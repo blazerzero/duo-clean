@@ -1,0 +1,57 @@
+{% load static %}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>VarClean</title>
+  <link rel="stylesheet" type="text/css" href="{% static 'datacleaner/css/style.css' %}">
+  <link rel="stylesheet" type="text/css" href="{% static 'datacleaner/css/bootstrap.css' %}">
+  <script type="text/javascript" src="{% static 'datacleaner/js/bootstrap.js' %}"></script>
+  <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+</head>
+<body>
+  <div class="header" id="header">
+    <h1 class="title">VarClean</h1>
+    <div class="dropdown-divider"></div>
+  </div>
+  <div class="welcome">
+    <div class="container">
+      <div class="row">
+        <div class="col step1">
+          <h4><u>Step 1: Data</u></h4>
+          <button type="button" class="btn btn-info" id="uploadDataBtn">Upload Data</button>
+        </div>
+        <div class="col step2">
+          <h4><u>Step 2: Dependencies</u></h4>
+          <button type="button" class="btn btn-info" id="uploadDepBtn">Upload Dependencies</button>
+          <div class="welcome-divider-or">OR</div>
+          <button type="button" class="btn btn-info" id="manualDepBtn">Manually Define Dependencies</button>
+          <div class="welcome-help">
+            <a href="#" id="whatIsDepBtn">
+              <img src="{% static 'datacleaner/images/help.svg' %}"></img>
+              <u>What is a dependency?</u>
+            </a>
+          </div>
+        </div>
+        <div class="col step3">
+          <h4><u>Step 3: Patterns</u></h4>
+          <button type="button" class="btn btn-info" id="uploadPatBtn">Upload Patterns</button>
+          <div class="welcome-divider-or">OR</div>
+          <button type="button" class="btn btn-info" id="manualPatBtn">Manually Define Patterns</button>
+          <div class="welcome-help">
+            <a href="#" id="whatIsPatBtn">
+              <img src="{% static 'datacleaner/images/help.svg' %}"></img>
+              <u>What is a pattern?</u>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="welcome-action-btns">
+      <button type="button" class="btn btn-danger" id="restartBtn">Restart</button>
+      <button type="button" class="btn btn-primary" id="findRepairsBtn">Find Repairs</button>
+    </div>
+  </div>
+</body>
+</html>
