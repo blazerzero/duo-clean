@@ -16,42 +16,18 @@
     <div class="dropdown-divider"></div>
   </div>
   <div class="welcome">
-    <div class="container">
-      <div class="row">
-        <div class="col step1">
-          <h4><u>Step 1: Data</u></h4>
-          <button type="button" class="btn btn-info" id="uploadDataBtn">Upload Data</button>
-        </div>
-        <div class="col step2">
-          <h4><u>Step 2: Dependencies</u></h4>
-          <button type="button" class="btn btn-info" id="uploadDepBtn">Upload Dependencies</button>
-          <div class="welcome-divider-or">OR</div>
-          <button type="button" class="btn btn-info" id="manualDepBtn">Manually Define Dependencies</button>
-          <div class="welcome-help">
-            <a href="#" id="whatIsDepBtn">
-              <img src="{% static 'datacleaner/images/help.svg' %}"></img>
-              <u>What is a dependency?</u>
-            </a>
-          </div>
-        </div>
-        <div class="col step3">
-          <h4><u>Step 3: Patterns</u></h4>
-          <button type="button" class="btn btn-info" id="uploadPatBtn">Upload Patterns</button>
-          <div class="welcome-divider-or">OR</div>
-          <button type="button" class="btn btn-info" id="manualPatBtn">Manually Define Patterns</button>
-          <div class="welcome-help">
-            <a href="#" id="whatIsPatBtn">
-              <img src="{% static 'datacleaner/images/help.svg' %}"></img>
-              <u>What is a pattern?</u>
-            </a>
-          </div>
-        </div>
+    <form enctype="multipart/form-data" action="{% url 'datacleaner:results' %}" method="post">
+      {% csrf_token %}
+      <div class="container">
+        <h4><u>Upload Data</u></h4>
+        <h6><i>* Only CSV files are supported at this time</i></h6>
+        <input type="file" name="data" accept=".csv" id="dataUploadBtn"/>
+        <!--<label for="dataUploadBtn" class="btn btn-info">Choose a file</label>-->
       </div>
-    </div>
-    <div class="welcome-action-btns">
-      <button type="button" class="btn btn-danger" id="restartBtn">Restart</button>
-      <button type="button" class="btn btn-primary" id="findRepairsBtn">Find Repairs</button>
-    </div>
+      <div class="welcome-action-btns">
+        <button type="submit" class="btn btn-primary" id="findRepairsBtn">Find Repairs</button>
+      </div>
+    </form>
   </div>
 </body>
 </html>

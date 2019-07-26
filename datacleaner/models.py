@@ -1,5 +1,6 @@
 from django.db.models import Model, CharField, IntegerField, ForeignKey, CASCADE
 from django_mysql.models import ListCharField
+from django import forms
 
 # Create your models here.
 class Tuple(Model):
@@ -21,4 +22,7 @@ class Cell(Model):
 	)
 	preferedness = IntegerField()
 	tup = ForeignKey(Tuple, on_delete = CASCADE)
-	
+
+class UploadFileForm(forms.Form):
+	title = forms.CharField(max_length=50)
+	file = forms.FileField()
