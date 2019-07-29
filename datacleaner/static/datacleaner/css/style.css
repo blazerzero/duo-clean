@@ -130,7 +130,7 @@ html, body {
   position: relative;
 }
 
-.cleanliness-circle {
+.dirtiness-circle {
    position: absolute;
    top: 0;
    right: 0;

@@ -100,10 +100,34 @@
               {% for field in row %}
                 <td>
                   <div class="data-cell">
-                    {{ field }}
-                    <div class="cleanliness-circle">
-                      <img src="{% static 'datacleaner/images/circle-solid.svg' %}" width="15">
-                    </div>
+                    {{ field.cellValue }}
+                    {% if field.dirtiness > 0 %}
+                      <div class="dirtiness-circle">
+                        <img
+                        {% if field.dirtiness == 1 %}
+                        src="{% static 'datacleaner/images/dirty-circle-1.svg' %}"
+                        {% elif field.dirtiness == 2 %}
+                        src="{% static 'datacleaner/images/dirty-circle-2.svg' %}"
+                        {% elif field.dirtiness == 3 %}
+                        src="{% static 'datacleaner/images/dirty-circle-3.svg' %}"
+                        {% elif field.dirtiness == 4 %}
+                        src="{% static 'datacleaner/images/dirty-circle-4.svg' %}"
+                        {% elif field.dirtiness == 5 %}
+                        src="{% static 'datacleaner/images/dirty-circle-5.svg' %}"
+                        {% elif field.dirtiness == 6 %}
+                        src="{% static 'datacleaner/images/dirty-circle-6.svg' %}"
+                        {% elif field.dirtiness == 7 %}
+                        src="{% static 'datacleaner/images/dirty-circle-7.svg' %}"
+                        {% elif field.dirtiness == 8 %}
+                        src="{% static 'datacleaner/images/dirty-circle-8.svg' %}"
+                        {% elif field.dirtiness == 9 %}
+                        src="{% static 'datacleaner/images/dirty-circle-9.svg' %}"
+                        {% elif field.dirtiness == 10 %}
+                        src="{% static 'datacleaner/images/dirty-circle-10.svg' %}"
+                        {% endif %}
+                        alt="L{{ field.dirtiness}}" width="15">
+                      </div>
+                    {% endif %}
                   </div>
                 </td>
               {% endfor %}

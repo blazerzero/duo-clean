@@ -11,13 +11,8 @@ def index(request):
 
 def results(request):
 	if request.method == 'POST':
-		#print(request.POST)
-		print(request.FILES)
 		form = UploadFileForm(request.POST, request.FILES)
-		#status = request.FILES['data'].name.endswith('.csv')
-		#print(status)
 		if len(request.FILES) > 0 and request.FILES['data'].name.endswith('.csv'):
-			# uploaded file hander function
 			header, csv_data = parseCSV(request.FILES['data'])
 			sent_data = sample(csv_data, 10)
 			return render(request, 'datacleaner/results.html', {'header': header, 'data': sent_data, 'fullData': csv_data})

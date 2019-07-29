@@ -1,3 +1,5 @@
+from random import randint
+
 def parseCSV(csv_file):
     header = list()
     csv_data = list()
@@ -8,13 +10,16 @@ def parseCSV(csv_file):
         fields = line.split(',')
         if i == 0:
             for field in fields:
+
                 header.append(field)
         else:
             data_line = list()
-            for field in fields:
+            for val in fields:
+                field = dict()
+                field.update({'cellValue': val})
+                field.update({'dirtiness': randint(0,10)})
                 data_line.append(field)
             csv_data.append(data_line)
         i += 1
         print(i)
     return header, csv_data
-     
