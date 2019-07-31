@@ -1,12 +1,13 @@
 from random import randint
 from tqdm import tqdm
+import pprint
 
 def parseCSV(csv_file):
     header = list()
     relationships = dict()
     csv_data = list()
 
-    data = csv_file.read().decode('utf-8')
+    data = csv_file.read().decode('utf-8-sig')
     lines = data.split('\n')
     count = 0
     maxOccurence = 1
@@ -24,8 +25,10 @@ def parseCSV(csv_file):
                 data_line.append(field)
                 for j in range(0, len(fields)):
                     if i != j:
-                        if (header[i], fields[i]) not in relationships.keys() or (header[j], fields[j]) not in relationships[(header[i], fields[i])].keys():
+                        if (header[i], fields[i]) not in relationships.keys():
                             relationships[(header[i], fields[i])] = dict()
+                            relationships[(header[i], fields[i])][(header[j], fields[j])] = 1
+                        elif (header[j], fields[j]) not in relationships[(header[i], fields[i])].keys():
                             relationships[(header[i], fields[i])][(header[j], fields[j])] = 1
                         else:
                             relationships[(header[i], fields[i])][(header[j], fields[j])] += 1
@@ -33,7 +36,7 @@ def parseCSV(csv_file):
                                 maxOccurence = relationships[(header[i], fields[i])][(header[j], fields[j])]
             csv_data.append(data_line)
         count += 1
-    print(relationships)
+    pprint.pprint(relationships)
     return header, csv_data, relationships, maxOccurence
 
 #def parseCSV(csv_file):
