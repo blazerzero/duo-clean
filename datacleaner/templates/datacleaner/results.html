@@ -100,7 +100,7 @@
               {% for field in row %}
                 <td>
                   <div class="data-cell">
-                    {{ field.cellValue }}
+                    <span>{{ field.cellValue }}</span>
                     {% if field.dirtiness > 0 %}
                       <div class="dirtiness-circle">
                         <img

@@ -11,11 +11,21 @@ def index(request):
 
 def results(request):
 	if request.method == 'POST':
-		form = UploadFileForm(request.POST, request.FILES)
+		#form = UploadFileForm(request.POST, request.FILES)
 		if len(request.FILES) > 0 and request.FILES['data'].name.endswith('.csv'):
 			header, csv_data, relationships, maxOccurence = parseCSV(request.FILES['data'])
 			sent_data = sample(csv_data, 10)
-			return render(request, 'datacleaner/results.html', {'header': header, 'data': sent_data, 'fullData': csv_data, 'maxOccurence': maxOccurence})
+			return render(
+				request,
+				'datacleaner/results.html',
+				{
+					'header': header,
+					'data': sent_data,
+					'fullData': csv_data,
+					'relationships': relationships,
+					'maxOccurence': maxOccurence
+				}
+			)
 		else:
 			return render(request, 'datacleaner/index.html')
 	return render(request, 'datacleaner/index.html')
