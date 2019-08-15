@@ -1,0 +1,111 @@
+.App {
+  text-align: center;
+}
+
+.App-logo {
+  animation: App-logo-spin infinite 20s linear;
+  height: 40vmin;
+  pointer-events: none;
+}
+
+.App-header {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.body-section {
+  margin: 1vw;
+}
+
+.content-centered {
+  text-align: center;
+  justify-content: center;
+  padding: 1vw;
+}
+.content-centered.title { font-weight: bold; }
+
+.top-level {
+  padding: 1vw;
+}
+
+.restart-btn {
+  float: left;
+}
+
+.export-btn {
+  float: right;
+}
+
+.middle-action-btn-section {
+  width: 100vw;
+  display: flex;
+  align-content: center;
+  justify-content: center;
+  padding: 2vw;
+}
+
+.middle-action-btn-section .btn-undo {
+  text-align: right;
+  margin-right: 2vw;
+}
+
+.middle-action-btn-section .btn-redo {
+  text-align: left;
+  margin-left: 2vw;
+}
+
+.key-box {
+  padding: 0.5vw;
+  margin-bottom: 0.5vw;
+  width: 25vw;
+  border: black 1px solid;
+}
+
+.dirty-color-line {
+  height: 1.5vw;
+  background-image: linear-gradient(to right, #ffe5e5, #ff0000);
+}
+
+.dirty-color-line-labels {
+  display: flex;
+}
+
+.dirty-color-line-labels .less {
+  width: 12vw;
+  text-align: left;
+}
+
+.dirty-color-line-labels .more {
+  width: 12vw;
+  text-align: right;
+}
+
+.repairs-applied-box {
+  padding: 0.5vw;
+  margin-top: 0.5vw;
+  width: 25vw;
+  border: black 1px solid;
+}
+
+.result-content {
+  font-size: 1.5vw;
+}
