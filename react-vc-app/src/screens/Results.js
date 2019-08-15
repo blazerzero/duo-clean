@@ -7,6 +7,8 @@ import {
   Table,
 } from 'react-bootstrap';
 import '../css/App.css';
+import undo from '../images/corner-up-left.svg';
+import redo from '../images/corner-up-right.svg';
 
 class Results extends Component {
   _handleShowRestartModal() {
@@ -16,7 +18,7 @@ class Results extends Component {
   render() {
     return (
       <div>
-        <div className='body-section'>
+        <div>
           <div className='top-level'>
             <Button className='restart-btn' variant='danger' onClick={() => this._handleShowRestartModal}>Restart</Button>
             <Button className='export-btn' variant='primary'>Export to CSV</Button>
@@ -24,8 +26,10 @@ class Results extends Component {
           <div className='middle-action-btn-section'>
             <Button className='btn-undo' variant='light' disabled>
               Undo
+              <img src={undo} />
             </Button>
             <Button className='btn-redo' variant='light' disabled>
+              <img src={redo} />
               Redo
             </Button>
           </div>

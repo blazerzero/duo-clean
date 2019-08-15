@@ -33,7 +33,7 @@
 }
 
 .body-section {
-  margin: 1vw;
+  padding: 1vw;
 }
 
 .content-centered {
@@ -107,5 +107,5 @@
 }
 
 .result-content {
-  font-size: 1.5vw;
+  font-size: 12pt;
 }
