@@ -7,6 +7,7 @@ import {
   Form,
   Row,
 } from 'react-bootstrap';
+import { connect } from 'react-redux';
 import '../css/App.css';
 
 class ImportButton extends Component {
@@ -29,44 +30,68 @@ class ImportButton extends Component {
 
 class Import extends Component {
   state = {
-    uploadedFile: null,
+    importedFile: null,
   }
 
-  _handleSubmit(e) {
-    if (this.state.uploadedFile != null) {
-      this.props.history.push('/results/');
+  _handleSubmit(history) {
+    if (this.state.importedFile != null) {
+      this.props.importFile(this.state)
+      history.push('/results/');
     }
   };
 
   render() {
     return (
-      <div className="body-section">
-        <Row className="content-centered">
-          <div>
-            <Form noValidate encType='multipart/form-data' onSubmit={() => this._handleSubmit}>
-              <div>
-                <h4><u>Import Data</u></h4>
-                <h6><i>* Only CSV files are supported at this time</i></h6>
-                <Form.Group controlId="data">
-                  <Form.Control
-                    type="file"
-                    placeholder="Choose a file"
-                    accept=".csv"
-                    onChange={(e) => {
-                      console.log(e.target.files);
-                      this.setState({ uploadedFile: e.target.files[0] }, () => {
-                        console.log(this.state);
-                      });
-                    }}/>
-                </Form.Group>
-              </div>
-              <ImportButton />
-            </Form>
-          </div>
-        </Row>
-      </div>
+      <Route render={({ history }) => (
+        <div className="body-section">
+          <Row className="content-centered">
+            <div>
+              <Form noValidate encType='multipart/form-data' onSubmit={() => this._handleSubmit(history)}>
+                <div>
+                  <h4><u>Import Data</u></h4>
+                  <h6><i>* Only CSV files are supported at this time</i></h6>
+                  <Form.Group controlId="data">
+                    <Form.Control
+                      type="file"
+                      placeholder="Choose a file"
+                      accept=".csv"
+                      onChange={(e) => {
+                        console.log(e.target.files);
+                        this.setState({ importedFile: e.target.files[0] }, () => {
+                          console.log(this.state);
+                        });
+                      }}/>
+                  </Form.Group>
+                </div>
+                <Button
+                  type='submit'
+                  variant='primary'>
+                  Import
+                </Button>
+              </Form>
+            </div>
+          </Row>
+        </div>
+      )} />
+
     );
   }
 }
 
-export default Import;
+const mapStateToProps = (state) => {
+  console.log(state);
+  return {
+    uploadedFile: state.importReducer.uploadedFile,
+  };
+};
+
+const mapDispatchToProps = (dispatch) => {
+  return {
+    importFile: (payload) => dispatch({
+      type: 'IMPORT_FILE',
+      payload: payload
+    }),
+  };
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(Import);
