@@ -8,7 +8,7 @@ import {
   Row,
 } from 'react-bootstrap';
 import { connect } from 'react-redux';
-//import axios from 'axios';
+import axios from 'axios';
 import '../css/App.css';
 
 class ImportButton extends Component {
@@ -37,19 +37,36 @@ class Import extends Component {
   async _handleSubmit(history) {
     console.log(this.state.importedFile);
     if (this.state.importedFile != null) {
-      const data = {
-        file: this.state.importedFile
+      const formData = new FormData();
+      formData.append('file', this.state.importedFile);
+      console.log(formData.get('file'));
+      const config = {
+        headers: {
+          'content-type': 'multipart/form-data'
+        }
       };
-      let response = await fetch('http://localhost:5000/import', {
+      axios.post('http://localhost:5000/import', formData, config)
+        .then(response => {
+          console.log(response);
+          console.log(JSON.parse(response.data));
+          var res = JSON.parse(response.data);
+        })
+        .catch(error => console.log(error));
+      /*const formData = new FormData();
+      formData.set('file', this.state.importedFile);
+      axios.post('http://localhost:5000/import', formData).then(res => {
+        console.log(res);
+      }).catch(error => console.log(error));*/
+      /*let response = await fetch('http://localhost:5000/import', {
         method: 'POST',
         headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
+          Accept: 'multipart/form-data',
+          'Content-Type': 'multipart/form-data',
         },
-        body: JSON.stringify(data)
-      });
-      console.log('done fetching!');
-      setTimeout(function() {history.push('/results/', { data: response })}, 3000);
+        body: data
+      });*/
+      //console.log('done fetching!');
+      //setTimeout(function() {history.push('/results/', { data: response })}, 3000);
       //axios.post('http://localhost:5000/import', data)
         //.then(response => history.push('/results/', { data: response }))
         //.catch(error => console.log("POST error:", error));
