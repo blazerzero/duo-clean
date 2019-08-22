@@ -8,6 +8,7 @@ import {
   Row,
 } from 'react-bootstrap';
 import { connect } from 'react-redux';
+//import axios from 'axios';
 import '../css/App.css';
 
 class ImportButton extends Component {
@@ -33,10 +34,26 @@ class Import extends Component {
     importedFile: null,
   }
 
-  _handleSubmit(history) {
+  async _handleSubmit(history) {
+    console.log(this.state.importedFile);
     if (this.state.importedFile != null) {
-      this.props.importFile(this.state)
-      history.push('/results/');
+      const data = {
+        file: this.state.importedFile
+      };
+      let response = await fetch('http://localhost:5000/import', {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+      });
+      console.log('done fetching!');
+      history.push('/results/', { data: response });
+      //axios.post('http://localhost:5000/import', data)
+        //.then(response => history.push('/results/', { data: response }))
+        //.catch(error => console.log("POST error:", error));
+      //history.push('/results/', {test: 'success'});
     }
   };
 
