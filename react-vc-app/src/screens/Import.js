@@ -49,7 +49,7 @@ class Import extends Component {
         body: JSON.stringify(data)
       });
       console.log('done fetching!');
-      history.push('/results/', { data: response });
+      setTimeout(function() {history.push('/results/', { data: response })}, 3000);
       //axios.post('http://localhost:5000/import', data)
         //.then(response => history.push('/results/', { data: response }))
         //.catch(error => console.log("POST error:", error));
@@ -63,7 +63,7 @@ class Import extends Component {
         <div className="body-section">
           <Row className="content-centered">
             <div>
-              <Form noValidate encType='multipart/form-data' onSubmit={() => this._handleSubmit(history)}>
+              <Form noValidate encType='multipart/form-data'>
                 <div>
                   <h4><u>Import Data</u></h4>
                   <h6><i>* Only CSV files are supported at this time</i></h6>
@@ -81,8 +81,8 @@ class Import extends Component {
                   </Form.Group>
                 </div>
                 <Button
-                  type='submit'
-                  variant='primary'>
+                  variant='primary'
+                  onClick={() => this._handleSubmit(history)}>
                   Import
                 </Button>
               </Form>
@@ -95,7 +95,7 @@ class Import extends Component {
   }
 }
 
-const mapStateToProps = (state) => {
+/*const mapStateToProps = (state) => {
   console.log(state);
   return {
     uploadedFile: state.importReducer.uploadedFile,
@@ -111,4 +111,5 @@ const mapDispatchToProps = (dispatch) => {
   };
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(Import);
+export default connect(mapStateToProps, mapDispatchToProps)(Import);*/
+export default Import;
