@@ -1,0 +1,259 @@
+Table : cities
+Columns : LatD, LatM, LatS, NS, LonD, LonM, LonS, EW, City, State
+
+Functional Dependencies: 
+{LatD} -> {NS}
+{LatD} -> {EW}
+{LatM} -> {NS}
+{LatM} -> {EW}
+{LatS} -> {NS}
+{LatS} -> {EW}
+{NS} -> {EW}
+{LonD} -> {NS}
+{LonD} -> {EW}
+{LonM} -> {NS}
+{LonM} -> {EW}
+{LonS} -> {EW}
+{LonS} -> {NS}
+{EW} -> {NS}
+{City} -> {NS}
+{City} -> {EW}
+{State} -> {NS}
+{State} -> {EW}
+{City, LonM} -> {LatS}
+{City, LonM} -> {LonD}
+{City, LonM} -> {LatD}
+{City, LonM} -> {State}
+{City, LonM} -> {LatM}
+{City, LonM} -> {LonS}
+{City, LonD} -> {LonM}
+{City, LonD} -> {LatS}
+{City, LonD} -> {LatD}
+{City, LonD} -> {State}
+{City, LonD} -> {LatM}
+{City, LonD} -> {LonS}
+{City, State} -> {LonM}
+{City, State} -> {LatS}
+{City, State} -> {LonD}
+{City, State} -> {LatD}
+{City, State} -> {LatM}
+{City, State} -> {LonS}
+{City, LatM} -> {LonM}
+{City, LatM} -> {LatS}
+{City, LatM} -> {LonD}
+{City, LatM} -> {LatD}
+{City, LatM} -> {State}
+{City, LatM} -> {LonS}
+{LonD, LatM} -> {LatS}
+{City, LonS} -> {LonM}
+{City, LonS} -> {LatS}
+{City, LonS} -> {LonD}
+{City, LonS} -> {LatD}
+{City, LonS} -> {State}
+{City, LonS} -> {LatM}
+{LonM, LatS, LonD} -> {LatM}
+{LonM, LatS, LonD} -> {City}
+{LonM, LatS, LonD} -> {State}
+{LonM, LatS, LonD} -> {LonS}
+{LonM, LatS, LonD} -> {LatD}
+{City, LatS, LatD} -> {LatM}
+{City, LatS, LatD} -> {State}
+{City, LatS, LatD} -> {LonM}
+{City, LatS, LatD} -> {LonD}
+{City, LatS, LatD} -> {LonS}
+{LonM, LatS, LatD} -> {LatM}
+{LonM, LatS, LatD} -> {City}
+{LonM, LatS, LatD} -> {State}
+{LonM, LatS, LatD} -> {LonD}
+{LonM, LatS, LatD} -> {LonS}
+{LonM, LonD, LatD} -> {LatM}
+{LonM, LonD, LatD} -> {City}
+{LonM, LonD, LatD} -> {State}
+{LonM, LonD, LatD} -> {LonS}
+{LonM, LonD, LatD} -> {LatS}
+{LatS, LonD, LatD} -> {LatM}
+{LatS, LonD, LatD} -> {City}
+{LatS, LonD, LatD} -> {State}
+{LatS, LonD, LatD} -> {LonM}
+{LatS, LonD, LatD} -> {LonS}
+{LonM, LonD, LatM} -> {City}
+{LonM, LonD, LatM} -> {State}
+{LonM, LonD, LatM} -> {LonS}
+{LonM, LonD, LatM} -> {LatD}
+{LonM, LatD, LatM} -> {City}
+{LonM, LatD, LatM} -> {State}
+{LonM, LatD, LatM} -> {LonD}
+{LonM, LatD, LatM} -> {LatS}
+{LonM, LatD, LatM} -> {LonS}
+{LonD, LatD, LatM} -> {City}
+{LonD, LatD, LatM} -> {State}
+{LonD, LatD, LatM} -> {LonM}
+{LonD, LatD, LatM} -> {LonS}
+{LonM, State, LatM} -> {City}
+{LonM, State, LatM} -> {LonS}
+{LonM, State, LatM} -> {LonD}
+{LonM, State, LatM} -> {LatS}
+{LonM, State, LatM} -> {LatD}
+{LonD, State, LatM} -> {City}
+{LonD, State, LatM} -> {LonS}
+{LonD, State, LatM} -> {LonM}
+{LonD, State, LatM} -> {LatD}
+{LatD, State, LatM} -> {City}
+{LatD, State, LatM} -> {LonS}
+{LatD, State, LatM} -> {LonM}
+{LatD, State, LatM} -> {LonD}
+{LatD, State, LatM} -> {LatS}
+{LonM, LonD, LonS} -> {LatM}
+{LonM, LonD, LonS} -> {City}
+{LonM, LonD, LonS} -> {State}
+{LonM, LonD, LonS} -> {LatS}
+{LonM, LonD, LonS} -> {LatD}
+{LatS, LonD, LonS} -> {LatM}
+{LatS, State, LonS} -> {LatM}
+{LatS, State, LonS} -> {City}
+{LatS, State, LonS} -> {LonM}
+{LatS, State, LonS} -> {LonD}
+{LatS, State, LonS} -> {LatD}
+{LatD, LatM, LonS} -> {City}
+{LatD, LatM, LonS} -> {State}
+{LatD, LatM, LonS} -> {LonM}
+{LatD, LatM, LonS} -> {LonD}
+{LatD, LatM, LonS} -> {LatS}
+{LonM, LatD, State, LonS} -> {LatM}
+{LonM, LatD, State, LonS} -> {City}
+{LonM, LatD, State, LonS} -> {LonD}
+{LonM, LatD, State, LonS} -> {LatS}
+
+Equivalences: 
+{NS} <-> {EW}
+{City, LonM} <-> {City, LonD}
+{City, LonM} <-> {City, State}
+{City, LonM} <-> {City, LatM}
+{City, LonM} <-> {City, LonS}
+{City, LonD} <-> {City, State}
+{City, LonD} <-> {City, LatM}
+{City, LonD} <-> {City, LonS}
+{City, State} <-> {City, LatM}
+{City, State} <-> {City, LonS}
+{City, LatM} <-> {City, LonS}
+{LonM, LatS, LonD} <-> {City, LatS, LatD}
+{LonM, LatS, LonD} <-> {LonM, LatS, LatD}
+{LonM, LatS, LonD} <-> {LonM, LonD, LatD}
+{LonM, LatS, LonD} <-> {LatS, LonD, LatD}
+{LonM, LatS, LonD} <-> {LonM, LonD, LatM}
+{LonM, LatS, LonD} <-> {LonM, LatD, LatM}
+{LonM, LatS, LonD} <-> {LonD, LatD, LatM}
+{LonM, LatS, LonD} <-> {LonM, State, LatM}
+{LonM, LatS, LonD} <-> {LonD, State, LatM}
+{LonM, LatS, LonD} <-> {LatD, State, LatM}
+{LonM, LatS, LonD} <-> {LonM, LonD, LonS}
+{LonM, LatS, LonD} <-> {LatS, State, LonS}
+{LonM, LatS, LonD} <-> {LatD, LatM, LonS}
+{City, LatS, LatD} <-> {LonM, LatS, LatD}
+{City, LatS, LatD} <-> {LonM, LonD, LatD}
+{City, LatS, LatD} <-> {LatS, LonD, LatD}
+{City, LatS, LatD} <-> {LonM, LonD, LatM}
+{City, LatS, LatD} <-> {LonM, LatD, LatM}
+{City, LatS, LatD} <-> {LonD, LatD, LatM}
+{City, LatS, LatD} <-> {LonM, State, LatM}
+{City, LatS, LatD} <-> {LonD, State, LatM}
+{City, LatS, LatD} <-> {LatD, State, LatM}
+{City, LatS, LatD} <-> {LonM, LonD, LonS}
+{City, LatS, LatD} <-> {LatS, State, LonS}
+{City, LatS, LatD} <-> {LatD, LatM, LonS}
+{LonM, LatS, LatD} <-> {LonM, LonD, LatD}
+{LonM, LatS, LatD} <-> {LatS, LonD, LatD}
+{LonM, LatS, LatD} <-> {LonM, LonD, LatM}
+{LonM, LatS, LatD} <-> {LonM, LatD, LatM}
+{LonM, LatS, LatD} <-> {LonD, LatD, LatM}
+{LonM, LatS, LatD} <-> {LonM, State, LatM}
+{LonM, LatS, LatD} <-> {LonD, State, LatM}
+{LonM, LatS, LatD} <-> {LatD, State, LatM}
+{LonM, LatS, LatD} <-> {LonM, LonD, LonS}
+{LonM, LatS, LatD} <-> {LatS, State, LonS}
+{LonM, LatS, LatD} <-> {LatD, LatM, LonS}
+{LonM, LonD, LatD} <-> {LatS, LonD, LatD}
+{LonM, LonD, LatD} <-> {LonM, LonD, LatM}
+{LonM, LonD, LatD} <-> {LonM, LatD, LatM}
+{LonM, LonD, LatD} <-> {LonD, LatD, LatM}
+{LonM, LonD, LatD} <-> {LonM, State, LatM}
+{LonM, LonD, LatD} <-> {LonD, State, LatM}
+{LonM, LonD, LatD} <-> {LatD, State, LatM}
+{LonM, LonD, LatD} <-> {LonM, LonD, LonS}
+{LonM, LonD, LatD} <-> {LatS, State, LonS}
+{LonM, LonD, LatD} <-> {LatD, LatM, LonS}
+{LatS, LonD, LatD} <-> {LonM, LonD, LatM}
+{LatS, LonD, LatD} <-> {LonM, LatD, LatM}
+{LatS, LonD, LatD} <-> {LonD, LatD, LatM}
+{LatS, LonD, LatD} <-> {LonM, State, LatM}
+{LatS, LonD, LatD} <-> {LonD, State, LatM}
+{LatS, LonD, LatD} <-> {LatD, State, LatM}
+{LatS, LonD, LatD} <-> {LonM, LonD, LonS}
+{LatS, LonD, LatD} <-> {LatS, State, LonS}
+{LatS, LonD, LatD} <-> {LatD, LatM, LonS}
+{LonM, LonD, LatM} <-> {LonM, LatD, LatM}
+{LonM, LonD, LatM} <-> {LonD, LatD, LatM}
+{LonM, LonD, LatM} <-> {LonM, State, LatM}
+{LonM, LonD, LatM} <-> {LonD, State, LatM}
+{LonM, LonD, LatM} <-> {LatD, State, LatM}
+{LonM, LonD, LatM} <-> {LonM, LonD, LonS}
+{LonM, LonD, LatM} <-> {LatS, State, LonS}
+{LonM, LonD, LatM} <-> {LatD, LatM, LonS}
+{LonM, LatD, LatM} <-> {LonD, LatD, LatM}
+{LonM, LatD, LatM} <-> {LonM, State, LatM}
+{LonM, LatD, LatM} <-> {LonD, State, LatM}
+{LonM, LatD, LatM} <-> {LatD, State, LatM}
+{LonM, LatD, LatM} <-> {LonM, LonD, LonS}
+{LonM, LatD, LatM} <-> {LatS, State, LonS}
+{LonM, LatD, LatM} <-> {LatD, LatM, LonS}
+{LonD, LatD, LatM} <-> {LonM, State, LatM}
+{LonD, LatD, LatM} <-> {LonD, State, LatM}
+{LonD, LatD, LatM} <-> {LatD, State, LatM}
+{LonD, LatD, LatM} <-> {LonM, LonD, LonS}
+{LonD, LatD, LatM} <-> {LatS, State, LonS}
+{LonD, LatD, LatM} <-> {LatD, LatM, LonS}
+{LonM, State, LatM} <-> {LonD, State, LatM}
+{LonM, State, LatM} <-> {LatD, State, LatM}
+{LonM, State, LatM} <-> {LonM, LonD, LonS}
+{LonM, State, LatM} <-> {LatS, State, LonS}
+{LonM, State, LatM} <-> {LatD, LatM, LonS}
+{LonD, State, LatM} <-> {LatD, State, LatM}
+{LonD, State, LatM} <-> {LonM, LonD, LonS}
+{LonD, State, LatM} <-> {LatS, State, LonS}
+{LonD, State, LatM} <-> {LatD, LatM, LonS}
+{LatD, State, LatM} <-> {LonM, LonD, LonS}
+{LatD, State, LatM} <-> {LatS, State, LonS}
+{LatD, State, LatM} <-> {LatD, LatM, LonS}
+{LonM, LonD, LonS} <-> {LatS, State, LonS}
+{LonM, LonD, LonS} <-> {LatD, LatM, LonS}
+{LatS, State, LonS} <-> {LatD, LatM, LonS}
+{LonD, LatM, LonS} <-> {LatS, LonD, LonS}
+
+Keys: 
+{LonD, City}
+{LatM, LonM, State}
+{LatD, LatM, State}
+{LonD, LonM, LonS}
+{LatM, LonD, LonM}
+{LatD, LatM, LonM}
+{LatD, LatM, LonS}
+{LatD, LatS, LonD}
+{LatD, LonD, LonM}
+{LonM, City}
+{LatD, LatS, City}
+{LatD, LatM, LonD}
+{LatM, City}
+{LonS, City}
+{LatS, LonD, LonM}
+{LatD, LonM, LonS, State}
+{LatS, LonS, State}
+{LatM, LonD, State}
+{City, State}
+{LatD, LatS, LonM}
+
+Time (s): 0.7229
+Row count: 128
+Attribute count: 10
+Number of Equivalences: 103
+Number of FDs: 121
+Number of FDs checked: 191

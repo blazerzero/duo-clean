@@ -1,0 +1,6 @@
+Table : adult
+Columns : A, B, C, D, E, F, G, H, I, J, K, L, M, N, O
+
+Functional Dependencies: 
+{D} -> {E}
+{E} -> {D}

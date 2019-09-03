@@ -28,14 +28,14 @@ def add_element_in_tuple(spxminusa, ca):
 
 def validcfd(xminusa, x, a, spxminusa, sp, ca):
     global dictpartitions
-    if xminusa == '' or a == '': 
+    if xminusa == '' or a == '':
         return False
     indexofa = x.index(a)
     newsp0 = add_element_in_tuple(spxminusa, ca)
     newsp1 = replace_element_in_tuple(sp, indexofa, ca)   #this is sp, except that in place of value of a we put ca
     if (x, newsp1) in dictpartitions.keys():
         if  len(dictpartitions[(xminusa, spxminusa)]) == len(dictpartitions[(x, newsp1)]):# and twodlen(dictpartitions[(xminusa, spxminusa)]) == twodlen(dictpartitions[(x, newsp1)]):
-            return True    
+            return True
     return False
 
 def twodlen(listoflists):
@@ -45,7 +45,7 @@ def twodlen(listoflists):
 	return summ
 
 def greaterthanorequalto(upxminusa, spxminusa): # this is actually greaterthan or equal to
-    if upxminusa == spxminusa: 
+    if upxminusa == spxminusa:
         return True
     flag = True
     for index in range(0, len(upxminusa)):
@@ -54,8 +54,8 @@ def greaterthanorequalto(upxminusa, spxminusa): # this is actually greaterthan o
                 flag = False
     return flag
 
-def doublegreaterthan(upxminusa, spxminusa): 
-    if upxminusa == spxminusa: 
+def doublegreaterthan(upxminusa, spxminusa):
+    if upxminusa == spxminusa:
         return False
     flag = True
     for index in range(0, len(upxminusa)):
@@ -63,7 +63,7 @@ def doublegreaterthan(upxminusa, spxminusa):
             if (not (upxminusa[index] == spxminusa[index])):
                 flag = False
     return flag
-    
+
 def compute_dependencies(level, listofcols):
     global dictCplus
     global finallistofCFDs
@@ -72,7 +72,7 @@ def compute_dependencies(level, listofcols):
         for a in x:
             for (att, ca) in dictCplus[(x, sp)]:
                 if att == a:
-                    newtup =  spXminusA(sp, x, a)      ### tuple(y for y in sp if not sp.index(y)==x.index(a)) # this is sp[X\A]                             
+                    newtup =  spXminusA(sp, x, a)      ### tuple(y for y in sp if not sp.index(y)==x.index(a)) # this is sp[X\A]
                     if validcfd( x.replace(a,''), x, a, newtup, sp, ca) and not ([x.replace(a,''), a, [newtup, ca]] in finallistofCFDs):
                         finallistofCFDs.append([x.replace(a,''), a, [newtup, ca]])
                         for (xx, up) in level:
@@ -87,7 +87,7 @@ def compute_dependencies(level, listofcols):
                                         stufftobedeleted = []
                                         for (bbval, sometup) in dictCplus[(x,up)]:
                                             if b_att == bbval:
-                                                stufftobedeleted.append((bbval,sometup))                        
+                                                stufftobedeleted.append((bbval,sometup))
                                         for item in stufftobedeleted:
                                             dictCplus[(x,up)].remove(item)
 
@@ -100,16 +100,16 @@ def prune(level):
     for item in stufftobedeleted:
         level.remove(item)
 
-def computeCplus(level): # for each tuple (x,sp) in the list level, it computes C+(x,sp), which is a list of (attribute, value) tuples) 
+def computeCplus(level): # for each tuple (x,sp) in the list level, it computes C+(x,sp), which is a list of (attribute, value) tuples)
     global listofcolumns
     global dictCplus
     listofcols = listofcolumns[:]
-    for (x,sp) in level: #sp is a tuple of strings like this: ('aa', 'bb', 'cc') or ('aa', )     
-       thesets=[]
+    for (x,sp) in level: #sp is a tuple of strings like this: ('aa', 'bb', 'cc') or ('aa', )
+        thesets=[]
         for b in x:
             indx = x.index(b) # the index where b is located in x
             spcopy =  spXminusA(sp, x, b)     ### tuple(y for y in sp if not sp.index(y)==indx)
-            spcopy2 = sp[:]            
+            spcopy2 = sp[:]
             if (x.replace(b,''), spcopy ) in dictCplus.keys():
                 temp = dictCplus[(x.replace(b,''), spcopy)]
             else: temp = []   # is this correct???? should I put [] here?
@@ -131,7 +131,7 @@ def initial_Cplus(level):
         for item in stufftobedeleted:
             dictCplus[(a,ca)].remove(item)
 
-def populateL1(listofcols):    
+def populateL1(listofcols):
     global k_suppthreshold
     l1 = []
     attributepartitions = computeAttributePartitions(listofcols)
@@ -145,14 +145,14 @@ def populateL1(listofcols):
 
 def computeInitialPartitions(level1, attributepartitions):
 	global data2D
-	global dictpartitions # dictpartitions[(x,sp)] is of the form [[0,1,2]]. So simply a list of lists of indices  
+	global dictpartitions # dictpartitions[(x,sp)] is of the form [[0,1,2]]. So simply a list of lists of indices
 	for (a,sp) in level1:
 		dictpartitions[(a,sp)]=[]
 		dictpartitions[(a,sp)] = attributepartitions[a]
 
 def old_computeInitialPartitions(level1, attributepartitions):
     global data2D
-    global dictpartitions # dictpartitions[(x,sp)] is of the form [[0,1,2]]. So simply a list of lists of indices  
+    global dictpartitions # dictpartitions[(x,sp)] is of the form [[0,1,2]]. So simply a list of lists of indices
     for (a,sp) in level1:
         dictpartitions[(a,sp)]=[]
         if sp[0]=='--':
@@ -162,8 +162,8 @@ def old_computeInitialPartitions(level1, attributepartitions):
                 if str(data2D.iloc[eqclass[0]][a])==sp[0]:
                     dictpartitions[(a,sp)].append(eqclass)
 
-def computeAttributePartitions(listofcols): # compute partitions for every attribute 
-    global data2D    
+def computeAttributePartitions(listofcols): # compute partitions for every attribute
+    global data2D
     attributepartitions = {}
     for a in listofcols:
         attributepartitions[a]=[]
@@ -176,7 +176,7 @@ def list_duplicates(seq):
     tally = defaultdict(list)
     for i,item in enumerate(seq):
         tally[item].append(i)
-    return ((key,locs) for key,locs in tally.items() 
+    return ((key,locs) for key,locs in tally.items()
                             if len(locs)>0)
 
 def sometuplematchesZUP(z,up):
@@ -193,7 +193,7 @@ def sometuplematchesZUP(z,up):
 def generate_next_level(level):
     nextlevel=[]
     for i in range(0,len(level)): # pick an element
-        for j in range(i+1, len(level)): # compare it to every element that comes after it. 
+        for j in range(i+1, len(level)): # compare it to every element that comes after it.
             if ((not level[i][0]==level[j][0]) and level[i][0][0:-1]==level[j][0][0:-1] and level[i][1][0:-1]==level[j][1][0:-1]):
                 z = level[i][0] + level[j][0][-1]
                 up = tuple(list(level[i][1]) + [level[j][1][-1]])
@@ -202,7 +202,7 @@ def generate_next_level(level):
                 if sometuplematchesZUP(z,up):
                     flag = True
                     for att in z:
-                        indexofatt = z.index(att) # where is att located in z                        
+                        indexofatt = z.index(att) # where is att located in z
                         up_zminusa = spXminusA(up, z, att)
                         zminusa = z.replace(att,'')
                         if not ((zminusa, up_zminusa) in level):
@@ -231,15 +231,15 @@ def partition_product(zup, xsp, ytp):
             tableT[t] = i
         tableS[i]=''
     for i in range(len(partitionYTP)):
-        for t in partitionYTP[i]: 
-            if ( not (tableT[t] == 'NULL')): 
-                tableS[tableT[t]] = sorted(list(set(tableS[tableT[t]]) | set([t]))) 
-        for t in partitionYTP[i]: 
-            if (not (tableT[t] == 'NULL')) and len(tableS[tableT[t]])>= 1 : 
-                partitionZUP.append(tableS[tableT[t]]) 
-            if not (tableT[t] == 'NULL'): tableS[tableT[t]]='' 
-    for i in range(len(partitionXSP)): 
-        for t in partitionXSP[i]: 
+        for t in partitionYTP[i]:
+            if ( not (tableT[t] == 'NULL')):
+                tableS[tableT[t]] = sorted(list(set(tableS[tableT[t]]) | set([t])))
+        for t in partitionYTP[i]:
+            if (not (tableT[t] == 'NULL')) and len(tableS[tableT[t]])>= 1 :
+                partitionZUP.append(tableS[tableT[t]])
+            if not (tableT[t] == 'NULL'): tableS[tableT[t]]=''
+    for i in range(len(partitionXSP)):
+        for t in partitionXSP[i]:
             tableT[t]='NULL'
     dictpartitions[zup] = partitionZUP
     dictpartitions[zup] = partitionZUP
@@ -284,7 +284,7 @@ while (not (L[l] == [])):
     L.append(temp)
     l=l+1
     #print "List of all CFDs: " , finallistofCFDs
-    #print "CFDs found: ", len(finallistofCFDs), ", level = ", l-1    
+    #print "CFDs found: ", len(finallistofCFDs), ", level = ", l-1
 
 print "List of all CFDs: " , finallistofCFDs
 print "Total number of CFDs found: ", len(finallistofCFDs)
