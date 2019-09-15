@@ -44,7 +44,13 @@ class Import(Resource):
         f.close()
         #p = subprocess.Popen(['./DFDrunner', newDir+'data.csv', newDir+'fdnum.txt'])
         #p.wait()
-        os.system('./DFDrunner ' + newDir + 'data.csv ' + newDir + 'fdnum.txt');
+
+        # DFD runner
+        #os.system('./DFDrunner ' + newDir + 'data.csv ' + newDir + 'fdnum.txt');
+
+        # TANE runner
+        os.system('./TANErunner ' + newDir + 'data.csv ' + newDir + 'fdnum.txt');
+
         #tane.runTANE('../data.csv', 'r')
         #print('done finding FDs')
         resF = open(newDir+'fdnum.txt', 'r')
