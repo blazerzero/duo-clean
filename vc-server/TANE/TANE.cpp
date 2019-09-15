@@ -18,7 +18,7 @@ TANE::TANE()
     outputResult();*/
 }
 
-void TANE::run(string inputPath)
+void TANE::run(string inputPath, string outputPath)
 {
     /*R = 0;
     rowNum = 0;

@@ -20,7 +20,8 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "dev": "./node_modules/.bin/nodemon"
   },
   "eslintConfig": {
     "extends": "react-app"
@@ -38,6 +39,7 @@
     ]
   },
   "devDependencies": {
+    "nodemon": "^1.19.2",
     "redux-logger": "^3.0.6"
   }
 }

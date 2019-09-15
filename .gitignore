@@ -3,3 +3,4 @@ vc-venv/
 vc-app-old/
 vc-server/TANE/boost_1_71_0
 venv/
+vc-server/store/

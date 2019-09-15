@@ -24,9 +24,8 @@ void TANE::run(string inputPath, string outputPath)
     rowNum = 0;
     columnNum = 0;*/
     inputFilePath = inputPath;
-    cout << inputFilePath << endl;
     outputFilePath = outputPath;
-    cout << outputFilePath << endl;
+    //cout << inputFilePath << endl;
     T.resize(100000,-1);
     //double start, stop, durationTime;
    // start = clock();
@@ -34,20 +33,20 @@ void TANE::run(string inputPath, string outputPath)
     //stop = clock();
     //durationTime = ((double)(stop - start)) / CLOCKS_PER_SEC;
     //cout << "Reading file Time: " << durationTime << "s" << endl;
-    cout << "about to mine FDs" << endl;
+    cout << "done0" << endl;
     mineFD();
-    cout << "about to go to outputResult" << endl;
+    cout << "done1" << endl;
     outputResult();
+    cout << "done2" << endl;
 }
 
 void TANE::readFile()
 {
     ifstream inFile;
-    cout << "about to open file" << endl;
     inFile.open(inputFilePath);
-    cout << "opened file" << endl;
     string temp;
     // get columnNum first
+    cout << inputFilePath << endl;
     if(!getline(inFile, temp))
     {
         cout << "Empty input file!" << endl;
@@ -82,6 +81,8 @@ void TANE::readFile()
     }
     db.push_back(tempInt);
     rowNum++;
+
+    cout << "dict done" << endl;
 
     for(int i = 0; i < columnNum; i++)
     {
@@ -118,7 +119,7 @@ void TANE::readFile()
         rowNum++;
     }
     inFile.close();
-    cout << "done reading input file" << endl;
+    cout << "done reading file" << endl;
 }
 
 void TANE::mineFD()
@@ -128,14 +129,12 @@ void TANE::mineFD()
     int empty = 0;
     CPlus[0] = R;
     set<int> level_1;
-    cout << "about to do calcPISingleton" << endl;
     for(int i = 0; i < columnNum; i++)
     {
         int t = 1 << i;
         level_1.insert(t);
         calcPISingleton(t);
     }
-    cout << "done calcPISingleton" << endl;
     level.push_back(level_1);
     int l = 1;
     while(!level[l].empty())
@@ -242,7 +241,6 @@ void TANE::generateNextLevel(int l)
 // output in order
 void TANE::outputResult()
 {
-    cout << "about to output result" << endl;
     ofstream outFile;
     outFile.open(outputFilePath, ios::out);
     if(!outFile)
@@ -260,7 +258,6 @@ void TANE::outputResult()
         }
         outFile << "-> ";
         outFile << FDResult[i].right << endl;
-        cout << "adding to outFile" << endl;
     }
     outFile.close();
 }
@@ -283,7 +280,6 @@ void TANE::calcPISingleton(int X)
     vector<vector<int>> t;
     int n;
     n = getSingleAttr(X);
-    cout << "partway through" << endl;
     int temp;
     int tempIndex = 0;
     vector<vector<int>> tempSuperSet;
@@ -309,10 +305,7 @@ void TANE::calcPISingleton(int X)
         if(a.size() != 1)
             t.push_back(a);
     }
-    cout << "still working" << endl;
-    cout << **PI[X] << endl;
     PI[X] = t;
-    cout << "calcPISingleton done" << endl;
 }
 
 void TANE::calcPIProduct(int X, int A, int B)
