@@ -37,8 +37,8 @@ class Import(Resource):
         data = importedFile.read().decode('utf-8-sig').split('\n')
         header = data[0].split(',')
         for line in [l for l in data if len(l) > 0]:
-            f.write(line)
-            f.write('\n')
+            f.write(line + '\n')
+            #f.write('\n')
         f.close()
         #f = open(newDir+'fdnum.txt', 'w')
         f.close()
