@@ -47,65 +47,39 @@
   padding: 1vw;
 }
 
-.restart-btn {
-  float: left;
-}
-
-.export-btn {
-  float: right;
-}
-
-.middle-action-btn-section {
-  width: 100vw;
-  display: flex;
-  align-content: center;
-  justify-content: center;
-  padding: 2vw;
-}
-
-.middle-action-btn-section .btn-undo {
-  text-align: right;
-  margin-right: 2vw;
-}
-
-.middle-action-btn-section .btn-redo {
-  text-align: left;
-  margin-left: 2vw;
-}
-
-.key-box {
-  padding: 0.5vw;
-  margin-bottom: 0.5vw;
-  width: 25vw;
-  border: black 1px solid;
-}
-
 .dirty-color-line {
   height: 1.5vw;
   background-image: linear-gradient(to right, #ffe5e5, #ff0000);
 }
 
-.dirty-color-line-labels {
-  display: flex;
+.upload-btn-wrapper {
+  position: relative;
+  overflow: hidden;
+  display: inline-block;
 }
 
-.dirty-color-line-labels .less {
-  width: 12vw;
-  text-align: left;
+.btn-round {
+  border-radius: 20px;
+  cursor: pointer;
 }
 
-.dirty-color-line-labels .more {
-  width: 12vw;
-  text-align: right;
+.with-pointer {
+  cursor: pointer;
 }
 
-.repairs-applied-box {
-  padding: 0.5vw;
-  margin-top: 0.5vw;
-  width: 25vw;
-  border: black 1px solid;
+.home {
+  background-image: url('../images/columbia.jpg');
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+  height: 100vh;
+  width: auto;
 }
 
-.result-content {
-  font-size: 12pt;
+.upload-btn-wrapper input[type=file] {
+  font-size: 100px;
+  position: absolute;
+  left: 0;
+  top: 0;
+  opacity: 0;
 }

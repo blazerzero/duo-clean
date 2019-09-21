@@ -16,9 +16,9 @@ class App extends Component {
       <Provider store={store}>
         <PersistGate loading={null} persistor={persistor}>
           <Router>
-            <div>
+            {/*<div>
               <Header />
-            </div>
+            </div>*/}
 
             <Route path='/' exact component={Import} />
             <Route path='/results/' component={Results} />

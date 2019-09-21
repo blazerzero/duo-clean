@@ -52,59 +52,35 @@ class Import extends Component {
           var res = JSON.parse(response.data);
         })
         .catch(error => console.log(error));
-      /*const formData = new FormData();
-      formData.set('file', this.state.importedFile);
-      axios.post('http://localhost:5000/import', formData).then(res => {
-        console.log(res);
-      }).catch(error => console.log(error));*/
-      /*let response = await fetch('http://localhost:5000/import', {
-        method: 'POST',
-        headers: {
-          Accept: 'multipart/form-data',
-          'Content-Type': 'multipart/form-data',
-        },
-        body: data
-      });*/
-      //console.log('done fetching!');
-      //setTimeout(function() {history.push('/results/', { data: response })}, 3000);
-      //axios.post('http://localhost:5000/import', data)
-        //.then(response => history.push('/results/', { data: response }))
-        //.catch(error => console.log("POST error:", error));
-      //history.push('/results/', {test: 'success'});
     }
   };
 
   render() {
     return (
       <Route render={({ history }) => (
-        <div className="body-section">
-          <Row className="content-centered">
-            <div>
-              <Form noValidate encType='multipart/form-data'>
-                <div>
-                  <h4><u>Import Data</u></h4>
-                  <h6><i>* Only CSV files are supported at this time</i></h6>
-                  <Form.Group controlId="data">
-                    <Form.Control
-                      type="file"
-                      placeholder="Choose a file"
-                      accept=".csv"
-                      onChange={(e) => {
-                        console.log(e.target.files);
-                        this.setState({ importedFile: e.target.files[0] }, () => {
-                          console.log(this.state);
-                        });
-                      }}/>
-                  </Form.Group>
-                </div>
+        <div className='body-section home'>
+          <Form noValidate encType='multipart/form-data'>
+            <Row className='content-centered'>
+              <div className='upload-btn-wrapper'>
                 <Button
-                  variant='primary'
-                  onClick={() => this._handleSubmit(history)}>
-                  Import
+                  variant='info'
+                  className='btn-round'
+                  size='lg'>
+                  Upload a file
                 </Button>
-              </Form>
-            </div>
-          </Row>
+                <input type='file' name='myfile' />
+              </div>
+            </Row>
+            <Row className='content-centered'>
+              <Button
+                variant='primary'
+                size='lg'
+                className='btn-round'
+                onClick={() => this._handleSubmit(history)}>
+                Import
+              </Button>
+            </Row>
+          </Form>
         </div>
       )} />
 
