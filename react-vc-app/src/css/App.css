@@ -56,15 +56,23 @@
   position: relative;
   overflow: hidden;
   display: inline-block;
+  cursor: pointer;
 }
 
 .btn-round {
   border-radius: 20px;
   cursor: pointer;
+  font-family: 'Rubik Medium', sans-serif;
 }
-
-.with-pointer {
-  cursor: pointer;
+.btn-round.left {
+  margin-right: 0.5vw;
+}
+.btn-round.right {
+  margin-left: 0.5vw;
+}
+.filename-area {
+  font-family: 'Rubik', sans-serif;
+  text-align: left;
 }
 
 .home {
@@ -76,10 +84,24 @@
   width: auto;
 }
 
-.upload-btn-wrapper input[type=file] {
-  font-size: 100px;
-  position: absolute;
-  left: 0;
-  top: 0;
-  opacity: 0;
+.home-header {
+  background-color: #fff;
+  border-color: #000;
+  border-radius: 50px;
+  border-width: 10px;
+  width: 25em;
+  padding-top: 0.5vw;
+}
+
+.home-title {
+  font-size: 2em;
+  font-family: 'Rubik Medium', sans-serif;
+  color: #d73f09;
+}
+.home-subtitle {
+  font-size: 1.25em;
+  font-family: 'Rubik', sans-serif;
+}
+.default-file-upload {
+  display: none;
 }
