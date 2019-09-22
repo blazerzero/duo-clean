@@ -9,6 +9,7 @@ import {
 } from 'react-bootstrap';
 import { connect } from 'react-redux';
 import axios from 'axios';
+
 import '../css/App.css';
 
 class ImportButton extends Component {
@@ -76,7 +77,7 @@ class Import extends Component {
   render() {
     return (
       <Route render={({ history }) => (
-        <div className='home'>
+        <div className='site-page home'>
           <Row className='content-centered'>
             <div className='home-header'>
               <span className='home-title'>VarClean</span>
