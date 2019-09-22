@@ -64,12 +64,24 @@
   cursor: pointer;
   font-family: 'Rubik Medium', sans-serif;
 }
+
 .btn-round.left {
   margin-right: 0.5vw;
 }
 .btn-round.right {
   margin-left: 0.5vw;
 }
+
+.general-btn {
+  background-color: #d73f09;
+  border-color: #d73f09;
+}
+
+.general-btn:hover {
+  background-color: #c03000;
+  border-color: #c03000;
+}
+
 .filename-area {
   font-family: 'Rubik', sans-serif;
   text-align: left;
@@ -98,10 +110,26 @@
   font-family: 'Rubik Medium', sans-serif;
   color: #d73f09;
 }
+
 .home-subtitle {
   font-size: 1.25em;
   font-family: 'Rubik', sans-serif;
 }
+
+.bottom-content, .lower-bottom-content {
+  bottom: 0;
+  position: absolute;
+  margin-bottom: 25vh;
+  width: 100vw;
+}
+
+.upper-bottom-content {
+  bottom: 0;
+  position: absolute;
+  margin-bottom: 35vh;
+  width: 100vw;
+}
+
 .default-file-upload {
   display: none;
 }

@@ -49,7 +49,11 @@ class Import extends Component {
         .then(response => {
           console.log(response);
           console.log(JSON.parse(response.data));
-          var res = JSON.parse(response.data);
+          var data = JSON.parse(response.data);
+          history.push({
+            pathname: '/results/',
+            data: data
+          });
         })
         .catch(error => console.log(error));
     }
@@ -64,6 +68,11 @@ class Import extends Component {
     document.getElementById('importDiv').style.display = 'block';
   }
 
+  _handleBackClick() {
+    document.getElementById('welcomeDiv').style.display = 'block';
+    document.getElementById('importDiv').style.display = 'none';
+  }
+
   render() {
     return (
       <Route render={({ history }) => (
@@ -76,10 +85,11 @@ class Import extends Component {
           </Row>
           <div className='body-section'>
             <div id='welcomeDiv' style={{display: 'block'}}>
+              <div style={{height: '40vh'}}></div>
               <Row className='content-centered'>
                 <Button
-                  variant='info'
-                  className='btn-round left'
+                  variant='danger'
+                  className='btn-round left general-btn'
                   size='lg'>
                   LEARN MORE
                 </Button>
@@ -93,11 +103,21 @@ class Import extends Component {
               </Row>
             </div>
             <div id='importDiv' style={{display: 'none'}}>
+              <Row className='content-centered'>
+                <Button
+                  variant='danger'
+                  className='btn-round'
+                  size='lg'
+                  onClick={this._handleBackClick}>
+                  BACK
+                </Button>
+              </Row>
+              <div style={{height: '30vh'}}></div>
               <Form noValidate encType='multipart/form-data'>
                 <Row className='content-centered'>
                   <Button
-                    variant='info'
-                    className='btn-round left'
+                    variant='primary'
+                    className='btn-round left general-btn'
                     size='lg'
                     onClick={() => document.getElementById('fileUploaderHandler').click()}>
                     CHOOSE FILE
@@ -105,6 +125,7 @@ class Import extends Component {
                   <Button
                     variant='light'
                     className='btn-round right filename-area'
+                    style={{cursor: 'default'}}
                     size='lg'>
                     {this.state.importedFile !== null ? this.state.importedFile.name : 'No file chosen'}
                   </Button>
