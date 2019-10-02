@@ -5,6 +5,7 @@ from random import sample
 from pprint import pprint
 import json
 import os
+import subprocess
 import helpers
 import time
 
@@ -46,10 +47,10 @@ class Import(Resource):
         #p.wait()
 
         # DFD runner
-        os.system('./DFDrunner ' + newDir + 'data.csv ' + newDir + 'fdnum.txt');
+        subprocess.call('./DFDrunner ' + newDir + 'data.csv ' + newDir + 'fdnum.txt');
 
         # TANE runner
-        #os.system('./TANErunner ' + newDir + 'data.csv ' + newDir + 'fdnum.txt');
+        #subprocess.call('./TANErunner ' + newDir + 'data.csv ' + newDir + 'fdnum.txt');
 
         #tane.runTANE('../data.csv', 'r')
         #print('done finding FDs')

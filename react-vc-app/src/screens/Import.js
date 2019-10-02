@@ -5,7 +5,10 @@ import {
   Button,
   Col,
   Form,
+  Modal,
   Row,
+  Tab,
+  Tabs,
 } from 'react-bootstrap';
 import { connect } from 'react-redux';
 import axios from 'axios';
@@ -33,6 +36,7 @@ class ImportButton extends Component {
 class Import extends Component {
   state = {
     importedFile: null,
+    showModal: false,
   }
 
   async _handleSubmit(history) {
@@ -74,7 +78,11 @@ class Import extends Component {
     document.getElementById('importDiv').style.display = 'none';
   }
 
+  _handleModalShow = () => this.setState({ showModal: true });
+  _handleModalClose = () => this.setState({ showModal: false });
+
   render() {
+
     return (
       <Route render={({ history }) => (
         <div className='site-page home'>
@@ -91,7 +99,8 @@ class Import extends Component {
                 <Button
                   variant='danger'
                   className='btn-round left general-btn'
-                  size='lg'>
+                  size='lg'
+                  onClick={this._handleModalShow}>
                   LEARN MORE
                 </Button>
                 <Button
@@ -159,6 +168,22 @@ class Import extends Component {
               </Form>
             </div>
           </div>
+          <Modal size='lg' show={this.state.showModal} onHide={this._handleModalClose}>
+            <Modal.Header closeButton>
+              <Modal.Title style={{ color: '#d73f09' }}>VarClean</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+              <Tabs defaultActiveKey="whatIs" id="uncontrolled-tab-example">
+                <Tab eventKey="whatIs" title="What is VarClean?" className="modalText">
+                  VarClean is a collaborative and personalized data cleaning platform. Unlike many existing data cleaning applications, VarClean learns about the true context and meaning of your dataset by leveraging your feedback to its suggestions while determining which rules to apply to the dataset. This allows VarClean to help guide you in the right direction regarding how to most effectively clean your dataset.
+                </Tab>
+                <Tab eventKey="howDoesWork" title="How does VarClean work?" className="modalText">
+                  VarClean cleans your dataset using an interactive two-step process: optimal rule discovery and repair configuration. First, VarClean runs DFD, a functional dependency discovery algorithm, to discover a complete list of minimal functional dependencies that could potentially be applied to the dataset. It then leverages its initial knowledge of how well the dependencies fit the dataset as-is to suggest dependencies. Then, you can respond with which suggestions match your understanding of the context of the dataset, create a new rule, or modify one of the suggestions. VarClean then recalculates the fit of each dependency by analysing your feedback, and it generates a new list of suggestions. This process repeats until you have found the set of rules that you believe best fit the dataset.
+                  Once you have your list of optimal rules, VarClean analyzes your picks and determines the best order in which to apply the rules to the dataset. You can follow its suggestion or build your own order of operations. Lastly, VarClean cleans the dataset based on the defined order of operations.
+                </Tab>
+              </Tabs>
+            </Modal.Body>
+          </Modal>
         </div>
       )} />
 

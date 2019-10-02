@@ -36,6 +36,14 @@
   padding: 1vw;
 }
 
+.modalText {
+  text-indent: 50px;
+  padding-bottom: 1em;
+  padding-left: 1em;
+  padding-right: 1em;
+  padding-top: 2em;
+}
+
 .content-centered {
   text-align: center;
   justify-content: center;
