@@ -38,7 +38,11 @@ class Import(Resource):
         data = importedFile.read().decode('utf-8-sig').split('\n')
         header = data[0].split(',')
         for line in [l for l in data if len(l) > 0]:
-            f.write(line + '\n')
+            trimmedLineList = [tL.strip() for tL in line.split(',')]
+            trimmedLine = ','.join(trimmedLineList)
+            #print(trimmedLineList)
+            #print(trimmedLine)
+            f.write(trimmedLine + '\n')
             #f.write('\n')
         f.close()
         #f = open(newDir+'fdnum.txt', 'w')
@@ -47,7 +51,7 @@ class Import(Resource):
         #p.wait()
 
         # DFD runner
-        subprocess.call('./DFDrunner ' + newDir + 'data.csv ' + newDir + 'fdnum.txt');
+        os.system('./DFDrunner ' + newDir + 'data.csv ' + newDir + 'fdnum.txt');
 
         # TANE runner
         #subprocess.call('./TANErunner ' + newDir + 'data.csv ' + newDir + 'fdnum.txt');
