@@ -50,6 +50,7 @@
   padding: 1vw;
 }
 .content-centered.title { font-weight: bold; }
+.content-centered.body-content { padding: 0.1vw; }
 
 .top-level {
   padding: 1vw;
@@ -109,15 +110,41 @@
 
 .home-header {
   background-color: #fff;
-  border-color: #000;
   border-radius: 50px;
-  border-width: 10px;
   width: 25em;
   padding-top: 0.5vw;
 }
 
+.results-header {
+  background-color: #fff;
+  border-color: #000;
+  border-radius: 50px;
+  border-width: 2px;
+  border-style: solid;
+  width: 20em;
+}
+
 .home-title {
   font-size: 2em;
+  font-family: 'Rubik Medium', sans-serif;
+  color: #d73f09;
+}
+
+.box-blur { box-shadow: 0px 5px 10px grey; }
+
+.results-title {
+  font-size: 2em;
+  font-family: 'Rubik', sans-serif;
+  color: #d73f09;
+}
+
+.suggested-dep-title {
+  font-size: 1.5em;
+  font-family: 'Rubik', sans-serif;
+}
+
+.sub-suggested-dep-title {
+  font-size: 1em;
   font-family: 'Rubik Medium', sans-serif;
   color: #d73f09;
 }

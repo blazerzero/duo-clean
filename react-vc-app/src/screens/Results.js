@@ -46,7 +46,22 @@ class Results extends Component {
     return (
       <Route render={({ history }) => (
         <div className='site-page'>
-
+          <Row className='content-centered'>
+            <div className='results-header box-blur'>
+              <span className='results-title'>VarClean</span>
+            </div>
+          </Row>
+          <Row className='content-centered'>
+            <span className='suggested-dep-title'><u>Suggested Dependencies</u></span>
+          </Row>
+          <Row className='content-centered body-content'>
+            <span className='sub-suggested-dep-title'>MARK THE RULES THAT MATCH YOUR NEEDS</span>
+          </Row>
+          <Row className='content-centered body-content'>
+            <Col><hr /></Col>
+            <span className='sub-suggested-dep-title'>OR</span>
+            <Col><hr /></Col>
+          </Row>
         </div>
       )} />
     );

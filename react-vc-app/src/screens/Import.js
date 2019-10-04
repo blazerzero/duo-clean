@@ -87,7 +87,7 @@ class Import extends Component {
       <Route render={({ history }) => (
         <div className='site-page home'>
           <Row className='content-centered'>
-            <div className='home-header'>
+            <div className='home-header box-blur'>
               <span className='home-title'>VarClean</span>
               <p className='home-subtitle'>Intelligently clean your data.</p>
             </div>
@@ -98,14 +98,14 @@ class Import extends Component {
               <Row className='content-centered'>
                 <Button
                   variant='danger'
-                  className='btn-round left general-btn'
+                  className='btn-round left general-btn box-blur'
                   size='lg'
                   onClick={this._handleModalShow}>
                   LEARN MORE
                 </Button>
                 <Button
                   variant='primary'
-                  className='btn-round right'
+                  className='btn-round right box-blur'
                   size='lg'
                   onClick={this._handleGetStartedClick}>
                   GET STARTED
@@ -116,7 +116,7 @@ class Import extends Component {
               <Row className='content-centered'>
                 <Button
                   variant='danger'
-                  className='btn-round'
+                  className='btn-round box-blur'
                   size='lg'
                   onClick={this._handleBackClick}>
                   BACK
@@ -127,7 +127,7 @@ class Import extends Component {
                 <Row className='content-centered'>
                   <Button
                     variant='primary'
-                    className='btn-round left general-btn'
+                    className='btn-round left general-btn box-blur'
                     size='lg'
                     onClick={() => document.getElementById('fileUploaderHandler').click()}>
                     CHOOSE FILE
@@ -143,7 +143,7 @@ class Import extends Component {
                     type='file'
                     placeholder='Choose a file'
                     accept='.csv'
-                    className='default-file-upload'
+                    className='default-file-upload box-blur'
                     id='fileUploaderHandler'
                     onChange={(e) => {
                       console.log(e.target.files);
@@ -157,7 +157,7 @@ class Import extends Component {
                   <Button
                     variant='primary'
                     size='lg'
-                    className='btn-round'
+                    className='btn-round box-blur'
                     style={{cursor: 'default'}}
                     id='findRulesBtn'
                     disabled={this.state.importedFile === null}
