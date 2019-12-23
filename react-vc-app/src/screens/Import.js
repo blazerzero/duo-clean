@@ -53,11 +53,11 @@ class Import extends Component {
       axios.post('http://localhost:5000/import', formData, config)
         .then(response => {
           console.log(response);
-          console.log(JSON.parse(response.data));
-          var data = JSON.parse(response.data);
+          var { header, project_id } = JSON.parse(response.data);
           history.push({
             pathname: '/results/',
-            data: data
+            header: header,
+            project_id: project_id
           });
         })
         .catch(error => console.log(error));
@@ -88,7 +88,7 @@ class Import extends Component {
         <div className='site-page home'>
           <Row className='content-centered'>
             <div className='home-header box-blur'>
-              <span className='home-title'>VarClean</span>
+              <span className='home-title'>CharmClean</span>
               <p className='home-subtitle'>Intelligently clean your data.</p>
             </div>
           </Row>
@@ -162,7 +162,7 @@ class Import extends Component {
                     id='findRulesBtn'
                     disabled={this.state.importedFile === null}
                     onClick={() => this._handleSubmit(history)}>
-                    FIND RULES
+                    START CLEANING
                   </Button>
                 </Row>
               </Form>

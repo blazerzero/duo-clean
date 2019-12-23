@@ -17,15 +17,13 @@ import redo from '../images/corner-up-right.svg';
 class Results extends Component {
 
   state = {
-    data: [],
-    selected: [],
+    dirtyData: null,
+    cleanData: null,
+    header: null,
+    project_id: 0,
   }
 
-  async _handleSubmitAndRegenerate() {
-
-  }
-
-  async _handleSubmitAndClean() {
+  async _handleSubmit() {
 
   }
 
@@ -33,9 +31,48 @@ class Results extends Component {
 
   }
 
+  async _getSample(project_id) {
+    const formData = new FormData();
+    formData.append('project_id', project_id);
+    console.log(formData.get('project_id'));
+    axios.post('http://localhost:5000/sample', formData)
+      .then(response => {
+        console.log(response);
+        console.log(JSON.parse(response.sample));
+        var dirtyData = JSON.parse(response.sample);
+        var cleanData = JSON.parse(response.sample);
+      })
+      .catch(error => console.log(error));
+  }
+
+  async _renderSample() {
+    var sample = [];
+    Object.keys(this.state.cleanData).forEach((key) => {
+      sample.push(this.state.cleanData[key]);
+    });
+    return (
+      <Table bordered responsive>
+        <thead>
+          <tr>
+            {this.state.header.map(item => <th>{item}</th>)}
+          </tr>
+        </thead>
+        <tbody>
+          {this.state.cleanData.map(row => (
+            <tr>
+              {row.map(item => <td key={item.id}>{item.value}</td>)}
+            </tr>
+          ))}
+        </tbody>
+      </Table>
+    )
+  }
+
   componentDidMount() {
-    const { data } = this.props.location;
-    this.setState({ data });
+    const { dataURL } = this.props.location;
+    this.setState({ dataURL }, () => {
+      var dirtyData = this._getSample(this.state.project_id);
+    });
   }
 
   constructor(props) {
@@ -48,20 +85,12 @@ class Results extends Component {
         <div className='site-page'>
           <Row className='content-centered'>
             <div className='results-header box-blur'>
-              <span className='results-title'>VarClean</span>
+              <span className='results-title'>CharmClean</span>
             </div>
           </Row>
-          <Row className='content-centered'>
-            <span className='suggested-dep-title'><u>Suggested Dependencies</u></span>
-          </Row>
-          <Row className='content-centered body-content'>
-            <span className='sub-suggested-dep-title'>MARK THE RULES THAT MATCH YOUR NEEDS</span>
-          </Row>
-          <Row className='content-centered body-content'>
-            <Col><hr /></Col>
-            <span className='sub-suggested-dep-title'>OR</span>
-            <Col><hr /></Col>
-          </Row>
+          <div>
+            { this.state.cleanData != null && this._renderSample() }
+          </div>
         </div>
       )} />
     );

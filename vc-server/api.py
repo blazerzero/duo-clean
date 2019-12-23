@@ -18,16 +18,17 @@ class Import(Resource):
         return {'test': 'success!'}
 
     def post(self):
+        newProjectID = 0
         existingProjects = [('0x' + d) for d in os.listdir('./store/') if os.path.isdir(os.path.join('./store/', d))]
         newDir = ''
         if (len(existingProjects) == 0):
-            newDir = './store/00000001/'
+            newProjectID = "{:08x}".format(1)
         else:
-            projectHexes = [int(d, 0) for d in existingProjects]
-            print(projectHexes)
-            newProjectHex = "{:08x}".format(max(projectHexes) + 1)
-            print(newProjectHex)
-            newDir = './store/' + newProjectHex + '/'
+            projectIDList = [int(d, 0) for d in existingProjects]
+            print(projectIDList)
+            newProjectID = "{:08x}".format(max(projectIDList) + 1)
+            print(newProjectID)
+        newDir = './store/' + newProjectID + '/'
         try:
             os.mkdir(newDir)
         except OSError:
@@ -51,56 +52,11 @@ class Import(Resource):
         #p.wait()
 
         # DFD runner
-        os.system('./DFDrunner ' + newDir + 'data.csv ' + newDir + 'fdnum.txt');
+        # os.system('./DFDrunner ' + newDir + 'data.csv ' + newDir + 'fdnum.txt');
 
-        # TANE runner
-        #subprocess.call('./TANErunner ' + newDir + 'data.csv ' + newDir + 'fdnum.txt');
-
-        #tane.runTANE('../data.csv', 'r')
-        #print('done finding FDs')
-        resF = open(newDir+'fdnum.txt', 'r')
-        res = resF.read()
-        resLines = res.split('\n')
-        resF.close()
-        fdFile = open(newDir+'fdlist.csv', 'a')
-        convertedRes = list()
-        for row in [r for r in resLines if len(r) > 0]:
-            #print(row)
-            lhsRow = filter(lambda a: a != ',', row.split(' -> ')[0].split(' '))
-            #print(lhsRow)
-            #print(row.split(' -> ')[1])
-            rhsRow = row.split(' -> ')[1]
-            #time.sleep(3)
-            lhs = list()
-            for colNum in lhsRow:
-                lhs.append(header[int(colNum)-1])
-            #key = tuple(lhs)
-            rhs = header[int(rhsRow)-1]
-            convertedRes.append((lhs, rhs))
-            l = '('
-            for e in [atr for atr in lhs if atr != ',']:
-                l += e
-                l += ' '
-            l = l[:-1]
-            l += '), '
-            l += rhs
-            fdFile.write(l + '\n')
-        fdFile.close()
-        #print(header)
-            #convertedRes.append((lhs, rhs))
-        #dataJSON = request.data.decode('utf8').replace("'", '"')
-        #data = json.loads(dataJSON)
-        #print(data['formData'])
-        #importedFile = request.form['file']
-        #print('got file')
-        #header, csv_data, relationships, maxOccurence = helpers.map_csv(importedFile)
-        #print('mapped values')
-
-        sent_data = sample(convertedRes, 10)
-        #print('got sample')
         returned_data = {
             'header': header,
-            'data': sent_data,
+            'project_id': newProjectID,
         }
         #response = {'test': 'success'}
         response = json.dumps(returned_data)
