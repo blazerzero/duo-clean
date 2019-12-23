@@ -41,24 +41,13 @@ class Import(Resource):
         for line in [l for l in data if len(l) > 0]:
             trimmedLineList = [tL.strip() for tL in line.split(',')]
             trimmedLine = ','.join(trimmedLineList)
-            #print(trimmedLineList)
-            #print(trimmedLine)
             f.write(trimmedLine + '\n')
-            #f.write('\n')
         f.close()
-        #f = open(newDir+'fdnum.txt', 'w')
-        f.close()
-        #p = subprocess.Popen(['./DFDrunner', newDir+'data.csv', newDir+'fdnum.txt'])
-        #p.wait()
-
-        # DFD runner
-        # os.system('./DFDrunner ' + newDir + 'data.csv ' + newDir + 'fdnum.txt');
 
         returned_data = {
             'header': header,
             'project_id': newProjectID,
         }
-        #response = {'test': 'success'}
         response = json.dumps(returned_data)
         pprint(response)
         return response, 201
