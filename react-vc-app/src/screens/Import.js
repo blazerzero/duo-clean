@@ -53,7 +53,8 @@ class Import extends Component {
       axios.post('http://localhost:5000/import', formData, config)
         .then(response => {
           console.log(response);
-          var { header, project_id } = JSON.parse(response.data);
+          var { header, project_id, msg } = JSON.parse(response.data);
+          console.log(msg);
           history.push({
             pathname: '/results/',
             header: header,

@@ -31,25 +31,35 @@ class Results extends Component {
 
   }
 
-  async _getSample(project_id) {
+  async _getSample(project_id, sample_size) {
     const formData = new FormData();
     formData.append('project_id', project_id);
+    formData.append('sample_size', sample_size);
     console.log(formData.get('project_id'));
+    var self = this;
     axios.post('http://localhost:5000/sample', formData)
-      .then(response => {
-        console.log(response);
-        console.log(JSON.parse(response.sample));
-        var dirtyData = JSON.parse(response.sample);
-        var cleanData = JSON.parse(response.sample);
+      .then((response) => {
+        console.log(response.data);
+        var res = JSON.parse(response.data);
+        var dirtyData = res.sample;
+        var cleanData = res.sample;
+        self.setState({ dirtyData, cleanData });
       })
       .catch(error => console.log(error));
   }
 
   async _renderSample() {
+    console.log(this.state.cleanData);
     var sample = [];
-    Object.keys(this.state.cleanData).forEach((key) => {
+    //console.log(Object.keys(this.state.cleanData));
+    //console.log(Object.keys(this.state.cleanData[0]));
+    /*Object.keys(this.state.cleanData).forEach((key) => {
       sample.push(this.state.cleanData[key]);
-    });
+    });*/
+    for (var i in this.state.cleanData) {
+      sample.push([i, this.state.cleanData[i]]);
+    }
+    console.log(sample);
     return (
       <Table bordered responsive>
         <thead>
@@ -58,7 +68,7 @@ class Results extends Component {
           </tr>
         </thead>
         <tbody>
-          {this.state.cleanData.map(row => (
+          {sample.map(row => (
             <tr>
               {row.map(item => <td key={item.id}>{item.value}</td>)}
             </tr>
@@ -69,9 +79,9 @@ class Results extends Component {
   }
 
   componentDidMount() {
-    const { dataURL } = this.props.location;
-    this.setState({ dataURL }, () => {
-      var dirtyData = this._getSample(this.state.project_id);
+    const { header, project_id } = this.props.location;
+    this.setState({ header, project_id }, () => {
+      this._getSample(this.state.project_id, 10);
     });
   }
 

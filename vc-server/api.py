@@ -8,6 +8,7 @@ import os
 import subprocess
 import helpers
 import time
+import pandas as pd
 
 app = Flask(__name__)
 CORS(app)
@@ -15,7 +16,7 @@ api = Api(app)
 
 class Import(Resource):
     def get(self):
-        return {'test': 'success!'}
+        return {'msg': '[SUCCESS] Import test success!'}
 
     def post(self):
         newProjectID = 0
@@ -32,8 +33,8 @@ class Import(Resource):
         try:
             os.mkdir(newDir)
         except OSError:
-            print ('Unable to create a new directory for the project.')
-            return { 'error': 'Unable to create a new directory for the project.' }
+            print ('[ERROR] Unable to create a new directory for the project.')
+            return {'msg': '[ERROR] Unable to create a new directory for the project.'}
         importedFile = request.files['file']
         f = open(newDir+'data.csv', 'w')
         data = importedFile.read().decode('utf-8-sig').split('\n')
@@ -47,12 +48,34 @@ class Import(Resource):
         returned_data = {
             'header': header,
             'project_id': newProjectID,
+            'msg': '[SUCCESS] Successfully created new project with project ID = ' + newProjectID + '.'
+        }
+        response = json.dumps(returned_data)
+        pprint(response)
+        return response, 201
+
+class Sample(Resource):
+    def get(self):
+        return {'msg': '[SUCCESS] Sample test success!'}
+
+    def post(self):
+        print(request.form)
+        print(request.form.get('project_id'))
+        project_id = request.form.get('project_id')
+        sample_size = int(request.form.get('sample_size'))
+        data = pd.read_csv('./store/' + project_id + '/data.csv')
+        sample = data.sample(sample_size).to_json(orient='index')   # SAMPLING FUNCTION GOES HERE; FOR NOW, BASIC SAMPLER
+
+        returned_data = {
+            'sample': sample,
+            'msg': '[SUCCESS] Successfully retrieved sample.'
         }
         response = json.dumps(returned_data)
         pprint(response)
         return response, 201
 
 api.add_resource(Import, '/import')
+api.add_resource(Sample, '/sample')
 
 if __name__ == '__main__':
     app.run(debug=True)
