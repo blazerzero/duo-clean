@@ -2,5 +2,9 @@
 vc-venv/
 vc-app-old/
 vc-server/TANE/boost_1_71_0
+vc-server/xplode-master/CMake*
+vc-server/xplode-master/cmake*
+vc-server/cfddiscovery-master/CMake*
+vc-server/cfddiscovery-master/cmake*
 venv/
 vc-server/store/
