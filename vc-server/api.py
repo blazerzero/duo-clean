@@ -88,9 +88,11 @@ class Clean(Resource):
         print(request.form)
         print(request.form.get('project_id'))
         print(request.form.get('data'))
+        print(request.form.get('sample_size'))
 
         project_id = request.form.get('project_id')
         s_in = json.load(request.form.get('data'))
+        sample_size = int(request.form.get('sample_size'))
 
         existing_iters = [('0x' + f) for f in os.listdir('./store/' + project_id + '/') if os.path.isfile(os.path.join('./store/' + project_id + '/', f))]
         iteration_list = [int(d, 0) for d in existing_iters]
@@ -104,16 +106,19 @@ class Clean(Resource):
         current_iter = "{:08x}".format(int(current_iter) + 1)
         d_rep.to_csv('./store/' + project_id + '/' + current_iter + '/data.csv', encoding='utf-8', index=False)
         top_cfds = helpers.discoverCFDs(d_dirty, d_rep, project_id)
-        discovered_cfds = helpers.addNewCfdsToList(top_cfds, project_id)
+        #discovered_cfds = helpers.addNewCfdsToList(top_cfds, project_id)
+        helpers.addNewCfdsToList(top_cfds, project_id)
 
-        d_rep = helpers.buildCover(d_rep, discovered_cfds)
-        cfd = helpers.pickCfd(top_cfds)
+        #d_rep = helpers.buildCover(d_rep, discovered_cfds)
+        d_rep = helpers.buildCover(d_rep, top_cfds)
+
+        cfd = helpers.pickCfd(top_cfds, 1)      #TODO
         d_rep = helpers.applyCfd(d_rep, cfd)
 
         d_rep.to_csv('./store/' + project_id + '/' + current_iter + '/data.csv', encoding='utf-8', index=False)
         np.savetxt('./store/' + project_id + '/' + current_iter + '/top_cfds.txt', top_cfds)
 
-        s_out = helpers.buildSample(d_rep).to_json(orient='index')
+        s_out = helpers.buildSample(d_rep, sample_size).to_json(orient='index')     #TODO
 
         returned_data = {
             'sample': s_out,

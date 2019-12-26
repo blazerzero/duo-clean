@@ -638,9 +638,8 @@ CFDList XPlode::postExplain(int minsup, double minconf, bool variable) {
     //std::vector<std::tuple<CFD,auto> > globalExplTuples;
     for (std::vector<CFD>::iterator it = globalExplanations.begin(); it != globalExplanations.end(); ++it) {
       CFD c = *it;
-      std::cout << score(c.first, c.second, violations.at(c)) << "; ";
+      std::cout << score(c.first, c.second, violations.at(c)) << std::endl;
     }
-    std::cout << std::endl;
     return globalExplanations;
 }
 

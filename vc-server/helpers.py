@@ -20,34 +20,72 @@ def discoverCFDs(project_id, current_iter):
     prev_iter = current_iter - 1
     dirty_fp = './store/' + project_id + '/' + prev_iter + '/data.csv'
     clean_fp = './store/' + project_id + '/' + current_iter + '/data.csv'
+
     process = sp.Popen(['./xplode-master/CTane', dirty_fp, clean_fp, '0.25', '2'], stdout=sp.PIPE).wait()
     print(process.communicate()[0])
     print(process.returncode)
-    top_cfds = np.array(['[ERROR] CFD DISCOVERY FAIL'])
     if process.returncode == 0:
-        top_cfds = np.array(process.communicate()[0].split('\n'))
-    return top_cfds
+        scores = np.array(process.communicate()[0].split('\n')[0])
+        top_cfds = np.array(process.communicate()[0].split('\n')[1:])
+        return np.array([{cfd: c.cfd, score: c.score} for c in np.nditer(top_cfds)])
+    else:
+        return '[ERROR] CFD DISCOVERY FAIL'
 
 def addNewCfdsToList(top_cfds, project_id):
-    discovered_cfds = np.loadtxt('./store/' + project_id + '/discovered_cfds.txt')
-    f = open('./store/' + project_id + '/discovered_cfds.txt', a)
-    for cfd in np.nditer(top_cfds):
-        if cfd not in discovered_cfds:
-            f.write(cfd + '\n')
-            discovered_cfds = np.append(discovered_cfds, cfd)
-    f.close()
-    return discovered_cfds
+    discovered_c_s = np.loadtxt('./store/' + project_id + '/discovered_cfds.txt')
+    discovered_c_s = np.array([json.loads(s) for s in np.nditer(discovered_c_s)])
+    discovered_cfds = [c.cfd for c in np.nditer(discovered_c_s)]
 
-def buildCover(d_rep, discovered_cfds):
-    return
+    for c in np.nditer(top_cfds):
+        if c.cfd not in discovered_cfds:
+            discovered_c_s = np.append(discovered_c_s, c)
+        else:
+            idx = np.where(discovered_c_s.cfd == c.cfd)
+            discovered_c_s[idx].score = c.score     # INSERT ITERATIVE SCORE UPDATING FUNCTION HERE
 
-def pickCfd(top_cfds):
+    np.savetxt('./store/' + project_id + '/discovered_cfds.txt', discovered_c_s)
+    #return discovered_c_s
+
+def buildCover(d_rep, top_cfds):
+    cover = np.empty(len(d_rep.index))
+    just_cfds = np.array([c.cfd for c in np.nditer(top_cfds)])
+    for idx, row in d_rep.iterrows():
+        relevant_cfds = []
+        for cfd in np.nditer(just_cfds):
+            lhs = np.array(cfd.split(' => ')[0][1:-1].split(', '))
+            rhs = cfd.split(' => ')[1]
+            applies = True
+            for lh in lhs:
+                if '=' in lh:
+                    lh = np.array(lh.split('='))
+                    if row[lh[0]] != lh[1]:
+                        applies = False
+                        break
+            if applies:
+                relevant_cfds.append(cfd)
+        relevant_cfds = np.array(relevant_cfds)
+        cover[idx] = relevant_cfds
+
+    d_rep['cover'] = cover
+    return d_rep
+
+# TODO
+def pickCfd(top_cfds, num_cfds):
     return
 
 def applyCfd(d_rep, cfd):
-    return
+    lhs = np.array(cfd.split(' => ')[0][1:-1].split(', '))
+    rhs = cfd.split(' => ')[1]
+    for idx, row in d_rep.iterrows():
+        if cfd in row['cover']:
+            if '=' in rhs:
+                rh = np.array(rhs.split('='))
+                row[rh[0]] = rh[1]
 
-def buildSample(d_rep):
+    return d_rep
+
+# TODO
+def buildSample(d_rep, sample_size):
     return
 
 '''def map_csv(csv_file):
