@@ -443,7 +443,7 @@ std::vector<PartitionTidList> XPlode::tidListIntersections(const PartitionTidLis
     return res;
 }
 
-CFD XPlode::postExplain(int minsup, double minconf, bool variable) {
+CFDList XPlode::postExplain(int minsup, double minconf, bool variable) {
     fDb.toFront(fRepairs);
     fDirty.toFront(fRepairs);
 
@@ -634,7 +634,14 @@ CFD XPlode::postExplain(int minsup, double minconf, bool variable) {
                   auto bscore = score(b.first, b.second, violations.at(b));
                   return (ascore < bscore) || (ascore == bscore && a.second < b.second);
               });
-    return globalExplanations.back();
+    //return globalExplanations.back();
+    //std::vector<std::tuple<CFD,auto> > globalExplTuples;
+    for (std::vector<CFD>::iterator it = globalExplanations.begin(); it != globalExplanations.end(); ++it) {
+      CFD c = *it;
+      std::cout << score(c.first, c.second, violations.at(c)) << "; ";
+    }
+    std::cout << std::endl;
+    return globalExplanations;
 }
 
 std::map<Itemset, int> XPlode::convertCFD(const Itemset &lhs, int rhs, const PartitionTidList &tids) {

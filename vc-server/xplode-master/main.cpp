@@ -20,9 +20,9 @@ int main(int argc, char *argv[]) {
         double epsilon = atof(argv[3]);
         int delta = atoi(argv[4]);
         XPlode xplode(dirtyDb, cleanDb);
-        CFD expl = xplode.postExplain(delta, 1.0-epsilon);
-        std::cout << "Best Explanation: " << std::endl;
-        Output::printCFD(expl, cleanDb);
+        CFDList explList = xplode.postExplain(delta, 1.0-epsilon);
+        //std::cout << "Best Explanation: " << std::endl;
+        Output::printCFDList(explList, cleanDb);
     }
     return 0;
 }

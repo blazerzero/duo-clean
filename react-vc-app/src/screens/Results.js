@@ -17,8 +17,8 @@ import redo from '../images/corner-up-right.svg';
 class Results extends Component {
 
   state = {
-    dirtyData: null,
-    cleanData: null,
+    dirtyData: [],
+    cleanData: [],
     header: null,
     project_id: 0,
   }
@@ -31,19 +31,26 @@ class Results extends Component {
 
   }
 
+  async _processSample(response) {
+    console.log(response.msg);
+    var dirtyData = JSON.parse(response.sample);
+    var cleanData = JSON.parse(response.sample);
+    this.setState({ dirtyData, cleanData });
+  }
+
   async _getSample(project_id, sample_size) {
     const formData = new FormData();
     formData.append('project_id', project_id);
     formData.append('sample_size', sample_size);
     console.log(formData.get('project_id'));
-    var self = this;
     axios.post('http://localhost:5000/sample', formData)
       .then((response) => {
-        console.log(response.data);
+        console.log(response.msg);
         var res = JSON.parse(response.data);
-        var dirtyData = res.sample;
-        var cleanData = res.sample;
-        self.setState({ dirtyData, cleanData });
+        var dirtyData = JSON.parse(res.sample);
+        var cleanData = JSON.parse(res.sample);
+        console.log(cleanData);
+        this.setState({ dirtyData, cleanData }, () => { console.log(this.state.cleanData) });
       })
       .catch(error => console.log(error));
   }
@@ -53,13 +60,18 @@ class Results extends Component {
     var sample = [];
     //console.log(Object.keys(this.state.cleanData));
     //console.log(Object.keys(this.state.cleanData[0]));
-    /*Object.keys(this.state.cleanData).forEach((key) => {
-      sample.push(this.state.cleanData[key]);
-    });*/
-    for (var i in this.state.cleanData) {
-      sample.push([i, this.state.cleanData[i]]);
+    Object.keys(this.state.cleanData).forEach((key) => {
+      sample.push({key, value: this.state.cleanData[key]});
+    });
+    for (var i = 0; i < sample.length; i++) {
+      var temp = [];
+      Object.keys(sample[i]).forEach((key) => {
+        temp.push({key, value: sample[i][key]});
+      });
+      sample[i].value = temp;
     }
     console.log(sample);
+    console.log(sample[0])
     return (
       <Table bordered responsive>
         <thead>
@@ -70,12 +82,16 @@ class Results extends Component {
         <tbody>
           {sample.map(row => (
             <tr>
-              {row.map(item => <td key={item.id}>{item.value}</td>)}
+              {row.map(item => <td key={item.key}>{item.value}</td>)}
             </tr>
           ))}
         </tbody>
       </Table>
     )
+  }
+
+  async _isPromise(obj) {
+    return obj instanceof Promise;
   }
 
   componentDidMount() {
@@ -99,7 +115,7 @@ class Results extends Component {
             </div>
           </Row>
           <div>
-            { this.state.cleanData != null && this._renderSample() }
+            { Object.keys(this.state.cleanData).length > 0 && this._isPromise(this.state.cleanData) !== true && this._getSample() }
           </div>
         </div>
       )} />
