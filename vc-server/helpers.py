@@ -70,8 +70,15 @@ def buildCover(d_rep, top_cfds):
     return d_rep
 
 # TODO
-def pickCfd(top_cfds, num_cfds):
-    return
+def pickCfds(top_cfds, num_cfds):
+    picked_cfds = np.empty(num_cfds)
+    # pick CFDs
+    return picked_cfds
+
+def applyCfdList(d_rep, cfdList):
+    for cfd in np.nditer(cfdList):
+        d_rep = applyCfd(d_rep, cfd)
+    return d_rep
 
 def applyCfd(d_rep, cfd):
     lhs = np.array(cfd.split(' => ')[0][1:-1].split(', '))

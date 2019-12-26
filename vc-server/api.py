@@ -112,8 +112,8 @@ class Clean(Resource):
         #d_rep = helpers.buildCover(d_rep, discovered_cfds)
         d_rep = helpers.buildCover(d_rep, top_cfds)
 
-        cfd = helpers.pickCfd(top_cfds, 1)      #TODO
-        d_rep = helpers.applyCfd(d_rep, cfd)
+        picked_cfd_list = helpers.pickCfds(top_cfds, 1)      #TODO
+        d_rep = helpers.applyCfdList(d_rep, picked_cfd_list)
 
         d_rep.to_csv('./store/' + project_id + '/' + current_iter + '/data.csv', encoding='utf-8', index=False)
         np.savetxt('./store/' + project_id + '/' + current_iter + '/top_cfds.txt', top_cfds)
