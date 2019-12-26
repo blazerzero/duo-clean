@@ -70,10 +70,10 @@ class Sample(Resource):
         current_iter = "{:08x}".format(max(iteration_list))
         print(current_iter)
         data = pd.read_csv('./store/' + project_id + '/' + current_iter + '/data.csv')
-        sample = data.sample(sample_size).to_json(orient='index')   # SAMPLING FUNCTION GOES HERE; FOR NOW, BASIC SAMPLER
+        s_out = helpers.buildSample(data).to_json(orient='index')   # SAMPLING FUNCTION GOES HERE; FOR NOW, BASIC SAMPLER
 
         returned_data = {
-            'sample': sample,
+            'sample': s_out,
             'msg': '[SUCCESS] Successfully retrieved sample.'
         }
         response = json.dumps(returned_data)
@@ -113,7 +113,7 @@ class Clean(Resource):
         d_rep.to_csv('./store/' + project_id + '/' + current_iter + '/data.csv', encoding='utf-8', index=False)
         np.savetxt('./store/' + project_id + '/' + current_iter + '/top_cfds.txt', top_cfds)
 
-        s_out = helpers.buildSample(d_rep)
+        s_out = helpers.buildSample(d_rep).to_json(orient='index')
 
         returned_data = {
             'sample': s_out,
