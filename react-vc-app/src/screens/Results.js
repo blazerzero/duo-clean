@@ -7,7 +7,6 @@ import {
   Table,
 } from 'react-bootstrap';
 import { BrowserRouter as Router, Route, Link } from 'react-router-dom';
-import { connect } from 'react-redux';
 import axios from 'axios';
 
 import '../css/App.css';
@@ -19,9 +18,10 @@ class Results extends Component {
   state = {
     dirtyData: [],
     cleanData: [],
-    header: null,
+    typeMap: [],
+    header: [],
     project_id: 0,
-  }
+  };
 
   async _handleSubmit() {
 
@@ -31,78 +31,55 @@ class Results extends Component {
 
   }
 
-  async _processSample(response) {
-    console.log(response.msg);
-    var dirtyData = JSON.parse(response.sample);
-    var cleanData = JSON.parse(response.sample);
-    this.setState({ dirtyData, cleanData });
+  async _buildTypeMap(data) {
+    var typeMap = {};
+    var rows = Object.keys(data);
+    var cols = this.state.header;
+    for (var i in rows) {
+      var tup = {};
+      for (var j in cols) {
+        tup[rows[j]] = typeof(data[rows[i]][cols[j]])
+      }
+      typeMap[i] = tup;
+    }
+    console.log(typeMap);
+    return typeMap;
   }
 
-  async _getSample(project_id, sample_size) {
+  async _getSampleData(project_id, sample_size) {
     const formData = new FormData();
     formData.append('project_id', project_id);
     formData.append('sample_size', sample_size);
     console.log(formData.get('project_id'));
     axios.post('http://localhost:5000/sample', formData)
-      .then((response) => {
-        console.log(response.msg);
-        var res = JSON.parse(response.data);
-        var dirtyData = JSON.parse(res.sample);
-        var cleanData = JSON.parse(res.sample);
-        console.log(cleanData);
-        this.setState({ dirtyData, cleanData }, () => { console.log(this.state.cleanData) });
+      .then(async(response) => {
+        var { sample, msg } = JSON.parse(response.data);
+        var data = JSON.parse(sample);
+        console.log(data);
+        console.log(msg);
+        this.setState({ dirtyData: data, cleanData: data }, () => {
+          var typeMap = this._buildTypeMap(this.state.cleanData);
+          this.setState({ typeMap });
+        });
       })
-      .catch(error => console.log(error));
-  }
-
-  async _renderSample() {
-    console.log(this.state.cleanData);
-    var sample = [];
-    //console.log(Object.keys(this.state.cleanData));
-    //console.log(Object.keys(this.state.cleanData[0]));
-    Object.keys(this.state.cleanData).forEach((key) => {
-      sample.push({key, value: this.state.cleanData[key]});
-    });
-    for (var i = 0; i < sample.length; i++) {
-      var temp = [];
-      Object.keys(sample[i]).forEach((key) => {
-        temp.push({key, value: sample[i][key]});
+      .catch(error => {
+        console.log(error);
+        return null;
       });
-      sample[i].value = temp;
-    }
-    console.log(sample);
-    console.log(sample[0])
-    return (
-      <Table bordered responsive>
-        <thead>
-          <tr>
-            {this.state.header.map(item => <th>{item}</th>)}
-          </tr>
-        </thead>
-        <tbody>
-          {sample.map(row => (
-            <tr>
-              {row.map(item => <td key={item.key}>{item.value}</td>)}
-            </tr>
-          ))}
-        </tbody>
-      </Table>
-    )
   }
 
-  async _isPromise(obj) {
-    return obj instanceof Promise;
+  async _renderHeader() {
+    console.log('building header');
+    return this.state.header.map((item, idx) => <th key={'header_'.concat(idx)}>{item}</th>);
   }
 
   componentDidMount() {
     const { header, project_id } = this.props.location;
-    this.setState({ header, project_id }, () => {
-      this._getSample(this.state.project_id, 10);
+    this.setState({ header, project_id }, async() => {
+      await this._getSampleData(this.state.project_id, 10);
+      console.log('got sample');
+      console.log(this.state);
     });
-  }
-
-  constructor(props) {
-    super(props);
   }
 
   render() {
@@ -115,7 +92,24 @@ class Results extends Component {
             </div>
           </Row>
           <div>
-            { Object.keys(this.state.cleanData).length > 0 && this._isPromise(this.state.cleanData) !== true && this._getSample() }
+            <Table bordered responsive>
+              <thead>
+                <tr>{ this.state.header.map((item) => {
+                  return <th key={'header_'.concat(item)}>{item}</th>
+                }) }</tr>
+              </thead>
+              <tbody>
+              { Object.keys(this.state.cleanData).map((idx) => {
+                return (
+                    <tr key={idx}>
+                      { Object.keys(this.state.cleanData[idx]).map((key) => {
+                        return <td key={idx.toString().concat('_', key)}>{this.state.cleanData[idx][key]}</td>
+                      }) }
+                    </tr>
+                )
+              }) }
+              </tbody>
+            </Table>
           </div>
         </div>
       )} />

@@ -41,6 +41,7 @@ def addNewCfdsToList(top_cfds, project_id):
             discovered_c_s = np.append(discovered_c_s, c)
         else:
             idx = np.where(discovered_c_s.cfd == c.cfd)
+            # TEMPORARY IMPLEMENTATION
             discovered_c_s[idx].score = c.score     # INSERT ITERATIVE SCORE UPDATING FUNCTION HERE
 
     np.savetxt('./store/' + project_id + '/discovered_cfds.txt', discovered_c_s)
@@ -71,8 +72,12 @@ def buildCover(d_rep, top_cfds):
 
 # TODO
 def pickCfds(top_cfds, num_cfds):
-    picked_cfds = np.empty(num_cfds)
+    #picked_cfds = np.empty(num_cfds)
     # pick CFDs
+    # TEMPORARY IMPLEMENTATION
+    just_cfds = np.array([c.cfd for c in np.nditer(top_cfds)])
+    just_scores = np.array([c.score for c in np.nditer(top_cfds)])
+    picked_cfds = np.random.choice(just_cfds, num_cfds, p=just_scores)
     return picked_cfds
 
 def applyCfdList(d_rep, cfdList):
@@ -93,7 +98,9 @@ def applyCfd(d_rep, cfd):
 
 # TODO
 def buildSample(d_rep, sample_size):
-    return
+    # TEMPORARY IMPLEMENTATION
+    sample = d_rep.sample(n=sample_size, random_state=1)
+    return sample
 
 '''def map_csv(csv_file):
     header = list()

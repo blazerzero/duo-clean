@@ -1,37 +1,16 @@
-import React, { createRef, Component } from 'react';
-import { Redirect, withRouter } from 'react-router-dom';
+import React, { Component } from 'react';
 import { BrowserRouter as Router, Route, Link } from 'react-router-dom';
 import {
   Button,
-  Col,
   Form,
   Modal,
   Row,
   Tab,
   Tabs,
 } from 'react-bootstrap';
-import { connect } from 'react-redux';
 import axios from 'axios';
 
 import '../css/App.css';
-
-class ImportButton extends Component {
-  render() {
-    return (
-      <Route render={({ history}) => (
-        <Button
-          type='submit'
-          variant='primary'
-          onClick={() => {
-            console.log('Going!');
-            history.push('/results/');
-          }}>
-          Import
-        </Button>
-      )} />
-    );
-  }
-}
 
 class Import extends Component {
   state = {
@@ -40,7 +19,6 @@ class Import extends Component {
   }
 
   async _handleSubmit(history) {
-    console.log(this.state.importedFile);
     if (this.state.importedFile != null) {
       const formData = new FormData();
       formData.append('file', this.state.importedFile);
@@ -52,7 +30,6 @@ class Import extends Component {
       };
       axios.post('http://localhost:5000/import', formData, config)
         .then(response => {
-          console.log(response);
           var { header, project_id, msg } = JSON.parse(response.data);
           console.log(msg);
           history.push({
@@ -64,10 +41,6 @@ class Import extends Component {
         .catch(error => console.log(error));
     }
   };
-
-  constructor(props) {
-    super(props);
-  }
 
   _handleGetStartedClick() {
     document.getElementById('welcomeDiv').style.display = 'none';
