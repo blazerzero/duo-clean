@@ -3,6 +3,7 @@ import {
   Button,
   Col,
   Form,
+  Modal,
   Row,
   Table,
 } from 'react-bootstrap';
@@ -21,6 +22,9 @@ class Results extends Component {
     typeMap: [],
     header: [],
     project_id: 0,
+    modal: false,
+    modalCellValue: null,
+    modalCellKey: null,
   };
 
   async _handleSubmit() {
@@ -73,6 +77,37 @@ class Results extends Component {
     return this.state.header.map((item, idx) => <th key={'header_'.concat(idx)}>{item}</th>);
   }
 
+
+  async _handleCellClick(key, event) {
+    var pieces = key.split('_');
+    var idx = parseInt(pieces.shift());
+    var attr = pieces.join('_');
+    this.setState({
+      modalCellValue: this.state.cleanData[idx][attr],
+      modalCellKey: key,
+      modal: true
+    });
+  }
+
+  async _closeModal() {
+    this.setState({ modal: false });
+  }
+
+  async _saveChange() {
+    var newCellValue = this.newCellValue.current.value;
+    var cleanData = this.state.cleanData;
+    var keyPieces = this.state.modalCellKey.split('_');
+    var idx = parseInt(keyPieces.shift());
+    var attr = keyPieces.join('_');
+    cleanData[idx][attr] = newCellValue;
+    this.setState({
+      cleanData,
+      modalCellValue: null,
+      modalCellKey: null,
+      modal: false,
+    });
+  }
+
   componentDidMount() {
     const { header, project_id } = this.props.location;
     this.setState({ header, project_id }, async() => {
@@ -82,10 +117,40 @@ class Results extends Component {
     });
   }
 
+  constructor(props) {
+    super(props);
+    this.newCellValue = React.createRef();
+    this._closeModal = this._closeModal.bind(this);
+    this._saveChange = this._saveChange.bind(this);
+  }
+
   render() {
+
     return (
       <Route render={({ history }) => (
         <div className='site-page'>
+          <Modal show={this.state.modal} onHide={this._closeModal} animation={false}>
+            <Modal.Header closeButton>
+              <Modal.Title>Edit Cell</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+              <Form.Group>
+                <Form.Label><strong>Current Value: </strong>{this.state.modalCellValue}</Form.Label>
+              </Form.Group>
+              <Form.Group>
+                <Form.Label><strong>New Value</strong></Form.Label>
+                <Form.Control as="textarea" rows="3" ref={this.newCellValue}>{this.state.modalCellValue}</Form.Control>
+              </Form.Group>
+            </Modal.Body>
+            <Modal.Footer>
+              <Button variant="secondary" onClick={this._closeModal}>
+                Cancel
+              </Button>
+              <Button variant="primary" onClick={this._saveChange}>
+                Save
+              </Button>
+            </Modal.Footer>
+          </Modal>
           <Row className='content-centered'>
             <div className='results-header box-blur'>
               <span className='results-title'>CharmClean</span>
@@ -102,8 +167,9 @@ class Results extends Component {
               { Object.keys(this.state.cleanData).map((idx) => {
                 return (
                     <tr key={idx}>
-                      { Object.keys(this.state.cleanData[idx]).map((key) => {
-                        return <td key={idx.toString().concat('_', key)}>{this.state.cleanData[idx][key]}</td>
+                      { Object.keys(this.state.cleanData[idx]).map((i) => {
+                        var key = idx.toString().concat('_', i);
+                        return <td key={key} onClick={this._handleCellClick.bind(this, key)}>{this.state.cleanData[idx][i]}</td>
                       }) }
                     </tr>
                 )
