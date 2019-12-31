@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6"/>
+	<Project>
+		<Option title="XPlode"/>
+		<Option makefile_is_custom="1"/>
+		<Option compiler="clang"/>
+		<Option virtualFolders="CMake Files\;"/>
+		<Build>
+			<Target title="all">
+				<Option working_dir="/Users/Omeed/Desktop/OSU/grad/thesis/var-clean-app/vc-server/xplode-master"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -f &quot;/Users/Omeed/Desktop/OSU/grad/thesis/var-clean-app/vc-server/xplode-master/Makefile&quot;  VERBOSE=1 all"/>
+					<CompileFile command="/usr/bin/make -f &quot;/Users/Omeed/Desktop/OSU/grad/thesis/var-clean-app/vc-server/xplode-master/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -f &quot;/Users/Omeed/Desktop/OSU/grad/thesis/var-clean-app/vc-server/xplode-master/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -f &quot;/Users/Omeed/Desktop/OSU/grad/thesis/var-clean-app/vc-server/xplode-master/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="rebuild_cache">
+				<Option working_dir="/Users/Omeed/Desktop/OSU/grad/thesis/var-clean-app/vc-server/xplode-master"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -f &quot;/Users/Omeed/Desktop/OSU/grad/thesis/var-clean-app/vc-server/xplode-master/Makefile&quot;  VERBOSE=1 rebuild_cache"/>
+					<CompileFile command="/usr/bin/make -f &quot;/Users/Omeed/Desktop/OSU/grad/thesis/var-clean-app/vc-server/xplode-master/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -f &quot;/Users/Omeed/Desktop/OSU/grad/thesis/var-clean-app/vc-server/xplode-master/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -f &quot;/Users/Omeed/Desktop/OSU/grad/thesis/var-clean-app/vc-server/xplode-master/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="edit_cache">
+				<Option working_dir="/Users/Omeed/Desktop/OSU/grad/thesis/var-clean-app/vc-server/xplode-master"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -f &quot;/Users/Omeed/Desktop/OSU/grad/thesis/var-clean-app/vc-server/xplode-master/Makefile&quot;  VERBOSE=1 edit_cache"/>
+					<CompileFile command="/usr/bin/make -f &quot;/Users/Omeed/Desktop/OSU/grad/thesis/var-clean-app/vc-server/xplode-master/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -f &quot;/Users/Omeed/Desktop/OSU/grad/thesis/var-clean-app/vc-server/xplode-master/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -f &quot;/Users/Omeed/Desktop/OSU/grad/thesis/var-clean-app/vc-server/xplode-master/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="CTane">
+				<Option output="/Users/Omeed/Desktop/OSU/grad/thesis/var-clean-app/vc-server/xplode-master/CTane" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/Users/Omeed/Desktop/OSU/grad/thesis/var-clean-app/vc-server/xplode-master"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="clang"/>
+				<Compiler/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -f &quot;/Users/Omeed/Desktop/OSU/grad/thesis/var-clean-app/vc-server/xplode-master/Makefile&quot;  VERBOSE=1 CTane"/>
+					<CompileFile command="/usr/bin/make -f &quot;/Users/Omeed/Desktop/OSU/grad/thesis/var-clean-app/vc-server/xplode-master/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -f &quot;/Users/Omeed/Desktop/OSU/grad/thesis/var-clean-app/vc-server/xplode-master/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -f &quot;/Users/Omeed/Desktop/OSU/grad/thesis/var-clean-app/vc-server/xplode-master/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="CTane/fast">
+				<Option output="/Users/Omeed/Desktop/OSU/grad/thesis/var-clean-app/vc-server/xplode-master/CTane" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/Users/Omeed/Desktop/OSU/grad/thesis/var-clean-app/vc-server/xplode-master"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="clang"/>
+				<Compiler/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -f &quot;/Users/Omeed/Desktop/OSU/grad/thesis/var-clean-app/vc-server/xplode-master/Makefile&quot;  VERBOSE=1 CTane/fast"/>
+					<CompileFile command="/usr/bin/make -f &quot;/Users/Omeed/Desktop/OSU/grad/thesis/var-clean-app/vc-server/xplode-master/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -f &quot;/Users/Omeed/Desktop/OSU/grad/thesis/var-clean-app/vc-server/xplode-master/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -f &quot;/Users/Omeed/Desktop/OSU/grad/thesis/var-clean-app/vc-server/xplode-master/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+		</Build>
+		<Unit filename="/Users/Omeed/Desktop/OSU/grad/thesis/var-clean-app/vc-server/xplode-master/algorithms/baseminer.cpp">
+			<Option target="CTane"/>
+		</Unit>
+		<Unit filename="/Users/Omeed/Desktop/OSU/grad/thesis/var-clean-app/vc-server/xplode-master/algorithms/baseminer.h">
+			<Option target="CTane"/>
+		</Unit>
+		<Unit filename="/Users/Omeed/Desktop/OSU/grad/thesis/var-clean-app/vc-server/xplode-master/algorithms/cfdindex.cpp">
+			<Option target="CTane"/>
+		</Unit>
+		<Unit filename="/Users/Omeed/Desktop/OSU/grad/thesis/var-clean-app/vc-server/xplode-master/algorithms/cfdindex.h">
+			<Option target="CTane"/>
+		</Unit>
+		<Unit filename="/Users/Omeed/Desktop/OSU/grad/thesis/var-clean-app/vc-server/xplode-master/algorithms/ctane.cpp">
+			<Option target="CTane"/>
+		</Unit>
+		<Unit filename="/Users/Omeed/Desktop/OSU/grad/thesis/var-clean-app/vc-server/xplode-master/algorithms/ctane.h">
+			<Option target="CTane"/>
+		</Unit>
+		<Unit filename="/Users/Omeed/Desktop/OSU/grad/thesis/var-clean-app/vc-server/xplode-master/algorithms/minernode.cpp">
+			<Option target="CTane"/>
+		</Unit>
+		<Unit filename="/Users/Omeed/Desktop/OSU/grad/thesis/var-clean-app/vc-server/xplode-master/algorithms/minernode.h">
+			<Option target="CTane"/>
+		</Unit>
+		<Unit filename="/Users/Omeed/Desktop/OSU/grad/thesis/var-clean-app/vc-server/xplode-master/algorithms/partitiontable.cpp">
+			<Option target="CTane"/>
+		</Unit>
+		<Unit filename="/Users/Omeed/Desktop/OSU/grad/thesis/var-clean-app/vc-server/xplode-master/algorithms/partitiontable.h">
+			<Option target="CTane"/>
+		</Unit>
+		<Unit filename="/Users/Omeed/Desktop/OSU/grad/thesis/var-clean-app/vc-server/xplode-master/algorithms/xplode.cpp">
+			<Option target="CTane"/>
+		</Unit>
+		<Unit filename="/Users/Omeed/Desktop/OSU/grad/thesis/var-clean-app/vc-server/xplode-master/algorithms/xplode.h">
+			<Option target="CTane"/>
+		</Unit>
+		<Unit filename="/Users/Omeed/Desktop/OSU/grad/thesis/var-clean-app/vc-server/xplode-master/data/cfd.cpp">
+			<Option target="CTane"/>
+		</Unit>
+		<Unit filename="/Users/Omeed/Desktop/OSU/grad/thesis/var-clean-app/vc-server/xplode-master/data/cfd.h">
+			<Option target="CTane"/>
+		</Unit>
+		<Unit filename="/Users/Omeed/Desktop/OSU/grad/thesis/var-clean-app/vc-server/xplode-master/data/database.cpp">
+			<Option target="CTane"/>
+		</Unit>
+		<Unit filename="/Users/Omeed/Desktop/OSU/grad/thesis/var-clean-app/vc-server/xplode-master/data/database.h">
+			<Option target="CTane"/>
+		</Unit>
+		<Unit filename="/Users/Omeed/Desktop/OSU/grad/thesis/var-clean-app/vc-server/xplode-master/data/databasereader.cpp">
+			<Option target="CTane"/>
+		</Unit>
+		<Unit filename="/Users/Omeed/Desktop/OSU/grad/thesis/var-clean-app/vc-server/xplode-master/data/databasereader.h">
+			<Option target="CTane"/>
+		</Unit>
+		<Unit filename="/Users/Omeed/Desktop/OSU/grad/thesis/var-clean-app/vc-server/xplode-master/data/types.cpp">
+			<Option target="CTane"/>
+		</Unit>
+		<Unit filename="/Users/Omeed/Desktop/OSU/grad/thesis/var-clean-app/vc-server/xplode-master/data/types.h">
+			<Option target="CTane"/>
+		</Unit>
+		<Unit filename="/Users/Omeed/Desktop/OSU/grad/thesis/var-clean-app/vc-server/xplode-master/main.cpp">
+			<Option target="CTane"/>
+		</Unit>
+		<Unit filename="/Users/Omeed/Desktop/OSU/grad/thesis/var-clean-app/vc-server/xplode-master/util/setutil.cpp">
+			<Option target="CTane"/>
+		</Unit>
+		<Unit filename="/Users/Omeed/Desktop/OSU/grad/thesis/var-clean-app/vc-server/xplode-master/util/setutil.h">
+			<Option target="CTane"/>
+		</Unit>
+		<Unit filename="/Users/Omeed/Desktop/OSU/grad/thesis/var-clean-app/vc-server/xplode-master/util/stringutil.cpp">
+			<Option target="CTane"/>
+		</Unit>
+		<Unit filename="/Users/Omeed/Desktop/OSU/grad/thesis/var-clean-app/vc-server/xplode-master/util/stringutil.h">
+			<Option target="CTane"/>
+		</Unit>
+		<Unit filename="/Users/Omeed/Desktop/OSU/grad/thesis/var-clean-app/vc-server/xplode-master/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\"/>
+		</Unit>
+	</Project>
+</CodeBlocks_project_file>

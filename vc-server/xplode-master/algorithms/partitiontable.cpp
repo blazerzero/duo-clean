@@ -258,6 +258,7 @@ SimpleTidList PartitionTable::violations(const PartitionTidList& x, const Partit
     std::set<int> bigt;
     for (int pi = 0; pi <= xa.fTids.size(); pi++) {
         if (pi == xa.fTids.size() || xa.fTids[pi] == PartitionTidList::SEP) {
+          if (pi > 0)
             bigt.insert(xa.fTids[pi-1]);
         }
     }
