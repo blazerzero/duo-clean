@@ -15,6 +15,7 @@ app = Flask(__name__)
 CORS(app)
 api = Api(app)
 
+
 class Import(Resource):
     def get(self):
         return {'msg': '[SUCCESS] Import test success!'}
@@ -23,7 +24,7 @@ class Import(Resource):
         newProjectID = 0
         existingProjects = [('0x' + d) for d in os.listdir('./store/') if os.path.isdir(os.path.join('./store/', d))]
         newDir = ''
-        if (len(existingProjects) == 0):
+        if len(existingProjects) == 0:
             newProjectID = "{:08x}".format(1)
         else:
             projectIDList = [int(d, 0) for d in existingProjects]
@@ -33,6 +34,7 @@ class Import(Resource):
         newDir = './store/' + newProjectID + '/'
         try:
             os.mkdir(newDir)
+            open(newDir + 'discovered_cfds.txt', 'w').close()
             newDir += '00000001/'
             os.mkdir(newDir)
         except OSError:
@@ -56,6 +58,7 @@ class Import(Resource):
         response = json.dumps(returned_data)
         pprint(response)
         return response, 200
+
 
 class Sample(Resource):
     def get(self):
@@ -82,6 +85,7 @@ class Sample(Resource):
         pprint(response)
         return response, 200
 
+
 class Clean(Resource):
     def get(self):
         return {'msg': '[SUCCESS] Clean test success!'}
@@ -92,22 +96,30 @@ class Clean(Resource):
         print(request.form.get('data'))
         print(request.form.get('sample_size'))
 
+        print('About to read form data');
+
         project_id = request.form.get('project_id')
-        s_in = json.load(request.form.get('data'))
+        s_in = request.form.get('data')
         sample_size = int(request.form.get('sample_size'))
 
-        existing_iters = [('0x' + f) for f in os.listdir('./store/' + project_id + '/') if os.path.isfile(os.path.join('./store/' + project_id + '/', f))]
+        print('Read form data')
+
+        existing_iters = [('0x' + f) for f in os.listdir('./store/' + project_id + '/') if os.path.isdir(os.path.join('./store/' + project_id + '/', f))]
         iteration_list = [int(d, 0) for d in existing_iters]
         print(iteration_list)
         current_iter = "{:08x}".format(max(iteration_list))
         print(current_iter)
 
         d_dirty = pd.read_csv('./store/' + project_id + '/' + current_iter + '/data.csv')
+        print(d_dirty)
         d_rep = helpers.applyUserRepairs(d_dirty, s_in)
-        current_it
-        current_iter = "{:08x}".format(int(current_iter) + 1)
+        print('here')
+        current_iter = "{:08x}".format(int('0x'+current_iter, 0) + 1)
+        print('here1')
+        os.mkdir('./store/' + project_id + '/' + current_iter + '/')
         d_rep.to_csv('./store/' + project_id + '/' + current_iter + '/data.csv', encoding='utf-8', index=False)
-        top_cfds = helpers.discoverCFDs(d_dirty, d_rep, project_id)
+        print('about to discover CFDs')
+        top_cfds = helpers.discoverCFDs(project_id, current_iter)
         #discovered_cfds = helpers.addNewCfdsToList(top_cfds, project_id)
         helpers.addNewCfdsToList(top_cfds, project_id) # TODO; TEMPORARY IMPLEMENTATION
 
@@ -132,6 +144,7 @@ class Clean(Resource):
         pprint(response)
         return response, 200
 
+
 class Result(Resource):
     def get(self):
         return {'msg': '[SUCCESS] Result test success!'}
@@ -139,6 +152,7 @@ class Result(Resource):
     def post(self):
         print(request.form)
         print(request.form.get('project_id'))
+
 
 api.add_resource(Import, '/import')
 api.add_resource(Sample, '/sample')

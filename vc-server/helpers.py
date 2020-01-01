@@ -17,42 +17,60 @@ def applyUserRepairs(d_dirty, s_in):
     return d_rep
 
 def discoverCFDs(project_id, current_iter):
-    prev_iter = current_iter - 1
+    prev_iter = "{:08x}".format(int('0x'+current_iter, 0) - 1)
     dirty_fp = './store/' + project_id + '/' + prev_iter + '/data.csv'
     clean_fp = './store/' + project_id + '/' + current_iter + '/data.csv'
 
-    process = sp.Popen(['./xplode-master/CTane', dirty_fp, clean_fp, '0.25', '2'], stdout=sp.PIPE).wait()
-    print(process.communicate()[0])
+    process = sp.Popen(['./xplode-master/CTane', dirty_fp, clean_fp, '0.25', '2'], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})
+    print(process)
+    #print(process.communicate()[0])
     print(process.returncode)
+    output = np.array(process.communicate()[0].decode("utf-8").split('\n'))[:-1]
+    print(len(output)/2)
     if process.returncode == 0:
-        scores = np.array(process.communicate()[0].split('\n')[0])
-        top_cfds = np.array(process.communicate()[0].split('\n')[1:])
-        return np.array([{cfd: c.cfd, score: c.score} for c in np.nditer(top_cfds)])
+        print(len(output))
+        scores = output[:int(len(output)/2)]
+        top_cfds = output[int(len(output)/2):]
+        return np.array([{'cfd': top_cfds[i], 'score': scores[i]} for i in range(0, len(top_cfds))])
     else:
         return '[ERROR] CFD DISCOVERY FAIL'
 
 def addNewCfdsToList(top_cfds, project_id):
-    discovered_c_s = np.loadtxt('./store/' + project_id + '/discovered_cfds.txt')
-    discovered_c_s = np.array([json.loads(s) for s in np.nditer(discovered_c_s)])
-    discovered_cfds = [c.cfd for c in np.nditer(discovered_c_s)]
+    #f = open('./store/' + project_id + '/discovered_cfds.txt', 'a+')
+    #f.close()
+    try:
+        print('about to read from file')
+        discovered_c_s = np.loadtxt('./store/' + project_id + '/discovered_cfds.txt')
+        print('read from file')
+        discovered_c_s = np.array([json.loads(s) for s in np.nditer(discovered_c_s)])
+        discovered_cfds = [c.cfd for c in np.nditer(discovered_c_s)]
 
-    for c in np.nditer(top_cfds):
-        if c.cfd not in discovered_cfds:
-            discovered_c_s = np.append(discovered_c_s, c)
-        else:
-            idx = np.where(discovered_c_s.cfd == c.cfd)
-            # TEMPORARY IMPLEMENTATION
-            discovered_c_s[idx].score = c.score     # INSERT ITERATIVE SCORE UPDATING FUNCTION HERE
+        for c in np.nditer(top_cfds):
+            if c.cfd not in discovered_cfds:
+                discovered_c_s = np.append(discovered_c_s, c)
+            else:
+                idx = np.where(discovered_c_s.cfd == c.cfd)
+                # TEMPORARY IMPLEMENTATION
+                discovered_c_s[idx].score = c.score     # INSERT ITERATIVE SCORE UPDATING FUNCTION HERE
 
-    np.savetxt('./store/' + project_id + '/discovered_cfds.txt', discovered_c_s)
+        discovered_c_s = [json.dumps(i) for i in discovered_c_s]
+    except ValueError:
+        discovered_c_s = [json.dumps(i) for i in top_cfds]
+
+    print('about to save')
+    print(discovered_c_s)
+    np.savetxt('./store/' + project_id + '/discovered_cfds.txt', discovered_c_s, fmt="%s")
     #return discovered_c_s
 
 def buildCover(d_rep, top_cfds):
     cover = np.empty(len(d_rep.index))
-    just_cfds = np.array([c.cfd for c in np.nditer(top_cfds)])
+    print(top_cfds[0]['cfd'])
+    #print(top_cfds[0].cfd)
+    print([c['cfd'] for c in top_cfds])
+    just_cfds = np.array([c.cfd for c in top_cfds])
     for idx, row in d_rep.iterrows():
         relevant_cfds = []
-        for cfd in np.nditer(just_cfds):
+        for cfd in np.nditer(just_cfds, ['refs_ok']):
             lhs = np.array(cfd.split(' => ')[0][1:-1].split(', '))
             rhs = cfd.split(' => ')[1]
             applies = True
@@ -75,13 +93,13 @@ def pickCfds(top_cfds, num_cfds):
     #picked_cfds = np.empty(num_cfds)
     # pick CFDs
     # TEMPORARY IMPLEMENTATION
-    just_cfds = np.array([c.cfd for c in np.nditer(top_cfds)])
-    just_scores = np.array([c.score for c in np.nditer(top_cfds)])
+    just_cfds = np.array([c.cfd for c in np.nditer(top_cfds, ['refs_ok'])])
+    just_scores = np.array([c.score for c in np.nditer(top_cfds, ['refs_ok'])])
     picked_cfds = np.random.choice(just_cfds, num_cfds, p=just_scores)
     return picked_cfds
 
 def applyCfdList(d_rep, cfdList):
-    for cfd in np.nditer(cfdList):
+    for cfd in np.nditer(cfdList, ['refs_ok']):
         d_rep = applyCfd(d_rep, cfd)
     return d_rep
 

@@ -28,7 +28,25 @@ class Results extends Component {
   };
 
   async _handleSubmit() {
-
+    const formData = new FormData();
+    formData.append('project_id', this.state.project_id);
+    formData.append('data', JSON.stringify(this.state.cleanData));
+    formData.append('sample_size', 10);
+    console.log(formData.get('project_id'));
+    axios.post('http://localhost:5000/clean', formData)
+        .then(async(response) => {
+          var { sample, msg } = JSON.parse(response.data);
+          var data = JSON.parse(sample);
+          console.log(data);
+          console.log(msg);
+          this.setState({ cleanData: data }, () => {
+            var typeMap = this._buildTypeMap(this.state.cleanData);
+            this.setState({ typeMap });
+          })
+        })
+        .catch(error => {
+          console.log(error);
+        });
   }
 
   async _handleRefresh() {
@@ -56,20 +74,19 @@ class Results extends Component {
     formData.append('sample_size', sample_size);
     console.log(formData.get('project_id'));
     axios.post('http://localhost:5000/sample', formData)
-      .then(async(response) => {
-        var { sample, msg } = JSON.parse(response.data);
-        var data = JSON.parse(sample);
-        console.log(data);
-        console.log(msg);
-        this.setState({ dirtyData: data, cleanData: data }, () => {
-          var typeMap = this._buildTypeMap(this.state.cleanData);
-          this.setState({ typeMap });
+        .then(async(response) => {
+          var { sample, msg } = JSON.parse(response.data);
+          var data = JSON.parse(sample);
+          console.log(data);
+          console.log(msg);
+          this.setState({ dirtyData: data, cleanData: data }, () => {
+            var typeMap = this._buildTypeMap(this.state.cleanData);
+            this.setState({ typeMap });
+          });
+        })
+        .catch(error => {
+          console.log(error);
         });
-      })
-      .catch(error => {
-        console.log(error);
-        return null;
-      });
   }
 
   async _renderHeader() {
@@ -122,6 +139,7 @@ class Results extends Component {
     this.newCellValue = React.createRef();
     this._closeModal = this._closeModal.bind(this);
     this._saveChange = this._saveChange.bind(this);
+    this._handleSubmit = this._handleSubmit.bind(this);
   }
 
   render() {
@@ -177,6 +195,13 @@ class Results extends Component {
               </tbody>
             </Table>
           </div>
+          <Button
+              variant='primary'
+              className='btn-round right box-blur'
+              size='lg'
+              onClick={this._handleSubmit}>
+            SUBMIT CHANGES AND SEE NEW EXAMPLES
+          </Button>
         </div>
       )} />
     );
