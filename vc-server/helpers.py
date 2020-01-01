@@ -63,14 +63,14 @@ def addNewCfdsToList(top_cfds, project_id):
     #return discovered_c_s
 
 def buildCover(d_rep, top_cfds):
-    cover = np.empty(len(d_rep.index))
+    cover = np.empty(len(d_rep.index), dtype=str)
     print(top_cfds[0]['cfd'])
     #print(top_cfds[0].cfd)
     print([c['cfd'] for c in top_cfds])
-    just_cfds = np.array([c.cfd for c in top_cfds])
+    just_cfds = np.array([c['cfd'] for c in top_cfds])
     for idx, row in d_rep.iterrows():
         relevant_cfds = []
-        for cfd in np.nditer(just_cfds, ['refs_ok']):
+        for cfd in just_cfds:
             lhs = np.array(cfd.split(' => ')[0][1:-1].split(', '))
             rhs = cfd.split(' => ')[1]
             applies = True
@@ -82,8 +82,8 @@ def buildCover(d_rep, top_cfds):
                         break
             if applies:
                 relevant_cfds.append(cfd)
-        relevant_cfds = np.array(relevant_cfds)
-        cover[idx] = relevant_cfds
+        #relevant_cfds = np.array(relevant_cfds)
+        cover[idx] = '; '.join(relevant_cfds)
 
     d_rep['cover'] = cover
     return d_rep
@@ -93,13 +93,17 @@ def pickCfds(top_cfds, num_cfds):
     #picked_cfds = np.empty(num_cfds)
     # pick CFDs
     # TEMPORARY IMPLEMENTATION
-    just_cfds = np.array([c.cfd for c in np.nditer(top_cfds, ['refs_ok'])])
-    just_scores = np.array([c.score for c in np.nditer(top_cfds, ['refs_ok'])])
-    picked_cfds = np.random.choice(just_cfds, num_cfds, p=just_scores)
-    return picked_cfds
+    just_cfds = np.array([c['cfd'] for c in top_cfds if float(c['score']) > 0])
+    just_scores = np.array([float(c['score']) for c in top_cfds if float(c['score']) > 0])
+    norm_scores = np.array([s/sum(just_scores) for s in just_scores])
+    if len(just_cfds) > 0:
+        picked_cfds = np.random.choice(just_cfds, num_cfds, p=norm_scores.astype('float64'))
+        return picked_cfds
+    else:
+        return None
 
 def applyCfdList(d_rep, cfdList):
-    for cfd in np.nditer(cfdList, ['refs_ok']):
+    for cfd in cfdList:
         d_rep = applyCfd(d_rep, cfd)
     return d_rep
 
@@ -107,7 +111,7 @@ def applyCfd(d_rep, cfd):
     lhs = np.array(cfd.split(' => ')[0][1:-1].split(', '))
     rhs = cfd.split(' => ')[1]
     for idx, row in d_rep.iterrows():
-        if cfd in row['cover']:
+        if cfd in row['cover'].split(', '):
             if '=' in rhs:
                 rh = np.array(rhs.split('='))
                 row[rh[0]] = rh[1]
@@ -117,7 +121,7 @@ def applyCfd(d_rep, cfd):
 # TODO
 def buildSample(d_rep, sample_size):
     # TEMPORARY IMPLEMENTATION
-    sample = d_rep.sample(n=sample_size, random_state=1)
+    sample = d_rep.sample(n=sample_size)
     return sample
 
 '''def map_csv(csv_file):
