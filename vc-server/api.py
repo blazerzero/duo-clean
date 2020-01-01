@@ -1,6 +1,7 @@
-from flask import Flask, request
+from flask import Flask, request, send_file
 from flask_restful import Resource, Api, reqparse, abort
 from flask_cors import CORS
+from flask_csv import send_csv
 from random import sample
 from pprint import pprint
 import json
@@ -146,19 +147,32 @@ class Clean(Resource):
         return response, 200
 
 
-class Result(Resource):
+class Download(Resource):
     def get(self):
         return {'msg': '[SUCCESS] Result test success!'}
 
     def post(self):
         print(request.form)
         print(request.form.get('project_id'))
+        project_id = request.form.get('project_id')
+
+        existing_iters = [('0x' + f) for f in os.listdir('./store/' + project_id + '/') if
+                          os.path.isdir(os.path.join('./store/' + project_id + '/', f))]
+        iteration_list = [int(d, 0) for d in existing_iters]
+        print(iteration_list)
+        latest_iter = "{:08x}".format(max(iteration_list))
+        print(latest_iter)
+
+        return send_file('./store/' + project_id + '/' + latest_iter + '/data.csv',
+                         mimetype='text/csv',
+                         attachment_filename='charm_cleaned.csv',
+                         as_attachment=True)
 
 
 api.add_resource(Import, '/import')
 api.add_resource(Sample, '/sample')
 api.add_resource(Clean, '/clean')
-api.add_resource(Result, '/result')
+api.add_resource(Download, '/download')
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -49,6 +49,24 @@ class Results extends Component {
         });
   }
 
+  async _handleDownload() {
+    const formData = new FormData();
+    formData.append('project_id', this.state.project_id);
+    axios.post('http://localhost:5000/download', formData)
+        .then((response) => {
+          const url = window.URL.createObjectURL(new Blob([response.data]));
+          const link = document.createElement('a');
+          link.href = url;
+          link.setAttribute('download', 'charm_cleaned.csv');
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        })
+        .catch(error => {
+          console.log(error);
+        })
+  }
+
   async _handleRefresh() {
 
   }
@@ -140,6 +158,7 @@ class Results extends Component {
     this._closeModal = this._closeModal.bind(this);
     this._saveChange = this._saveChange.bind(this);
     this._handleSubmit = this._handleSubmit.bind(this);
+    this._handleDownload = this._handleDownload.bind(this);
   }
 
   render() {
@@ -195,13 +214,22 @@ class Results extends Component {
               </tbody>
             </Table>
           </div>
-          <Button
-              variant='primary'
-              className='btn-round right box-blur'
-              size='lg'
-              onClick={this._handleSubmit}>
-            SUBMIT CHANGES AND SEE NEW EXAMPLES
-          </Button>
+          <div className='content-centered'>
+            <Button
+                variant='primary'
+                className='btn-round right box-blur'
+                size='lg'
+                onClick={this._handleSubmit}>
+              SUBMIT CHANGES AND SEE NEW EXAMPLES
+            </Button>
+            <Button
+                variant='success'
+                className='btn-round right box-blur'
+                size='lg'
+                onClick={this._handleDownload}>
+              DOWNLOAD
+            </Button>
+          </div>
         </div>
       )} />
     );
