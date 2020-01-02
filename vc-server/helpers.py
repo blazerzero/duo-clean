@@ -7,6 +7,7 @@ import subprocess as sp
 import pandas as pd
 import numpy as np
 
+
 def applyUserRepairs(d_dirty, s_in):
     d_rep = d_dirty
     s_df = pd.read_json(s_in, orient='index')
@@ -16,6 +17,7 @@ def applyUserRepairs(d_dirty, s_in):
 
     return d_rep
 
+
 def discoverCFDs(project_id, current_iter):
     prev_iter = "{:08x}".format(int('0x'+current_iter, 0) - 1)
     dirty_fp = './store/' + project_id + '/' + prev_iter + '/data.csv'
@@ -23,17 +25,21 @@ def discoverCFDs(project_id, current_iter):
 
     process = sp.Popen(['./xplode-master/CTane', dirty_fp, clean_fp, '0.25', '2'], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})
     print(process)
-    #print(process.communicate()[0])
     print(process.returncode)
-    output = np.array(process.communicate()[0].decode("utf-8").split('\n'))[:-1]
+    output = process.communicate()[0].decode("utf-8")
     print(len(output)/2)
     if process.returncode == 0:
-        print(len(output))
-        scores = output[:int(len(output)/2)]
-        top_cfds = output[int(len(output)/2):]
-        return np.array([{'cfd': top_cfds[i], 'score': scores[i]} for i in range(0, len(top_cfds))])
+        if output == '[NO CFDS FOUND]':
+            return None
+        else:
+            output = np.array(output.split('\n'))[:-1]
+            print(len(output))
+            scores = output[:int(len(output)/2)]
+            top_cfds = output[int(len(output)/2):]
+            return np.array([{'cfd': top_cfds[i], 'score': scores[i]} for i in range(0, len(top_cfds))])
     else:
-        return '[ERROR] CFD DISCOVERY FAIL'
+        return '[ERROR] CFD DISCOVERY FAILURE'
+
 
 def addNewCfdsToList(top_cfds, project_id):
     #f = open('./store/' + project_id + '/discovered_cfds.txt', 'a+')
@@ -88,6 +94,7 @@ def buildCover(d_rep, top_cfds):
     d_rep['cover'] = cover
     return d_rep
 
+
 # TODO
 def pickCfds(top_cfds, num_cfds):
     #picked_cfds = np.empty(num_cfds)
@@ -102,10 +109,12 @@ def pickCfds(top_cfds, num_cfds):
     else:
         return None
 
+
 def applyCfdList(d_rep, cfdList):
     for cfd in cfdList:
         d_rep = applyCfd(d_rep, cfd)
     return d_rep
+
 
 def applyCfd(d_rep, cfd):
     lhs = np.array(cfd.split(' => ')[0][1:-1].split(', '))
@@ -117,6 +126,7 @@ def applyCfd(d_rep, cfd):
                 row[rh[0]] = rh[1]
 
     return d_rep
+
 
 # TODO
 def buildSample(d_rep, sample_size):

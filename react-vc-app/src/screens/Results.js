@@ -39,7 +39,14 @@ class Results extends Component {
           var data = JSON.parse(sample);
           console.log(data);
           console.log(msg);
-          this.setState({ cleanData: data }, () => {
+          for (var i in data) {
+            for (var j in data[i]) {
+              if (data[i][j] == null) data[i][j] = '';
+              else if (typeof data[i][j] != 'string') data[i][j] = data[i][j].toString();
+            }
+          }
+          //var modMap = await this._buildModMap(data, data);
+          this.setState({ cleanData: data, /*modMap*/ }, () => {
             var typeMap = this._buildTypeMap(this.state.cleanData);
             this.setState({ typeMap });
           })
@@ -78,12 +85,29 @@ class Results extends Component {
     for (var i in rows) {
       var tup = {};
       for (var j in cols) {
-        tup[rows[j]] = typeof(data[rows[i]][cols[j]])
+        tup[cols[j]] = typeof(data[rows[i]][cols[j]])
       }
-      typeMap[i] = tup;
+      typeMap[rows[i]] = tup;
     }
     console.log(typeMap);
     return typeMap;
+  }
+
+  async _buildModMap(dirtyData, cleanData) {
+    var modMap = {};
+    var rows = Object.keys(cleanData);
+    var cols = this.state.header;
+    for (var i in rows) {
+      var tup = {};
+      for (var j in cols) {
+        //console.log(dirtyData[rows[i]][cols[j]]);
+        //console.log(cleanData[rows[i]][cols[j]]);
+        tup[cols[j]] = (dirtyData[rows[i]][cols[j]] === cleanData[rows[i]][cols[j]] ? 'not-modified-cell' : 'modified-cell');
+      }
+      modMap[rows[i]] = tup;
+    }
+    console.log(modMap);
+    return modMap;
   }
 
   async _getSampleData(project_id, sample_size) {
@@ -97,7 +121,15 @@ class Results extends Component {
           var data = JSON.parse(sample);
           console.log(data);
           console.log(msg);
-          this.setState({ dirtyData: data, cleanData: data }, () => {
+          for (var i in data) {
+            for (var j in data[i]) {
+              if (data[i][j] == null) data[i][j] = '';
+              else if (typeof data[i][j] != 'string') data[i][j] = data[i][j].toString();
+            }
+          }
+          /*var modMap = await this._buildModMap(data, data);
+          console.log(modMap);*/
+          this.setState({ dirtyData: data, cleanData: data, /*modMap*/ }, () => {
             var typeMap = this._buildTypeMap(this.state.cleanData);
             this.setState({ typeMap });
           });
@@ -135,11 +167,22 @@ class Results extends Component {
     var idx = parseInt(keyPieces.shift());
     var attr = keyPieces.join('_');
     cleanData[idx][attr] = newCellValue;
+
+    for (var i in cleanData) {
+      for (var j in cleanData[i]) {
+        if (cleanData[i][j] == null) cleanData[i][j] = '';
+        else if (typeof cleanData[i][j] != 'string') cleanData[i][j] = cleanData[i][j].toString();
+      }
+    }
+
+    //var modMap = await this._buildModMap(this.state.dirtyData, cleanData);
+
     this.setState({
       cleanData,
       modalCellValue: null,
       modalCellKey: null,
       modal: false,
+      //modMap,
     });
   }
 
@@ -162,7 +205,6 @@ class Results extends Component {
   }
 
   render() {
-
     return (
       <Route render={({ history }) => (
         <div className='site-page'>
@@ -176,7 +218,7 @@ class Results extends Component {
               </Form.Group>
               <Form.Group>
                 <Form.Label><strong>New Value</strong></Form.Label>
-                <Form.Control as="textarea" rows="3" ref={this.newCellValue}>{this.state.modalCellValue}</Form.Control>
+                <Form.Control as="textarea" rows="3" ref={this.newCellValue} defaultValue={this.state.modalCellValue}></Form.Control>
               </Form.Group>
             </Modal.Body>
             <Modal.Footer>
@@ -201,12 +243,15 @@ class Results extends Component {
                 }) }</tr>
               </thead>
               <tbody>
-              { Object.keys(this.state.cleanData).map((idx) => {
+              { Object.keys(this.state.cleanData).map((i) => {
                 return (
-                    <tr key={idx}>
-                      { Object.keys(this.state.cleanData[idx]).map((i) => {
-                        var key = idx.toString().concat('_', i);
-                        return <td key={key} onClick={this._handleCellClick.bind(this, key)}>{this.state.cleanData[idx][i]}</td>
+                    <tr key={i}>
+                      { Object.keys(this.state.cleanData[i]).map((j) => {
+                        var key = i.toString().concat('_', j);
+                        return <td
+                            key={key}
+                            onClick={this._handleCellClick.bind(this, key)}>{this.state.cleanData[i][j]}
+                        </td>
                       }) }
                     </tr>
                 )

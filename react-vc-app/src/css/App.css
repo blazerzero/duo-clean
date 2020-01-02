@@ -171,3 +171,11 @@
 .default-file-upload {
   display: none;
 }
+
+.modified-cell {
+  font-weight: bold;
+}
+
+.not-modified-cell {
+  font-weight: normal;
+}

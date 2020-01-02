@@ -24,7 +24,12 @@ int main(int argc, char *argv[]) {
         CFDList explList = xplode.postExplain(delta, 1.0-epsilon);
         //std::cout << "Best Explanation: " << std::endl;
         //Output::printCFD(expl, cleanDb);
-        Output::printCFDList(explList, cleanDb);
+        if (explList.size() > 0) {
+            Output::printCFDList(explList, cleanDb);
+        }
+        else {
+            std::cout << "[NO CFDS FOUND]";
+        }
     }
     return 0;
 }

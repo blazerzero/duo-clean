@@ -121,21 +121,23 @@ class Clean(Resource):
         d_rep.to_csv('./store/' + project_id + '/' + current_iter + '/data.csv', encoding='utf-8', index=False)
         print('about to discover CFDs')
         top_cfds = helpers.discoverCFDs(project_id, current_iter)
-        #discovered_cfds = helpers.addNewCfdsToList(top_cfds, project_id)
-        helpers.addNewCfdsToList(top_cfds, project_id) # TODO; TEMPORARY IMPLEMENTATION
 
-        #d_rep = helpers.buildCover(d_rep, discovered_cfds)
-        d_rep = helpers.buildCover(d_rep, top_cfds)
+        if top_cfds is not None and isinstance(top_cfds, np.ndarray):
+            #discovered_cfds = helpers.addNewCfdsToList(top_cfds, project_id)
+            helpers.addNewCfdsToList(top_cfds, project_id) # TODO; TEMPORARY IMPLEMENTATION
 
-        picked_cfd_list = helpers.pickCfds(top_cfds, 1)      # TODO; TEMPORARY IMPLEMENTATION
-        if picked_cfd_list is not None:
-            d_rep = helpers.applyCfdList(d_rep, picked_cfd_list)
+            #d_rep = helpers.buildCover(d_rep, discovered_cfds)
+            d_rep = helpers.buildCover(d_rep, top_cfds)
 
-        d_rep = d_rep.drop(columns=['cover'])
+            picked_cfd_list = helpers.pickCfds(top_cfds, 1)      # TODO; TEMPORARY IMPLEMENTATION
+            if picked_cfd_list is not None:
+                d_rep = helpers.applyCfdList(d_rep, picked_cfd_list)
+
+            d_rep = d_rep.drop(columns=['cover'])
+
+            np.savetxt('./store/' + project_id + '/' + current_iter + '/top_cfds.txt', top_cfds, fmt="%s")
 
         d_rep.to_csv('./store/' + project_id + '/' + current_iter + '/data.csv', encoding='utf-8', index=False)
-        np.savetxt('./store/' + project_id + '/' + current_iter + '/top_cfds.txt', top_cfds, fmt="%s")
-
         s_out = helpers.buildSample(d_rep, sample_size).to_json(orient='index')     # TODO; TEMPORARY IMPLEMENTATION
 
         returned_data = {
