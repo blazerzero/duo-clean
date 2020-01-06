@@ -107,16 +107,13 @@ class Clean(Resource):
 
         existing_iters = [('0x' + f) for f in os.listdir('./store/' + project_id + '/') if os.path.isdir(os.path.join('./store/' + project_id + '/', f))]
         iteration_list = [int(d, 0) for d in existing_iters]
-        print(iteration_list)
-        current_iter = "{:08x}".format(max(iteration_list))
-        print(current_iter)
+        #print(iteration_list)
+        current_iter = "{:08x}".format(max(iteration_list) + 1)
+        print("New iteration: " + str(current_iter))
 
-        d_dirty = pd.read_csv('./store/' + project_id + '/' + current_iter + '/data.csv')
-        print(d_dirty)
+        d_dirty = pd.read_csv('./store/' + project_id + '/00000001/data.csv')
+        #print(d_dirty)
         d_rep = helpers.applyUserRepairs(d_dirty, s_in)
-        print('here')
-        current_iter = "{:08x}".format(int('0x'+current_iter, 0) + 1)
-        print('here1')
         os.mkdir('./store/' + project_id + '/' + current_iter + '/')
         d_rep.to_csv('./store/' + project_id + '/' + current_iter + '/data.csv', encoding='utf-8', index=False)
         print('about to discover CFDs')
