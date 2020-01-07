@@ -115,7 +115,7 @@ class ReceiverCharmKeyword_Feature_NoFeature(object):
 
 class ReceiverCharmKeyword_NoFeature_Feature(object):
 	"""docstring for ReceiverCharm"""
-	def __init__(self, data, receiverData, dataSource, fileToStore):
+	def __init__(self, data, receiverData, dataSource, fileToStore, projectPath):
 		super(ReceiverCharmKeyword_NoFeature_Feature, self).__init__()
 		self.features = list()
 		self.invertedIndex = dict()
@@ -316,7 +316,7 @@ class ReceiverCharmKeyword_NoFeature_NoFeature(object):
 
 class ReceiverCharmKeyword(object):
 	"""docstring for ReceiverCharm"""
-	def __init__(self, data, receiverData, dataSource, fileToStore, idfLevel):
+	def __init__(self, data, receiverData, dataSource, fileToStore, idfLevel, projectPath):
 		super(ReceiverCharmKeyword, self).__init__()
 		self.features = list()
 		self.invertedIndex = dict()
@@ -327,7 +327,7 @@ class ReceiverCharmKeyword(object):
 		self.receivedSignals = list()
 		self.fileToStore = fileToStore
 		self.receiver = KeywordSearchWithLearning(receiverData, dataSource, fileToStore)
-		self.setupStrategy(data, idfLevel)
+		self.setupStrategy(data, idfLevel, projectPath)
 		self.fileToStore = fileToStore
 		self.maxValue = dict()
 
@@ -356,7 +356,7 @@ class ReceiverCharmKeyword(object):
 
 		return obj
 
-	def setupStrategy(self, data, idfLevel):
+	def setupStrategy(self, data, idfLevel, projectPath):
 		print('Setting Up Strategy')
 		#b000jz4hqo
 		featureConst = FeatureConstructor()
@@ -369,8 +369,8 @@ class ReceiverCharmKeyword(object):
 		#"+self.dataPath+self.fileToStore+"
 		#100ksigmodDemoRE_100k
 		#/data/mccamish/datatype/idfStats/100ksigmodDemoRE_100k,,1547895437000
-		if not os.path.exists("/data/mccamish/datatype/idfStats/"+self.dataPath+self.fileToStore+"/"):
-			os.makedirs("/data/mccamish/datatype/idfStats/"+self.dataPath+self.fileToStore+"/")
+		if not os.path.exists(projectPath+"idfStats/"+self.dataPath+self.fileToStore+"/"):
+			os.makedirs(projectPath+"idfStats/"+self.dataPath+self.fileToStore+"/")
 			print('Creating data...')
 			for record in listOfTuples:
 
@@ -412,17 +412,17 @@ class ReceiverCharmKeyword(object):
 							self.numOfFeatures[intent].remove(term)
 
 			print('saving stats')
-			self.save_obj(self.idf, "/data/mccamish/datatype/idfStats/"+self.dataPath+self.fileToStore+"/idf")
-			self.save_obj(self.invertedIndex, "/data/mccamish/datatype/idfStats/"+self.dataPath+self.fileToStore+"/invertedIndex")
-			self.save_obj(self.numOfFeatures, "/data/mccamish/datatype/idfStats/"+self.dataPath+self.fileToStore+"/numOfFeatures")
-			self.save_obj(self.features, "/data/mccamish/datatype/idfStats/"+self.dataPath+self.fileToStore+"/features")
+			self.save_obj(self.idf, projectPath+"idfStats/"+self.dataPath+self.fileToStore+"/idf")
+			self.save_obj(self.invertedIndex, projectPath+"idfStats/"+self.dataPath+self.fileToStore+"/invertedIndex")
+			self.save_obj(self.numOfFeatures, projectPath+"idfStats/"+self.dataPath+self.fileToStore+"/numOfFeatures")
+			self.save_obj(self.features, projectPath+"idfStats/"+self.dataPath+self.fileToStore+"/features")
 
 		else:
 			print("loading data...")
-			self.idf = self.load_obj("/data/mccamish/datatype/idfStats/"+self.dataPath+self.fileToStore+"/idf")
-			self.invertedIndex = self.load_obj("/data/mccamish/datatype/idfStats/"+self.dataPath+self.fileToStore+"/invertedIndex")
-			self.numOfFeatures = self.load_obj("/data/mccamish/datatype/idfStats/"+self.dataPath+self.fileToStore+"/numOfFeatures")
-			self.features = self.load_obj("/data/mccamish/datatype/idfStats/"+self.dataPath+self.fileToStore+"/features")
+			self.idf = self.load_obj(projectPath+"idfStats/"+self.dataPath+self.fileToStore+"/idf")
+			self.invertedIndex = self.load_obj(projectPath+"idfStats/"+self.dataPath+self.fileToStore+"/invertedIndex")
+			self.numOfFeatures = self.load_obj(projectPath+"idfStats/"+self.dataPath+self.fileToStore+"/numOfFeatures")
+			self.features = self.load_obj(projectPath+"idfStats/"+self.dataPath+self.fileToStore+"/features")
 
 	def pickSingleReturn(self, tupleWeights):
 		#print(len(tupleWeights))
@@ -827,12 +827,12 @@ class SenderBaseline(object):
 
 class SenderCharm_zipf(object):
 	"""docstring for SenderCharm"""
-	def __init__(self, data, alpha, idfLevel, dataType, fileToStore):
+	def __init__(self, data, alpha, idfLevel, dataType, fileToStore, projectPath):
 		super(SenderCharm_zipf, self).__init__()
 		self.fileToStore = fileToStore
 		self.dataType = dataType
 		self.strategy = dict()
-		self.setupStrategy(data, alpha, idfLevel)
+		self.setupStrategy(data, alpha, idfLevel, projectPath)
 		self.specificityDict = dict()
 		self.createDistribution()
 
@@ -852,7 +852,7 @@ class SenderCharm_zipf(object):
 		with open('zipf/' + name + '.pkl', 'rb') as f:
 			return pickle.load(f)
 
-	def setupStrategy(self, data, alpha, idfLevel):
+	def setupStrategy(self, data, alpha, idfLevel, projectPath):
 		#b000jz4hqo
 		featureConst = FeatureConstructor()
 		listOfTuples = data.getValues()
@@ -868,9 +868,9 @@ class SenderCharm_zipf(object):
 		intnetSet = set()
 		self.distribution = dict()
 		i = 0
-		print("/data/mccamish/datatype/idfStats/"+self.dataType+self.fileToStore+"_sender/")
-		if not os.path.exists("/data/mccamish/datatype/idfStats/"+self.dataType+self.fileToStore+"_sender/"):
-			os.makedirs("/data/mccamish/datatype/idfStats/"+self.dataType+self.fileToStore+"_sender/")
+		print(projectPath+"idfStats/"+self.dataType+self.fileToStore+"_sender/")
+		if not os.path.exists(projectPath+"idfStats/"+self.dataType+self.fileToStore+"_sender/"):
+			os.makedirs(projectPath+"idfStats/"+self.dataType+self.fileToStore+"_sender/")
 			print('Creating data...')
 			for record in listOfTuples:
 				signals = featureConst.getFeaturesOfSingleTuple(record, data.getHeader(), 1)
@@ -925,17 +925,17 @@ class SenderCharm_zipf(object):
 			print(len(self.strategy.keys()))
 
 			print('saving stats')
-			self.save_obj_strat(self.idf, "/data/mccamish/datatype/idfStats/"+self.dataType+self.fileToStore+"_sender/idf")
-			self.save_obj_strat(self.invertedIndex, "/data/mccamish/datatype/idfStats/"+self.dataType+self.fileToStore+"_sender/invertedIndex")
-			self.save_obj_strat(self.countSignals, "/data/mccamish/datatype/idfStats/"+self.dataType+self.fileToStore+"_sender/countSignals")
-			self.save_obj_strat(self.strategy, "/data/mccamish/datatype/idfStats/"+self.dataType+self.fileToStore+"_sender/strategy")
+			self.save_obj_strat(self.idf, projectPath+"idfStats/"+self.dataType+self.fileToStore+"_sender/idf")
+			self.save_obj_strat(self.invertedIndex, projectPath+"idfStats/"+self.dataType+self.fileToStore+"_sender/invertedIndex")
+			self.save_obj_strat(self.countSignals, projectPath+"idfStats/"+self.dataType+self.fileToStore+"_sender/countSignals")
+			self.save_obj_strat(self.strategy, projectPath+"idfStats/"+self.dataType+self.fileToStore+"_sender/strategy")
 
 		else:
 			print("loading data...")
-			self.idf = self.load_obj_strat("/data/mccamish/datatype/idfStats/"+self.dataType+self.fileToStore+"_sender/idf")
-			self.invertedIndex = self.load_obj_strat("/data/mccamish/datatype/idfStats/"+self.dataType+self.fileToStore+"_sender/invertedIndex")
-			self.countSignals = self.load_obj_strat("/data/mccamish/datatype/idfStats/"+self.dataType+self.fileToStore+"_sender/countSignals")
-			self.strategy = self.load_obj_strat("/data/mccamish/datatype/idfStats/"+self.dataType+self.fileToStore+"_sender/strategy")
+			self.idf = self.load_obj_strat(projectPath+"idfStats/"+self.dataType+self.fileToStore+"_sender/idf")
+			self.invertedIndex = self.load_obj_strat(projectPath+"idfStats/"+self.dataType+self.fileToStore+"_sender/invertedIndex")
+			self.countSignals = self.load_obj_strat(projectPath+"idfStats/"+self.dataType+self.fileToStore+"_sender/countSignals")
+			self.strategy = self.load_obj_strat(projectPath+"idfStats/"+self.dataType+self.fileToStore+"_sender/strategy")
 		# for intent in self.strategy:
 		# 	for signal in allSignals:
 		# 		if signal not in self.strategy[intent]:

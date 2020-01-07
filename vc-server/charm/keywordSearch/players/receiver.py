@@ -27,7 +27,7 @@ class ReceiverKeyword(object):
 		self.idfLevel = idfLevel
 
 	def initializeRE(self):
-		self.strategy = ReceiverCharmKeyword(self.data, self.receiverData, self.dataSource, self.fileToStore, self.idfLevel)
+		self.strategy = ReceiverCharmKeyword(self.data, self.receiverData, self.dataSource, self.fileToStore, self.idfLevel, projectPath)
 
 	def initializeRE_NoFeature_NoFeature(self):
 		self.strategy = ReceiverCharmKeyword_NoFeature_NoFeature(self.data, self.receiverData, self.dataSource, self.fileToStore)
@@ -39,7 +39,7 @@ class ReceiverKeyword(object):
 		self.strategy = ReceiverCharmKeyword_NoFeature_Feature(self.data, self.receiverData, self.dataSource, self.fileToStore)
 
 	def initializeUCB(self, alpha=0.5):
-		self.strategy = ReceiverUCBKeyword(self.data, self.receiverData, self.dataSource, self.fileToStore, alpha, self.idfLevel)
+		self.strategy = ReceiverUCBKeyword(self.data, self.receiverData, self.dataSource, self.fileToStore, alpha, self.idfLevel, projectPath)
 
 	def initializeUCB_NoFeature_NoFeature(self, alpha=0.5):
 		self.strategy = ReceiverUCBKeyword_NoFeature_NoFeature(self.data, self.receiverData, self.dataSource, self.fileToStore, alpha)

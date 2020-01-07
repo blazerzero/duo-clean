@@ -332,7 +332,7 @@ class ReceiverUCBKeyword_NoFeature_NoFeature(object):
 
 class ReceiverUCBKeyword(object):
 	"""docstring for ReceiverCharm"""
-	def __init__(self, data, receiverData, dataSource, fileToStore, alpha, idfLevel):
+	def __init__(self, data, receiverData, dataSource, fileToStore, alpha, idfLevel, projectPath):
 		super(ReceiverUCBKeyword, self).__init__()
 		self.features = list()
 		self.invertedIndex = dict()
@@ -343,7 +343,7 @@ class ReceiverUCBKeyword(object):
 		self.dataPath = dataSource
 		self.receivedSignals = list()
 		self.fileToStore = fileToStore
-		self.setupStrategy(data, idfLevel)
+		self.setupStrategy(data, idfLevel, projectPath)
 		self.receiver = KeywordSearchWithLearning(receiverData, dataSource, fileToStore)
 		self.fileToStore = fileToStore
 		self.alpha = 0.2
@@ -366,7 +366,7 @@ class ReceiverUCBKeyword(object):
 
 		return obj
 
-	def setupStrategy(self, data, idfLevel):
+	def setupStrategy(self, data, idfLevel, projectPath):
 		self.time = dict()
 		#b000jz4hqo
 		featureConst = FeatureConstructor()
@@ -375,8 +375,8 @@ class ReceiverUCBKeyword(object):
 		countTermInDoc = dict()
 		self.idf = dict()
 
-		if not os.path.exists("/data/mccamish/datatype/idfStats/"+self.dataPath+self.fileToStore+"/"):
-			os.makedirs("/data/mccamish/datatype/idfStats/"+self.dataPath+self.fileToStore+"/")
+		if not os.path.exists(projectPath+"idfStats/"+self.dataPath+self.fileToStore+"/"):
+			os.makedirs(projectPath+"idfStats/"+self.dataPath+self.fileToStore+"/")
 
 			for record in listOfTuples:
 				intentFeatures = featureConst.getFeaturesOfSingleTuple(record, data.getHeader(), 1)
@@ -411,19 +411,19 @@ class ReceiverUCBKeyword(object):
 						if term in self.numOfFeatures[intent]:
 							self.numOfFeatures[intent].remove(term)
 			print('saving stats')
-			self.save_obj(self.idf, "/data/mccamish/datatype/idfStats/"+self.dataPath+self.fileToStore+"/idf")
-			self.save_obj(self.invertedIndex, "/data/mccamish/datatype/idfStats/"+self.dataPath+self.fileToStore+"/invertedIndex")
-			self.save_obj(self.numOfFeatures, "/data/mccamish/datatype/idfStats/"+self.dataPath+self.fileToStore+"/numOfFeatures")
-			self.save_obj(self.features, "/data/mccamish/datatype/idfStats/"+self.dataPath+self.fileToStore+"/features")
-			self.save_obj(self.time, "/data/mccamish/datatype/idfStats/"+self.dataPath+self.fileToStore+"/time")
+			self.save_obj(self.idf, projectPath+"idfStats/"+self.dataPath+self.fileToStore+"/idf")
+			self.save_obj(self.invertedIndex, projectPath+"idfStats/"+self.dataPath+self.fileToStore+"/invertedIndex")
+			self.save_obj(self.numOfFeatures, projectPath+"idfStats/"+self.dataPath+self.fileToStore+"/numOfFeatures")
+			self.save_obj(self.features, projectPath+"idfStats/"+self.dataPath+self.fileToStore+"/features")
+			self.save_obj(self.time, projectPath+"idfStats/"+self.dataPath+self.fileToStore+"/time")
 
 		else:
 			print("loading data...")
-			self.idf = self.load_obj("/data/mccamish/datatype/idfStats/"+self.dataPath+self.fileToStore+"/idf")
-			self.invertedIndex = self.load_obj("/data/mccamish/datatype/idfStats/"+self.dataPath+self.fileToStore+"/invertedIndex")
-			self.numOfFeatures = self.load_obj("/data/mccamish/datatype/idfStats/"+self.dataPath+self.fileToStore+"/numOfFeatures")
-			self.features = self.load_obj("/data/mccamish/datatype/idfStats/"+self.dataPath+self.fileToStore+"/features")
-			self.time = self.load_obj("/data/mccamish/datatype/idfStats/"+self.dataPath+self.fileToStore+"/time")
+			self.idf = self.load_obj(projectPath+"idfStats/"+self.dataPath+self.fileToStore+"/idf")
+			self.invertedIndex = self.load_obj(projectPath+"idfStats/"+self.dataPath+self.fileToStore+"/invertedIndex")
+			self.numOfFeatures = self.load_obj(projectPath+"idfStats/"+self.dataPath+self.fileToStore+"/numOfFeatures")
+			self.features = self.load_obj(projectPath+"idfStats/"+self.dataPath+self.fileToStore+"/features")
+			self.time = self.load_obj(projectPath+"idfStats/"+self.dataPath+self.fileToStore+"/time")
 
 
 
@@ -503,7 +503,7 @@ class ReceiverUCBKeyword(object):
 
 class SenderUCB_zipf(object):
 	"""docstring for SenderCharm"""
-	def __init__(self, data, alpha, idfLevel, datatype, fileToStore):
+	def __init__(self, data, alpha, idfLevel, datatype, fileToStore, projectPath):
 		super(SenderUCB_zipf, self).__init__()
 		self.strategy = dict()
 		self.datatype = datatype
@@ -511,7 +511,7 @@ class SenderUCB_zipf(object):
 		self.dataPath = datatype
 		self.strategyDenom = dict()
 		self.strategyTime = 0
-		self.setupStrategy(data, alpha, idfLevel)
+		self.setupStrategy(data, alpha, idfLevel, projectPath)
 		self.specificityDict = dict()
 		self.createDistribution()
 
@@ -532,7 +532,7 @@ class SenderUCB_zipf(object):
 		with open('zipf/' + name + '.pkl', 'rb') as f:
 			return pickle.load(f)
 
-	def setupStrategy(self, data, alpha, idfLevel):
+	def setupStrategy(self, data, alpha, idfLevel, projectPath):
 		#b000jz4hqo
 		self.time = dict()
 		featureConst = FeatureConstructor()
@@ -546,8 +546,8 @@ class SenderUCB_zipf(object):
 		self.intentFeatures = dict()
 		self.maxValue = dict()
 
-		if not os.path.exists("/data/mccamish/datatype/idfStats/"+self.dataPath+self.fileToStore+"_sender/"):
-			os.makedirs("/data/mccamish/datatype/idfStats/"+self.dataPath+self.fileToStore+"_sender/")
+		if not os.path.exists(projectPath+"idfStats/"+self.dataPath+self.fileToStore+"_sender/"):
+			os.makedirs(projectPath+"idfStats/"+self.dataPath+self.fileToStore+"_sender/")
 
 			for record in listOfTuples:
 				signals = featureConst.getFeaturesOfSingleTuple(record, data.getHeader(), 1)
@@ -603,19 +603,19 @@ class SenderUCB_zipf(object):
 							del self.strategy[goodTerm][term]
 							del self.strategyDenom[goodTerm][term]
 
-			self.save_obj_idf(self.idf, "/data/mccamish/datatype/idfStats/"+self.dataPath+self.fileToStore+"_sender/idf")
-			self.save_obj_idf(self.strategy, "/data/mccamish/datatype/idfStats/"+self.dataPath+self.fileToStore+"_sender/strategy")
-			self.save_obj_idf(self.strategyDenom, "/data/mccamish/datatype/idfStats/"+self.dataPath+self.fileToStore+"_sender/strategyDenom")
-			self.save_obj_idf(self.intentFeatures, "/data/mccamish/datatype/idfStats/"+self.dataPath+self.fileToStore+"_sender/intentFeatures")
-			self.save_obj_idf(self.time, "/data/mccamish/datatype/idfStats/"+self.dataPath+self.fileToStore+"_sender/time")
+			self.save_obj_idf(self.idf, projectPath+"idfStats/"+self.dataPath+self.fileToStore+"_sender/idf")
+			self.save_obj_idf(self.strategy, projectPath+"idfStats/"+self.dataPath+self.fileToStore+"_sender/strategy")
+			self.save_obj_idf(self.strategyDenom, projectPath+"idfStats/"+self.dataPath+self.fileToStore+"_sender/strategyDenom")
+			self.save_obj_idf(self.intentFeatures, projectPath+"idfStats/"+self.dataPath+self.fileToStore+"_sender/intentFeatures")
+			self.save_obj_idf(self.time, projectPath+"idfStats/"+self.dataPath+self.fileToStore+"_sender/time")
 
 		else:
 			print("loading data...")
-			self.idf = self.load_obj_idf("/data/mccamish/datatype/idfStats/"+self.dataPath+self.fileToStore+"_sender/idf")
-			self.strategy = self.load_obj_idf("/data/mccamish/datatype/idfStats/"+self.dataPath+self.fileToStore+"_sender/strategy")
-			self.strategyDenom = self.load_obj_idf("/data/mccamish/datatype/idfStats/"+self.dataPath+self.fileToStore+"_sender/strategyDenom")
-			self.intentFeatures = self.load_obj_idf("/data/mccamish/datatype/idfStats/"+self.dataPath+self.fileToStore+"_sender/intentFeatures")
-			self.time = self.load_obj_idf("/data/mccamish/datatype/idfStats/"+self.dataPath+self.fileToStore+"_sender/time")
+			self.idf = self.load_obj_idf(projectPath+"idfStats/"+self.dataPath+self.fileToStore+"_sender/idf")
+			self.strategy = self.load_obj_idf(projectPath+"idfStats/"+self.dataPath+self.fileToStore+"_sender/strategy")
+			self.strategyDenom = self.load_obj_idf(projectPath+"idfStats/"+self.dataPath+self.fileToStore+"_sender/strategyDenom")
+			self.intentFeatures = self.load_obj_idf(projectPath+"idfStats/"+self.dataPath+self.fileToStore+"_sender/intentFeatures")
+			self.time = self.load_obj_idf(projectPath+"idfStats/"+self.dataPath+self.fileToStore+"_sender/time")
 		# for intent in self.strategy:
 		# 	for signal in allSignals:
 		# 		if signal not in self.strategy[intent]:

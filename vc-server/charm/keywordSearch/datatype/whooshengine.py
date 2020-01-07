@@ -27,14 +27,14 @@ from datatype.datastore import Data
 
 class KeywordSearchWithLearning(object):
 	"""docstring for KeywordSearch"""
-	def __init__(self, pathName, datasource, fileToSave):
+	def __init__(self, pathName, datasource, fileToSave, projectPath):
 		super(KeywordSearchWithLearning, self).__init__()
 		self.dataPath = pathName
 		self.table = dict()
 		self.datasource = datasource
 		self.storeData(self.dataPath)
 		self.fileToSave = fileToSave
-		self.indexer = self.createIndex()
+		self.indexer = self.createIndex(projectPath)
 
 	def storeData(self, dataPath):
 		stop_words = set(stopwords.words('english'))
@@ -66,20 +66,20 @@ class KeywordSearchWithLearning(object):
 
 		return titles[:numberToReturn], content[:numberToReturn], scores[:numberToReturn]
 
-	def createIndex(self):
-		print('creating index: ' + str("/data/mccamish/datatype/"+self.datasource+self.fileToSave+"/"))
-		if not os.path.exists("/data/mccamish/datatype/"+self.datasource+self.fileToSave+"/"):
-			os.makedirs("/data/mccamish/datatype/"+self.datasource+self.fileToSave+"/")
+	def createIndex(self, projectPath):
+		print('creating index: ' + str(projectPath+self.datasource+self.fileToSave+"/"))
+		if not os.path.exists(projectPath+self.datasource+self.fileToSave+"/"):
+			os.makedirs(projectPath+self.datasource+self.fileToSave+"/")
 
-		if exists_in(str("/data/mccamish/datatype/"+self.datasource+self.fileToSave+"/")):
+		if exists_in(str(projectPath+self.datasource+self.fileToSave+"/")):
 				print('Found index, loading...')
-				indexer = open_dir(str("/data/mccamish/datatype/"+self.datasource+self.fileToSave+"/"))
+				indexer = open_dir(str(projectPath+self.datasource+self.fileToSave+"/"))
 				return indexer
 				
-		shutil.rmtree("/data/mccamish/datatype/"+self.datasource+self.fileToSave+"/")
-		os.makedirs("/data/mccamish/datatype/"+self.datasource+self.fileToSave+"/")
+		shutil.rmtree(projectPath+self.datasource+self.fileToSave+"/")
+		os.makedirs(projectPath+self.datasource+self.fileToSave+"/")
 		schema = Schema(title=TEXT(stored=True), content=TEXT(stored=True))
-		indexer = create_in("/data/mccamish/datatype/"+self.datasource+self.fileToSave+"", schema)
+		indexer = create_in(projectPath+self.datasource+self.fileToSave+"", schema)
 		
 		writer = indexer.writer()
 		
@@ -93,14 +93,14 @@ class KeywordSearchWithLearning(object):
 
 class KeywordSearch(object):
 	"""docstring for KeywordSearch"""
-	def __init__(self, pathName, datasource, fileToSave):
+	def __init__(self, pathName, datasource, fileToSave, projectPath):
 		super(KeywordSearch, self).__init__()
 		self.dataPath = pathName
 		self.table = dict()
 		self.fileToSave = fileToSave
 		self.datasource = datasource
 		self.storeData(self.dataPath)
-		self.indexer = self.createIndex()
+		self.indexer = self.createIndex(projectPath)
 
 
 	def storeData(self, dataPath):
@@ -125,20 +125,20 @@ class KeywordSearch(object):
 
 		return titles[:numberToReturn], content[:numberToReturn]
 
-	def createIndex(self):
-		print('creating index: ' + str("/data/mccamish/datatype/"+self.datasource+self.fileToSave+"/"))
-		if not os.path.exists("/data/mccamish/datatype/"+self.datasource+self.fileToSave+"/"):
-			os.makedirs("/data/mccamish/datatype/"+self.datasource+self.fileToSave+"/")
+	def createIndex(self, projectPath):
+		print('creating index: ' + str(projectPath+self.datasource+self.fileToSave+"/"))
+		if not os.path.exists(projectPath+self.datasource+self.fileToSave+"/"):
+			os.makedirs(projectPath+self.datasource+self.fileToSave+"/")
 
-		if exists_in(str("/data/mccamish/datatype/"+self.datasource+self.fileToSave+"/")):
+		if exists_in(str(projectPath+self.datasource+self.fileToSave+"/")):
 				print('Found index, loading...')
-				indexer = open_dir(str("/data/mccamish/datatype/"+self.datasource+self.fileToSave+"/"))
+				indexer = open_dir(str(projectPath+self.datasource+self.fileToSave+"/"))
 				return indexer
 
-		shutil.rmtree("/data/mccamish/datatype/"+self.datasource+self.fileToSave+"/")
-		os.makedirs("/data/mccamish/datatype/"+self.datasource+self.fileToSave+"/")
+		shutil.rmtree(projectPath+self.datasource+self.fileToSave+"/")
+		os.makedirs(projectPath+self.datasource+self.fileToSave+"/")
 		schema = Schema(title=TEXT(stored=True), content=TEXT(stored=True))
-		indexer = create_in("/data/mccamish/datatype/"+self.datasource+self.fileToSave+"", schema)
+		indexer = create_in(projectPath+self.datasource+self.fileToSave+"", schema)
 		
 		writer = indexer.writer()
 		
