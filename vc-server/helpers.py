@@ -19,8 +19,8 @@ def applyUserRepairs(d_dirty, s_in):
 
 
 def discoverCFDs(project_id, current_iter):
-    prev_iter = "{:08x}".format(int('0x'+current_iter, 0) - 1)
-    dirty_fp = './store/' + project_id + '/' + prev_iter + '/data.csv'
+    #prev_iter = "{:08x}".format(int('0x'+current_iter, 0) - 1)
+    dirty_fp = './store/' + project_id + '/00000001/data.csv'
     clean_fp = './store/' + project_id + '/' + current_iter + '/data.csv'
 
     process = sp.Popen(['./xplode-master/CTane', dirty_fp, clean_fp, '0.25', '2'], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})
@@ -42,31 +42,36 @@ def discoverCFDs(project_id, current_iter):
 
 
 def addNewCfdsToList(top_cfds, project_id):
-    #f = open('./store/' + project_id + '/discovered_cfds.txt', 'a+')
-    #f.close()
-    try:
-        print('about to read from file')
-        discovered_c_s = np.loadtxt('./store/' + project_id + '/discovered_cfds.txt')
-        print('read from file')
-        discovered_c_s = np.array([json.loads(s) for s in np.nditer(discovered_c_s)])
-        discovered_cfds = [c.cfd for c in np.nditer(discovered_c_s)]
+    print('about to read from file')
+    if os.path.isfile('./store/' + project_id + '/discovered_cfds.csv'):
+        dscv_df = pd.read_csv('./store/' + project_id + '/discovered_cfds.csv', usecols=['lhs', 'rhs'])
+        dscv_df['cfd'] = '(' + dscv_df['lhs'] + ') => ' + dscv_df['rhs']
+        print('read from CFD file')
+        score_df = pd.read_csv('./store/' + project_id + '/scores.csv', squeeze=True)
+        print('read from score file')
 
-        for c in np.nditer(top_cfds):
-            if c.cfd not in discovered_cfds:
-                discovered_c_s = np.append(discovered_c_s, c)
-            else:
-                idx = np.where(discovered_c_s.cfd == c.cfd)
-                # TEMPORARY IMPLEMENTATION
-                discovered_c_s[idx].score = c.score     # INSERT ITERATIVE SCORE UPDATING FUNCTION HERE
+        for c in top_cfds:
+            pieces = c.cfd[1:].split(') => ')
+            lhs = pieces[0]
+            rhs = pieces[1]
+            if c.cfd not in dscv_df['cfd']:
+                dscv_df = dscv_df.concat({'lhs': lhs, 'rhs': rhs, 'cfd': c.cfd}, ignore_index=True)
+                score_df = score_df.concat({'score': c.score}, ignore_index=True)
+            else :
+                idx = dscv_df[dscv_df['cfd'] == c.cfd]
+                score_df[idx]['score'] = c.score
 
-        discovered_c_s = [json.dumps(i) for i in discovered_c_s]
-    except ValueError:
-        discovered_c_s = [json.dumps(i) for i in top_cfds]
+        dscv_df.to_csv('./store/' + project_id + '/discovered_cfds.csv', index_label='cfd_id', columns=['lhs', 'rhs'])
+        score_df.to_csv('./store/' + project_id + '/scores.csv', index_label='cfd_id')
+    else:
+        dscv_cfds = np.array([{'lhs': c['cfd'][1:].split(') => ')[0], 'rhs': c['cfd'][1:].split(') => ')[1], 'cfd': c['cfd']} for c in top_cfds])
+        scores = np.array([c['score'] for c in top_cfds])
+        dscv_df = pd.DataFrame({'lhs': [c['lhs'] for c in dscv_cfds], 'rhs': [c['rhs'] for c in dscv_cfds], 'cfd': [c['cfd'] for c in dscv_cfds]})
+        score_df = pd.DataFrame({'score': scores})
 
-    print('about to save')
-    print(discovered_c_s)
-    np.savetxt('./store/' + project_id + '/discovered_cfds.txt', discovered_c_s, fmt="%s")
-    #return discovered_c_s
+        dscv_df.to_csv('./store/' + project_id + '/discovered_cfds.csv', index_label='cfd_id', columns=['lhs', 'rhs'])
+        score_df.to_csv('./store/' + project_id + '/scores.csv', index_label='cfd_id')
+
 
 def buildCover(d_rep, top_cfds):
     cover = np.empty(len(d_rep.index), dtype=str)
@@ -95,11 +100,11 @@ def buildCover(d_rep, top_cfds):
     return d_rep
 
 
-# TODO
+# TODO; TEMPORARY IMPLEMENTATION
 def pickCfds(top_cfds, num_cfds):
     #picked_cfds = np.empty(num_cfds)
     # pick CFDs
-    # TEMPORARY IMPLEMENTATION
+    # TEMPORARY IMPLEMENTATION; SHOULD INTEGRATE CHARM HERE
     just_cfds = np.array([c['cfd'] for c in top_cfds if float(c['score']) > 0])
     just_scores = np.array([float(c['score']) for c in top_cfds if float(c['score']) > 0])
     norm_scores = np.array([s/sum(just_scores) for s in just_scores])

@@ -35,7 +35,6 @@ class Import(Resource):
         newDir = './store/' + newProjectID + '/'
         try:
             os.mkdir(newDir)
-            open(newDir + 'discovered_cfds.txt', 'w').close()
             newDir += '00000001/'
             os.mkdir(newDir)
         except OSError:
@@ -132,7 +131,7 @@ class Clean(Resource):
 
             d_rep = d_rep.drop(columns=['cover'])
 
-            np.savetxt('./store/' + project_id + '/' + current_iter + '/top_cfds.txt', top_cfds, fmt="%s")
+            #np.savetxt('./store/' + project_id + '/' + current_iter + '/top_cfds.txt', top_cfds, fmt="%s")
 
         d_rep.to_csv('./store/' + project_id + '/' + current_iter + '/data.csv', encoding='utf-8', index=False)
         s_out = helpers.buildSample(d_rep, sample_size).to_json(orient='index')     # TODO; TEMPORARY IMPLEMENTATION
