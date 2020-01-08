@@ -4,6 +4,8 @@ from flask_cors import CORS
 from flask_csv import send_csv
 from random import sample
 from pprint import pprint
+from zipfile import ZipFile
+from io import BytesIO
 import json
 import os
 import subprocess
@@ -126,6 +128,7 @@ class Clean(Resource):
             d_rep = helpers.buildCover(d_rep, top_cfds)
 
             picked_cfd_list = helpers.pickCfds(top_cfds, 1)      # TODO; TEMPORARY IMPLEMENTATION
+            np.savetxt('./store/' + project_id + '/' + current_iter + '/applied_cfds.txt', picked_cfd_list, fmt="%s")
             if picked_cfd_list is not None:
                 d_rep = helpers.applyCfdList(d_rep, picked_cfd_list)
 
@@ -161,10 +164,14 @@ class Download(Resource):
         latest_iter = "{:08x}".format(max(iteration_list))
         print(latest_iter)
 
-        return send_file('./store/' + project_id + '/' + latest_iter + '/data.csv',
-                         mimetype='text/csv',
-                         attachment_filename='charm_cleaned.csv',
-                         as_attachment=True)
+        finalZip = BytesIO()
+
+        with ZipFile(finalZip, 'w') as zf:
+            zf.write('./store/' + project_id + '/' + latest_iter + '/data.csv')
+            zf.write('./store/' + project_id + '/' + latest_iter + '/applied_cfds.txt')
+        finalZip.seek(0)
+
+        return send_file(finalZip, attachment_filename='charm_cleaned.zip', as_attachment=True)
 
 
 api.add_resource(Import, '/import')
