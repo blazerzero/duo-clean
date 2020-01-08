@@ -34,7 +34,7 @@ def getSearchResults(receiver, query, sampleSize):
         for row in searchResults:
             rule = receiver.data.getListRow(row)
             res.append(CFD(rule))
-        return res
+        return res, searchResults
     except KeyError:
         print('No search results. Please try again.')
         return None
