@@ -6,6 +6,11 @@ import json
 import subprocess as sp
 import pandas as pd
 import numpy as np
+import sys
+import pickle
+
+sys.path.insert(0, './charm/keywordSearch/charm')
+import charm
 
 
 def applyUserRepairs(d_dirty, s_in):
@@ -63,6 +68,12 @@ def addNewCfdsToList(top_cfds, project_id):
 
         dscv_df.to_csv('./store/' + project_id + '/discovered_cfds.csv', index_label='cfd_id', columns=['lhs', 'rhs'])
         score_df.to_csv('./store/' + project_id + '/scores.csv', index_label='cfd_id')
+
+        receiver = pickle.load( open('./store/' + project_id + '/charm_receiver.p', 'rb') )
+        # receiver = charm.updateReceiver(receiver, project_id)   #TODO; THIS IS WHERE THE RECEIVER AND STRATEGY GET UPDATED WITH THE NEW DATA
+        #pickle.dump(receiver, open('./store/' + project_id + '/charm_receiver.p', 'wb'))
+        return receiver
+
     else:
         dscv_cfds = np.array([{'lhs': c['cfd'][1:].split(') => ')[0], 'rhs': c['cfd'][1:].split(') => ')[1], 'cfd': c['cfd']} for c in top_cfds])
         scores = np.array([c['score'] for c in top_cfds])
@@ -71,6 +82,10 @@ def addNewCfdsToList(top_cfds, project_id):
 
         dscv_df.to_csv('./store/' + project_id + '/discovered_cfds.csv', index_label='cfd_id', columns=['lhs', 'rhs'])
         score_df.to_csv('./store/' + project_id + '/scores.csv', index_label='cfd_id')
+
+        receiver = charm.prepareReceiver(project_id)
+        #pickle.dump( receiver, open('./store/' + project_id + '/charm_receiver.p', 'wb') )
+        return receiver
 
 
 def buildCover(d_rep, top_cfds):
@@ -114,22 +129,29 @@ def pickCfds(top_cfds, num_cfds):
     else:
         return None
 
+def charmPickCfds(receiver, query, sample_size):
+    return charm.getSearchResults(receiver, query, sample_size)
+
 
 def applyCfdList(d_rep, cfdList):
     for cfd in cfdList:
         d_rep = applyCfd(d_rep, cfd)
     return d_rep
 
-
-def applyCfd(d_rep, cfd):
+#TODO: Figure out how to apply CFDs with no "=" sign on the RHS
+def applyCfd(d_rep, cfd, cfd_id, receiver):
+    mod_count = 0
     lhs = np.array(cfd.split(' => ')[0][1:-1].split(', '))
     rhs = cfd.split(' => ')[1]
     for idx, row in d_rep.iterrows():
         if cfd in row['cover'].split(', '):
             if '=' in rhs:
                 rh = np.array(rhs.split('='))
-                row[rh[0]] = rh[1]
+                if row[rh[0]] != rh[1]:
+                    row[rh[0]] = rh[1]
+                    mod_count += 1
 
+    #charm.reinforce(receiver, cfd_id, mod_count)        # reinforcement value is equal to the number of modifications made to the dataset by this CFD (i.e. number of rows modified)
     return d_rep
 
 

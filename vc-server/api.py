@@ -13,6 +13,7 @@ import helpers
 import time
 import pandas as pd
 import numpy as np
+import pickle
 
 app = Flask(__name__)
 CORS(app)
@@ -122,17 +123,22 @@ class Clean(Resource):
 
         if top_cfds is not None and isinstance(top_cfds, np.ndarray):
             #discovered_cfds = helpers.addNewCfdsToList(top_cfds, project_id)
-            helpers.addNewCfdsToList(top_cfds, project_id) # TODO; TEMPORARY IMPLEMENTATION
+            receiver = helpers.addNewCfdsToList(top_cfds, project_id) # TODO; TEMPORARY IMPLEMENTATION
 
             #d_rep = helpers.buildCover(d_rep, discovered_cfds)
             d_rep = helpers.buildCover(d_rep, top_cfds)
 
-            picked_cfd_list = helpers.pickCfds(top_cfds, 1)      # TODO; TEMPORARY IMPLEMENTATION
+            picked_cfd_list = helpers.pickCfds(top_cfds, 1)      # TODO; TEMPORARY IMPLEMENTATION; MODIFICATION OF STRATEGY AND QUERYING WILL HAPPEN HERE
+
+            # TODO: everything through the "pickle.dump" line will eventually be outside of this if statement, once Charm is integrated
+            #picked_cfd_list, picked_idx = helpers.charmPickCfds(receiver, query, sample_size)
+
             np.savetxt('./store/' + project_id + '/' + current_iter + '/applied_cfds.txt', picked_cfd_list, fmt="%s")
             if picked_cfd_list is not None:
                 d_rep = helpers.applyCfdList(d_rep, picked_cfd_list)
 
             d_rep = d_rep.drop(columns=['cover'])
+            pickle.dump( receiver, open('./store/' + project_id + '/charm_receiver.p', 'wb') )
 
             #np.savetxt('./store/' + project_id + '/' + current_iter + '/top_cfds.txt', top_cfds, fmt="%s")
 
