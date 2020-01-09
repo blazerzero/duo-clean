@@ -37,7 +37,7 @@ def getRules(receiver, query, sample_size):
         return rules, rule_id_list
     except KeyError:
         print('No search results. Please try again.')
-        return None
+        return None, None
 
 def reinforce(receiver, cfd_id, reinforcement_value):
     receiver.reinforce(cfd_id, reinforcement_value)

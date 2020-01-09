@@ -69,10 +69,11 @@ def addNewCfdsToList(top_cfds, project_id):
         dscv_df.to_csv('./store/' + project_id + '/discovered_cfds.csv', index_label='cfd_id', columns=['lhs', 'rhs'])
         score_df.to_csv('./store/' + project_id + '/scores.csv', index_label='cfd_id')
 
-        receiver = pickle.load( open('./store/' + project_id + '/charm_receiver.p', 'rb') )
-        # receiver = charm.updateReceiver(receiver, project_id)   #TODO; THIS IS WHERE THE RECEIVER AND STRATEGY GET UPDATED WITH THE NEW DATA
+        # TODO: uncomment when Charm is integrated
+        #receiver = pickle.load( open('./store/' + project_id + '/charm_receiver.p', 'rb') )
+        # receiver = charm.updateReceiver(receiver, project_id)   #TODO; implement updateReceiver; THIS IS WHERE THE RECEIVER AND STRATEGY GET UPDATED WITH THE NEW DATA
         #pickle.dump(receiver, open('./store/' + project_id + '/charm_receiver.p', 'wb'))
-        return receiver
+        #return receiver
 
     else:
         dscv_cfds = np.array([{'lhs': c['cfd'][1:].split(') => ')[0], 'rhs': c['cfd'][1:].split(') => ')[1], 'cfd': c['cfd']} for c in top_cfds])
@@ -83,9 +84,10 @@ def addNewCfdsToList(top_cfds, project_id):
         dscv_df.to_csv('./store/' + project_id + '/discovered_cfds.csv', index_label='cfd_id', columns=['lhs', 'rhs'])
         score_df.to_csv('./store/' + project_id + '/scores.csv', index_label='cfd_id')
 
-        receiver = charm.prepareReceiver(project_id)
+        # TODO: uncomment when Charm is integrated
+        #receiver = charm.prepareReceiver(project_id)
         #pickle.dump( receiver, open('./store/' + project_id + '/charm_receiver.p', 'wb') )
-        return receiver
+        #return receiver
 
 
 def buildCover(d_rep, top_cfds):
@@ -115,11 +117,8 @@ def buildCover(d_rep, top_cfds):
     return d_rep
 
 
-# TODO; TEMPORARY IMPLEMENTATION
+# TODO; TEMPORARY IMPLEMENTATION; charmPickCfds will be used eventually
 def pickCfds(top_cfds, num_cfds):
-    #picked_cfds = np.empty(num_cfds)
-    # pick CFDs
-    # TEMPORARY IMPLEMENTATION; SHOULD INTEGRATE CHARM HERE
     just_cfds = np.array([c['cfd'] for c in top_cfds if float(c['score']) > 0])
     just_scores = np.array([float(c['score']) for c in top_cfds if float(c['score']) > 0])
     norm_scores = np.array([s/sum(just_scores) for s in just_scores])
@@ -132,14 +131,20 @@ def pickCfds(top_cfds, num_cfds):
 def charmPickCfds(receiver, query, sample_size):
     return charm.getSearchResults(receiver, query, sample_size)
 
+# TODO: This will be the final version of applyCfdList
+#def applyCfdList(d_rep, cfd_list, cfd_id_list):
+#    for i in range(0, len(cfd_list)):
+#        d_rep = applyCfd(d_rep, cfd_list[i], cfd_id_list[i])
+#    return d_rep
 
+# TODO: This version of applyCfdList will be removed
 def applyCfdList(d_rep, cfdList):
     for cfd in cfdList:
         d_rep = applyCfd(d_rep, cfd)
     return d_rep
 
-#TODO: Figure out how to apply CFDs with no "=" sign on the RHS
-def applyCfd(d_rep, cfd, cfd_id, receiver):
+#TODO: Figure out how to apply CFDs with no "=" sign on the RHS, and remove None from cfd_id and receiver when integrating
+def applyCfd(d_rep, cfd, cfd_id=None, receiver=None):
     mod_count = 0
     lhs = np.array(cfd.split(' => ')[0][1:-1].split(', '))
     rhs = cfd.split(' => ')[1]

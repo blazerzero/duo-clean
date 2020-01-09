@@ -109,12 +109,10 @@ class Clean(Resource):
 
         existing_iters = [('0x' + f) for f in os.listdir('./store/' + project_id + '/') if os.path.isdir(os.path.join('./store/' + project_id + '/', f))]
         iteration_list = [int(d, 0) for d in existing_iters]
-        #print(iteration_list)
         current_iter = "{:08x}".format(max(iteration_list) + 1)
         print("New iteration: " + str(current_iter))
 
         d_dirty = pd.read_csv('./store/' + project_id + '/00000001/data.csv')
-        #print(d_dirty)
         d_rep = helpers.applyUserRepairs(d_dirty, s_in)
         os.mkdir('./store/' + project_id + '/' + current_iter + '/')
         d_rep.to_csv('./store/' + project_id + '/' + current_iter + '/data.csv', encoding='utf-8', index=False)
@@ -122,25 +120,23 @@ class Clean(Resource):
         top_cfds = helpers.discoverCFDs(project_id, current_iter)
 
         if top_cfds is not None and isinstance(top_cfds, np.ndarray):
-            #discovered_cfds = helpers.addNewCfdsToList(top_cfds, project_id)
-            receiver = helpers.addNewCfdsToList(top_cfds, project_id) # TODO; TEMPORARY IMPLEMENTATION
+            helpers.addNewCfdsToList(top_cfds, project_id)
+            #receiver = helpers.addNewCfdsToList(top_cfds, project_id) # TODO; this will eventually be the function call used for addNewCfdsToList
 
-            #d_rep = helpers.buildCover(d_rep, discovered_cfds)
             d_rep = helpers.buildCover(d_rep, top_cfds)
 
-            picked_cfd_list = helpers.pickCfds(top_cfds, 1)      # TODO; TEMPORARY IMPLEMENTATION; MODIFICATION OF STRATEGY AND QUERYING WILL HAPPEN HERE
+            picked_cfd_list = helpers.pickCfds(top_cfds, 1)      # TODO; will eventually use charmPickCfds instead
 
             # TODO: everything through the "pickle.dump" line will eventually be outside of this if statement, once Charm is integrated
-            #picked_cfd_list, picked_idx = helpers.charmPickCfds(receiver, query, sample_size)
+            #picked_cfd_list, picked_idx_list = helpers.charmPickCfds(receiver, query, sample_size)
 
             np.savetxt('./store/' + project_id + '/' + current_iter + '/applied_cfds.txt', picked_cfd_list, fmt="%s")
             if picked_cfd_list is not None:
                 d_rep = helpers.applyCfdList(d_rep, picked_cfd_list)
+                #d_rep = helpers.applyCfdList(d_rep, picked_cfd_list, picked_idx_list)  # TODO: This will eventually be the function call used for applyCfdList
 
             d_rep = d_rep.drop(columns=['cover'])
-            pickle.dump( receiver, open('./store/' + project_id + '/charm_receiver.p', 'wb') )
-
-            #np.savetxt('./store/' + project_id + '/' + current_iter + '/top_cfds.txt', top_cfds, fmt="%s")
+            #pickle.dump( receiver, open('./store/' + project_id + '/charm_receiver.p', 'wb') )     # TODO: uncomment to save receiver into pickle file
 
         d_rep.to_csv('./store/' + project_id + '/' + current_iter + '/data.csv', encoding='utf-8', index=False)
         s_out = helpers.buildSample(d_rep, sample_size).to_json(orient='index')     # TODO; TEMPORARY IMPLEMENTATION
