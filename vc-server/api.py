@@ -99,7 +99,7 @@ class Clean(Resource):
         print(request.form.get('data'))
         print(request.form.get('sample_size'))
 
-        print('About to read form data');
+        print('About to read form data')
 
         project_id = request.form.get('project_id')
         s_in = request.form.get('data')
@@ -139,6 +139,7 @@ class Clean(Resource):
             #pickle.dump( receiver, open('./store/' + project_id + '/charm_receiver.p', 'wb') )     # TODO: uncomment to save receiver into pickle file
 
         d_rep.to_csv('./store/' + project_id + '/' + current_iter + '/data.csv', encoding='utf-8', index=False)
+        helpers.reinforceTuples(project_id, current_iter, top_cfds, d_rep)
         s_out = helpers.buildSample(d_rep, sample_size).to_json(orient='index')     # TODO; TEMPORARY IMPLEMENTATION
 
         returned_data = {

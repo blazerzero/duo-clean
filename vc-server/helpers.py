@@ -160,10 +160,42 @@ def applyCfd(d_rep, cfd, cfd_id=None, receiver=None):
     return d_rep
 
 
+def reinforceTuples(project_id, current_iter, applied_cfds, d_latest):
+    if applied_cfds is not None:
+        tuple_weights = None
+        value_mapper = None
+        if current_iter == '00000002':
+            tuple_weights = pd.DataFrame(index=d_latest, columns=['weight'])
+            tuple_weights['weight'] = 1
+            value_mapper = pd.DataFrame().reindex_like(d_latest)
+            d_01 = pd.read_csv('./store/' + project_id + '/00000001/data.csv')
+            d_02 = pd.read_csv('./store/' + project_id + '/00000002/data.csv')
+            for idx in d_01.index:
+                for col in d_01.columns:
+                    value_mapper.at[idx, col] = [d_01.at[idx, col]]
+                    if d_01.at[idx, col] != d_02.at[idx, col]:
+                        value_mapper.at[idx, col].append(d_02.at[idx, col])
+        else:
+            tuple_weights = pd.read_pickle('./store/' + project_id + '/tuple_weights.p')
+            value_mapper = pd.read_pickle('./store/' + project_id + '/value_mapper.p')
+            for idx in d_latest.index:
+                for col in d_latest.columns:
+                    if d_latest.at[idx, col] not in value_mapper.at[idx, col]:
+                        value_mapper.at[idx, col].append(d_latest.at[idx, col])
+        # TODO: Implement reinforcements here as written in your notebook
+        value_mapper.to_pickle('./store/' + project_id + '/value_mapper.p')
+        tuple_weights.to_pickle('./store/' + project_id + '/tuple_weights.p')
+
+
+
+
 # TODO
-def buildSample(d_rep, sample_size):
+def buildSample(d_rep, sample_size, project_id):
     # TEMPORARY IMPLEMENTATION
-    sample = d_rep.sample(n=sample_size)
+    tuple_weights = pd.read_pickle('./store/' + project_id + '/tuple_weights.p')
+    chosen_tups = tuple_weights.sample(n=sample_size, weights='weight')     # tuples with a larger weight (a.k.a. larger value in the 'weight' column of tuple_weights) are more likely to be chosen
+    print('Chosen example indexes: ' + str(chosen_tups.index))
+    sample = d_rep.iloc[chosen_tups.index]
     return sample
 
 '''def map_csv(csv_file):
