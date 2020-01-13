@@ -78,7 +78,21 @@ class Sample(Resource):
         current_iter = "{:08x}".format(max(iteration_list))
         print(current_iter)
         data = pd.read_csv('./store/' + project_id + '/' + current_iter + '/data.csv')
-        s_out = helpers.buildSample(data, min(sample_size, len(data.index))).to_json(orient='index')   # SAMPLING FUNCTION GOES HERE; FOR NOW, BASIC SAMPLER
+        tuple_weights = pd.DataFrame(index=data.index, columns=['weight'])
+        tuple_weights['weight'] = 1
+        value_mapper = dict()
+        print(tuple_weights)
+        print(value_mapper)
+        for idx in data.index:
+            value_mapper[idx] = dict()
+            for col in data.columns:
+                print(idx, col)
+                #value_mapper.at[idx, col] = ' '.join([str(data.at[idx, col])])
+                value_mapper[idx][col] = [data.at[idx, col]]
+        #value_mapper.to_pickle('./store/' + project_id + '/value_mapper.p')
+        pickle.dump( value_mapper, open('./store/' + project_id + '/value_mapper.p', 'wb') )
+        tuple_weights.to_pickle('./store/' + project_id + '/tuple_weights.p')
+        s_out = helpers.buildSample(data, min(sample_size, len(data.index)), project_id).to_json(orient='index')   # SAMPLING FUNCTION GOES HERE; FOR NOW, BASIC SAMPLER
 
         returned_data = {
             'sample': s_out,
@@ -118,6 +132,7 @@ class Clean(Resource):
         d_rep.to_csv('./store/' + project_id + '/' + current_iter + '/data.csv', encoding='utf-8', index=False)
         print('about to discover CFDs')
         top_cfds = helpers.discoverCFDs(project_id, current_iter)
+        d_rep['cover'] = None
 
         if top_cfds is not None and isinstance(top_cfds, np.ndarray):
             helpers.addNewCfdsToList(top_cfds, project_id)
@@ -132,15 +147,15 @@ class Clean(Resource):
 
             np.savetxt('./store/' + project_id + '/' + current_iter + '/applied_cfds.txt', picked_cfd_list, fmt="%s")
             if picked_cfd_list is not None:
-                d_rep = helpers.applyCfdList(d_rep, picked_cfd_list)
+                d_rep = helpers.applyCfdList(project_id, d_rep, picked_cfd_list)
                 #d_rep = helpers.applyCfdList(d_rep, picked_cfd_list, picked_idx_list)  # TODO: This will eventually be the function call used for applyCfdList
 
-            d_rep = d_rep.drop(columns=['cover'])
             #pickle.dump( receiver, open('./store/' + project_id + '/charm_receiver.p', 'wb') )     # TODO: uncomment to save receiver into pickle file
 
+        d_rep = d_rep.drop(columns=['cover'])
+        helpers.reinforceTuplesBasedOnVariance(project_id, d_rep)
         d_rep.to_csv('./store/' + project_id + '/' + current_iter + '/data.csv', encoding='utf-8', index=False)
-        helpers.reinforceTuples(project_id, current_iter, top_cfds, d_rep)
-        s_out = helpers.buildSample(d_rep, sample_size).to_json(orient='index')     # TODO; TEMPORARY IMPLEMENTATION
+        s_out = helpers.buildSample(d_rep, sample_size, project_id).to_json(orient='index')     # TODO; TEMPORARY IMPLEMENTATION
 
         returned_data = {
             'sample': s_out,

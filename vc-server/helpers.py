@@ -8,6 +8,7 @@ import pandas as pd
 import numpy as np
 import sys
 import pickle
+from collections import Counter
 
 sys.path.insert(0, './charm/keywordSearch/charm')
 import charm
@@ -56,12 +57,12 @@ def addNewCfdsToList(top_cfds, project_id):
         print('read from score file')
 
         for c in top_cfds:
-            pieces = c.cfd[1:].split(') => ')
+            pieces = c['cfd'][1:].split(') => ')
             lhs = pieces[0]
             rhs = pieces[1]
-            if c.cfd not in dscv_df['cfd']:
-                dscv_df = dscv_df.concat({'lhs': lhs, 'rhs': rhs, 'cfd': c.cfd}, ignore_index=True)
-                score_df = score_df.concat({'score': c.score}, ignore_index=True)
+            if c['cfd'] not in dscv_df['cfd']:
+                dscv_df = dscv_df.append({'lhs': lhs, 'rhs': rhs, 'cfd': c['cfd']}, ignore_index=True)
+                score_df = score_df.append({'score': c['score']}, ignore_index=True)
             else :
                 idx = dscv_df[dscv_df['cfd'] == c.cfd]
                 score_df[idx]['score'] = c.score
@@ -99,10 +100,10 @@ def buildCover(d_rep, top_cfds):
     for idx, row in d_rep.iterrows():
         relevant_cfds = []
         for cfd in just_cfds:
-            lhs = np.array(cfd.split(' => ')[0][1:-1].split(', '))
+            lhs = cfd.split(' => ')[0][1:-1]
             rhs = cfd.split(' => ')[1]
             applies = True
-            for lh in lhs:
+            for lh in lhs.split(', '):
                 if '=' in lh:
                     lh = np.array(lh.split('='))
                     if row[lh[0]] != lh[1]:
@@ -129,62 +130,60 @@ def pickCfds(top_cfds, num_cfds):
         return None
 
 def charmPickCfds(receiver, query, sample_size):
-    return charm.getSearchResults(receiver, query, sample_size)
+    return charm.getRules(receiver, query, sample_size)
 
 # TODO: This will be the final version of applyCfdList
-#def applyCfdList(d_rep, cfd_list, cfd_id_list):
+#def applyCfdList(project_id, d_rep, cfd_list, cfd_id_list):
 #    for i in range(0, len(cfd_list)):
-#        d_rep = applyCfd(d_rep, cfd_list[i], cfd_id_list[i])
+#        d_rep = applyCfd(project_id, d_rep, cfd_list[i], cfd_id_list[i])
 #    return d_rep
 
 # TODO: This version of applyCfdList will be removed
-def applyCfdList(d_rep, cfdList):
-    for cfd in cfdList:
-        d_rep = applyCfd(d_rep, cfd)
+def applyCfdList(project_id, d_rep, cfd_list):
+    for cfd in cfd_list:
+        d_rep = applyCfd(project_id, d_rep, cfd)
     return d_rep
 
 #TODO: Figure out how to apply CFDs with no "=" sign on the RHS, and remove None from cfd_id and receiver when integrating
-def applyCfd(d_rep, cfd, cfd_id=None, receiver=None):
-    mod_count = 0
-    lhs = np.array(cfd.split(' => ')[0][1:-1].split(', '))
-    rhs = cfd.split(' => ')[1]
+def applyCfd(project_id, d_rep, cfd, cfd_id=None, receiver=None):
+    #mod_count = 0
+    #lhs = np.array(cfd.split(' => ')[0][1:-1].split(', '))
+    #rhs = cfd.split(' => ')[1]
+    tuple_weights = pd.read_pickle('./store/' + project_id + '/tuple_weights.p')
     for idx, row in d_rep.iterrows():
+        mod_count = 0
         if cfd in row['cover'].split(', '):
+            lhs = cfd.split(' => ')[0][1:-1]
+            rhs = cfd.split(' => ')[1]
             if '=' in rhs:
                 rh = np.array(rhs.split('='))
                 if row[rh[0]] != rh[1]:
                     row[rh[0]] = rh[1]
                     mod_count += 1
+        tuple_weights.at[idx, 'weight'] += mod_count
 
     #charm.reinforce(receiver, cfd_id, mod_count)        # reinforcement value is equal to the number of modifications made to the dataset by this CFD (i.e. number of rows modified)
     return d_rep
 
 
-def reinforceTuples(project_id, current_iter, applied_cfds, d_latest):
-    if applied_cfds is not None:
-        tuple_weights = None
-        value_mapper = None
-        if current_iter == '00000002':
-            tuple_weights = pd.DataFrame(index=d_latest, columns=['weight'])
-            tuple_weights['weight'] = 1
-            value_mapper = pd.DataFrame().reindex_like(d_latest)
-            d_01 = pd.read_csv('./store/' + project_id + '/00000001/data.csv')
-            d_02 = pd.read_csv('./store/' + project_id + '/00000002/data.csv')
-            for idx in d_01.index:
-                for col in d_01.columns:
-                    value_mapper.at[idx, col] = [d_01.at[idx, col]]
-                    if d_01.at[idx, col] != d_02.at[idx, col]:
-                        value_mapper.at[idx, col].append(d_02.at[idx, col])
-        else:
-            tuple_weights = pd.read_pickle('./store/' + project_id + '/tuple_weights.p')
-            value_mapper = pd.read_pickle('./store/' + project_id + '/value_mapper.p')
-            for idx in d_latest.index:
-                for col in d_latest.columns:
-                    if d_latest.at[idx, col] not in value_mapper.at[idx, col]:
-                        value_mapper.at[idx, col].append(d_latest.at[idx, col])
-        # TODO: Implement reinforcements here as written in your notebook
-        value_mapper.to_pickle('./store/' + project_id + '/value_mapper.p')
-        tuple_weights.to_pickle('./store/' + project_id + '/tuple_weights.p')
+def reinforceTuplesBasedOnVariance(project_id, d_latest):
+    tuple_weights = pd.read_pickle('./store/' + project_id + '/tuple_weights.p')
+    value_mapper = pickle.load( open('./store/' + project_id + '/value_mapper.p', 'rb') )
+    # TODO: Implement reinforcements here as written in your notebook
+    for idx in d_latest.index:
+        reinforcementValue = 0
+        for col in d_latest.columns:
+            value_mapper[idx][col].append(d_latest.at[idx, col])
+            num_unique = len(set(value_mapper[idx][col]))        # TODO: May be good to incorporate how many unique values there have been, but unsure of how to integrate this stat yet
+            cell_values = Counter(value_mapper[idx][col])
+            mode = cell_values.most_common(1)[0][0]
+            num_occurrences_mode = cell_values.most_common(1)[0][1]
+            #num_occurrences_mode = value_mapper[idx][col].count(most_common)
+            reinforcementValue += (1 - (num_occurrences_mode/len(value_mapper[idx][col])))
+
+        tuple_weights.at[idx, 'weight'] += reinforcementValue
+    pickle.dump( value_mapper, open('./store/' + project_id + '/value_mapper.p', 'wb') )
+    tuple_weights.to_pickle('./store/' + project_id + '/tuple_weights.p')
 
 
 
