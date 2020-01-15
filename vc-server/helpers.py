@@ -166,24 +166,43 @@ def applyCfd(project_id, d_rep, cfd, cfd_id=None, receiver=None):
     return d_rep
 
 
-def reinforceTuplesBasedOnVariance(project_id, d_latest):
+def reinforceTuplesBasedOnContradiction(project_id, current_iter, d_latest):
     tuple_weights = pd.read_pickle('./store/' + project_id + '/tuple_weights.p')
     value_mapper = pickle.load( open('./store/' + project_id + '/value_mapper.p', 'rb') )
-    # TODO: Implement reinforcements here as written in your notebook
+    prev_iter = "{:08x}".format(int('0x' + current_iter, 0) - 1)
+    # TODO: Implement checking previous value spread and value disagreement
+    value_spread = pickle.load( open('./store/' + project_id + '/' + prev_iter + '/value_spread.p', 'rb') )
+    value_disagreement = pickle.load( open('./store/' + project_id + '/' + prev_iter + '/value_disagreement.p', 'rb') )
     for idx in d_latest.index:
         reinforcementValue = 0
         for col in d_latest.columns:
             value_mapper[idx][col].append(d_latest.at[idx, col])
-            num_unique = len(set(value_mapper[idx][col]))        # TODO: May be good to incorporate how many unique values there have been, but unsure of how to integrate this stat yet
+            num_unique = len(set(value_mapper[idx][col]))
+            vspr_d = 0       # value spread delta (change in value spread)
+            if num_unique > value_spread[idx][col]:
+                vspr_d = 1
+                value_spread[idx][col] = num_unique
+
             cell_values = Counter(value_mapper[idx][col])
-            mode = cell_values.most_common(1)[0][0]
             num_occurrences_mode = cell_values.most_common(1)[0][1]
+            new_vdis = 1 - (num_occurrences_mode/len(value_mapper[idx][col]))   # new value disagreement (value disagreement for the current iteration)
+            vdis_d = new_vdis - value_disagreement[idx][col]
+            value_disagreement[idx][col] = new_vdis
+
+            reinforcementValue += (vspr_d + vdis_d)
+
+            #mode = cell_values.most_common(1)[0][0]
             #num_occurrences_mode = value_mapper[idx][col].count(most_common)
-            reinforcementValue += (1 - (num_occurrences_mode/len(value_mapper[idx][col])))
+            #current_value_spread = num_unique/len(value_mapper[idx][col])
+            #current_value_disagreement = 1 - (num_occurrences_mode/len(value_mapper[idx][col]))
+            #reinforcementValue += current_value_spread
+            #reinforcementValue += current_value_disagreement
 
         tuple_weights.at[idx, 'weight'] += reinforcementValue
-    pickle.dump( value_mapper, open('./store/' + project_id + '/value_mapper.p', 'wb') )
     tuple_weights.to_pickle('./store/' + project_id + '/tuple_weights.p')
+    pickle.dump( value_mapper, open('./store/' + project_id + '/value_mapper.p', 'wb') )
+    pickle_dump( value_spread, open('./store/' + project_id + '/' + current_iter + '/value_spread.p', 'wb') )
+    pickle_dump( value_disagreement, open('./store/' + project_id + '/' + current_iter + '/value_disagreement.p', 'wb') )
 
 
 

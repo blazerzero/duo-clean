@@ -81,16 +81,24 @@ class Sample(Resource):
         tuple_weights = pd.DataFrame(index=data.index, columns=['weight'])
         tuple_weights['weight'] = 1
         value_mapper = dict()
+        value_spread = dict()
+        value_disagreement = dict()
         print(tuple_weights)
         print(value_mapper)
         for idx in data.index:
             value_mapper[idx] = dict()
+            value_spread = dict()
+            value_disagreement = dict()
             for col in data.columns:
                 print(idx, col)
                 #value_mapper.at[idx, col] = ' '.join([str(data.at[idx, col])])
                 value_mapper[idx][col] = [data.at[idx, col]]
+                value_spread[idx][col] = 1
+                value_disagreement[idx][col] = 0
         #value_mapper.to_pickle('./store/' + project_id + '/value_mapper.p')
         pickle.dump( value_mapper, open('./store/' + project_id + '/value_mapper.p', 'wb') )
+        pickle.dump( value_spread, open('./store/' + project_id + '/00000001/value_spread.p', 'wb') )
+        pickle.dump( value_disagreement, open('./store/' + project_id + '/00000001/value_disagreement.p', 'wb') )
         tuple_weights.to_pickle('./store/' + project_id + '/tuple_weights.p')
         s_out = helpers.buildSample(data, min(sample_size, len(data.index)), project_id).to_json(orient='index')   # SAMPLING FUNCTION GOES HERE; FOR NOW, BASIC SAMPLER
 
@@ -153,7 +161,7 @@ class Clean(Resource):
             #pickle.dump( receiver, open('./store/' + project_id + '/charm_receiver.p', 'wb') )     # TODO: uncomment to save receiver into pickle file
 
         d_rep = d_rep.drop(columns=['cover'])
-        helpers.reinforceTuplesBasedOnVariance(project_id, d_rep)
+        helpers.reinforceTuplesBasedOnContradiction(project_id, current_iter, d_rep)
         d_rep.to_csv('./store/' + project_id + '/' + current_iter + '/data.csv', encoding='utf-8', index=False)
         s_out = helpers.buildSample(d_rep, sample_size, project_id).to_json(orient='index')     # TODO; TEMPORARY IMPLEMENTATION
 
