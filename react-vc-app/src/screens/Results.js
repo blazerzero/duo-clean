@@ -59,7 +59,12 @@ class Results extends Component {
   async _handleDownload() {
     const formData = new FormData();
     formData.append('project_id', this.state.project_id);
-    axios.post('http://localhost:5000/download', formData)
+    axios.post('http://localhost:5000/download', formData, {
+      responseType: 'arraybuffer',
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      }
+    })
         .then((response) => {
           const url = window.URL.createObjectURL(new Blob([response.data]));
           const link = document.createElement('a');
