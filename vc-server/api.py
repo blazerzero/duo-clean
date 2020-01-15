@@ -14,6 +14,7 @@ import time
 import pandas as pd
 import numpy as np
 import pickle
+import math
 
 app = Flask(__name__)
 CORS(app)
@@ -44,7 +45,7 @@ class Import(Resource):
             print ('[ERROR] Unable to create a new directory for the project.')
             return {'msg': '[ERROR] Unable to create a new directory for the project.'}
         importedFile = request.files['file']
-        f = open(newDir+'data.csv', 'w')
+        f = open(newDir + 'data.csv', 'w')
         data = importedFile.read().decode('utf-8-sig').split('\n')
         header = data[0].split(',')
         for line in [l for l in data if len(l) > 0]:
@@ -52,6 +53,19 @@ class Import(Resource):
             trimmedLine = ','.join(trimmedLineList)
             f.write(trimmedLine + '\n')
         f.close()
+
+        #df = pd.read_csv(newDir + 'data.csv')
+        #for idx in df.index:
+        #    for col in df.columns:
+        #        try:
+        #            if math.isnan(float(df.at[idx, col])):
+        #                df.at[idx, col] = ''
+        #        except ValueError:
+        #            pass
+        #        except TypeError:
+        #            pass
+
+        #df.to_csv(newDir + 'data.csv', encoding='utf-8', index=False)
 
         returned_data = {
             'header': header,
@@ -77,7 +91,7 @@ class Sample(Resource):
         print(iteration_list)
         current_iter = "{:08x}".format(max(iteration_list))
         print(current_iter)
-        data = pd.read_csv('./store/' + project_id + '/' + current_iter + '/data.csv')
+        data = pd.read_csv('./store/' + project_id + '/' + current_iter + '/data.csv', keep_default_na=False)
         tuple_weights = pd.DataFrame(index=data.index, columns=['weight'])
         tuple_weights['weight'] = 1
         value_mapper = dict()
@@ -87,8 +101,8 @@ class Sample(Resource):
         print(value_mapper)
         for idx in data.index:
             value_mapper[idx] = dict()
-            value_spread = dict()
-            value_disagreement = dict()
+            value_spread[idx] = dict()
+            value_disagreement[idx] = dict()
             for col in data.columns:
                 print(idx, col)
                 #value_mapper.at[idx, col] = ' '.join([str(data.at[idx, col])])
@@ -134,7 +148,7 @@ class Clean(Resource):
         current_iter = "{:08x}".format(max(iteration_list) + 1)
         print("New iteration: " + str(current_iter))
 
-        d_dirty = pd.read_csv('./store/' + project_id + '/00000001/data.csv')
+        d_dirty = pd.read_csv('./store/' + project_id + '/00000001/data.csv', keep_default_na=False)
         d_rep = helpers.applyUserRepairs(d_dirty, s_in)
         os.mkdir('./store/' + project_id + '/' + current_iter + '/')
         d_rep.to_csv('./store/' + project_id + '/' + current_iter + '/data.csv', encoding='utf-8', index=False)
@@ -153,11 +167,14 @@ class Clean(Resource):
             # TODO: everything through the "pickle.dump" line will eventually be outside of this if statement, once Charm is integrated
             #picked_cfd_list, picked_idx_list = helpers.charmPickCfds(receiver, query, sample_size)
 
-            np.savetxt('./store/' + project_id + '/' + current_iter + '/applied_cfds.txt', picked_cfd_list, fmt="%s")
             if picked_cfd_list is not None:
+                np.savetxt('./store/' + project_id + '/' + current_iter + '/applied_cfds.txt', picked_cfd_list,
+                           fmt="%s")
                 d_rep = helpers.applyCfdList(project_id, d_rep, picked_cfd_list)
                 #d_rep = helpers.applyCfdList(d_rep, picked_cfd_list, picked_idx_list)  # TODO: This will eventually be the function call used for applyCfdList
-
+            else:
+                with open('./store/' + project_id + '/' + current_iter + '/applied_cfds.txt', 'w') as f:
+                    print('No CFDs were applied.', file=f)
             #pickle.dump( receiver, open('./store/' + project_id + '/charm_receiver.p', 'wb') )     # TODO: uncomment to save receiver into pickle file
 
         d_rep = d_rep.drop(columns=['cover'])

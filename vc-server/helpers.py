@@ -9,6 +9,7 @@ import numpy as np
 import sys
 import pickle
 from collections import Counter
+from pprint import pprint
 
 sys.path.insert(0, './charm/keywordSearch/charm')
 import charm
@@ -50,10 +51,10 @@ def discoverCFDs(project_id, current_iter):
 def addNewCfdsToList(top_cfds, project_id):
     print('about to read from file')
     if os.path.isfile('./store/' + project_id + '/discovered_cfds.csv'):
-        dscv_df = pd.read_csv('./store/' + project_id + '/discovered_cfds.csv', usecols=['lhs', 'rhs'])
+        dscv_df = pd.read_csv('./store/' + project_id + '/discovered_cfds.csv', usecols=['lhs', 'rhs'], keep_default_na=False)
         dscv_df['cfd'] = '(' + dscv_df['lhs'] + ') => ' + dscv_df['rhs']
         print('read from CFD file')
-        score_df = pd.read_csv('./store/' + project_id + '/scores.csv', squeeze=True)
+        score_df = pd.read_csv('./store/' + project_id + '/scores.csv', squeeze=True, keep_default_na=False)
         print('read from score file')
 
         for c in top_cfds:
@@ -178,18 +179,20 @@ def reinforceTuplesBasedOnContradiction(project_id, current_iter, d_latest):
         for col in d_latest.columns:
             value_mapper[idx][col].append(d_latest.at[idx, col])
             num_unique = len(set(value_mapper[idx][col]))
-            vspr_d = 0       # value spread delta (change in value spread)
+            vspr_d = 0       # value spread delta (change in value spread from last iteration)
             if num_unique > value_spread[idx][col]:
                 vspr_d = 1
-                value_spread[idx][col] = num_unique
+            value_spread[idx][col] = num_unique
 
             cell_values = Counter(value_mapper[idx][col])
             num_occurrences_mode = cell_values.most_common(1)[0][1]
             new_vdis = 1 - (num_occurrences_mode/len(value_mapper[idx][col]))   # new value disagreement (value disagreement for the current iteration)
-            vdis_d = new_vdis - value_disagreement[idx][col]
+            vdis_d = new_vdis - value_disagreement[idx][col]            # value disagreement delta (change in value disagreement from last iteration; set to 0 if less than 0 so as to disallow negative tuple weights)
+            if vdis_d < 0:
+                vdis_d = 0
             value_disagreement[idx][col] = new_vdis
 
-            reinforcementValue += (vspr_d + vdis_d)
+            reinforcementValue += (vspr_d + new_vdis + vdis_d)     # add change in value spread, new value disagreement, and change in value disagreement from last iteration
 
             #mode = cell_values.most_common(1)[0][0]
             #num_occurrences_mode = value_mapper[idx][col].count(most_common)
@@ -199,10 +202,18 @@ def reinforceTuplesBasedOnContradiction(project_id, current_iter, d_latest):
             #reinforcementValue += current_value_disagreement
 
         tuple_weights.at[idx, 'weight'] += reinforcementValue
+
+    tuple_weights['weight'] = tuple_weights['weight']/tuple_weights['weight'].sum()
+    print('Tuple weights:')
+    pprint(tuple_weights)
+    print()
+    #pprint(value_mapper)
+    #pprint(value_spread)
+    #pprint(value_disagreement)
     tuple_weights.to_pickle('./store/' + project_id + '/tuple_weights.p')
     pickle.dump( value_mapper, open('./store/' + project_id + '/value_mapper.p', 'wb') )
-    pickle_dump( value_spread, open('./store/' + project_id + '/' + current_iter + '/value_spread.p', 'wb') )
-    pickle_dump( value_disagreement, open('./store/' + project_id + '/' + current_iter + '/value_disagreement.p', 'wb') )
+    pickle.dump( value_spread, open('./store/' + project_id + '/' + current_iter + '/value_spread.p', 'wb') )
+    pickle.dump( value_disagreement, open('./store/' + project_id + '/' + current_iter + '/value_disagreement.p', 'wb') )
 
 
 
@@ -212,7 +223,8 @@ def buildSample(d_rep, sample_size, project_id):
     # TEMPORARY IMPLEMENTATION
     tuple_weights = pd.read_pickle('./store/' + project_id + '/tuple_weights.p')
     chosen_tups = tuple_weights.sample(n=sample_size, weights='weight')     # tuples with a larger weight (a.k.a. larger value in the 'weight' column of tuple_weights) are more likely to be chosen
-    print('Chosen example indexes: ' + str(chosen_tups.index))
+    print('Chosen example indexes:')
+    pprint(chosen_tups.index)
     sample = d_rep.iloc[chosen_tups.index]
     return sample
 
