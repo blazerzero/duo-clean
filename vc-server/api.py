@@ -112,6 +112,7 @@ class Sample(Resource):
                 value_spread[idx][col] = 1
                 value_disagreement[idx][col] = 0
         #value_mapper.to_pickle('./store/' + project_id + '/value_mapper.p')
+        tuple_weights.to_pickle('./store/' + project_id + '/tuple_weights.p')
         pickle.dump( value_mapper, open('./store/' + project_id + '/value_mapper.p', 'wb') )
         pickle.dump( value_spread, open('./store/' + project_id + '/00000001/value_spread.p', 'wb') )
         pickle.dump( value_disagreement, open('./store/' + project_id + '/00000001/value_disagreement.p', 'wb') )
@@ -120,7 +121,7 @@ class Sample(Resource):
             if idx in s_out.index:
                 exploration_freq.at[idx, 'count'] += 1
             else:
-                tuple_weights.at[idx, 'count'] += 1
+                tuple_weights.at[idx, 'weight'] += 1
 
         tuple_weights['weight'] = tuple_weights['weight'] / tuple_weights['weight'].sum()
         tuple_weights.to_pickle('./store/' + project_id + '/tuple_weights.p')
@@ -157,7 +158,7 @@ class Clean(Resource):
         iteration_list = [int(d, 0) for d in existing_iters]
         current_iter = "{:08x}".format(max(iteration_list) + 1)
         print("New iteration: " + str(current_iter))
-        prev_iter = "{:08x}".format(current_iter - 1)
+        prev_iter = "{:08x}".format(max(iteration_list))
 
         d_dirty = pd.read_csv('./store/' + project_id + '/' + prev_iter + '/data.csv', keep_default_na=False)
         d_rep = helpers.applyUserRepairs(d_dirty, s_in)
@@ -200,7 +201,7 @@ class Clean(Resource):
             if idx in s_out.index:
                 exploration_freq.at[idx, 'count'] += 1
             else:
-                tuple_weights.at[idx, 'count'] += (1 - (exploration_freq.at[idx, 'count']/int(current_iter, 0)))    # reinforce tuple based on how frequently been explored
+                tuple_weights.at[idx, 'weight'] += (1 - (exploration_freq.at[idx, 'count']/int(current_iter, 0)))    # reinforce tuple based on how frequently been explored
 
         tuple_weights['weight'] = tuple_weights['weight'] / tuple_weights['weight'].sum()
         tuple_weights.to_pickle('./store/' + project_id + '/tuple_weights.p')
