@@ -94,6 +94,8 @@ class Sample(Resource):
         data = pd.read_csv('./store/' + project_id + '/' + current_iter + '/data.csv', keep_default_na=False)
         tuple_weights = pd.DataFrame(index=data.index, columns=['weight'])
         tuple_weights['weight'] = 1
+        exploration_freq = pd.DataFrame(index=data.index, columns=['count'])
+        exploration_freq['count'] = 0
         value_mapper = dict()
         value_spread = dict()
         value_disagreement = dict()
@@ -113,11 +115,19 @@ class Sample(Resource):
         pickle.dump( value_mapper, open('./store/' + project_id + '/value_mapper.p', 'wb') )
         pickle.dump( value_spread, open('./store/' + project_id + '/00000001/value_spread.p', 'wb') )
         pickle.dump( value_disagreement, open('./store/' + project_id + '/00000001/value_disagreement.p', 'wb') )
+        s_out = helpers.buildSample(data, min(sample_size, len(data.index)), project_id)   # SAMPLING FUNCTION GOES HERE; FOR NOW, BASIC SAMPLER
+        for idx in data.index:
+            if idx in s_out.index:
+                exploration_freq.at[idx, 'count'] += 1
+            else:
+                tuple_weights.at[idx, 'count'] += 1
+
+        tuple_weights['weight'] = tuple_weights['weight'] / tuple_weights['weight'].sum()
         tuple_weights.to_pickle('./store/' + project_id + '/tuple_weights.p')
-        s_out = helpers.buildSample(data, min(sample_size, len(data.index)), project_id).to_json(orient='index')   # SAMPLING FUNCTION GOES HERE; FOR NOW, BASIC SAMPLER
+        exploration_freq.to_pickle('./store/' + project_id + '/exploration_freq.p')
 
         returned_data = {
-            'sample': s_out,
+            'sample': s_out.to_json(orient='index'),
             'msg': '[SUCCESS] Successfully retrieved sample.'
         }
         response = json.dumps(returned_data)
@@ -147,8 +157,9 @@ class Clean(Resource):
         iteration_list = [int(d, 0) for d in existing_iters]
         current_iter = "{:08x}".format(max(iteration_list) + 1)
         print("New iteration: " + str(current_iter))
+        prev_iter = "{:08x}".format(current_iter - 1)
 
-        d_dirty = pd.read_csv('./store/' + project_id + '/00000001/data.csv', keep_default_na=False)
+        d_dirty = pd.read_csv('./store/' + project_id + '/' + prev_iter + '/data.csv', keep_default_na=False)
         d_rep = helpers.applyUserRepairs(d_dirty, s_in)
         os.mkdir('./store/' + project_id + '/' + current_iter + '/')
         d_rep.to_csv('./store/' + project_id + '/' + current_iter + '/data.csv', encoding='utf-8', index=False)
@@ -180,10 +191,23 @@ class Clean(Resource):
         d_rep = d_rep.drop(columns=['cover'])
         helpers.reinforceTuplesBasedOnContradiction(project_id, current_iter, d_rep)
         d_rep.to_csv('./store/' + project_id + '/' + current_iter + '/data.csv', encoding='utf-8', index=False)
-        s_out = helpers.buildSample(d_rep, sample_size, project_id).to_json(orient='index')     # TODO; TEMPORARY IMPLEMENTATION
+        s_out = helpers.buildSample(d_rep, sample_size, project_id)     # TODO; TEMPORARY IMPLEMENTATION
+
+        tuple_weights = pd.read_pickle('./store/' + project_id + '/tuple_weights.p')
+        exploration_freq = pd.read_pickle('./store/' + project_id + 'exploration_freq.p')
+
+        for idx in d_rep.index:
+            if idx in s_out.index:
+                exploration_freq.at[idx, 'count'] += 1
+            else:
+                tuple_weights.at[idx, 'count'] += (1 - (exploration_freq.at[idx, 'count']/int(current_iter, 0)))    # reinforce tuple based on how frequently been explored
+
+        tuple_weights['weight'] = tuple_weights['weight'] / tuple_weights['weight'].sum()
+        tuple_weights.to_pickle('./store/' + project_id + '/tuple_weights.p')
+        exploration_freq.to_pickle('./store/' + project_id + '/exploration_freq.p')
 
         returned_data = {
-            'sample': s_out,
+            'sample': s_out.to_json(orient='index'),
             'msg': '[SUCCESS] Successfully applied and generalized repair and retrived new sample.'
         }
         response = json.dumps(returned_data)

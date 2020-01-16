@@ -134,9 +134,9 @@ def charmPickCfds(receiver, query, sample_size):
     return charm.getRules(receiver, query, sample_size)
 
 # TODO: This will be the final version of applyCfdList
-#def applyCfdList(project_id, d_rep, cfd_list, cfd_id_list):
+#def applyCfdList(project_id, d_rep, cfd_list, cfd_id_list, receiver):
 #    for i in range(0, len(cfd_list)):
-#        d_rep = applyCfd(project_id, d_rep, cfd_list[i], cfd_id_list[i])
+#        d_rep = applyCfd(project_id, d_rep, cfd_list[i], cfd_id_list[i], receiver)
 #    return d_rep
 
 # TODO: This version of applyCfdList will be removed
@@ -171,7 +171,6 @@ def reinforceTuplesBasedOnContradiction(project_id, current_iter, d_latest):
     tuple_weights = pd.read_pickle('./store/' + project_id + '/tuple_weights.p')
     value_mapper = pickle.load( open('./store/' + project_id + '/value_mapper.p', 'rb') )
     prev_iter = "{:08x}".format(int('0x' + current_iter, 0) - 1)
-    # TODO: Implement checking previous value spread and value disagreement
     value_spread = pickle.load( open('./store/' + project_id + '/' + prev_iter + '/value_spread.p', 'rb') )
     value_disagreement = pickle.load( open('./store/' + project_id + '/' + prev_iter + '/value_disagreement.p', 'rb') )
     for idx in d_latest.index:
@@ -194,28 +193,16 @@ def reinforceTuplesBasedOnContradiction(project_id, current_iter, d_latest):
 
             reinforcementValue += (vspr_d + new_vdis + vdis_d)     # add change in value spread, new value disagreement, and change in value disagreement from last iteration
 
-            #mode = cell_values.most_common(1)[0][0]
-            #num_occurrences_mode = value_mapper[idx][col].count(most_common)
-            #current_value_spread = num_unique/len(value_mapper[idx][col])
-            #current_value_disagreement = 1 - (num_occurrences_mode/len(value_mapper[idx][col]))
-            #reinforcementValue += current_value_spread
-            #reinforcementValue += current_value_disagreement
-
         tuple_weights.at[idx, 'weight'] += reinforcementValue
 
     tuple_weights['weight'] = tuple_weights['weight']/tuple_weights['weight'].sum()
     print('Tuple weights:')
     pprint(tuple_weights)
     print()
-    #pprint(value_mapper)
-    #pprint(value_spread)
-    #pprint(value_disagreement)
     tuple_weights.to_pickle('./store/' + project_id + '/tuple_weights.p')
     pickle.dump( value_mapper, open('./store/' + project_id + '/value_mapper.p', 'wb') )
     pickle.dump( value_spread, open('./store/' + project_id + '/' + current_iter + '/value_spread.p', 'wb') )
     pickle.dump( value_disagreement, open('./store/' + project_id + '/' + current_iter + '/value_disagreement.p', 'wb') )
-
-
 
 
 # TODO
@@ -227,40 +214,3 @@ def buildSample(d_rep, sample_size, project_id):
     pprint(chosen_tups.index)
     sample = d_rep.iloc[chosen_tups.index]
     return sample
-
-'''def map_csv(csv_file):
-    header = list()
-    relationships = dict()
-    csv_data = list()
-
-    data = csv_file.read().decode('utf-8-sig')
-    lines = data.split('\n')
-    count = 0
-    maxOccurence = 1
-    for line in tqdm(lines):
-        fields = line.split(',')
-        if count == 0:
-            for field in fields:
-                header.append(field)
-        else:
-            data_line = list()
-            for i in range(0, len(fields)):
-                field = dict()
-                field.update({'cellValue': fields[i]})
-                field.update({'dirtiness': -1})
-                data_line.append(field)
-                for j in range(0, len(fields)):
-                    if i != j:
-                        if (header[i], fields[i]) not in relationships.keys():
-                            relationships[(header[i], fields[i])] = dict()
-                            relationships[(header[i], fields[i])][(header[j], fields[j])] = 1
-                        elif (header[j], fields[j]) not in relationships[(header[i], fields[i])].keys():
-                            relationships[(header[i], fields[i])][(header[j], fields[j])] = 1
-                        else:
-                            relationships[(header[i], fields[i])][(header[j], fields[j])] += 1
-                            if relationships[(header[i], fields[i])][(header[j], fields[j])] > maxOccurence:
-                                maxOccurence = relationships[(header[i], fields[i])][(header[j], fields[j])]
-            csv_data.append(data_line)
-        count += 1
-    pprint.pprint(relationships)
-    return header, csv_data, relationships, maxOccurence'''
