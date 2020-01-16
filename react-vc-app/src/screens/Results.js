@@ -255,6 +255,7 @@ class Results extends Component {
                         var key = i.toString().concat('_', j);
                         return <td
                             key={key}
+                            style={{cursor: 'pointer'}}
                             onClick={this._handleCellClick.bind(this, key)}>{this.state.cleanData[i][j]}
                         </td>
                       }) }

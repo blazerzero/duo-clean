@@ -144,16 +144,25 @@ class Import extends Component {
           </div>
           <Modal size='lg' show={this.state.showModal} onHide={this._handleModalClose}>
             <Modal.Header closeButton>
-              <Modal.Title style={{ color: '#d73f09' }}>VarClean</Modal.Title>
+              <Modal.Title style={{ color: '#d73f09' }}>CharmClean</Modal.Title>
             </Modal.Header>
             <Modal.Body>
               <Tabs defaultActiveKey="whatIs" id="uncontrolled-tab-example">
-                <Tab eventKey="whatIs" title="What is VarClean?" className="modalText">
-                  VarClean is a collaborative and personalized data cleaning platform. Unlike many existing data cleaning applications, VarClean learns about the true context and meaning of your dataset by leveraging your feedback to its suggestions while determining which rules to apply to the dataset. This allows VarClean to help guide you in the right direction regarding how to most effectively clean your dataset.
+                <Tab eventKey="whatIs" title="What is CharmClean?" className="modalText">
+                  CharmClean is an iterative and collaborative data cleaning platform.
+                  Unlike many existing data cleaning applications, CharmClean directly uses the repairs you make
+                  to build a cohesive list of candidate rules to apply to the dataset and intelligently decide
+                  what parts of your dataset are important to analyze next.
                 </Tab>
-                <Tab eventKey="howDoesWork" title="How does VarClean work?" className="modalText">
-                  VarClean cleans your dataset using an interactive two-step process: optimal rule discovery and repair configuration. First, VarClean runs DFD, a functional dependency discovery algorithm, to discover a complete list of minimal functional dependencies that could potentially be applied to the dataset. It then leverages its initial knowledge of how well the dependencies fit the dataset as-is to suggest dependencies. Then, you can respond with which suggestions match your understanding of the context of the dataset, create a new rule, or modify one of the suggestions. VarClean then recalculates the fit of each dependency by analysing your feedback, and it generates a new list of suggestions. This process repeats until you have found the set of rules that you believe best fit the dataset.
-                  Once you have your list of optimal rules, VarClean analyzes your picks and determines the best order in which to apply the rules to the dataset. You can follow its suggestion or build your own order of operations. Lastly, VarClean cleans the dataset based on the defined order of operations.
+                <Tab eventKey="howDoesWork" title="How does CharmClean work?" className="modalText">
+                  CharmClean cleans your dataset using an interactive three-step process:
+                  optimal rule discovery, learning-based cleaning, and intelligent data sampling.
+                  All you have to worry about is cleaning the sample of your data that's shown to you. CharmClean
+                  directly analyzes the repairs your submit to iteratively build a list of possible rules to apply
+                  to the dataset as a whole. It then selects rules to apply based on the repairs you submitted and
+                  how well rules have performed in the past, reinforcing rules that are particularly effective.
+                  Then, it analyzes the history of each cell in the dataset to decide which tuples you should
+                  review next.
                 </Tab>
               </Tabs>
             </Modal.Body>
