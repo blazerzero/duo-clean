@@ -11,8 +11,8 @@ import pickle
 from collections import Counter
 from pprint import pprint
 
-sys.path.insert(0, './charm/keywordSearch/charm')
-import charm
+#sys.path.insert(0, './charm/keywordSearch/charm')
+#import charm
 
 
 def applyUserRepairs(d_dirty, s_in):
@@ -31,16 +31,12 @@ def discoverCFDs(project_id, current_iter):
     clean_fp = './store/' + project_id + '/' + current_iter + '/data.csv'
 
     process = sp.Popen(['./xplode-master/CTane', dirty_fp, clean_fp, '0.25', '2'], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})
-    print(process)
-    print(process.returncode)
     output = process.communicate()[0].decode("utf-8")
-    print(len(output)/2)
     if process.returncode == 0:
         if output == '[NO CFDS FOUND]':
             return None
         else:
             output = np.array(output.split('\n'))[:-1]
-            print(len(output))
             scores = output[:int(len(output)/2)]
             top_cfds = output[int(len(output)/2):]
             return np.array([{'cfd': top_cfds[i], 'score': scores[i]} for i in range(0, len(top_cfds))])
@@ -49,13 +45,12 @@ def discoverCFDs(project_id, current_iter):
 
 
 def addNewCfdsToList(top_cfds, project_id):
-    print('about to read from file')
+    dscv_df = None
+    score_df = None
     if os.path.isfile('./store/' + project_id + '/discovered_cfds.csv'):
         dscv_df = pd.read_csv('./store/' + project_id + '/discovered_cfds.csv', usecols=['lhs', 'rhs'], keep_default_na=False)
         dscv_df['cfd'] = '(' + dscv_df['lhs'] + ') => ' + dscv_df['rhs']
-        print('read from CFD file')
         score_df = pd.read_csv('./store/' + project_id + '/scores.csv', squeeze=True, keep_default_na=False)
-        print('read from score file')
 
         for c in top_cfds:
             pieces = c['cfd'][1:].split(') => ')
@@ -65,17 +60,8 @@ def addNewCfdsToList(top_cfds, project_id):
                 dscv_df = dscv_df.append({'lhs': lhs, 'rhs': rhs, 'cfd': c['cfd']}, ignore_index=True)
                 score_df = score_df.append({'score': c['score']}, ignore_index=True)
             else :
-                idx = dscv_df[dscv_df['cfd'] == c.cfd]
-                score_df[idx]['score'] = c.score
-
-        dscv_df.to_csv('./store/' + project_id + '/discovered_cfds.csv', index_label='cfd_id', columns=['lhs', 'rhs'])
-        score_df.to_csv('./store/' + project_id + '/scores.csv', index_label='cfd_id')
-
-        # TODO: uncomment when Charm is integrated
-        #receiver = pickle.load( open('./store/' + project_id + '/charm_receiver.p', 'rb') )
-        # receiver = charm.updateReceiver(receiver, project_id)   #TODO; implement updateReceiver; THIS IS WHERE THE RECEIVER AND STRATEGY GET UPDATED WITH THE NEW DATA
-        #pickle.dump(receiver, open('./store/' + project_id + '/charm_receiver.p', 'wb'))
-        #return receiver
+                idx = dscv_df[dscv_df['cfd'] == c['cfd']]
+                score_df.at[idx, 'score'] = c['score']
 
     else:
         dscv_cfds = np.array([{'lhs': c['cfd'][1:].split(') => ')[0], 'rhs': c['cfd'][1:].split(') => ')[1], 'cfd': c['cfd']} for c in top_cfds])
@@ -83,19 +69,14 @@ def addNewCfdsToList(top_cfds, project_id):
         dscv_df = pd.DataFrame({'lhs': [c['lhs'] for c in dscv_cfds], 'rhs': [c['rhs'] for c in dscv_cfds], 'cfd': [c['cfd'] for c in dscv_cfds]})
         score_df = pd.DataFrame({'score': scores})
 
-        dscv_df.to_csv('./store/' + project_id + '/discovered_cfds.csv', index_label='cfd_id', columns=['lhs', 'rhs'])
-        score_df.to_csv('./store/' + project_id + '/scores.csv', index_label='cfd_id')
+    dscv_df.to_csv('./store/' + project_id + '/discovered_cfds.csv', index_label='cfd_id', columns=['lhs', 'rhs'])
+    score_df.to_csv('./store/' + project_id + '/scores.csv', index_label='cfd_id')
 
-        # TODO: uncomment when Charm is integrated
-        #receiver = charm.prepareReceiver(project_id)
-        #pickle.dump( receiver, open('./store/' + project_id + '/charm_receiver.p', 'wb') )
-        #return receiver
 
 
 def buildCover(d_rep, top_cfds):
     cover = np.empty(len(d_rep.index), dtype=str)
     print(top_cfds[0]['cfd'])
-    #print(top_cfds[0].cfd)
     print([c['cfd'] for c in top_cfds])
     just_cfds = np.array([c['cfd'] for c in top_cfds])
     for idx, row in d_rep.iterrows():
@@ -112,14 +93,13 @@ def buildCover(d_rep, top_cfds):
                         break
             if applies:
                 relevant_cfds.append(cfd)
-        #relevant_cfds = np.array(relevant_cfds)
         cover[idx] = '; '.join(relevant_cfds)
 
     d_rep['cover'] = cover
     return d_rep
 
 
-# TODO; TEMPORARY IMPLEMENTATION; charmPickCfds will be used eventually
+# TODO; TEMPORARY IMPLEMENTATION
 def pickCfds(top_cfds, num_cfds):
     just_cfds = np.array([c['cfd'] for c in top_cfds if float(c['score']) > 0])
     just_scores = np.array([float(c['score']) for c in top_cfds if float(c['score']) > 0])
@@ -130,27 +110,14 @@ def pickCfds(top_cfds, num_cfds):
     else:
         return None
 
-def charmPickCfds(receiver, query, sample_size):
-    return charm.getRules(receiver, query, sample_size)
-
-# TODO: This will be the final version of applyCfdList
-#def applyCfdList(project_id, d_rep, cfd_list, cfd_id_list, receiver):
-#    for i in range(0, len(cfd_list)):
-#        d_rep = applyCfd(project_id, d_rep, cfd_list[i], cfd_id_list[i], receiver)
-#    return d_rep
-
-# TODO: This version of applyCfdList will be removed
 def applyCfdList(project_id, d_rep, cfd_list):
     for cfd in cfd_list:
         d_rep = applyCfd(project_id, d_rep, cfd)
     return d_rep
 
-#TODO: Figure out how to apply CFDs with no "=" sign on the RHS, and remove None from cfd_id and receiver when integrating
-def applyCfd(project_id, d_rep, cfd, cfd_id=None, receiver=None):
+def applyCfd(project_id, d_rep, cfd, cfd_id=None):
     #mod_count = 0
-    #lhs = np.array(cfd.split(' => ')[0][1:-1].split(', '))
-    #rhs = cfd.split(' => ')[1]
-    tuple_weights = pd.read_pickle('./store/' + project_id + '/tuple_weights.p')
+    tuple_metadata = pd.read_pickle('./store/' + project_id + '/tuple_metadata.p')
     for idx, row in d_rep.iterrows():
         mod_count = 0
         if cfd in row['cover'].split(', '):
@@ -161,54 +128,48 @@ def applyCfd(project_id, d_rep, cfd, cfd_id=None, receiver=None):
                 if row[rh[0]] != rh[1]:
                     row[rh[0]] = rh[1]
                     mod_count += 1
-        tuple_weights.at[idx, 'weight'] += mod_count
-
-    #charm.reinforce(receiver, cfd_id, mod_count)        # reinforcement value is equal to the number of modifications made to the dataset by this CFD (i.e. number of rows modified)
+        #tuple_metadata.at[idx, 'weight'] += mod_count
     return d_rep
 
 
 def reinforceTuplesBasedOnContradiction(project_id, current_iter, d_latest):
-    tuple_weights = pd.read_pickle('./store/' + project_id + '/tuple_weights.p')
-    value_mapper = pickle.load( open('./store/' + project_id + '/value_mapper.p', 'rb') )
-    prev_iter = "{:08x}".format(int('0x' + current_iter, 0) - 1)
-    value_spread = pickle.load( open('./store/' + project_id + '/' + prev_iter + '/value_spread.p', 'rb') )
-    value_disagreement = pickle.load( open('./store/' + project_id + '/' + prev_iter + '/value_disagreement.p', 'rb') )
+    tuple_metadata = pd.read_pickle('./store/' + project_id + '/tuple_metadata.p')
+    value_metadata = pickle.load( open('./store/' + project_id + '/value_metadata.p', 'rb') )
+    #prev_iter = "{:08x}".format(int('0x' + current_iter, 0) - 1)
     for idx in d_latest.index:
         reinforcementValue = 0
         for col in d_latest.columns:
-            value_mapper[idx][col].append(d_latest.at[idx, col])
-            num_unique = len(set(value_mapper[idx][col]))
+            prev_spread = len(set(value_metadata[idx][col]['history']))
+            value_metadata[idx][col]['history'].append(d_latest.at[idx, col])
+            curr_spread = len(set(value_metadata[idx][col]['history']))
             vspr_d = 0       # value spread delta (change in value spread from last iteration)
-            if num_unique > value_spread[idx][col]:
+            if curr_spread > prev_spread:
                 vspr_d = 1
-            value_spread[idx][col] = num_unique
 
-            cell_values = Counter(value_mapper[idx][col])
+            cell_values = Counter(value_metadata[idx][col]['history'])
             num_occurrences_mode = cell_values.most_common(1)[0][1]
-            new_vdis = 1 - (num_occurrences_mode/len(value_mapper[idx][col]))   # new value disagreement (value disagreement for the current iteration)
-            vdis_d = new_vdis - value_disagreement[idx][col]            # value disagreement delta (change in value disagreement from last iteration; set to 0 if less than 0 so as to disallow negative tuple weights)
+            new_vdis = 1 - (num_occurrences_mode/len(value_metadata[idx][col]['history']))   # new value disagreement (value disagreement for the current iteration)
+            vdis_d = new_vdis - value_metadata[idx][col]['disagreement']            # value disagreement delta (change in value disagreement from last iteration; set to 0 if less than 0 so as to disallow negative tuple weights)
+            value_metadata[idx][col]['disagreement'] = new_vdis
             if vdis_d < 0:
                 vdis_d = 0
-            value_disagreement[idx][col] = new_vdis
 
             reinforcementValue += (vspr_d + new_vdis + vdis_d)     # add change in value spread, new value disagreement, and change in value disagreement from last iteration
 
-        tuple_weights.at[idx, 'weight'] += reinforcementValue
+        tuple_metadata.at[idx, 'weight'] += reinforcementValue
 
-    tuple_weights['weight'] = tuple_weights['weight']/tuple_weights['weight'].sum()
+    #tuple_weights['weight'] = tuple_weights['weight']/tuple_weights['weight'].sum()
     print('Tuple weights:')
-    pprint(tuple_weights)
+    pprint(tuple_metadata['weight'])
     print()
-    tuple_weights.to_pickle('./store/' + project_id + '/tuple_weights.p')
-    pickle.dump( value_mapper, open('./store/' + project_id + '/value_mapper.p', 'wb') )
-    pickle.dump( value_spread, open('./store/' + project_id + '/' + current_iter + '/value_spread.p', 'wb') )
-    pickle.dump( value_disagreement, open('./store/' + project_id + '/' + current_iter + '/value_disagreement.p', 'wb') )
+    tuple_metadata.to_pickle('./store/' + project_id + '/tuple_metadata.p')
+    pickle.dump( value_metadata, open('./store/' + project_id + '/value_metadata.p', 'wb') )
 
 
 # TODO
 def buildSample(d_rep, sample_size, project_id):
     # TEMPORARY IMPLEMENTATION
-    tuple_weights = pd.read_pickle('./store/' + project_id + '/tuple_weights.p')
+    tuple_metadata = pd.read_pickle('./store/' + project_id + '/tuple_metadata.p')
     chosen_tups = tuple_weights.sample(n=sample_size, weights='weight')     # tuples with a larger weight (a.k.a. larger value in the 'weight' column of tuple_weights) are more likely to be chosen
     print('Chosen example indexes:')
     pprint(chosen_tups.index)
