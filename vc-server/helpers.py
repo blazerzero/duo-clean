@@ -11,8 +11,8 @@ import pickle
 from collections import Counter
 from pprint import pprint
 
-#sys.path.insert(0, './charm/keywordSearch/charm')
-#import charm
+sys.path.insert(0, './charm/keywordSearch/charm')
+import charm
 
 
 def applyUserRepairs(d_dirty, s_in):
@@ -44,7 +44,7 @@ def discoverCFDs(project_id, current_iter):
         return '[ERROR] CFD DISCOVERY FAILURE'
 
 
-def addNewCfdsToList(top_cfds, project_id):
+def addNewCfdsToList(top_cfds, project_id, receiver=None):
     dscv_df = None
     score_df = None
     if os.path.isfile('./store/' + project_id + '/discovered_cfds.csv'):
@@ -63,22 +63,32 @@ def addNewCfdsToList(top_cfds, project_id):
                 idx = dscv_df[dscv_df['cfd'] == c['cfd']]
                 score_df.at[idx, 'score'] = c['score']
 
+        dscv_df.to_csv('./store/' + project_id + '/discovered_cfds.csv', index_label='cfd_id', columns=['lhs', 'rhs'])
+        score_df.to_csv('./store/' + project_id + '/scores.csv', index_label='cfd_id')
+
+        receiver = pickle.load( open('./store/' + project_id + '/receiver.p', 'rb') )
+        # TODO: Update receiver stuff to account for new CFDs
+        pickle.dump(receiver, open('./store/' + project_id + '/receiver.p', 'wb'))
+
+
     else:
         dscv_cfds = np.array([{'lhs': c['cfd'][1:].split(') => ')[0], 'rhs': c['cfd'][1:].split(') => ')[1], 'cfd': c['cfd']} for c in top_cfds])
         scores = np.array([c['score'] for c in top_cfds])
         dscv_df = pd.DataFrame({'lhs': [c['lhs'] for c in dscv_cfds], 'rhs': [c['rhs'] for c in dscv_cfds], 'cfd': [c['cfd'] for c in dscv_cfds]})
         score_df = pd.DataFrame({'score': scores})
 
-    dscv_df.to_csv('./store/' + project_id + '/discovered_cfds.csv', index_label='cfd_id', columns=['lhs', 'rhs'])
-    score_df.to_csv('./store/' + project_id + '/scores.csv', index_label='cfd_id')
+        dscv_df.to_csv('./store/' + project_id + '/discovered_cfds.csv', index_label='cfd_id', columns=['lhs', 'rhs'])
+        score_df.to_csv('./store/' + project_id + '/scores.csv', index_label='cfd_id')
+
+        receiver = charm.prepareReceiver(project_id)
+        pickle.dump( receiver, open('./store/' + project_id + '/receiver.p', 'wb') )
 
 
-
-def buildCover(d_rep, top_cfds):
+def buildCover(d_rep, picked_cfds):
     cover = np.empty(len(d_rep.index), dtype=str)
-    print(top_cfds[0]['cfd'])
-    print([c['cfd'] for c in top_cfds])
-    just_cfds = np.array([c['cfd'] for c in top_cfds])
+    print(picked_cfds[0]['cfd'])
+    print([c['cfd'] for c in picked_cfds])
+    just_cfds = np.array([c['cfd'] for c in picked_cfds])
     for idx, row in d_rep.iterrows():
         relevant_cfds = []
         for cfd in just_cfds:
@@ -98,6 +108,9 @@ def buildCover(d_rep, top_cfds):
     d_rep['cover'] = cover
     return d_rep
 
+# TODO; CHARM-INTEGRATED IMPLEMENTATION
+#def pickCfds(receiver, query, num_cfds):
+    #return charm.getRules(receiver, query, num_cfds)
 
 # TODO; TEMPORARY IMPLEMENTATION
 def pickCfds(top_cfds, num_cfds):
@@ -112,15 +125,17 @@ def pickCfds(top_cfds, num_cfds):
 
 def applyCfdList(project_id, d_rep, cfd_list):
     for cfd in cfd_list:
+        #stringified_cfd = '(' + cfd.lhs + ') => ' + cfd.rhs
         d_rep = applyCfd(project_id, d_rep, cfd)
+        #d_rep = applyCfd(project_id, d_rep, stringified_cfd, cfd.cfd_id, receiver)
     return d_rep
 
-def applyCfd(project_id, d_rep, cfd, cfd_id=None):
+def applyCfd(project_id, d_rep, cfd, cfd_id=None, receiver=None):
     #mod_count = 0
     tuple_metadata = pd.read_pickle('./store/' + project_id + '/tuple_metadata.p')
     for idx, row in d_rep.iterrows():
         mod_count = 0
-        if cfd in row['cover'].split(', '):
+        if row['cover'] is not None and cfd in row['cover'].split('; '):
             lhs = cfd.split(' => ')[0][1:-1]
             rhs = cfd.split(' => ')[1]
             if '=' in rhs:
@@ -129,6 +144,7 @@ def applyCfd(project_id, d_rep, cfd, cfd_id=None):
                     row[rh[0]] = rh[1]
                     mod_count += 1
         #tuple_metadata.at[idx, 'weight'] += mod_count
+        #charm.reinforce(receiver, cfd_id, 1)
     return d_rep
 
 

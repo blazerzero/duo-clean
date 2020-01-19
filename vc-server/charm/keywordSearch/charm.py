@@ -6,11 +6,12 @@ import pickle
 
 class CFD:
     def __init__(self, rule):
-        self.lhs = rule[0]
-        self.title = rule[1]
+        self.cfd_id = rule[0]
+        self.lhs = rule[1]
+        self.rhs = rule[2]
 
 def prepareReceiver(project_id):
-    receiverData = '../../store/' + project_id + '/discovered_cfds.txt'
+    receiverData = '../../store/' + project_id + '/discovered_cfds.csv'
     dataSource = project_id
     fileToStore = '_rules'
 
@@ -34,7 +35,7 @@ def getRules(receiver, query, sample_size):
         for rule_id in rule_id_list:
             rule = receiver.data.getListRow(rule_id)
             rules.append(CFD(rule))
-        return rules, rule_id_list
+        return rules
     except KeyError:
         print('No search results. Please try again.')
         return None, None

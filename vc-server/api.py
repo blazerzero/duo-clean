@@ -124,12 +124,14 @@ class Clean(Resource):
 
         if top_cfds is not None and isinstance(top_cfds, np.ndarray):
             helpers.addNewCfdsToList(top_cfds, project_id)
-            d_rep = helpers.buildCover(d_rep, top_cfds)
             picked_cfd_list = helpers.pickCfds(top_cfds, 1)
+            #TODO: Build query from user repairs
+            #picked_cfd_list = helpers.pickCfds(receiver, query, 1)
 
             if picked_cfd_list is not None:
                 np.savetxt('./store/' + project_id + '/' + current_iter + '/applied_cfds.txt', picked_cfd_list,
                            fmt="%s")
+                d_rep = helpers.buildCover(d_rep, picked_cfd_list)
                 d_rep = helpers.applyCfdList(project_id, d_rep, picked_cfd_list)
             else:
                 with open('./store/' + project_id + '/' + current_iter + '/applied_cfds.txt', 'w') as f:
