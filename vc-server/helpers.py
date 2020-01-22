@@ -68,7 +68,7 @@ def addNewCfdsToList(top_cfds, project_id, receiver=None):
 
         receiver = pickle.load( open('./store/' + project_id + '/receiver.p', 'rb') )
         # TODO: Update receiver stuff to account for new CFDs
-        receiver = charm.updateReceiver(top_cfds)
+        receiver = charm.updateReceiver(receiver, top_cfds)
         pickle.dump(receiver, open('./store/' + project_id + '/receiver.p', 'wb'))
 
 
@@ -110,8 +110,9 @@ def buildCover(d_rep, picked_cfds):
     return d_rep
 
 # TODO; CHARM-INTEGRATED IMPLEMENTATION
-#def pickCfds(receiver, query, num_cfds):
-    #return charm.getRules(receiver, query, num_cfds)
+#def pickCfds(query, num_cfds):
+#    receiver = pickle.load( open('./store/' + project_id + '/receiver.p', 'rb') )
+#    return charm.getRules(receiver, query, num_cfds)
 
 # TODO; TEMPORARY IMPLEMENTATION
 def pickCfds(top_cfds, num_cfds):

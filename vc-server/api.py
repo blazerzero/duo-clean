@@ -126,7 +126,7 @@ class Clean(Resource):
             helpers.addNewCfdsToList(top_cfds, project_id)
             picked_cfd_list = helpers.pickCfds(top_cfds, 1)
             #TODO: Build query from user repairs
-            #picked_cfd_list = helpers.pickCfds(receiver, query, 1)
+            #picked_cfd_list = helpers.pickCfds(query, 1)
 
             if picked_cfd_list is not None:
                 np.savetxt('./store/' + project_id + '/' + current_iter + '/applied_cfds.txt', picked_cfd_list,
