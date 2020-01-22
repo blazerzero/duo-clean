@@ -313,6 +313,136 @@ class ReceiverCharmKeyword_NoFeature_NoFeature(object):
 				self.featureWeights[signal][inte] += score
 
 
+class ReceiverCharmKeyword_CFDLite(object):
+	"""docstring for ReceiverCharm Lite"""
+	def __init__(self, data, dataSource, fileToStore, projectPath):
+		super(ReceiverCharmKeyword_CFDLite, self).__init__()
+		self.features = list()
+		self.invertedIndex = dict()
+		self.numOfFeatures = dict()
+		self.featureWeights = dict()
+		self.dataPath = dataSource
+		self.returnedTuples = list()
+		self.receivedSignals = list()
+		self.fileToStore = fileToStore
+		self.receiver = dict()
+		self.projectPath = projectPath
+		self.updateStrategy(data)
+		self.maxValue = dict()
+
+	def save_obj(self, obj, name):
+		with open(name + '.pkl', 'wb') as f:
+			pickle.dump(obj, f)
+
+	def load_obj(self, name):
+		with open(name + '.pkl', 'rb') as f:
+			return pickle.load(f)
+
+	def loadPickle(self, obj, name):
+		try:
+			obj = load_obj(name)
+		except (OSError, IOError) as e:
+			save_obj(obj, name)
+
+		return obj
+
+	def updateStrategy(self, data):
+		print('Updating strategy...')
+		listOfTuples = data
+		lengthOfFeatures = list()
+
+		print('Updating records...')
+
+		if os.path.exists(projectPath + 'idfStats/' + self.dataPath + self.fileStore + '/'):
+			print('Loading data...')
+			self.invertedIndex = self.load_obj(self.projectPath + 'idfStats/' + self.dataPath + self.fileToStore + '/invertedIndex')
+			self.numOfFeatures = self.load_obj(self.projectPath + 'idfStats/' + self.dataPath + self.fileToStore + '/numOfFeatures')
+		else:
+			os.makedirs(projectPath + 'idfStats/' + self.dataPath + self.fileToStore + '/')
+			print('Creating data...')
+
+		for record in listOfTuples:
+			intentFeatures = [cL for cL in record['lhs'].split(', ')].extend([cR for cR in record['rhs'].split(', ')])
+			tupleID = record['cfd_id']
+			if tupleID not in self.receiver.keys():
+				self.receiver[tupleID] = dict()
+				self.receiver[tupleID]['lhs'] = record['lhs']
+				self.receiver[tupleID]['rhs'] = record['rhs']
+			if tupleID not in self.numOfFeatures:
+				self.numOfFeatures[tupleID] = list()
+			for intentFeature in intentFeatures:
+				if intentFeature not in self.invertedIndex:
+					self.invertedIndex[intentFeature] = list()
+				if tupleID not in self.invertedIndex[intentFeature]:
+					self.invertedIndex[intentFeature].append(tupleID)
+				if intentFeature not in self.numOfFeatures[tupleID]:
+					self.numOfFeatures[tupleID].append(intentFeature)
+
+			lengthOfFeatures.append(len(self.numOfFeatures[tupleID]))
+
+		print('Saving stats...')
+		self.save_obj(self.invertedIndex, self.projectPath + 'idfStats/' + self.dataPath + self.fileToStore + '/invertedIndex')
+		self.save_obj(self.numOfFeatures, self.projectPath + 'idfStats/' + self.dataPath + self.fileToStore + '/numOfFeatures')
+		print('Done updating strategy!')
+
+	def pickSingleReturn(self, tupleWeights):
+		chance = random.uniform(0, 1)
+		cumulative = 0
+		total = sum(tupleWeights.values())
+		for tupleID in tupleWeights:
+			cumulative += tupleWeights[tupleID]/total
+			if cumulative > chance:
+				del tupleWeights[tupleID]
+				return tupleID
+
+	def returnTuples(self, signalsReceived, numberToReturn):
+		self.receivedSignals = signalsReceived
+		#keywordQuery = ' '.join(signalsReceived)		# signalsReceived should come in as a list of "words"
+
+		returnedTuples = list()
+		cfdIDs = self.receiver.keys()
+		tupleWeights = dict()
+
+		for cfdID in cfdIDs:
+			topKFeaturesStore = dict()
+			weight = 1
+			for signal in signalsReceived:
+				if signal not in self.featureWeights:
+					self.featureWeights[signal] = dict()
+				if signal not in self.maxValue:
+					self.maxValue[signal] = 1
+				for feature in self.numOfFeatures[cfdID]:
+					if feature not in self.featureWeights[signal]:
+						self.featureWeights[signal][feature] = 1
+					topKFeaturesStore[(signal, feature)] = self.featureWeights[signal][feature]
+
+			topKFeatures = heapq.nlargest(100, topKFeaturesStore, key=topKFeaturesStore.__getitem__)
+			for signal, feature in topKFeatures:
+				weight *= math.exp(self.featureWeights[signal][feature]/self.maxValue[signal])
+			tupleWeights[cfdID] = weight
+
+		#topKWewights = heapq.nlargest(10, tupleWeights, key=tupleWeights.__getitem__)
+		while len(returnedTuples) < numberToReturn:
+			returnedTuple = self.pickSingleReturn(tupleWeights)
+			if returnedTuple not in returnedTuples:
+				returnedTuples.append(returnedTuple)
+			if len(returnedTuples) >= len(cfdIDs):
+				break
+
+		self.returnedTuples = returnedTuples
+		return returnedTuples
+
+	def reinforce(self, signals, intent, score):
+		#keywordQuery = ' '.join(signals)
+
+		for inte in intent:
+			if inte is not None:
+				for featureOfIntent in self.numOfFeatures[inte]:
+					for sig in signals:
+						self.featureWeights[sig][featureOfIntent] += score
+						if self.featureWeights[sig][featureOfIntent] > self.maxValue[sig]:
+							self.maxValue[sig] = self.featureWeights[sig][featureOfIntent]
+
 
 class ReceiverCharmKeyword(object):
 	"""docstring for ReceiverCharm"""

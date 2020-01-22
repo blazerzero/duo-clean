@@ -10,14 +10,19 @@ class CFD:
         self.lhs = rule[1]
         self.rhs = rule[2]
 
-def prepareReceiver(project_id):
-    receiverData = '../../store/' + project_id + '/discovered_cfds.csv'
+def prepareReceiver(project_id, data):
+    #receiverData = '../../store/' + project_id + '/discovered_cfds.csv'
+    projectPath = '../../store/' + project_id + '/'
     dataSource = project_id
     fileToStore = '_rules'
 
-    receiver = ReceiverKeyword(receiverData, dataSource, fileToStore, 0.5)
-    receiver.setData(receiverData, 'csv')
-    receiver.initializeRE('../../store/' + project_id + '/')
+    receiver = ReceiverKeyword(projectPath, fileToStore, dataSource)
+    #receiver.setData(receiverData, 'csv')
+    receiver.initializeRE_CFDLite(data)
+    return receiver
+
+def updateReceiver(receiver, data):
+    receiver.strategy.updateStrategy(data)
     return receiver
 
 def getRules(receiver, query, sample_size):

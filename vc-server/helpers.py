@@ -68,6 +68,7 @@ def addNewCfdsToList(top_cfds, project_id, receiver=None):
 
         receiver = pickle.load( open('./store/' + project_id + '/receiver.p', 'rb') )
         # TODO: Update receiver stuff to account for new CFDs
+        receiver = charm.updateReceiver(top_cfds)
         pickle.dump(receiver, open('./store/' + project_id + '/receiver.p', 'wb'))
 
 
@@ -80,7 +81,7 @@ def addNewCfdsToList(top_cfds, project_id, receiver=None):
         dscv_df.to_csv('./store/' + project_id + '/discovered_cfds.csv', index_label='cfd_id', columns=['lhs', 'rhs'])
         score_df.to_csv('./store/' + project_id + '/scores.csv', index_label='cfd_id')
 
-        receiver = charm.prepareReceiver(project_id)
+        receiver = charm.prepareReceiver(project_id, top_cfds)
         pickle.dump( receiver, open('./store/' + project_id + '/receiver.p', 'wb') )
 
 
