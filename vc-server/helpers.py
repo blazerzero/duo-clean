@@ -47,42 +47,79 @@ def discoverCFDs(project_id, current_iter):
 def addNewCfdsToList(top_cfds, project_id, receiver=None):
     dscv_df = None
     score_df = None
-    if os.path.isfile('./store/' + project_id + '/discovered_cfds.csv'):
-        dscv_df = pd.read_csv('./store/' + project_id + '/discovered_cfds.csv', usecols=['lhs', 'rhs'], keep_default_na=False)
-        dscv_df['cfd'] = '(' + dscv_df['lhs'] + ') => ' + dscv_df['rhs']
-        score_df = pd.read_csv('./store/' + project_id + '/scores.csv', squeeze=True, keep_default_na=False)
+    #if os.path.isfile('./store/' + project_id + '/discovered_cfds.csv'):
+    #    dscv_df = pd.read_csv('./store/' + project_id + '/discovered_cfds.csv', usecols=['lhs', 'rhs'], keep_default_na=False)
+    #    dscv_df['cfd'] = '(' + dscv_df['lhs'] + ') => ' + dscv_df['rhs']
+    #    score_df = pd.read_csv('./store/' + project_id + '/scores.csv', squeeze=True, keep_default_na=False)
 
-        for c in top_cfds:
-            pieces = c['cfd'][1:].split(') => ')
-            lhs = pieces[0]
-            rhs = pieces[1]
-            if c['cfd'] not in dscv_df['cfd']:
-                dscv_df = dscv_df.append({'lhs': lhs, 'rhs': rhs, 'cfd': c['cfd']}, ignore_index=True)
-                score_df = score_df.append({'score': c['score']}, ignore_index=True)
-            else :
-                idx = dscv_df[dscv_df['cfd'] == c['cfd']]
-                score_df.at[idx, 'score'] = c['score']
+    #    for c in top_cfds:
+    #        pieces = c['cfd'][1:].split(') => ')
+    #        lhs = pieces[0]
+    #        rhs = pieces[1]
+    #        if c['cfd'] not in dscv_df['cfd']:
+    #            dscv_df = dscv_df.append({'lhs': lhs, 'rhs': rhs, 'cfd': c['cfd']}, ignore_index=True)
+    #            score_df = score_df.append({'score': c['score']}, ignore_index=True)
+    #        else :
+    #            idx = dscv_df[dscv_df['cfd'] == c['cfd']]
+    #            score_df.at[idx, 'score'] = c['score']
 
-        dscv_df.to_csv('./store/' + project_id + '/discovered_cfds.csv', index_label='cfd_id', columns=['lhs', 'rhs'])
-        score_df.to_csv('./store/' + project_id + '/scores.csv', index_label='cfd_id')
+    #    dscv_df.to_csv('./store/' + project_id + '/discovered_cfds.csv', index_label='cfd_id', columns=['lhs', 'rhs'])
+    #    score_df.to_csv('./store/' + project_id + '/scores.csv', index_label='cfd_id')
 
-        receiver = pickle.load( open('./store/' + project_id + '/receiver.p', 'rb') )
+    #    receiver = pickle.load( open('./store/' + project_id + '/receiver.p', 'rb') )
         # TODO: Update receiver stuff to account for new CFDs
-        receiver = charm.updateReceiver(receiver, top_cfds)
-        pickle.dump(receiver, open('./store/' + project_id + '/receiver.p', 'wb'))
+    #    receiver = charm.updateReceiver(receiver, top_cfds)
+    #    pickle.dump(receiver, open('./store/' + project_id + '/receiver.p', 'wb'))
 
+    if os.path.isfile('./store/' + project_id + '/cfd_metadata.p'):
+        cfd_metadata = pd.read_pickle('./store/' + project_id + '/cfd_metadata.p')
+        receiver = pickle.load( open('./store/' + project_id + '/receiver.p', 'rb') )
+        for c in top_cfds:
+            exists = False
+            for idx, row in cfd_metadata:
+                lhs = c['cfd'].split(' => ')[0][1:-1]
+                rhs = c['cfd'].split(' => ')[1]
+                if cfd_metadata['lhs'] == lhs and cfd_metadata['rhs'] == rhs:
+                    exists = True
+                    row['num_found'] += 1
+                    charm.reinforce(receiver, idx, c['score']/row['num_found'])
+                    break
+            if not exists:
+                df = pd.DataFrame({'lhs': [lhs], 'rhs': [rhs], 'num_found': [1]})
+                cfd_metadata.append(df, ignore_index=True)
+                charm.updateReceiver(receiver, [c])
+                charm.reinforce(receiver, len(cfd_metadata)-1, c['score'])
+
+        pickle.dump(receiver, open('./store/' + project_id + '/receiver.p', 'wb'))
+        cfd_metadata.to_pickle('./store/' + project_id + '/cfd_metadata.p')
 
     else:
-        dscv_cfds = np.array([{'lhs': c['cfd'][1:].split(') => ')[0], 'rhs': c['cfd'][1:].split(') => ')[1], 'cfd': c['cfd']} for c in top_cfds])
-        scores = np.array([c['score'] for c in top_cfds])
-        dscv_df = pd.DataFrame({'lhs': [c['lhs'] for c in dscv_cfds], 'rhs': [c['rhs'] for c in dscv_cfds], 'cfd': [c['cfd'] for c in dscv_cfds]})
-        score_df = pd.DataFrame({'score': scores})
+        cfd_metadata = pd.DataFrame(index=range(0, len(top_cfds)), columns=['lhs', 'rhs', 'num_found'])
+        cfd_metadata['lhs'] = [c['cfd'].split(' => ')[0][1:-1] for c in top_cfds]
+        cfd_metadata['rhs'] = [c['cfd'].split(' => ')[1] for c in top_cfds]
+        cfd_metadata['num_found'] = 1
 
-        dscv_df.to_csv('./store/' + project_id + '/discovered_cfds.csv', index_label='cfd_id', columns=['lhs', 'rhs'])
-        score_df.to_csv('./store/' + project_id + '/scores.csv', index_label='cfd_id')
+        scores = [c['score'] for c in top_cfds]
 
         receiver = charm.prepareReceiver(project_id, top_cfds)
+        for idx in cfd_metadata.index:
+            charm.reinforce(receiver, idx, scores[idx])
+
         pickle.dump( receiver, open('./store/' + project_id + '/receiver.p', 'wb') )
+        cfd_metadata.to_pickle('./store/' + project_id + '/cfd_metadata.p')
+
+
+    #else:
+    #    dscv_cfds = np.array([{'lhs': c['cfd'][1:].split(') => ')[0], 'rhs': c['cfd'][1:].split(') => ')[1], 'cfd': c['cfd']} for c in top_cfds])
+    #    scores = np.array([c['score'] for c in top_cfds])
+    #    dscv_df = pd.DataFrame({'lhs': [c['lhs'] for c in dscv_cfds], 'rhs': [c['rhs'] for c in dscv_cfds], 'cfd': [c['cfd'] for c in dscv_cfds]})
+    #    score_df = pd.DataFrame({'score': scores})
+
+    #    dscv_df.to_csv('./store/' + project_id + '/discovered_cfds.csv', index_label='cfd_id', columns=['lhs', 'rhs'])
+    #    score_df.to_csv('./store/' + project_id + '/scores.csv', index_label='cfd_id')
+
+    #    receiver = charm.prepareReceiver(project_id, top_cfds)
+    #    pickle.dump( receiver, open('./store/' + project_id + '/receiver.p', 'wb') )
 
 
 def buildCover(d_rep, picked_cfds):
