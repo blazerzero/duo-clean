@@ -31,8 +31,8 @@ class ReceiverKeyword(object):
 	def initializeRE(self):
 		self.strategy = ReceiverCharmKeyword(self.data, self.receiverData, self.dataSource, self.fileToStore, self.idfLevel, self.projectPath)
 
-	def initializeRE_CFDLite(self, data):
-		self.strategy = ReceiverCharmKeyword_CFDLite(data, self.dataSource, self.fileToStore, self.projectPath)
+	def initializeRE_CFDLite_OLD(self, data):
+		self.strategy = ReceiverCharmKeyword_CFDLite_OLD(data, self.dataSource, self.fileToStore, self.projectPath)
 
 	def initializeRE_NoFeature_NoFeature(self):
 		self.strategy = ReceiverCharmKeyword_NoFeature_NoFeature(self.data, self.receiverData, self.dataSource, self.fileToStore)

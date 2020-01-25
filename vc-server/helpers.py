@@ -74,7 +74,7 @@ def addNewCfdsToList(top_cfds, project_id, receiver=None):
     if os.path.isfile('./store/' + project_id + '/cfd_metadata.p'):
         cfd_metadata = pd.read_pickle('./store/' + project_id + '/cfd_metadata.p')
         receiver = pickle.load( open('./store/' + project_id + '/receiver.p', 'rb') )
-        for c in top_cfds:
+        for c in [tc for tc in top_cfds if tc['score'] > 0]:
             exists = False
             for idx, row in cfd_metadata:
                 lhs = c['cfd'].split(' => ')[0][1:-1]
@@ -95,8 +95,8 @@ def addNewCfdsToList(top_cfds, project_id, receiver=None):
 
     else:
         cfd_metadata = pd.DataFrame(index=range(0, len(top_cfds)), columns=['lhs', 'rhs', 'num_found'])
-        cfd_metadata['lhs'] = [c['cfd'].split(' => ')[0][1:-1] for c in top_cfds]
-        cfd_metadata['rhs'] = [c['cfd'].split(' => ')[1] for c in top_cfds]
+        cfd_metadata['lhs'] = [c['cfd'].split(' => ')[0][1:-1] for c in top_cfds if c['score'] > 0]
+        cfd_metadata['rhs'] = [c['cfd'].split(' => ')[1] for c in top_cfds if c['score'] > 0]
         cfd_metadata['num_found'] = 1
 
         scores = [c['score'] for c in top_cfds]

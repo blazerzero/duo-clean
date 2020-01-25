@@ -313,10 +313,127 @@ class ReceiverCharmKeyword_NoFeature_NoFeature(object):
 				self.featureWeights[signal][inte] += score
 
 
-class ReceiverCharmKeyword_CFDLite(object):
+class ReceiverCharmCFD(object):
+	"""docstring from ReceiverCharm CFD"""
+	def __init__(self, data, projectPath):
+		self.featureMap = dict()
+		self.featureWeights = dict()
+		self.returnedCFDs = list()
+		self.receivedSignals = list()
+		self.updateStrategy(data)
+		self.maxValue = dict()
+		self.projectPath = projectPath
+		self.cfds = dict()
+		self.cfdWeights = dict()
+
+	def save_obj(self, obj, name):
+		with open(name + '.p', 'wb') as f:
+			pickle.dump(obj, f)
+
+	def load_obj(self, name):
+		with open(name + '.p', 'rb') as f:
+			return pickle.load(f)
+
+	def loadPickle(self, obj, name):
+		try:
+			obj = load_obj(name)
+		except (OSError, IOError) as e:
+			save_obj(obj, name)
+
+		return obj
+
+	def updateStrategy(self, cfds):
+		print('Updating strategy...')
+
+		if os.path.exists(self.projectPath + 'stats/'):
+			print('Loading feature map...')
+			self.featureMap = self.load_obj(self.projectPath + 'stats/feature_map.p')
+		else:
+			print('Creating feature map...')
+
+		for cfd in cfds:
+			cfdFeatures = [cL for cL in cfd['lhs'].spli(', ')].extend([cR for cR in cfd['rhs'].split(', ')])
+			cfdID = cfd['cfd_id']
+			if cfdID not in self.cfds.keys():
+				self.cfds[cfdID] = dict()
+				self.cfds[cfdID]['lhs'] = cfd['lhs']
+				self.cfds[cfdID]['rhs'] = cfd['rhs']
+			if cfdID not in self.featureMap:
+				self.featureMap[cfdID] = list()
+			for feature in cfdFeatures:
+				if feature not in self.featureMap[cfdID]:
+					self.featureMap[cfdID].append(feature)
+
+		print('Saving stats...')
+		self.save_obj(self.featureMap, self.projectPath + 'stats/feature_map.p')
+		print('Done updating strategy!')
+
+	def pickSingleReturn(self, cfdWeights):
+		chance = random.uniform(0, 1)
+		cumulative = 0
+		total = sum(cfdWeights.values())
+		for cfdID in cfdWeights:
+			cumulative += cfdWeights[cfdID]/total
+			if cumulative > chance:
+				del cfdWeights[cfdID]
+				return cfdID
+
+	def returnTuples(self, signalsReceived, numberToReturn):
+		self.receivedSignals = signalsReceived
+
+		returnedCFDs = list()
+		cfdIDs = self.cfds.keys()
+		cfdWeights = dict()
+
+		for cfdID in cfdIDs:
+			topKFeaturesStore = dict()
+			weight = 1
+			for signal in self.receivedSignals:
+				if signal not in self.featureWeights:
+					self.featureWeights[signal] = dict()
+				if signal not in self.maxValue:
+					self.maxValue[signal] = 1
+				for feature in self.featureMap[cfdID]:
+					if feature not in self.featureWeights[signal]:
+						self.featureWeights[signal][feature] = 1
+					topKFeaturesStore[(signal, feature)] = self.featureWeights[signal][feature]
+
+			topKFeatures = heapq.nlargest(100, topKFeaturesStore, key=topKFeaturesStore.__getitem__)
+			for signal, feature in topKFeatures:
+				weight *= math.exp(self.featureWeights[signal][feature]/self.maxValue[signal])
+			cfdWeights[cfdID] = weight
+
+		while len(returnedCFDs) < numberToReturn:
+			returnedCFD = self.pickSingleReturn(cfdWeights)
+			if returnedCFD not in returnedCFDs:
+				returnedCFDs.append(returnedCFD)
+			if len(returnedCFDs) >= len(cfdIDs):
+				break
+
+		self.returnedCFDs = returnedCFDs
+		return returnedCFDs
+
+	def reinforce(self, signals, intent, score):
+		for inte in intent:
+			if inte is not None:
+				for featureOfIntent in self.features[inte]:
+					for sig in signals:
+						if sig in self.featureWeights.keys():
+							if featureOfIntent in self.featureWeights[sig].keys():
+								self.featureWeights[sig][featureOfIntent] += score
+							else:
+								self.featureWeights[sig][featureOfIntent] = score
+						else:
+							self.featureWeights[sig] = dict()
+							self.featureWeights[sig][featureOfIntent] = score
+						if self.featureWeights[sig][featureOfIntent] > self.maxValue[sig]:
+							self.maxValue[sig] = self.featureWeights[sig][featureOfIntent]
+
+
+class ReceiverCharmKeyword_CFDLite_OLD(object):
 	"""docstring for ReceiverCharm Lite"""
 	def __init__(self, data, dataSource, fileToStore, projectPath):
-		super(ReceiverCharmKeyword_CFDLite, self).__init__()
+		super(ReceiverCharmKeyword_CFDLite_OLD, self).__init__()
 		self.features = list()
 		self.invertedIndex = dict()
 		self.numOfFeatures = dict()
