@@ -122,7 +122,16 @@ class Clean(Resource):
         top_cfds = helpers.discoverCFDs(project_id, current_iter)
         d_rep['cover'] = None
 
-        cfd_applied_map = dict()
+        cfd_applied_map = None
+        if os.path.isfile('./store/' + project_id + '/cfd_applied_map.p'):
+            cfd_applied_map = list()
+        else:
+            cfd_applied_map = pickle.load( open('./store/' + project_id + '/cfd_applied_map.p', 'wb') )
+        cfd_applied_map.append(dict())
+        for idx in d_rep.index:
+            cfd_applied_map[idx] = dict()
+            for col in d_col.columns:
+                cfd_applied_map[idx][col] = None
 
         if top_cfds is not None and isinstance(top_cfds, np.ndarray):
             helpers.addNewCfdsToList(top_cfds, project_id, current_iter)
@@ -134,7 +143,7 @@ class Clean(Resource):
                 np.savetxt('./store/' + project_id + '/' + current_iter + '/applied_cfds.txt', picked_cfd_list,
                            fmt="%s")
                 d_rep = helpers.buildCover(d_rep, picked_cfd_list)
-                d_rep, cfd_applied_map = helpers.applyCfdList(project_id, d_rep, picked_cfd_list, picked_cfd_id_list)
+                d_rep, cfd_applied_map = helpers.applyCfdList(project_id, d_rep, picked_cfd_list, picked_cfd_id_list, current_iter)
             else:
                 with open('./store/' + project_id + '/' + current_iter + '/applied_cfds.txt', 'w') as f:
                     print('No CFDs were applied.', file=f)
@@ -154,7 +163,7 @@ class Clean(Resource):
         #tuple_metadata['weight'] = tuple_metadata['weight'] / tuple_metadata['weight'].sum()
         tuple_metadata.to_pickle('./store/' + project_id + '/tuple_metadata.p')
 
-        s_out = helpers.buildSample(d_rep, sample_size, project_id)
+        s_out = helpers.buildSample(d_rep, sample_size, project_id, cfd_applied_map)
 
         pickle.dump( current_iter, open('./store/' + project_id + '/current_iter.p', 'wb') )
 

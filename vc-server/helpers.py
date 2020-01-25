@@ -18,15 +18,21 @@ import charm
 def applyUserRepairs(d_dirty, s_in):
     d_rep = d_dirty
     s_df = pd.read_json(s_in, orient='index')
-
-    for idx, row in s_df.iterrows():
-        d_rep.iloc[idx] = row
+    print(s_df.index)
 
     cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
     receiver = pickle.load( open('./store/' + project_id + '/receiver.p', 'rb') )
     current_iter = pickle.load( open('./store/' + project_id + '/current_iter.p', 'rb') )
+    #value_metadata = pickle.load( open('./store/' + project_id + '/value_metadata.p', 'rb') )
+
+    #for idx in s_df.index:
+        #for col in s_df.columns:
+            #d_rep.at[idx, col] = s_df.at[idx, col]
+
+
 
     #TODO: Find the CFD applied by the system for changes made by the user, and check if it was reverted to match a previous CFD
+
 
     #pickle.dump(receiver, open('./store/' + project_id + '/receiver.p', 'wb'))
     #pickle.dump(cfd_metadata, open('./store/' + project_id + '/cfd_metadata.p', 'wb'))
@@ -54,32 +60,6 @@ def discoverCFDs(project_id, current_iter):
 
 
 def addNewCfdsToList(top_cfds, project_id, current_iter, receiver=None):
-    #dscv_df = None
-    #score_df = None
-    #if os.path.isfile('./store/' + project_id + '/discovered_cfds.csv'):
-    #    dscv_df = pd.read_csv('./store/' + project_id + '/discovered_cfds.csv', usecols=['lhs', 'rhs'], keep_default_na=False)
-    #    dscv_df['cfd'] = '(' + dscv_df['lhs'] + ') => ' + dscv_df['rhs']
-    #    score_df = pd.read_csv('./store/' + project_id + '/scores.csv', squeeze=True, keep_default_na=False)
-
-    #    for c in top_cfds:
-    #        pieces = c['cfd'][1:].split(') => ')
-    #        lhs = pieces[0]
-    #        rhs = pieces[1]
-    #        if c['cfd'] not in dscv_df['cfd']:
-    #            dscv_df = dscv_df.append({'lhs': lhs, 'rhs': rhs, 'cfd': c['cfd']}, ignore_index=True)
-    #            score_df = score_df.append({'score': c['score']}, ignore_index=True)
-    #        else :
-    #            idx = dscv_df[dscv_df['cfd'] == c['cfd']]
-    #            score_df.at[idx, 'score'] = c['score']
-
-    #    dscv_df.to_csv('./store/' + project_id + '/discovered_cfds.csv', index_label='cfd_id', columns=['lhs', 'rhs'])
-    #    score_df.to_csv('./store/' + project_id + '/scores.csv', index_label='cfd_id')
-
-    #    receiver = pickle.load( open('./store/' + project_id + '/receiver.p', 'rb') )
-        # TODO: Update receiver stuff to account for new CFDs
-    #    receiver = charm.updateReceiver(receiver, top_cfds)
-    #    pickle.dump(receiver, open('./store/' + project_id + '/receiver.p', 'wb'))
-
     if os.path.isfile('./store/' + project_id + '/cfd_metadata.p'):
         cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
         receiver = pickle.load( open('./store/' + project_id + '/receiver.p', 'rb') )
@@ -100,33 +80,16 @@ def addNewCfdsToList(top_cfds, project_id, current_iter, receiver=None):
                 cfd_metadata[-1]['rhs'] = c['cfd'].split(' => ')[1]
                 cfd_metadata[-1]['num_found'] = 1
                 cfd_metadata[-1]['num_changes'] = dict()
-                cfd_metadata[-1]['num_changes'][current_iter] = [0]
+                cfd_metadata[-1]['num_changes'][current_iter] = 0
 
                 c['cfd_id'] = len(cfd_metadata) - 1
                 charm.updateReceiver(receiver, [c])
                 charm.reinforce(receiver, c['cfd_id'], c['score'])
-            #for idx, row in cfd_metadata:
-            #    lhs = c['cfd'].split(' => ')[0][1:-1]
-            #    rhs = c['cfd'].split(' => ')[1]
-            #    if cfd_metadata['lhs'] == lhs and cfd_metadata['rhs'] == rhs:
-            #        exists = True
-            #        row['num_found'] += 1
-            #        charm.reinforce(receiver, idx, c['score']/row['num_found'])
-            #        break
-            #if not exists:
-            #    df = pd.DataFrame({'lhs': [lhs], 'rhs': [rhs], 'num_found': [1]})
-            #    cfd_metadata.append(df, ignore_index=True)
-            #    charm.updateReceiver(receiver, [c])
-            #    charm.reinforce(receiver, len(cfd_metadata)-1, c['score'])
 
         pickle.dump( receiver, open('./store/' + project_id + '/receiver.p', 'wb') )
         pickle.dump( cfd_metadata, open('./store/' + project_id + '/cfd_metadata.p', 'wb') )
 
     else:
-        #cfd_metadata = pd.DataFrame(index=range(0, len(top_cfds)), columns=['lhs', 'rhs', 'num_found'])
-        #cfd_metadata['lhs'] = [c['cfd'].split(' => ')[0][1:-1] for c in top_cfds if c['score'] > 0]
-        #cfd_metadata['rhs'] = [c['cfd'].split(' => ')[1] for c in top_cfds if c['score'] > 0]
-        #cfd_metadata['num_found'] = 1
         cfd_metadata = list()
         for c in [tc for tc in top_cfds if tc['score'] > 0]:
             cfd_metadata.append(dict())
@@ -134,7 +97,7 @@ def addNewCfdsToList(top_cfds, project_id, current_iter, receiver=None):
             cfd_metadata[-1]['rhs'] = c['cfd'].split(' => ')[1]
             cfd_metadata[-1]['num_found'] = 1
             cfd_metadata[-1]['num_changes'] = dict()
-            cfd_metadata[-1]['num_changes'][current_iter] = [0]
+            cfd_metadata[-1]['num_changes'][current_iter] = 0
 
         scores = [c['score'] for c in top_cfds if c['score'] > 0]
 
@@ -144,19 +107,6 @@ def addNewCfdsToList(top_cfds, project_id, current_iter, receiver=None):
 
         pickle.dump( receiver, open('./store/' + project_id + '/receiver.p', 'wb') )
         pickle.dump( cfd_metadata, open('./store/' + project_id + '/cfd_metadata.p', 'wb') )
-
-
-    #else:
-    #    dscv_cfds = np.array([{'lhs': c['cfd'][1:].split(') => ')[0], 'rhs': c['cfd'][1:].split(') => ')[1], 'cfd': c['cfd']} for c in top_cfds])
-    #    scores = np.array([c['score'] for c in top_cfds])
-    #    dscv_df = pd.DataFrame({'lhs': [c['lhs'] for c in dscv_cfds], 'rhs': [c['rhs'] for c in dscv_cfds], 'cfd': [c['cfd'] for c in dscv_cfds]})
-    #    score_df = pd.DataFrame({'score': scores})
-
-    #    dscv_df.to_csv('./store/' + project_id + '/discovered_cfds.csv', index_label='cfd_id', columns=['lhs', 'rhs'])
-    #    score_df.to_csv('./store/' + project_id + '/scores.csv', index_label='cfd_id')
-
-    #    receiver = charm.prepareReceiver(project_id, top_cfds)
-    #    pickle.dump( receiver, open('./store/' + project_id + '/receiver.p', 'wb') )
 
 
 def buildCover(d_rep, picked_cfds):
@@ -199,19 +149,18 @@ def pickCfds(top_cfds, num_cfds):
     else:
         return None, None
 
-def applyCfdList(project_id, d_rep, cfd_list, cfd_id_list):
-    cfd_applied_map = dict()
+def applyCfdList(project_id, d_rep, cfd_list, cfd_id_list, cfd_applied_map, current_iter):
     for idx in d_rep.index:
         cfd_applied_map[idx] = dict()
         for col in d_rep.columns:
             cfd_applied_map[idx][col] = None
     for i in range(0, len(cfd_list)):
         #stringified_cfd = '(' + cfd.lhs + ') => ' + cfd.rhs
-        d_rep, cfd_applied_map = applyCfd(project_id, d_rep, cfd_list[i], cfd_id_list[i], cfd_applied_map)
+        d_rep, cfd_applied_map = applyCfd(project_id, d_rep, cfd_list[i], cfd_id_list[i], cfd_applied_map, current_iter)
         #d_rep = applyCfd(project_id, d_rep, stringified_cfd, cfd.cfd_id, receiver)
     return d_rep, cfd_applied_map
 
-def applyCfd(project_id, d_rep, cfd, cfd_id, cfd_applied_map):
+def applyCfd(project_id, d_rep, cfd, cfd_id, cfd_applied_map, current_iter):
     #mod_count = 0
     tuple_metadata = pd.read_pickle('./store/' + project_id + '/tuple_metadata.p')
     for idx, row in d_rep.iterrows():
@@ -268,11 +217,22 @@ def reinforceCFDs(project_id, cfd_id, receiver, cfd_metadata):
 
 
 # TODO
-def buildSample(d_rep, sample_size, project_id):
+def buildSample(d_rep, sample_size, project_id, cfd_applied_map, current_iter):
     # TEMPORARY IMPLEMENTATION
-    tuple_metadata = pd.read_pickle('./store/' + project_id + '/tuple_metadata.p')
+    #tuple_metadata = pd.read_pickle('./store/' + project_id + '/tuple_metadata.p')
+    cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
     chosen_tups = tuple_weights.sample(n=sample_size, weights='weight')     # tuples with a larger weight (a.k.a. larger value in the 'weight' column of tuple_weights) are more likely to be chosen
     print('Chosen example indexes:')
     pprint(chosen_tups.index)
+
+    for idx in chosen_tups.index:
+        seen = list()
+        for col in d_rep.columns:
+        # TODO; Calculate how many rows the CFD was applied to in the sample
+            if cfd_applied_map[idx][col] not in seen:
+                seen.append(cfd_applied_map[idx][col])
+                cfd_metadata[cfd_applied_map[idx][col]]['num_changes'][current_iter] += 1
+
+    pickle.dump(cfd_metadata, open('./store/' + project_id + '/cfd_metadata.p', 'wb') )
     sample = d_rep.iloc[chosen_tups.index]
     return sample
