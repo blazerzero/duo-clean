@@ -352,7 +352,9 @@ class ReceiverCharmCFD(object):
 			print('Creating feature map...')
 
 		for cfd in cfds:
-			cfdFeatures = [cL for cL in cfd['lhs'].spli(', ')].extend([cR for cR in cfd['rhs'].split(', ')])
+			lhs = c['cfd'].split(' => ')[0][1:-1]
+			rhs = c['cfd'].split(' => ')[1]
+			cfdFeatures = [cL for cL in lhs.split(', ')].extend([cR for cR in rhs.split(', ')])
 			cfdID = cfd['cfd_id']
 			if cfdID not in self.cfds.keys():
 				self.cfds[cfdID] = dict()

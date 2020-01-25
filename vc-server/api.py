@@ -122,9 +122,11 @@ class Clean(Resource):
         top_cfds = helpers.discoverCFDs(project_id, current_iter)
         d_rep['cover'] = None
 
+        cfd_applied_map = dict()
+
         if top_cfds is not None and isinstance(top_cfds, np.ndarray):
-            helpers.addNewCfdsToList(top_cfds, project_id)
-            picked_cfd_list = helpers.pickCfds(top_cfds, 1)
+            helpers.addNewCfdsToList(top_cfds, project_id, current_iter)
+            picked_cfd_list, picked_cfd_id_list = helpers.pickCfds(top_cfds, 1)
             #TODO: Build query from user repairs
             #picked_cfd_list = helpers.pickCfds(query, 1)
 
@@ -132,13 +134,13 @@ class Clean(Resource):
                 np.savetxt('./store/' + project_id + '/' + current_iter + '/applied_cfds.txt', picked_cfd_list,
                            fmt="%s")
                 d_rep = helpers.buildCover(d_rep, picked_cfd_list)
-                d_rep = helpers.applyCfdList(project_id, d_rep, picked_cfd_list)
+                d_rep, cfd_applied_map = helpers.applyCfdList(project_id, d_rep, picked_cfd_list, picked_cfd_id_list)
             else:
                 with open('./store/' + project_id + '/' + current_iter + '/applied_cfds.txt', 'w') as f:
                     print('No CFDs were applied.', file=f)
 
         d_rep = d_rep.drop(columns=['cover'])
-        helpers.reinforceTuplesBasedOnContradiction(project_id, current_iter, d_rep)
+        helpers.reinforceTuplesBasedOnContradiction(project_id, current_iter, d_rep, cfd_applied_map)
         d_rep.to_csv('./store/' + project_id + '/' + current_iter + '/data.csv', encoding='utf-8', index=False)
 
         tuple_metadata = pd.read_pickle('./store/' + project_id + '/tuple_metadata.p')
@@ -153,6 +155,8 @@ class Clean(Resource):
         tuple_metadata.to_pickle('./store/' + project_id + '/tuple_metadata.p')
 
         s_out = helpers.buildSample(d_rep, sample_size, project_id)
+
+        pickle.dump( current_iter, open('./store/' + project_id + '/current_iter.p', 'wb') )
 
         returned_data = {
             'sample': s_out.to_json(orient='index'),

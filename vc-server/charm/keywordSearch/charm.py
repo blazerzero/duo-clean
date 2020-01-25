@@ -38,7 +38,7 @@ def getRules(receiver, query, sample_size):
         for rule_id in rule_id_list:
             rule = receiver.data.getListRow(rule_id)
             rules.append(CFD(rule))
-        return rules
+        return rules, rule_id_list
     except KeyError:
         print('No search results. Please try again.')
         return None, None
