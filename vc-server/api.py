@@ -15,6 +15,7 @@ import pandas as pd
 import numpy as np
 import pickle
 import math
+import shutil
 
 app = Flask(__name__)
 CORS(app)
@@ -39,8 +40,8 @@ class Import(Resource):
         newDir = './store/' + newProjectID + '/'
         try:
             os.mkdir(newDir)
-            newDir += '00000001/'
-            os.mkdir(newDir)
+        #    newDir += '00000001/'
+        #    os.mkdir(newDir)
         except OSError:
             print ('[ERROR] Unable to create a new directory for the project.')
             return {'msg': '[ERROR] Unable to create a new directory for the project.'}
@@ -53,6 +54,7 @@ class Import(Resource):
             trimmedLine = ','.join(trimmedLineList)
             f.write(trimmedLine + '\n')
         f.close()
+        shutil.copyfile(newDir + 'data.csv', newDir + 'before.csv')
 
         #df = pd.read_csv(newDir + 'data.csv')
 
@@ -76,7 +78,7 @@ class Sample(Resource):
         existing_iters = [('0x' + f) for f in os.listdir('./store/' + project_id + '/') if os.path.isdir(os.path.join('./store/' + project_id + '/', f))]
         iteration_list = [int(d, 0) for d in existing_iters]
         current_iter = "{:08x}".format(max(iteration_list))
-        data = pd.read_csv('./store/' + project_id + '/' + current_iter + '/data.csv', keep_default_na=False)
+        data = pd.read_csv('./store/' + project_id + '/before.csv', keep_default_na=False)
         tuple_metadata = pd.DataFrame(index=data.index, columns=['weight', 'expl_freq'])
         tuple_metadata['weight'] = 1
         tuple_metadata['expl_freq'] = 0
@@ -84,13 +86,14 @@ class Sample(Resource):
         for idx in data.index:
             value_metadata[idx] = dict()
             for col in data.columns:
-                value_metadata[idx][col]['history'] = [data.at[idx, col]]
+                value_metadata[idx][col]['history'] = [(data.at[idx, col], None)]
                 value_metadata[idx][col]['disagreement'] = 0
         tuple_metadata.to_pickle('./store/' + project_id + '/tuple_metadata.p')
-        pickle.dump( value_metadata, open('./store/' + project_id + '/00000001/value_metadata.p', 'wb') )
+        pickle.dump( value_metadata, open('./store/' + project_id + '/value_metadata.p', 'wb') )
 
         s_out = helpers.buildSample(data, min(sample_size, len(data.index)), project_id)   # SAMPLING FUNCTION GOES HERE; FOR NOW, BASIC SAMPLER
-
+        current_iter = '00000001'
+        pickle.dump( open(current_iter, './store/' + project_id + 'current_iter.p', 'wb') )
         returned_data = {
             'sample': s_out.to_json(orient='index'),
             'msg': '[SUCCESS] Successfully retrieved sample.'
@@ -109,16 +112,17 @@ class Clean(Resource):
         s_in = request.form.get('data')
         sample_size = int(request.form.get('sample_size'))
 
-        existing_iters = [('0x' + f) for f in os.listdir('./store/' + project_id + '/') if os.path.isdir(os.path.join('./store/' + project_id + '/', f))]
-        iteration_list = [int(d, 0) for d in existing_iters]
-        current_iter = "{:08x}".format(max(iteration_list) + 1)
-        prev_iter = "{:08x}".format(max(iteration_list))
+        #existing_iters = [('0x' + f) for f in os.listdir('./store/' + project_id + '/') if os.path.isdir(os.path.join('./store/' + project_id + '/', f))]
+        #iteration_list = [int(d, 0) for d in existing_iters]
+        #current_iter = "{:08x}".format(max(iteration_list) + 1)
 
-        d_dirty = pd.read_csv('./store/' + project_id + '/' + prev_iter + '/data.csv', keep_default_na=False)
+        #prev_iter = "{:08x}".format(max(iteration_list))
+
+        d_dirty = pd.read_csv('./store/' + project_id + '/before.csv', keep_default_na=False)
         d_rep = helpers.applyUserRepairs(d_dirty, s_in)
-        os.mkdir('./store/' + project_id + '/' + current_iter + '/')
-        os.mknod('./store/' + project_id + '/' + current_iter + '/applied_cfds.txt')
-        d_rep.to_csv('./store/' + project_id + '/' + current_iter + '/data.csv', encoding='utf-8', index=False)
+        #os.mkdir('./store/' + project_id + '/' + current_iter + '/')
+        os.mknod('./store/' + project_id + '/applied_cfds.txt')
+        d_rep.to_csv('./store/' + project_id + '/after.csv', encoding='utf-8', index=False)
         top_cfds = helpers.discoverCFDs(project_id, current_iter)
         d_rep['cover'] = None
 
@@ -129,9 +133,9 @@ class Clean(Resource):
             cfd_applied_map = pickle.load( open('./store/' + project_id + '/cfd_applied_map.p', 'wb') )
         cfd_applied_map.append(dict())
         for idx in d_rep.index:
-            cfd_applied_map[idx] = dict()
+            cfd_applied_map[-1][idx] = dict()
             for col in d_col.columns:
-                cfd_applied_map[idx][col] = None
+                cfd_applied_map[-1][idx][col] = None
 
         if top_cfds is not None and isinstance(top_cfds, np.ndarray):
             helpers.addNewCfdsToList(top_cfds, project_id, current_iter)
@@ -140,17 +144,17 @@ class Clean(Resource):
             #picked_cfd_list = helpers.pickCfds(query, 1)
 
             if picked_cfd_list is not None:
-                np.savetxt('./store/' + project_id + '/' + current_iter + '/applied_cfds.txt', picked_cfd_list,
+                np.savetxt('./store/' + project_id + '/applied_cfds.txt', np.array(picked_cfd_list),
                            fmt="%s")
                 d_rep = helpers.buildCover(d_rep, picked_cfd_list)
                 d_rep, cfd_applied_map = helpers.applyCfdList(project_id, d_rep, picked_cfd_list, picked_cfd_id_list, current_iter)
             else:
-                with open('./store/' + project_id + '/' + current_iter + '/applied_cfds.txt', 'w') as f:
+                with open('./store/' + project_id + '/applied_cfds.txt', 'w') as f:
                     print('No CFDs were applied.', file=f)
 
         d_rep = d_rep.drop(columns=['cover'])
         helpers.reinforceTuplesBasedOnContradiction(project_id, current_iter, d_rep, cfd_applied_map)
-        d_rep.to_csv('./store/' + project_id + '/' + current_iter + '/data.csv', encoding='utf-8', index=False)
+        d_rep.to_csv('./store/' + project_id + '/before.csv', encoding='utf-8', index=False)
 
         tuple_metadata = pd.read_pickle('./store/' + project_id + '/tuple_metadata.p')
 

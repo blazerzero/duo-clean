@@ -19,15 +19,34 @@ def applyUserRepairs(d_dirty, s_in):
     d_rep = d_dirty
     s_df = pd.read_json(s_in, orient='index')
     print(s_df.index)
-
     cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
     receiver = pickle.load( open('./store/' + project_id + '/receiver.p', 'rb') )
     current_iter = pickle.load( open('./store/' + project_id + '/current_iter.p', 'rb') )
-    #value_metadata = pickle.load( open('./store/' + project_id + '/value_metadata.p', 'rb') )
+    curr_iter_num = int('0x' + current_iter, 0)
+    cfd_applied_map = pickle.load( open('./store/' + project_id))
+    value_metadata = pickle.load( open('./store/' + project_id + '/value_metadata.p', 'rb') )
 
-    #for idx in s_df.index:
-        #for col in s_df.columns:
-            #d_rep.at[idx, col] = s_df.at[idx, col]
+    num_times_applied_each_cfd = dict()
+    for idx in s_df.index:
+        for col in s_df.columns:
+            if cfd_applied_map[-1][idx][col] in num_times_applied_each_cfd.keys():
+                num_times_applied_each_cfd[cfd_applied_map[-1][idx][col]] += 1
+            else:
+                num_times_applied_each_cfd[cfd_applied_map[-1][idx][col]] = 1
+
+    for idx in s_df.index:
+        for col in s_df.columns:
+            if (d_rep.at[idx, col] != s_df.at[idx, col]):
+                try:
+                    latest_match_idx = next(i for i in reversed(range(len(value_metadata[idx][col]['history']))) if value_metadata[idx][col]['history'][i][0] == s_df.at[idx, col])
+                    charm.reinforce(receiver, value_metadata[idx][col]['history'][latest_match_index][1], latest_match_idx/(len(value_metadata[idx][col]['history']) - 1))
+                    #charm.reinforce(receiver, value_metadata[idx][col]['history'][-1][1], -1/num_times_applied_each_cfd[value_metadata[idx][col]['history'][-1][1]])
+                except ValueError:
+                    last_cfd_id = value_metadata[idx][col]['history'][-1][1]
+                    charm.reinforce(receiver, last_cfd_id, -1/num_times_applied_each_cfd[last_cfd_id])
+                d_rep.at[idx, col] = s_df.at[idx, col]
+            #else:
+
 
 
 
