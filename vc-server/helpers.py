@@ -26,6 +26,7 @@ def applyUserRepairs(d_dirty, s_in):
     cfd_applied_map = pickle.load( open('./store/' + project_id))
     value_metadata = pickle.load( open('./store/' + project_id + '/value_metadata.p', 'rb') )
 
+    changed_ids = list()
     num_times_applied_each_cfd = dict()
     for idx in s_df.index:
         for col in s_df.columns:
@@ -36,17 +37,19 @@ def applyUserRepairs(d_dirty, s_in):
 
     for idx in s_df.index:
         for col in s_df.columns:
-            if (d_rep.at[idx, col] != s_df.at[idx, col]):
+            if d_rep.at[idx, col] != s_df.at[idx, col]:
+                changed_ids.append(idx)
                 try:
                     latest_match_idx = next(i for i in reversed(range(len(value_metadata[idx][col]['history']))) if value_metadata[idx][col]['history'][i][0] == s_df.at[idx, col])
                     charm.reinforce(receiver, value_metadata[idx][col]['history'][latest_match_index][1], latest_match_idx/(len(value_metadata[idx][col]['history']) - 1))
                     #charm.reinforce(receiver, value_metadata[idx][col]['history'][-1][1], -1/num_times_applied_each_cfd[value_metadata[idx][col]['history'][-1][1]])
                 except ValueError:
                     last_cfd_id = value_metadata[idx][col]['history'][-1][1]
-                    charm.reinforce(receiver, last_cfd_id, -1/num_times_applied_each_cfd[last_cfd_id])
+                    #charm.reinforce(receiver, last_cfd_id, -1/num_times_applied_each_cfd[last_cfd_id])
                 d_rep.at[idx, col] = s_df.at[idx, col]
-            #else:
-
+            else:
+                last_cfd_id = value_metadata[idx][col]['history'][-1][1]
+                charm.reinforce(receiver, last_cfd_id, 1/num_times_applied_each_cfd[last_cfd_id])
 
 
 
@@ -56,7 +59,7 @@ def applyUserRepairs(d_dirty, s_in):
     #pickle.dump(receiver, open('./store/' + project_id + '/receiver.p', 'wb'))
     #pickle.dump(cfd_metadata, open('./store/' + project_id + '/cfd_metadata.p', 'wb'))
 
-    return d_rep
+    return d_rep, changed_ids
 
 
 def discoverCFDs(project_id, current_iter):
@@ -153,20 +156,22 @@ def buildCover(d_rep, picked_cfds):
     return d_rep
 
 # TODO; CHARM-INTEGRATED IMPLEMENTATION
-#def pickCfds(query, num_cfds):
-#    receiver = pickle.load( open('./store/' + project_id + '/receiver.p', 'rb') )
-#    return charm.getRules(receiver, query, num_cfds)
+def pickCfds(query, num_cfds):
+    receiver = pickle.load( open('./store/' + project_id + '/receiver.p', 'rb') )
+    rules, rule_id_list = charm.getRules(receiver, query, num_cfds)
+    pickle.dump( open('./store/' + project_id + '/receiver.p', 'wb') )
+    return rules, rule_id_list
 
 # TODO; TEMPORARY IMPLEMENTATION
-def pickCfds(top_cfds, num_cfds):
-    just_cfds = np.array([c['cfd'] for c in top_cfds if float(c['score']) > 0])
-    just_scores = np.array([float(c['score']) for c in top_cfds if float(c['score']) > 0])
-    norm_scores = np.array([s/sum(just_scores) for s in just_scores])
-    if len(just_cfds) > 0:
-        picked_cfds = np.random.choice(just_cfds, num_cfds, p=norm_scores.astype('float64'))
-        return picked_cfds, picked_cfd_ids
-    else:
-        return None, None
+#def pickCfds(top_cfds, num_cfds):
+#    just_cfds = np.array([c['cfd'] for c in top_cfds if float(c['score']) > 0])
+#    just_scores = np.array([float(c['score']) for c in top_cfds if float(c['score']) > 0])
+#    norm_scores = np.array([s/sum(just_scores) for s in just_scores])
+#    if len(just_cfds) > 0:
+#        picked_cfds = np.random.choice(just_cfds, num_cfds, p=norm_scores.astype('float64'))
+#        return picked_cfds, picked_cfd_ids
+#    else:
+#        return None, None
 
 def applyCfdList(project_id, d_rep, cfd_list, cfd_id_list, cfd_applied_map, current_iter):
     for idx in d_rep.index:

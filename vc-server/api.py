@@ -119,7 +119,7 @@ class Clean(Resource):
         #prev_iter = "{:08x}".format(max(iteration_list))
 
         d_dirty = pd.read_csv('./store/' + project_id + '/before.csv', keep_default_na=False)
-        d_rep = helpers.applyUserRepairs(d_dirty, s_in)
+        d_rep, changed_ids = helpers.applyUserRepairs(d_dirty, s_in)
         #os.mkdir('./store/' + project_id + '/' + current_iter + '/')
         os.mknod('./store/' + project_id + '/applied_cfds.txt')
         d_rep.to_csv('./store/' + project_id + '/after.csv', encoding='utf-8', index=False)
@@ -139,9 +139,14 @@ class Clean(Resource):
 
         if top_cfds is not None and isinstance(top_cfds, np.ndarray):
             helpers.addNewCfdsToList(top_cfds, project_id, current_iter)
-            picked_cfd_list, picked_cfd_id_list = helpers.pickCfds(top_cfds, 1)
+            #picked_cfd_list, picked_cfd_id_list = helpers.pickCfds(top_cfds, 1)
             #TODO: Build query from user repairs
-            #picked_cfd_list = helpers.pickCfds(query, 1)
+            query = ''
+            for idx in changed_ids:
+                for col in s_in.columns:
+                    query += (col + '=' + s_in.at[idx, col] + ' ')
+            query = query[:-1]
+            picked_cfd_list, picked_cfd_id_list = helpers.pickCfds(query, 1)
 
             if picked_cfd_list is not None:
                 np.savetxt('./store/' + project_id + '/applied_cfds.txt', np.array(picked_cfd_list),
