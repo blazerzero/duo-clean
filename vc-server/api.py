@@ -40,6 +40,8 @@ class Import(Resource):
         newDir = './store/' + newProjectID + '/'
         try:
             os.mkdir(newDir)
+            #os.mknod(newDir + 'applied_cfds.txt')
+            open(newDir + 'applied_cfds.txt', 'w').close()
         #    newDir += '00000001/'
         #    os.mkdir(newDir)
         except OSError:
@@ -77,7 +79,7 @@ class Sample(Resource):
         sample_size = int(request.form.get('sample_size'))
         existing_iters = [('0x' + f) for f in os.listdir('./store/' + project_id + '/') if os.path.isdir(os.path.join('./store/' + project_id + '/', f))]
         iteration_list = [int(d, 0) for d in existing_iters]
-        current_iter = "{:08x}".format(max(iteration_list))
+        #current_iter = "{:08x}".format(max(iteration_list))
         data = pd.read_csv('./store/' + project_id + '/before.csv', keep_default_na=False)
         tuple_metadata = pd.DataFrame(index=data.index, columns=['weight', 'expl_freq'])
         tuple_metadata['weight'] = 1
@@ -86,14 +88,18 @@ class Sample(Resource):
         for idx in data.index:
             value_metadata[idx] = dict()
             for col in data.columns:
-                value_metadata[idx][col]['history'] = [(data.at[idx, col], None)]
+                value_metadata[idx][col] = dict()
+                #value_metadata[idx][col]['history'] = [(data.at[idx, col], None)]
+                value_metadata[idx][col]['history'] = list()
+                value_metadata[idx][col]['history'].append(helpers.ValueHistory(data.at[idx, col], 'system', None, '00000000', False))
                 value_metadata[idx][col]['disagreement'] = 0
+
+        s_out = data.sample(n=sample_size)
         tuple_metadata.to_pickle('./store/' + project_id + '/tuple_metadata.p')
         pickle.dump( value_metadata, open('./store/' + project_id + '/value_metadata.p', 'wb') )
 
-        s_out = helpers.buildSample(data, min(sample_size, len(data.index)), project_id)   # SAMPLING FUNCTION GOES HERE; FOR NOW, BASIC SAMPLER
         current_iter = '00000001'
-        pickle.dump( open(current_iter, './store/' + project_id + 'current_iter.p', 'wb') )
+        pickle.dump( current_iter, open('./store/' + project_id + '/current_iter.p', 'wb') )
         returned_data = {
             'sample': s_out.to_json(orient='index'),
             'msg': '[SUCCESS] Successfully retrieved sample.'
@@ -114,14 +120,14 @@ class Clean(Resource):
 
         #existing_iters = [('0x' + f) for f in os.listdir('./store/' + project_id + '/') if os.path.isdir(os.path.join('./store/' + project_id + '/', f))]
         #iteration_list = [int(d, 0) for d in existing_iters]
-        #current_iter = "{:08x}".format(max(iteration_list) + 1)
+        current_iter = pickle.load(open('./store/' + project_id + '/current_iter.p', 'rb'))
 
         #prev_iter = "{:08x}".format(max(iteration_list))
 
         d_dirty = pd.read_csv('./store/' + project_id + '/before.csv', keep_default_na=False)
-        d_rep, changed_ids = helpers.applyUserRepairs(d_dirty, s_in)
+        d_rep, changed_ids = helpers.applyUserRepairs(d_dirty, s_in, project_id, current_iter)
+        current_iter = "{:08x}".format(int('0x'+current_iter, 0)+1)
         #os.mkdir('./store/' + project_id + '/' + current_iter + '/')
-        os.mknod('./store/' + project_id + '/applied_cfds.txt')
         d_rep.to_csv('./store/' + project_id + '/after.csv', encoding='utf-8', index=False)
         top_cfds = helpers.discoverCFDs(project_id, current_iter)
         d_rep['cover'] = None
@@ -130,11 +136,14 @@ class Clean(Resource):
         if os.path.isfile('./store/' + project_id + '/cfd_applied_map.p'):
             cfd_applied_map = list()
         else:
-            cfd_applied_map = pickle.load( open('./store/' + project_id + '/cfd_applied_map.p', 'wb') )
+            cfd_applied_map = pickle.load( open('./store/' + project_id + '/cfd_applied_map.p', 'rb') )
+        print('here')
         cfd_applied_map.append(dict())
+        print('Initialize CFD applied map for this iteration')
+        print(top_cfds)
         for idx in d_rep.index:
             cfd_applied_map[-1][idx] = dict()
-            for col in d_col.columns:
+            for col in d_rep.columns:
                 cfd_applied_map[-1][idx][col] = None
 
         if top_cfds is not None and isinstance(top_cfds, np.ndarray):
@@ -172,9 +181,10 @@ class Clean(Resource):
         #tuple_metadata['weight'] = tuple_metadata['weight'] / tuple_metadata['weight'].sum()
         tuple_metadata.to_pickle('./store/' + project_id + '/tuple_metadata.p')
 
-        s_out = helpers.buildSample(d_rep, sample_size, project_id, cfd_applied_map)
+        s_out = helpers.buildSample(d_rep, sample_size, project_id, cfd_applied_map, current_iter)
 
         pickle.dump( current_iter, open('./store/' + project_id + '/current_iter.p', 'wb') )
+        pickle.dump( cfd_applied_map, open('./store/' + project_id + '/cfd_applied_map.p', 'wb') )
 
         returned_data = {
             'sample': s_out.to_json(orient='index'),

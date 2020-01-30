@@ -14,59 +14,76 @@ from pprint import pprint
 sys.path.insert(0, './charm/keywordSearch/charm')
 import charm
 
+class ValueHistory(object):
+    def __init__(self, value, agent, cfd_applied, iter, changed):
+        self.value = value
+        self.agent = agent
+        self.cfd_applied = cfd_applied
+        self.iter = iter
+        self.changed = changed
 
-def applyUserRepairs(d_dirty, s_in):
+def applyUserRepairs(d_dirty, s_in, project_id, current_iter):
     d_rep = d_dirty
     s_df = pd.read_json(s_in, orient='index')
     print(s_df.index)
-    cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
-    receiver = pickle.load( open('./store/' + project_id + '/receiver.p', 'rb') )
-    current_iter = pickle.load( open('./store/' + project_id + '/current_iter.p', 'rb') )
-    curr_iter_num = int('0x' + current_iter, 0)
-    cfd_applied_map = pickle.load( open('./store/' + project_id))
-    value_metadata = pickle.load( open('./store/' + project_id + '/value_metadata.p', 'rb') )
-
     changed_ids = list()
-    num_times_applied_each_cfd = dict()
-    for idx in s_df.index:
-        for col in s_df.columns:
-            if cfd_applied_map[-1][idx][col] in num_times_applied_each_cfd.keys():
-                num_times_applied_each_cfd[cfd_applied_map[-1][idx][col]] += 1
-            else:
-                num_times_applied_each_cfd[cfd_applied_map[-1][idx][col]] = 1
+    if current_iter == '00000001':
+        for idx in s_df.index:
+            for col in s_df.columns:
+                if d_rep.at[idx, col] != s_df.at[idx, col]:
+                    d_rep.at[idx, col] = s_df.at[idx, col]
+                    if idx not in changed_ids:
+                        changed_ids.append(idx)
 
-    for idx in s_df.index:
-        for col in s_df.columns:
-            if d_rep.at[idx, col] != s_df.at[idx, col]:
-                changed_ids.append(idx)
-                try:
-                    latest_match_idx = next(i for i in reversed(range(len(value_metadata[idx][col]['history']))) if value_metadata[idx][col]['history'][i][0] == s_df.at[idx, col])
-                    charm.reinforce(receiver, value_metadata[idx][col]['history'][latest_match_index][1], latest_match_idx/(len(value_metadata[idx][col]['history']) - 1))
-                    #charm.reinforce(receiver, value_metadata[idx][col]['history'][-1][1], -1/num_times_applied_each_cfd[value_metadata[idx][col]['history'][-1][1]])
-                except ValueError:
-                    last_cfd_id = value_metadata[idx][col]['history'][-1][1]
-                    #charm.reinforce(receiver, last_cfd_id, -1/num_times_applied_each_cfd[last_cfd_id])
-                d_rep.at[idx, col] = s_df.at[idx, col]
-            else:
-                last_cfd_id = value_metadata[idx][col]['history'][-1][1]
-                charm.reinforce(receiver, last_cfd_id, 1/num_times_applied_each_cfd[last_cfd_id])
+    else:
+        #cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
+        receiver = pickle.load( open('./store/' + project_id + '/receiver.p', 'rb') )
+        #curr_iter_num = int('0x' + current_iter, 0)
+        cfd_applied_map = pickle.load( open('./store/' + project_id))
+        value_metadata = pickle.load( open('./store/' + project_id + '/value_metadata.p', 'rb') )
+
+        num_times_applied_each_cfd = dict()
+        for idx in s_df.index:
+            for col in s_df.columns:
+                if cfd_applied_map[-1][idx][col] in num_times_applied_each_cfd.keys():
+                    num_times_applied_each_cfd[cfd_applied_map[-1][idx][col]] += 1
+                else:
+                    num_times_applied_each_cfd[cfd_applied_map[-1][idx][col]] = 1
+
+        for idx in s_df.index:
+            for col in s_df.columns:
+                if d_rep.at[idx, col] != s_df.at[idx, col]:
+                    if idx not in changed_ids:
+                        changed_ids.append(idx)
+                    try:
+                        latest_match_idx = next(i for i in reversed(range(len(value_metadata[idx][col]['history']))) if value_metadata[idx][col]['history'][i].value == s_df.at[idx, col])
+                        charm.reinforce(receiver, value_metadata[idx][col]['history'][latest_match_index].cfd_applied, latest_match_idx/(len(value_metadata[idx][col]['history']) - 1))
+                        #charm.reinforce(receiver, value_metadata[idx][col]['history'][-1][1], -1/num_times_applied_each_cfd[value_metadata[idx][col]['history'][-1][1]])
+                    except ValueError:
+                        last_cfd_id = value_metadata[idx][col]['history'][-1].cfd_applied
+                        #charm.reinforce(receiver, last_cfd_id, -1/num_times_applied_each_cfd[last_cfd_id])
+                    d_rep.at[idx, col] = s_df.at[idx, col]
+                else:
+                    last_cfd_id = value_metadata[idx][col]['history'][-1].cfd_applied
+                    charm.reinforce(receiver, last_cfd_id, 1/num_times_applied_each_cfd[last_cfd_id])
 
 
 
-    #TODO: Find the CFD applied by the system for changes made by the user, and check if it was reverted to match a previous CFD
+        #TODO: Find the CFD applied by the system for changes made by the user, and check if it was reverted to match a previous CFD
 
 
-    #pickle.dump(receiver, open('./store/' + project_id + '/receiver.p', 'wb'))
-    #pickle.dump(cfd_metadata, open('./store/' + project_id + '/cfd_metadata.p', 'wb'))
+        #pickle.dump(receiver, open('./store/' + project_id + '/receiver.p', 'wb'))
+        #pickle.dump(cfd_metadata, open('./store/' + project_id + '/cfd_metadata.p', 'wb'))
 
+    print(changed_ids)
     return d_rep, changed_ids
 
 
 def discoverCFDs(project_id, current_iter):
     #prev_iter = "{:08x}".format(int('0x'+current_iter, 0) - 1)
-    dirty_fp = './store/' + project_id + '/00000001/data.csv'
-    clean_fp = './store/' + project_id + '/' + current_iter + '/data.csv'
-
+    dirty_fp = './store/' + project_id + '/before.csv'
+    clean_fp = './store/' + project_id + '/after.csv'
+    print('about to run xplode')
     process = sp.Popen(['./xplode-master/CTane', dirty_fp, clean_fp, '0.25', '2'], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})
     output = process.communicate()[0].decode("utf-8")
     if process.returncode == 0:
@@ -85,7 +102,7 @@ def addNewCfdsToList(top_cfds, project_id, current_iter, receiver=None):
     if os.path.isfile('./store/' + project_id + '/cfd_metadata.p'):
         cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
         receiver = pickle.load( open('./store/' + project_id + '/receiver.p', 'rb') )
-        for c in [tc for tc in top_cfds if tc['score'] > 0]:
+        for c in [tc for tc in top_cfds if float(tc['score']) > 0]:
             exists = False
             for idx, cfd in enumerate(cfd_metadata):
                 lhs = c['cfd'].split(' => ')[0][1:-1]
@@ -94,7 +111,7 @@ def addNewCfdsToList(top_cfds, project_id, current_iter, receiver=None):
                     exists = True
                     cfd['num_found'] += 1
                     cfd['num_changes'][current_iter] = [0]
-                    charm.reinforce(receiver, idx, c['score']/cfd['num_found'])
+                    charm.reinforce(receiver, idx, float(c['score'])/cfd['num_found'])
                     break
             if not exists:
                 cfd_metadata.append(dict())
@@ -106,14 +123,14 @@ def addNewCfdsToList(top_cfds, project_id, current_iter, receiver=None):
 
                 c['cfd_id'] = len(cfd_metadata) - 1
                 charm.updateReceiver(receiver, [c])
-                charm.reinforce(receiver, c['cfd_id'], c['score'])
+                charm.reinforce(receiver, c['cfd_id'], float(c['score']))
 
         pickle.dump( receiver, open('./store/' + project_id + '/receiver.p', 'wb') )
         pickle.dump( cfd_metadata, open('./store/' + project_id + '/cfd_metadata.p', 'wb') )
 
     else:
         cfd_metadata = list()
-        for c in [tc for tc in top_cfds if tc['score'] > 0]:
+        for c in [tc for tc in top_cfds if float(tc['score']) > 0]:
             cfd_metadata.append(dict())
             cfd_metadata[-1]['lhs'] = c['cfd'].split(' => ')[0][1:-1]
             cfd_metadata[-1]['rhs'] = c['cfd'].split(' => ')[1]
@@ -121,7 +138,7 @@ def addNewCfdsToList(top_cfds, project_id, current_iter, receiver=None):
             cfd_metadata[-1]['num_changes'] = dict()
             cfd_metadata[-1]['num_changes'][current_iter] = 0
 
-        scores = [c['score'] for c in top_cfds if c['score'] > 0]
+        scores = [float(c['score']) for c in top_cfds if float(c['score']) > 0]
 
         receiver = charm.prepareReceiver(project_id, top_cfds)
         for idx, _ in enumerate(cfd_metadata):
@@ -211,7 +228,7 @@ def reinforceTuplesBasedOnContradiction(project_id, current_iter, d_latest, cfd_
         reinforcementValue = 0
         for col in d_latest.columns:
             prev_spread = len(set(value_metadata[idx][col]['history']))
-            value_metadata[idx][col]['history'].append((d_latest.at[idx, col], cfd_applied_map[idx][col]))
+            #value_metadata[idx][col]['history'].append((d_latest.at[idx, col], cfd_applied_map[idx][col])) #TODO; Clean up to use new ValueHistory class object
             curr_spread = len(set(value_metadata[idx][col]['history']))
             vspr_d = 0       # value spread delta (change in value spread from last iteration)
             if curr_spread > prev_spread:
