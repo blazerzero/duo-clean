@@ -58,6 +58,7 @@ def applyUserRepairs(d_dirty, s_in, project_id, current_iter):
                     try:
                         latest_match_idx = next(i for i in reversed(range(len(value_metadata[idx][col]['history']))) if value_metadata[idx][col]['history'][i].value == s_df.at[idx, col])
                         charm.reinforce(receiver, value_metadata[idx][col]['history'][latest_match_index].cfd_applied, latest_match_idx/(len(value_metadata[idx][col]['history']) - 1))
+                        value_metadata[idx][col]['history'].append(ValueHistory(s_df.at[idx, col], 'user', None, current_iter, True))
                         #charm.reinforce(receiver, value_metadata[idx][col]['history'][-1][1], -1/num_times_applied_each_cfd[value_metadata[idx][col]['history'][-1][1]])
                     except ValueError:
                         last_cfd_id = value_metadata[idx][col]['history'][-1].cfd_applied
@@ -204,6 +205,8 @@ def applyCfdList(project_id, d_rep, cfd_list, cfd_id_list, cfd_applied_map, curr
 def applyCfd(project_id, d_rep, cfd, cfd_id, cfd_applied_map, current_iter):
     #mod_count = 0
     tuple_metadata = pd.read_pickle('./store/' + project_id + '/tuple_metadata.p')
+    value_metadata = pickle.load( open('./store/' + project_id + '/value_metadata.p', 'rb') )
+
     for idx, row in d_rep.iterrows():
         #mod_count = 0
         if row['cover'] is not None and cfd in row['cover'].split('; '):
@@ -215,6 +218,9 @@ def applyCfd(project_id, d_rep, cfd, cfd_id, cfd_applied_map, current_iter):
                     row[rh[0]] = rh[1]
                     #mod_count += 1
                     cfd_applied_map[idx][rh[0]] = cfd_id
+                    value_metadata[idx][rh[0]]['history'].append(ValueHistory(rh[1], 'system', cfd_id, current_iter, True))
+                else:
+                    value_metadata[idx][rh[0]]['history'].append(ValueHistory(rh[1], 'system', cfd_id, current_iter, False))
         #tuple_metadata.at[idx, 'weight'] += mod_count
         #charm.reinforce(receiver, cfd_id, 1)
     return d_rep, cfd_applied_map
@@ -234,7 +240,7 @@ def reinforceTuplesBasedOnContradiction(project_id, current_iter, d_latest, cfd_
             if curr_spread > prev_spread:
                 vspr_d = 1
 
-            cell_values = Counter([val for (val, cfd) in value_metadata[idx][col]['history']])
+            cell_values = Counter([val for (val, _, _, _, _) in value_metadata[idx][col]['history']])
             num_occurrences_mode = cell_values.most_common(1)[0][1]
             new_vdis = 1 - (num_occurrences_mode/len(value_metadata[idx][col]['history']))   # new value disagreement (value disagreement for the current iteration)
             vdis_d = new_vdis - value_metadata[idx][col]['disagreement']            # value disagreement delta (change in value disagreement from last iteration; set to 0 if less than 0 so as to disallow negative tuple weights)
