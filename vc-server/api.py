@@ -125,7 +125,8 @@ class Clean(Resource):
         #prev_iter = "{:08x}".format(max(iteration_list))
 
         d_dirty = pd.read_csv('./store/' + project_id + '/before.csv', keep_default_na=False)
-        d_rep, changed_ids = helpers.applyUserRepairs(d_dirty, s_in, project_id, current_iter)
+        s_df = pd.read_json(s_in, orient='index')
+        d_rep, changed_ids = helpers.applyUserRepairs(d_dirty, s_df, project_id, current_iter)
         current_iter = "{:08x}".format(int('0x'+current_iter, 0)+1)
         #os.mkdir('./store/' + project_id + '/' + current_iter + '/')
         d_rep.to_csv('./store/' + project_id + '/after.csv', encoding='utf-8', index=False)
@@ -147,15 +148,20 @@ class Clean(Resource):
                 cfd_applied_map[-1][idx][col] = None
 
         if top_cfds is not None and isinstance(top_cfds, np.ndarray):
-            helpers.addNewCfdsToList(top_cfds, project_id, current_iter)
-            #picked_cfd_list, picked_cfd_id_list = helpers.pickCfds(top_cfds, 1)
-            #TODO: Build query from user repairs
             query = ''
             for idx in changed_ids:
-                for col in s_in.columns:
-                    query += (col + '=' + s_in.at[idx, col] + ' ')
+                for col in s_df.columns:
+                    query += (col + '=' + s_df.at[idx, col] + ' ')
             query = query[:-1]
-            picked_cfd_list, picked_cfd_id_list = helpers.pickCfds(query, 1)
+            tokenized_query = query.split(' ')
+            formatted_query = []
+            for q in tokenized_query:
+                word = "('" + q + "')"
+                formatted_query.append(word)
+            helpers.addNewCfdsToList(top_cfds, project_id, current_iter, formatted_query)
+            #picked_cfd_list, picked_cfd_id_list = helpers.pickCfds(top_cfds, 1)
+            #TODO: Build query from user repairs
+            picked_cfd_list, picked_cfd_id_list = helpers.pickCfds(project_id, query, 1)
 
             if picked_cfd_list is not None:
                 np.savetxt('./store/' + project_id + '/applied_cfds.txt', np.array(picked_cfd_list),
@@ -173,7 +179,7 @@ class Clean(Resource):
         tuple_metadata = pd.read_pickle('./store/' + project_id + '/tuple_metadata.p')
 
         for idx in d_rep.index:
-            if idx in s_in.index:
+            if idx in s_df.index:
                 tuple_metadata.at[idx, 'expl_freq'] += 1
             else:
                 tuple_metadata.at[idx, 'weight'] += (1 - (tuple_metadata.at[idx, 'expl_freq']/int('0x'+current_iter, 0)))    # reinforce tuple based on how frequently been explored

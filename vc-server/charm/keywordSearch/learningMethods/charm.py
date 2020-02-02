@@ -315,7 +315,7 @@ class ReceiverCharmKeyword_NoFeature_NoFeature(object):
 
 class ReceiverCharmCFD(object):
 	"""docstring from ReceiverCharm CFD"""
-	def __init__(self, data, projectPath):
+	def __init__(self, data, projectPath, signalsReceived):
 		self.featureMap = dict()
 		self.featureWeights = dict()
 		self.returnedCFDs = list()
@@ -324,7 +324,7 @@ class ReceiverCharmCFD(object):
 		self.maxValue = dict()
 		self.cfds = dict()
 		self.cfdWeights = dict()
-		self.updateStrategy(data)
+		self.updateStrategy(data, signalsReceived)
 
 	def save_obj(self, obj, name):
 		#with open(name, 'wb') as f:
@@ -342,10 +342,15 @@ class ReceiverCharmCFD(object):
 
 		return obj
 
-	def updateStrategy(self, cfds):
+	def updateStrategy(self, cfds, signalsReceived):
+		self.receivedSignals = signalsReceived
 		print('Updating strategy...')
 
-		if os.path.exists(self.projectPath):
+		for signal in self.receivedSignals:
+			if signal not in self.maxValue:
+				self.maxValue[signal] = 1
+
+		if os.path.exists(self.projectPath + 'feature_map.p'):
 			print('Loading feature map...')
 			self.featureMap = self.load_obj(self.projectPath + 'feature_map.p')
 		else:
@@ -398,8 +403,6 @@ class ReceiverCharmCFD(object):
 			for signal in self.receivedSignals:
 				if signal not in self.featureWeights:
 					self.featureWeights[signal] = dict()
-				if signal not in self.maxValue:
-					self.maxValue[signal] = 1
 				for feature in self.featureMap[cfdID]:
 					if feature not in self.featureWeights[signal]:
 						self.featureWeights[signal][feature] = 1
@@ -423,7 +426,7 @@ class ReceiverCharmCFD(object):
 	def reinforce(self, signals, intent, score):
 		for inte in intent:
 			if inte is not None:
-				for featureOfIntent in self.features[inte]:
+				for featureOfIntent in self.cfds[inte]:
 					for sig in signals:
 						if sig in self.featureWeights.keys():
 							if featureOfIntent in self.featureWeights[sig].keys():

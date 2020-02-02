@@ -20,7 +20,7 @@ from learningMethods.NoStrategy import NoStrategy
 
 class ReceiverKeyword(object):
 	"""docstring for ReceiverAll"""
-	def __init__(self, projectPath, fileToStore=None, dataSource=None, receiverData=None, idfLevel=None, data=None):
+	def __init__(self, projectPath, fileToStore=None, dataSource=None, receiverData=None, idfLevel=None, data=None, receivedSignal=None):
 		super(ReceiverKeyword, self).__init__()
 		self.data = data
 		self.projectPath = projectPath
@@ -29,12 +29,13 @@ class ReceiverKeyword(object):
 		self.fileToStore = fileToStore
 		self.idfLevel = idfLevel
 		self.strategy = None
+		self.receivedSignal = receivedSignal
 
 	def initializeRE(self):
 		self.strategy = ReceiverCharmKeyword(self.data, self.receiverData, self.dataSource, self.fileToStore, self.idfLevel, self.projectPath)
 
 	def initializeRE_CFD(self):
-		self.strategy = ReceiverCharmCFD(self.data, self.projectPath)
+		self.strategy = ReceiverCharmCFD(self.data, self.projectPath, self.receivedSignal)
 
 	#def initializeRE_CFDLite_OLD(self, data):
 	#	self.strategy = ReceiverCharmKeyword_CFDLite_OLD(data, self.dataSource, self.fileToStore, self.projectPath)

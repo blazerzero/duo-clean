@@ -10,17 +10,17 @@ class CFD:
         self.lhs = rule[1]
         self.rhs = rule[2]
 
-def prepareReceiver(project_id, data):
-    projectPath = '../../store/' + project_id + '/'
+def prepareReceiver(project_id, data, query):
+    projectPath = './store/' + project_id + '/'
     #dataSource = project_id
     #fileToStore = '_rules'
 
-    receiver = ReceiverKeyword(projectPath, None, None, None, None, data)
+    receiver = ReceiverKeyword(projectPath, None, None, None, None, data, query)
     receiver.initializeRE_CFD()
     return receiver
 
-def updateReceiver(receiver, data):
-    receiver.strategy.updateStrategy(data)
+def updateReceiver(receiver, data, query):
+    receiver.strategy.updateStrategy(data, query)
     #return receiver
 
 def getRules(receiver, query, sample_size):
@@ -36,7 +36,7 @@ def getRules(receiver, query, sample_size):
         rules = []
 
         for rule_id in rule_id_list:
-            rule = receiver.data.getListRow(rule_id)
+            rule = receiver.data[rule_id]
             rules.append(CFD(rule))
         return rules, rule_id_list
     except KeyError:
@@ -45,4 +45,4 @@ def getRules(receiver, query, sample_size):
 
 def reinforce(receiver, cfd_id, reinforcement_value):
     receiver.reinforce(cfd_id, reinforcement_value)
-    print("The CFD with cfd_id " + cfd_id + " has been reinforced.")
+    print("The CFD with cfd_id " + str(cfd_id) + " has been reinforced.")

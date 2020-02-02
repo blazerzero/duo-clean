@@ -22,9 +22,8 @@ class ValueHistory(object):
         self.iter = iter
         self.changed = changed
 
-def applyUserRepairs(d_dirty, s_in, project_id, current_iter):
+def applyUserRepairs(d_dirty, s_df, project_id, current_iter):
     d_rep = d_dirty
-    s_df = pd.read_json(s_in, orient='index')
     print(s_df.index)
     changed_ids = list()
     if current_iter == '00000001':
@@ -99,7 +98,7 @@ def discoverCFDs(project_id, current_iter):
         return '[ERROR] CFD DISCOVERY FAILURE'
 
 
-def addNewCfdsToList(top_cfds, project_id, current_iter, receiver=None):
+def addNewCfdsToList(top_cfds, project_id, current_iter, query, receiver=None):
     if os.path.isfile('./store/' + project_id + '/cfd_metadata.p'):
         cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
         receiver = pickle.load( open('./store/' + project_id + '/receiver.p', 'rb') )
@@ -123,7 +122,7 @@ def addNewCfdsToList(top_cfds, project_id, current_iter, receiver=None):
                 cfd_metadata[-1]['num_changes'][current_iter] = 0
 
                 c['cfd_id'] = len(cfd_metadata) - 1
-                charm.updateReceiver(receiver, [c])
+                charm.updateReceiver(receiver, [c], query)
                 charm.reinforce(receiver, c['cfd_id'], float(c['score']))
 
         pickle.dump( receiver, open('./store/' + project_id + '/receiver.p', 'wb') )
@@ -141,7 +140,7 @@ def addNewCfdsToList(top_cfds, project_id, current_iter, receiver=None):
 
         scores = [float(c['score']) for c in top_cfds if float(c['score']) > 0]
 
-        receiver = charm.prepareReceiver(project_id, top_cfds)
+        receiver = charm.prepareReceiver(project_id, top_cfds, query)
         for idx, _ in enumerate(cfd_metadata):
             charm.reinforce(receiver, idx, scores[idx])
 
@@ -174,10 +173,10 @@ def buildCover(d_rep, picked_cfds):
     return d_rep
 
 # TODO; CHARM-INTEGRATED IMPLEMENTATION
-def pickCfds(query, num_cfds):
+def pickCfds(project_id, query, num_cfds):
     receiver = pickle.load( open('./store/' + project_id + '/receiver.p', 'rb') )
     rules, rule_id_list = charm.getRules(receiver, query, num_cfds)
-    pickle.dump( open('./store/' + project_id + '/receiver.p', 'wb') )
+    pickle.dump( receiver, open('./store/' + project_id + '/receiver.p', 'wb') )
     return rules, rule_id_list
 
 # TODO; TEMPORARY IMPLEMENTATION
@@ -240,7 +239,7 @@ def reinforceTuplesBasedOnContradiction(project_id, current_iter, d_latest, cfd_
             if curr_spread > prev_spread:
                 vspr_d = 1
 
-            cell_values = Counter([val for (val, _, _, _, _) in value_metadata[idx][col]['history']])
+            cell_values = Counter([vh.value for vh in value_metadata[idx][col]['history']])
             num_occurrences_mode = cell_values.most_common(1)[0][1]
             new_vdis = 1 - (num_occurrences_mode/len(value_metadata[idx][col]['history']))   # new value disagreement (value disagreement for the current iteration)
             vdis_d = new_vdis - value_metadata[idx][col]['disagreement']            # value disagreement delta (change in value disagreement from last iteration; set to 0 if less than 0 so as to disallow negative tuple weights)
@@ -266,9 +265,10 @@ def reinforceCFDs(project_id, cfd_id, receiver, cfd_metadata):
 # TODO
 def buildSample(d_rep, sample_size, project_id, cfd_applied_map, current_iter):
     # TEMPORARY IMPLEMENTATION
-    #tuple_metadata = pd.read_pickle('./store/' + project_id + '/tuple_metadata.p')
+    tuple_metadata = pd.read_pickle('./store/' + project_id + '/tuple_metadata.p')
+    #tuple_weights = pickl
     cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
-    chosen_tups = tuple_weights.sample(n=sample_size, weights='weight')     # tuples with a larger weight (a.k.a. larger value in the 'weight' column of tuple_weights) are more likely to be chosen
+    chosen_tups = tuple_metadata.sample(n=sample_size, weights='weight')     # tuples with a larger weight (a.k.a. larger value in the 'weight' column of tuple_weights) are more likely to be chosen
     print('Chosen example indexes:')
     pprint(chosen_tups.index)
 
