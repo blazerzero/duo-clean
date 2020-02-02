@@ -11,7 +11,7 @@ import pickle
 from collections import Counter
 from pprint import pprint
 
-sys.path.insert(0, './charm/keywordSearch/charm')
+sys.path.insert(0, './charm/keywordSearch/')
 import charm
 
 class ValueHistory(object):

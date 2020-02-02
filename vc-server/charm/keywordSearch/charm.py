@@ -12,11 +12,11 @@ class CFD:
 
 def prepareReceiver(project_id, data):
     projectPath = '../../store/' + project_id + '/'
-    dataSource = project_id
-    fileToStore = '_rules'
+    #dataSource = project_id
+    #fileToStore = '_rules'
 
-    receiver = ReceiverKeyword(projectPath, fileToStore, dataSource)
-    receiver.initializeRE_CFDLite(data)
+    receiver = ReceiverKeyword(projectPath, None, None, None, None, data)
+    receiver.initializeRE_CFD()
     return receiver
 
 def updateReceiver(receiver, data):

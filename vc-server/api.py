@@ -134,9 +134,9 @@ class Clean(Resource):
 
         cfd_applied_map = None
         if os.path.isfile('./store/' + project_id + '/cfd_applied_map.p'):
-            cfd_applied_map = list()
-        else:
             cfd_applied_map = pickle.load( open('./store/' + project_id + '/cfd_applied_map.p', 'rb') )
+        else:
+            cfd_applied_map = list()
         print('here')
         cfd_applied_map.append(dict())
         print('Initialize CFD applied map for this iteration')

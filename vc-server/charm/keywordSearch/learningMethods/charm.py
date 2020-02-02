@@ -320,19 +320,19 @@ class ReceiverCharmCFD(object):
 		self.featureWeights = dict()
 		self.returnedCFDs = list()
 		self.receivedSignals = list()
-		self.updateStrategy(data)
-		self.maxValue = dict()
 		self.projectPath = projectPath
+		self.maxValue = dict()
 		self.cfds = dict()
 		self.cfdWeights = dict()
+		self.updateStrategy(data)
 
 	def save_obj(self, obj, name):
-		with open(name + '.p', 'wb') as f:
-			pickle.dump(obj, f)
+		#with open(name, 'wb') as f:
+		pickle.dump(obj, open(name, 'wb'))
 
 	def load_obj(self, name):
-		with open(name + '.p', 'rb') as f:
-			return pickle.load(f)
+		#with open(name, 'rb') as f:
+		return pickle.load(open(name, 'rb'))
 
 	def loadPickle(self, obj, name):
 		try:
@@ -345,21 +345,26 @@ class ReceiverCharmCFD(object):
 	def updateStrategy(self, cfds):
 		print('Updating strategy...')
 
-		if os.path.exists(self.projectPath + 'stats/'):
+		if os.path.exists(self.projectPath):
 			print('Loading feature map...')
-			self.featureMap = self.load_obj(self.projectPath + 'stats/feature_map.p')
+			self.featureMap = self.load_obj(self.projectPath + 'feature_map.p')
 		else:
 			print('Creating feature map...')
 
 		for cfd in cfds:
-			lhs = c['cfd'].split(' => ')[0][1:-1]
-			rhs = c['cfd'].split(' => ')[1]
-			cfdFeatures = [cL for cL in lhs.split(', ')].extend([cR for cR in rhs.split(', ')])
+			lhs = cfd['cfd'].split(' => ')[0][1:-1]
+			rhs = cfd['cfd'].split(' => ')[1]
+			print(lhs)
+			print(rhs)
+			#print([cL for cL in lhs.split(', ')])
+			#print([cR for cR in rhs.split(', ')])
+			cfdFeatures = [cL for cL in lhs.split(', ')]
+			cfdFeatures.extend([cR for cR in rhs.split(', ')])
 			cfdID = cfd['cfd_id']
 			if cfdID not in self.cfds.keys():
 				self.cfds[cfdID] = dict()
-				self.cfds[cfdID]['lhs'] = cfd['lhs']
-				self.cfds[cfdID]['rhs'] = cfd['rhs']
+				self.cfds[cfdID]['lhs'] = lhs
+				self.cfds[cfdID]['rhs'] = rhs
 			if cfdID not in self.featureMap:
 				self.featureMap[cfdID] = list()
 			for feature in cfdFeatures:
@@ -367,7 +372,7 @@ class ReceiverCharmCFD(object):
 					self.featureMap[cfdID].append(feature)
 
 		print('Saving stats...')
-		self.save_obj(self.featureMap, self.projectPath + 'stats/feature_map.p')
+		self.save_obj(self.featureMap, self.projectPath + 'feature_map.p')
 		print('Done updating strategy!')
 
 	def pickSingleReturn(self, cfdWeights):
