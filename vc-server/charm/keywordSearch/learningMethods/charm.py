@@ -342,6 +342,12 @@ class ReceiverCharmCFD(object):
 
 		return obj
 
+	########################################
+	# FUNCTION: updateStrategy
+	# PURPOSE:
+	# INPUT:
+	# OUTPUT:
+	########################################
 	def updateStrategy(self, cfds, signalsReceived):
 		self.receivedSignals = signalsReceived
 		print('Updating strategy...')
@@ -380,6 +386,12 @@ class ReceiverCharmCFD(object):
 		self.save_obj(self.featureMap, self.projectPath + 'feature_map.p')
 		print('Done updating strategy!')
 
+	########################################
+	# FUNCTION: pickSingleReturn
+	# PURPOSE:
+	# INPUT:
+	# OUTPUT:
+	########################################
 	def pickSingleReturn(self, cfdWeights):
 		chance = random.uniform(0, 1)
 		cumulative = 0
@@ -390,6 +402,12 @@ class ReceiverCharmCFD(object):
 				del cfdWeights[cfdID]
 				return cfdID
 
+	########################################
+	# FUNCTION: returnTuples
+	# PURPOSE:
+	# INPUT:
+	# OUTPUT:
+	########################################
 	def returnTuples(self, signalsReceived, numberToReturn):
 		self.receivedSignals = signalsReceived
 
@@ -423,6 +441,12 @@ class ReceiverCharmCFD(object):
 		self.returnedCFDs = returnedCFDs
 		return returnedCFDs
 
+	########################################
+	# FUNCTION: reinforce
+	# PURPOSE:
+	# INPUT:
+	# OUTPUT:
+	########################################
 	def reinforce(self, signals, intent, score):
 		for inte in intent:
 			if inte is not None:

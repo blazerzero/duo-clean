@@ -78,9 +78,14 @@ def applyUserRepairs(d_dirty, s_df, project_id, current_iter):
     print(changed_ids)
     return d_rep, changed_ids
 
-
-def discoverCFDs(project_id, current_iter):
-    #prev_iter = "{:08x}".format(int('0x'+current_iter, 0) - 1)
+########################################
+# FUNCTION: discoverCFDs
+# PURPOSE: Run XPlode on the before-repair and after-repair versions of the dataset.
+# INPUT: project_id: The ID of the current interaction, used to retrieve the datasets.
+# OUTPUT: An array of JSON objects containing information on each discovered CFD
+# (including CFD ID, CFd, and score), or None if there was an XPlode runtime error or no CFDs were found.
+########################################
+def discoverCFDs(project_id):
     dirty_fp = './store/' + project_id + '/before.csv'
     clean_fp = './store/' + project_id + '/after.csv'
     print('about to run xplode')
@@ -88,6 +93,7 @@ def discoverCFDs(project_id, current_iter):
     output = process.communicate()[0].decode("utf-8")
     if process.returncode == 0:
         if output == '[NO CFDS FOUND]':
+            print(output)
             return None
         else:
             output = np.array(output.split('\n'))[:-1]
@@ -95,9 +101,16 @@ def discoverCFDs(project_id, current_iter):
             top_cfds = output[int(len(output)/2):]
             return np.array([{'cfd_id': i, 'cfd': top_cfds[i], 'score': scores[i]} for i in range(0, len(top_cfds))])
     else:
-        return '[ERROR] CFD DISCOVERY FAILURE'
+        print('[ERROR] CFD DISCOVERY FAILURE')
+        return None
 
 
+########################################
+# FUNCTION: addNewCfdsToList
+# PURPOSE:
+# INPUT:
+# OUTPUT:
+########################################
 def addNewCfdsToList(top_cfds, project_id, current_iter, query, receiver=None):
     if os.path.isfile('./store/' + project_id + '/cfd_metadata.p'):
         cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
@@ -148,6 +161,12 @@ def addNewCfdsToList(top_cfds, project_id, current_iter, query, receiver=None):
         pickle.dump( cfd_metadata, open('./store/' + project_id + '/cfd_metadata.p', 'wb') )
 
 
+########################################
+# FUNCTION: buildCover
+# PURPOSE:
+# INPUT:
+# OUTPUT:
+########################################
 def buildCover(d_rep, picked_cfds):
     cover = np.empty(len(d_rep.index), dtype=str)
     print(picked_cfds[0]['cfd'])
@@ -172,7 +191,13 @@ def buildCover(d_rep, picked_cfds):
     d_rep['cover'] = cover
     return d_rep
 
-# TODO; CHARM-INTEGRATED IMPLEMENTATION
+
+########################################
+# FUNCTION: pickCfds
+# PURPOSE:
+# INPUT:
+# OUTPUT:
+########################################
 def pickCfds(project_id, query, num_cfds):
     receiver = pickle.load( open('./store/' + project_id + '/receiver.p', 'rb') )
     rules, rule_id_list = charm.getRules(receiver, query, num_cfds)
@@ -190,6 +215,13 @@ def pickCfds(project_id, query, num_cfds):
 #    else:
 #        return None, None
 
+
+########################################
+# FUNCTION: applyCfdList
+# PURPOSE:
+# INPUT:
+# OUTPUT:
+########################################
 def applyCfdList(project_id, d_rep, cfd_list, cfd_id_list, cfd_applied_map, current_iter):
     for idx in d_rep.index:
         cfd_applied_map[idx] = dict()
@@ -201,6 +233,13 @@ def applyCfdList(project_id, d_rep, cfd_list, cfd_id_list, cfd_applied_map, curr
         #d_rep = applyCfd(project_id, d_rep, stringified_cfd, cfd.cfd_id, receiver)
     return d_rep, cfd_applied_map
 
+
+########################################
+# FUNCTION: applyCfd
+# PURPOSE:
+# INPUT:
+# OUTPUT:
+########################################
 def applyCfd(project_id, d_rep, cfd, cfd_id, cfd_applied_map, current_iter):
     #mod_count = 0
     tuple_metadata = pd.read_pickle('./store/' + project_id + '/tuple_metadata.p')
@@ -225,6 +264,12 @@ def applyCfd(project_id, d_rep, cfd, cfd_id, cfd_applied_map, current_iter):
     return d_rep, cfd_applied_map
 
 
+########################################
+# FUNCTION: reinforceTuplesBasedOnContradiction
+# PURPOSE:
+# INPUT:
+# OUTPUT:
+########################################
 def reinforceTuplesBasedOnContradiction(project_id, current_iter, d_latest, cfd_applied_map):
     tuple_metadata = pd.read_pickle('./store/' + project_id + '/tuple_metadata.p')
     value_metadata = pickle.load( open('./store/' + project_id + '/value_metadata.p', 'rb') )
@@ -263,6 +308,12 @@ def reinforceCFDs(project_id, cfd_id, receiver, cfd_metadata):
 
 
 # TODO
+########################################
+# FUNCTION: buildSample
+# PURPOSE:
+# INPUT:
+# OUTPUT:
+########################################
 def buildSample(d_rep, sample_size, project_id, cfd_applied_map, current_iter):
     # TEMPORARY IMPLEMENTATION
     tuple_metadata = pd.read_pickle('./store/' + project_id + '/tuple_metadata.p')

@@ -77,9 +77,6 @@ class Sample(Resource):
     def post(self):
         project_id = request.form.get('project_id')
         sample_size = int(request.form.get('sample_size'))
-        existing_iters = [('0x' + f) for f in os.listdir('./store/' + project_id + '/') if os.path.isdir(os.path.join('./store/' + project_id + '/', f))]
-        iteration_list = [int(d, 0) for d in existing_iters]
-        #current_iter = "{:08x}".format(max(iteration_list))
         data = pd.read_csv('./store/' + project_id + '/before.csv', keep_default_na=False)
         tuple_metadata = pd.DataFrame(index=data.index, columns=['weight', 'expl_freq'])
         tuple_metadata['weight'] = 1
@@ -89,7 +86,6 @@ class Sample(Resource):
             value_metadata[idx] = dict()
             for col in data.columns:
                 value_metadata[idx][col] = dict()
-                #value_metadata[idx][col]['history'] = [(data.at[idx, col], None)]
                 value_metadata[idx][col]['history'] = list()
                 value_metadata[idx][col]['history'].append(helpers.ValueHistory(data.at[idx, col], 'system', None, '00000000', False))
                 value_metadata[idx][col]['disagreement'] = 0
@@ -118,22 +114,16 @@ class Clean(Resource):
         s_in = request.form.get('data')
         sample_size = int(request.form.get('sample_size'))
 
-        #existing_iters = [('0x' + f) for f in os.listdir('./store/' + project_id + '/') if os.path.isdir(os.path.join('./store/' + project_id + '/', f))]
-        #iteration_list = [int(d, 0) for d in existing_iters]
         current_iter = pickle.load(open('./store/' + project_id + '/current_iter.p', 'rb'))
-
-        #prev_iter = "{:08x}".format(max(iteration_list))
 
         d_dirty = pd.read_csv('./store/' + project_id + '/before.csv', keep_default_na=False)
         s_df = pd.read_json(s_in, orient='index')
         d_rep, changed_ids = helpers.applyUserRepairs(d_dirty, s_df, project_id, current_iter)
         current_iter = "{:08x}".format(int('0x'+current_iter, 0)+1)
-        #os.mkdir('./store/' + project_id + '/' + current_iter + '/')
         d_rep.to_csv('./store/' + project_id + '/after.csv', encoding='utf-8', index=False)
-        top_cfds = helpers.discoverCFDs(project_id, current_iter)
+        top_cfds = helpers.discoverCFDs(project_id)
         d_rep['cover'] = None
 
-        cfd_applied_map = None
         if os.path.isfile('./store/' + project_id + '/cfd_applied_map.p'):
             cfd_applied_map = pickle.load( open('./store/' + project_id + '/cfd_applied_map.p', 'rb') )
         else:
@@ -159,8 +149,6 @@ class Clean(Resource):
                 word = "('" + q + "')"
                 formatted_query.append(word)
             helpers.addNewCfdsToList(top_cfds, project_id, current_iter, formatted_query)
-            #picked_cfd_list, picked_cfd_id_list = helpers.pickCfds(top_cfds, 1)
-            #TODO: Build query from user repairs
             picked_cfd_list, picked_cfd_id_list = helpers.pickCfds(project_id, query, 1)
 
             if picked_cfd_list is not None:
