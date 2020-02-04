@@ -11,12 +11,13 @@ class CFD:
         self.rhs = rule[2]
 
 
-########################################
-# FUNCTION: prepareReceiver
-# PURPOSE:
-# INPUT:
-# OUTPUT:
-########################################
+'''
+FUNCTION: prepareReceiver
+PURPOSE:
+INPUT:
+OUTPUT:
+* receiver: The system learning object
+'''
 def prepareReceiver(project_id, data, query):
     projectPath = './store/' + project_id + '/'
     #dataSource = project_id
@@ -27,23 +28,25 @@ def prepareReceiver(project_id, data, query):
     return receiver
 
 
-########################################
-# FUNCTION: updateReceiver
-# PURPOSE:
-# INPUT:
-# OUTPUT:
-########################################
+'''
+FUNCTION: updateReceiver
+PURPOSE:
+INPUT:
+OUTPUT: None
+'''
 def updateReceiver(receiver, data, query):
     receiver.strategy.updateStrategy(data, query)
     #return receiver
 
 
-########################################
-# FUNCTION: getRules
-# PURPOSE:
-# INPUT:
-# OUTPUT:
-########################################
+'''
+FUNCTION: getRules
+PURPOSE:
+INPUT:
+OUTPUT:
+* rules: The selected CFDs, or None if there was a KeyError while searching
+* rule_id_list: A list of the IDs of the selected CFDs, or None if there was a KeyError while searching
+'''
 def getRules(receiver, query, sample_size):
     try:
         tokenized_query = query.split(' ')
@@ -65,12 +68,12 @@ def getRules(receiver, query, sample_size):
         return None, None
 
 
-########################################
-# FUNCTION: reinforce
-# PURPOSE:
-# INPUT:
-# OUTPUT:
-########################################
+'''
+FUNCTION: reinforce
+PURPOSE:
+INPUT:
+OUTPUT: None
+'''
 def reinforce(receiver, cfd_id, reinforcement_value):
     receiver.reinforce(cfd_id, reinforcement_value)
     print("The CFD with cfd_id " + str(cfd_id) + " has been reinforced.")

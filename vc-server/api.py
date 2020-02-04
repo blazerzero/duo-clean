@@ -129,13 +129,7 @@ class Clean(Resource):
         else:
             cfd_applied_map = list()
         print('here')
-        cfd_applied_map.append(dict())
-        print('Initialize CFD applied map for this iteration')
         print(top_cfds)
-        for idx in d_rep.index:
-            cfd_applied_map[-1][idx] = dict()
-            for col in d_rep.columns:
-                cfd_applied_map[-1][idx][col] = None
 
         if top_cfds is not None and isinstance(top_cfds, np.ndarray):
             query = ''
@@ -152,16 +146,16 @@ class Clean(Resource):
             picked_cfd_list, picked_cfd_id_list = helpers.pickCfds(project_id, query, 1)
 
             if picked_cfd_list is not None:
-                np.savetxt('./store/' + project_id + '/applied_cfds.txt', np.array(picked_cfd_list),
-                           fmt="%s")
+                with open('./store/' + project_id + '/applied_cfds.txt', 'a') as f:
+                    np.savetxt(f, np.array(picked_cfd_list), fmt="%s")
                 d_rep = helpers.buildCover(d_rep, picked_cfd_list)
-                d_rep, cfd_applied_map = helpers.applyCfdList(project_id, d_rep, picked_cfd_list, picked_cfd_id_list, current_iter)
+                d_rep, cfd_applied_map = helpers.applyCfdList(project_id, d_rep, picked_cfd_list, picked_cfd_id_list, cfd_applied_map, current_iter)
             else:
                 with open('./store/' + project_id + '/applied_cfds.txt', 'w') as f:
                     print('No CFDs were applied.', file=f)
 
         d_rep = d_rep.drop(columns=['cover'])
-        helpers.reinforceTuplesBasedOnContradiction(project_id, current_iter, d_rep, cfd_applied_map)
+        helpers.reinforceTuplesBasedOnContradiction(project_id, current_iter, d_rep)
         d_rep.to_csv('./store/' + project_id + '/before.csv', encoding='utf-8', index=False)
 
         tuple_metadata = pd.read_pickle('./store/' + project_id + '/tuple_metadata.p')
@@ -204,8 +198,8 @@ class Download(Resource):
         finalZip = BytesIO()
 
         with ZipFile(finalZip, 'w') as zf:
-            zf.write('./store/' + project_id + '/' + latest_iter + '/data.csv')
-            zf.write('./store/' + project_id + '/' + latest_iter + '/applied_cfds.txt')
+            zf.write('./store/' + project_id + '/after.csv')
+            zf.write('./store/' + project_id + '/applied_cfds.txt')
         finalZip.seek(0)
 
         return send_file(finalZip, attachment_filename='charm_cleaned.zip', as_attachment=True)
