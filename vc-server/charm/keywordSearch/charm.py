@@ -13,15 +13,16 @@ class CFD:
 
 '''
 FUNCTION: prepareReceiver
-PURPOSE:
+PURPOSE: Initialize the system learning receiver
 INPUT:
+* project_id: The ID of the interaction.
+* data: The initial set of discovered CFDs
+* query: A formatted version of the rows the user modified; used for mapping repaired tuples to CFDs in the receiver
 OUTPUT:
 * receiver: The system learning object
 '''
 def prepareReceiver(project_id, data, query):
     projectPath = './store/' + project_id + '/'
-    #dataSource = project_id
-    #fileToStore = '_rules'
 
     receiver = ReceiverKeyword(projectPath, None, None, None, None, data, query)
     receiver.initializeRE_CFD()
@@ -30,8 +31,11 @@ def prepareReceiver(project_id, data, query):
 
 '''
 FUNCTION: updateReceiver
-PURPOSE:
+PURPOSE: Add new data to the system learning receiver
 INPUT:
+* receiver: The system learning object
+* data: The set of newly discovered CFDs
+* query: A formatted version of the rows the user modified; used for mapping repaired tuples to CFDs in the receiver
 OUTPUT: None
 '''
 def updateReceiver(receiver, data, query):
@@ -41,8 +45,11 @@ def updateReceiver(receiver, data, query):
 
 '''
 FUNCTION: getRules
-PURPOSE:
+PURPOSE: Select CFDs to apply via the learning receiver
 INPUT:
+* receiver: The system learning object
+* query: A stringified representation of the rows repaired by the user.
+* sample_size: How many CFDs are to be selected
 OUTPUT:
 * rules: The selected CFDs, or None if there was a KeyError while searching
 * rule_id_list: A list of the IDs of the selected CFDs, or None if there was a KeyError while searching
@@ -70,8 +77,11 @@ def getRules(receiver, query, sample_size):
 
 '''
 FUNCTION: reinforce
-PURPOSE:
+PURPOSE: Reinforce the weight of a particular CFD
 INPUT:
+* receiver: The system learning object
+* cfd_id: The CFD ID of a particular CFD
+* reinforcement_value: The value to reinforce the CFD's weight by
 OUTPUT: None
 '''
 def reinforce(receiver, cfd_id, reinforcement_value):

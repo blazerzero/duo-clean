@@ -327,11 +327,9 @@ class ReceiverCharmCFD(object):
 		self.updateStrategy(data, signalsReceived)
 
 	def save_obj(self, obj, name):
-		#with open(name, 'wb') as f:
 		pickle.dump(obj, open(name, 'wb'))
 
 	def load_obj(self, name):
-		#with open(name, 'rb') as f:
 		return pickle.load(open(name, 'rb'))
 
 	def loadPickle(self, obj, name):
@@ -344,8 +342,11 @@ class ReceiverCharmCFD(object):
 
 	'''
 	FUNCTION: updateStrategy
-	PURPOSE:
+	PURPOSE: Update the data, metadata, and feature mappings of the receiver
 	INPUT:
+	* self: The system learning receiver
+	* cfds: A set of CFDs
+	* signalsReceived: A formatted version of the rows the user modified; used for mapping repaired tuples to CFDs in the receiver
 	OUTPUT: None
 	'''
 	def updateStrategy(self, cfds, signalsReceived):
@@ -365,10 +366,6 @@ class ReceiverCharmCFD(object):
 		for cfd in cfds:
 			lhs = cfd['cfd'].split(' => ')[0][1:-1]
 			rhs = cfd['cfd'].split(' => ')[1]
-			print(lhs)
-			print(rhs)
-			#print([cL for cL in lhs.split(', ')])
-			#print([cR for cR in rhs.split(', ')])
 			cfdFeatures = [cL for cL in lhs.split(', ')]
 			cfdFeatures.extend([cR for cR in rhs.split(', ')])
 			cfdID = cfd['cfd_id']
@@ -389,9 +386,12 @@ class ReceiverCharmCFD(object):
 
 	'''
 	FUNCTION: pickSingleReturn
-	PURPOSE:
+	PURPOSE: Pick one CFD to return
 	INPUT:
+	* self: The system learning receiver
+	* cfdWeights: The weights of each CFD stored in the receiver
 	OUTPUT:
+	* cfdID: The CFD ID of the selected CFD
 	'''
 	def pickSingleReturn(self, cfdWeights):
 		chance = random.uniform(0, 1)
@@ -406,9 +406,14 @@ class ReceiverCharmCFD(object):
 
 	'''
 	FUNCTION: returnTuples
-	PURPOSE:
+	PURPOSE: Return a list of CFDs (and their CFD IDs) to be applied to the dataset, by evaluating the repairs the user
+	made to the sample.
 	INPUT:
+	* self: The system learning receiver
+	* signalsReceived: A formatted version of the rows the user modified; used for mapping repaired tuples to CFDs in the receiver
+	* numberToReturn: How many CFDs to pick
 	OUTPUT:
+	* returnedCFDs: A list of the CFD IDs of the selected CFDs
 	'''
 	def returnTuples(self, signalsReceived, numberToReturn):
 		self.receivedSignals = signalsReceived
@@ -446,8 +451,12 @@ class ReceiverCharmCFD(object):
 
 	'''
 	FUNCTION: reinforce
-	PURPOSE:
+	PURPOSE: Reinforce a CFD's weights, particularly where the feature mapping lines up with the user's repairs
 	INPUT:
+	* self: The system learning receiver
+	* signals: A formatted version of the rows the user modified; used for mapping repaired tuples to CFDs in the receiver
+	* intent: The ID of the CFD to be reinforced
+	* score: The value to reinforce the CFD by
 	OUTPUT: None
 	'''
 	def reinforce(self, signals, intent, score):

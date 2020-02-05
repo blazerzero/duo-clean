@@ -55,19 +55,21 @@ def applyUserRepairs(d_dirty, s_df, project_id, current_iter):
 
     # Not first iteration; CFDs may have been applied previously; reinforce CFDs based on user's feedback
     else:
-        #cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
-        receiver = pickle.load( open('./store/' + project_id + '/receiver.p', 'rb') )
-        #curr_iter_num = int('0x' + current_iter, 0)
+        try:
+            receiver = pickle.load( open('./store/' + project_id + '/receiver.p', 'rb') )
+        except FileNotFoundError:
+            receiver = None
         cfd_applied_map = pickle.load( open('./store/' + project_id + '/cfd_applied_map.p', 'rb') )
+        prev_iter = "{:08x}".format(int('0x' + current_iter, 0) - 1)
 
         # Count the number of rows in the sample each CFD from the previous iteration was applied to
         num_times_applied_each_cfd = dict()
         for idx in s_df.index:
             for col in s_df.columns:
-                if cfd_applied_map[current_iter][idx][col] in num_times_applied_each_cfd.keys():
-                    num_times_applied_each_cfd[cfd_applied_map[current_iter][idx][col]] += 1
+                if cfd_applied_map[prev_iter][idx][col] in num_times_applied_each_cfd.keys():
+                    num_times_applied_each_cfd[cfd_applied_map[prev_iter][idx][col]] += 1
                 else:
-                    num_times_applied_each_cfd[cfd_applied_map[current_iter][idx][col]] = 1
+                    num_times_applied_each_cfd[cfd_applied_map[prev_iter][idx][col]] = 1
 
         # Map the user's repairs on the sample to the full dataset, keeping track of which tuples have been modified
         for idx in s_df.index:
@@ -77,25 +79,24 @@ def applyUserRepairs(d_dirty, s_df, project_id, current_iter):
                         changed_ids.append(idx)     # Add the row's index to the list of changed tuple IDs
                     try:
                         latest_match_idx = next(i for i in reversed(range(len(value_metadata[idx][col]['history']))) if value_metadata[idx][col]['history'][i].value == s_df.at[idx, col])      # Get the most recent CFD that resulted in the value declared by the user
-                        charm.reinforce(receiver, value_metadata[idx][col]['history'][latest_match_index].cfd_applied, latest_match_idx/(len(value_metadata[idx][col]['history']) - 1))         # Reinforce this CFD based on how recently it was applied
+                        if receiver is not None and value_metadata[idx][col]['history'][latest_match_idx].cfd_applied is not None:
+                            charm.reinforce(receiver, value_metadata[idx][col]['history'][latest_match_idx].cfd_applied, latest_match_idx/(len(value_metadata[idx][col]['history']) - 1))         # Reinforce this CFD based on how recently it was applied
                         value_metadata[idx][col]['history'].append(ValueHistory(s_df.at[idx, col], 'user', None, current_iter, True))       # Add the new value to the history of this cell
-                        #charm.reinforce(receiver, value_metadata[idx][col]['history'][-1][1], -1/num_times_applied_each_cfd[value_metadata[idx][col]['history'][-1][1]])
-                    except ValueError:      # This is the first time this cell has had this value
+                    except StopIteration:      # This is the first time this cell has had this value
                         pass
-                        #last_cfd_id = value_metadata[idx][col]['history'][-1].cfd_applied
-                        #charm.reinforce(receiver, last_cfd_id, -1/num_times_applied_each_cfd[last_cfd_id])
                     d_rep.at[idx, col] = s_df.at[idx, col]
                 else:       # The user did not modify the value of this cell
                     last_cfd_id = value_metadata[idx][col]['history'][-1].cfd_applied       # Get the cfd_id of the CFD that was just applied to this cell
-                    charm.reinforce(receiver, last_cfd_id, 1/num_times_applied_each_cfd[last_cfd_id])       # Reinforce this CFD
+                    if receiver is not None and last_cfd_id is not None:
+                        charm.reinforce(receiver, last_cfd_id, 1/num_times_applied_each_cfd[last_cfd_id])       # Reinforce this CFD
 
 
 
         #TODO: Find the CFD applied by the system for changes made by the user, and check if it was reverted to match a previous CFD
 
 
-        pickle.dump(receiver, open('./store/' + project_id + '/receiver.p', 'wb'))
-        #pickle.dump(cfd_metadata, open('./store/' + project_id + '/cfd_metadata.p', 'wb'))
+        if receiver is not None:
+            pickle.dump(receiver, open('./store/' + project_id + '/receiver.p', 'wb'))
 
     print(changed_ids)
     return d_rep, changed_ids
@@ -258,11 +259,6 @@ OUTPUT:
 * cfd_applied_map: A map of which CFDs have been applied to each cell in each iteration, updated for this iteration
 '''
 def applyCfdList(project_id, d_rep, cfd_list, cfd_id_list, cfd_applied_map, current_iter):
-    cfd_applied_map[current_iter] = dict()
-    for idx in d_rep.index:
-        cfd_applied_map[current_iter][idx] = dict()
-        for col in d_rep.columns:
-            cfd_applied_map[current_iter][idx][col] = None
     for i in range(0, len(cfd_list)):
         #stringified_cfd = '(' + cfd.lhs + ') => ' + cfd.rhs
         d_rep, cfd_applied_map = applyCfd(project_id, d_rep, cfd_list[i], cfd_id_list[i], cfd_applied_map, current_iter)
@@ -285,12 +281,9 @@ OUTPUT:
 * cfd_applied_map: A map of which CFDs have been applied to each cell in each iteration, updated for this iteration
 '''
 def applyCfd(project_id, d_rep, cfd, cfd_id, cfd_applied_map, current_iter):
-    #mod_count = 0
-    #tuple_metadata = pd.read_pickle('./store/' + project_id + '/tuple_metadata.p')
     value_metadata = pickle.load( open('./store/' + project_id + '/value_metadata.p', 'rb') )
 
     for idx, row in d_rep.iterrows():
-        #mod_count = 0
         if row['cover'] is not None and cfd in row['cover'].split('; '):
             lhs = cfd.split(' => ')[0][1:-1]
             rhs = cfd.split(' => ')[1]
@@ -303,8 +296,6 @@ def applyCfd(project_id, d_rep, cfd, cfd_id, cfd_applied_map, current_iter):
                     value_metadata[idx][rh[0]]['history'].append(ValueHistory(rh[1], 'system', cfd_id, current_iter, True))
                 else:
                     value_metadata[idx][rh[0]]['history'].append(ValueHistory(rh[1], 'system', cfd_id, current_iter, False))
-        #tuple_metadata.at[idx, 'weight'] += mod_count
-        #charm.reinforce(receiver, cfd_id, 1)
     return d_rep, cfd_applied_map
 
 
@@ -340,7 +331,6 @@ def reinforceTuplesBasedOnContradiction(project_id, current_iter, d_latest):
 
         tuple_metadata.at[idx, 'weight'] += reinforcementValue
 
-    #tuple_weights['weight'] = tuple_weights['weight']/tuple_weights['weight'].sum()
     print('Tuple weights:')
     pprint(tuple_metadata['weight'])
     print()
@@ -348,7 +338,6 @@ def reinforceTuplesBasedOnContradiction(project_id, current_iter, d_latest):
     pickle.dump( value_metadata, open('./store/' + project_id + '/value_metadata.p', 'wb') )
 
 
-# TODO
 '''
 FUNCTION: buildSample
 PURPOSE: Create a new sample of the dataset for the user to interact with and give feedback through.
@@ -362,19 +351,24 @@ OUTPUT:
 '''
 def buildSample(d_rep, sample_size, project_id, cfd_applied_map, current_iter):
     tuple_metadata = pd.read_pickle('./store/' + project_id + '/tuple_metadata.p')
-    cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
+    try:
+        cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
+    except FileNotFoundError:
+        cfd_metadata = None
     chosen_tups = tuple_metadata.sample(n=sample_size, weights='weight')     # tuples with a larger weight (a.k.a. larger value in the 'weight' column of tuple_metadata) are more likely to be chosen
     print('Chosen example indexes:')
     pprint(chosen_tups.index)
 
-    for idx in chosen_tups.index:
-        seen = list()
-        for col in d_rep.columns:
-        # TODO; Calculate how many rows the CFD was applied to in the sample
-            if cfd_applied_map[current_iter][idx][col] is not None and cfd_applied_map[current_iter][idx][col] not in seen:
-                seen.append(cfd_applied_map[current_iter][idx][col])
-                cfd_metadata[cfd_applied_map[current_iter][idx][col]]['num_changes'][current_iter] += 1
+    if cfd_metadata is not None:
+        for idx in chosen_tups.index:
+            seen = list()
+            for col in d_rep.columns:
+            # Calculate how many rows the CFD was applied to in the sample
+                if cfd_applied_map[current_iter][idx][col] is not None and cfd_applied_map[current_iter][idx][col] not in seen:
+                    seen.append(cfd_applied_map[current_iter][idx][col])
+                    cfd_metadata[cfd_applied_map[current_iter][idx][col]]['num_changes'][current_iter] += 1
 
-    pickle.dump(cfd_metadata, open('./store/' + project_id + '/cfd_metadata.p', 'wb') )
+        pickle.dump(cfd_metadata, open('./store/' + project_id + '/cfd_metadata.p', 'wb') )
+
     sample = d_rep.iloc[chosen_tups.index]
     return sample
