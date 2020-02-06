@@ -24,8 +24,8 @@ OUTPUT:
 def prepareReceiver(project_id, data, query):
     projectPath = './store/' + project_id + '/'
 
-    receiver = ReceiverKeyword(projectPath, None, None, None, None, data, query)
-    receiver.initializeRE_CFD()
+    receiver = ReceiverKeyword(projectPath, None, None, None, None, data, query)        # initialize the bare receiver
+    receiver.initializeRE_CFD()     # set the receiver to be a Charm CFD receiver
     return receiver
 
 
@@ -39,7 +39,7 @@ INPUT:
 OUTPUT: None
 '''
 def updateReceiver(receiver, data, query):
-    receiver.strategy.updateStrategy(data, query)
+    receiver.strategy.updateStrategy(data, query)       # add new data to the receiver and update feature mappings
     #return receiver
 
 
@@ -56,22 +56,16 @@ OUTPUT:
 '''
 def getRules(receiver, query, sample_size):
     try:
-        tokenized_query = query.split(' ')
-        formatted_query = []
-        for q in tokenized_query:
-            word = "('" + q + "')"
-            formatted_query.append(word)
-        print(formatted_query)
-
-        rule_id_list = receiver.getTuples(formatted_query, sample_size)
+        rule_id_list = receiver.getTuples(query, sample_size)       # get rule IDs from receiver
         rules = []
 
         for rule_id in rule_id_list:
-            rule = receiver.data[rule_id]
-            rules.append(CFD(rule))
+            #print(receiver.data[rule_id])
+            rule = receiver.data[rule_id]       # get the rule that corresponds with this rule ID
+            rules.append(rule)                  # add the rule to the list of selected rules
         return rules, rule_id_list
-    except KeyError:
-        print('No search results. Please try again.')
+    except KeyError:        # There was an error selecting CFDs from the receiver
+        print('There was an error selecting CFDs. Please try again.')
         return None, None
 
 
@@ -85,5 +79,5 @@ INPUT:
 OUTPUT: None
 '''
 def reinforce(receiver, cfd_id, reinforcement_value):
-    receiver.reinforce(cfd_id, reinforcement_value)
+    receiver.reinforce(cfd_id, reinforcement_value)         # reinforce the weight of this CFD
     print("The CFD with cfd_id " + str(cfd_id) + " has been reinforced.")

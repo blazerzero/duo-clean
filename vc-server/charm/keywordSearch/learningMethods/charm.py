@@ -363,6 +363,7 @@ class ReceiverCharmCFD(object):
 		else:
 			print('Creating feature map...')
 
+		# add new CFDs to data store and feature map
 		for cfd in cfds:
 			lhs = cfd['cfd'].split(' => ')[0][1:-1]
 			rhs = cfd['cfd'].split(' => ')[1]
@@ -423,7 +424,7 @@ class ReceiverCharmCFD(object):
 		cfdWeights = dict()
 
 		for cfdID in cfdIDs:
-			topKFeaturesStore = dict()
+			topKFeaturesStore = dict()		# initialize a tuple-ified representation of signal/feature pairs
 			weight = 1
 			for signal in self.receivedSignals:
 				if signal not in self.featureWeights:
@@ -433,16 +434,16 @@ class ReceiverCharmCFD(object):
 						self.featureWeights[signal][feature] = 1
 					topKFeaturesStore[(signal, feature)] = self.featureWeights[signal][feature]
 
-			topKFeatures = heapq.nlargest(100, topKFeaturesStore, key=topKFeaturesStore.__getitem__)
-			for signal, feature in topKFeatures:
+			topKFeatures = heapq.nlargest(100, topKFeaturesStore, key=topKFeaturesStore.__getitem__)		# get top K signal/features pairs
+			for signal, feature in topKFeatures:		# calculate the weight of the CFD by analyzing the weight of each signal/feature pair
 				weight *= math.exp(self.featureWeights[signal][feature]/self.maxValue[signal])
 			cfdWeights[cfdID] = weight
 
 		while len(returnedCFDs) < numberToReturn:
-			returnedCFD = self.pickSingleReturn(cfdWeights)
+			returnedCFD = self.pickSingleReturn(cfdWeights)		# pick one CFD
 			if returnedCFD not in returnedCFDs:
-				returnedCFDs.append(returnedCFD)
-			if len(returnedCFDs) >= len(cfdIDs):
+				returnedCFDs.append(returnedCFD)		# if not already picked, add to list of CFDs to return
+			if len(returnedCFDs) >= len(cfdIDs):	# if every possible CFD has been selected, break out of the while loop
 				break
 
 		self.returnedCFDs = returnedCFDs
@@ -460,20 +461,20 @@ class ReceiverCharmCFD(object):
 	OUTPUT: None
 	'''
 	def reinforce(self, signals, intent, score):
-		for inte in intent:
+		for inte in intent:			# for each CFD to reinforce
 			if inte is not None:
-				for featureOfIntent in self.cfds[inte]:
-					for sig in signals:
-						if sig in self.featureWeights.keys():
-							if featureOfIntent in self.featureWeights[sig].keys():
-								self.featureWeights[sig][featureOfIntent] += score
-							else:
-								self.featureWeights[sig][featureOfIntent] = score
-						else:
-							self.featureWeights[sig] = dict()
-							self.featureWeights[sig][featureOfIntent] = score
-						if self.featureWeights[sig][featureOfIntent] > self.maxValue[sig]:
-							self.maxValue[sig] = self.featureWeights[sig][featureOfIntent]
+				for featureOfIntent in self.cfds[inte]:								# for each feature of the CFD
+					for sig in signals:													# for each aspect (a.k.a. signal) of each row the user modified
+						if sig in self.featureWeights.keys():								# if this signal has been previously seen by the receiver
+							if featureOfIntent in self.featureWeights[sig].keys():				# if this signal/feature pair has been previously seen by the receiver
+								self.featureWeights[sig][featureOfIntent] += score					# update the weight of this signal/feature pair
+							else:																# if this signal/feature pair has NOT been previously seen by the receiver
+								self.featureWeights[sig][featureOfIntent] = score					# initialize the weight of this signal/feature pair to the score passed into the function
+						else:																# if this signal has NOT been previously seen by the receiver
+							self.featureWeights[sig] = dict()									# initialize a dictionary for this signal
+							self.featureWeights[sig][featureOfIntent] = score					# initialize the weight of this signal/feature pair to the score passed into the function
+						if self.featureWeights[sig][featureOfIntent] > self.maxValue[sig]:	# if the weight of this signal/feature pair is greater than the maximum weight value previously calculated for this signal
+							self.maxValue[sig] = self.featureWeights[sig][featureOfIntent]		# update the maximum weight value for this signal to the weight of this signal/feature pair
 
 
 class ReceiverCharmKeyword_CFDLite_OLD(object):
