@@ -246,15 +246,18 @@ INPUT:
 * cfd_list: The list of CFDs to be applied
 * cfd_id_list: The list of the CFD IDs of the CFDs to be applied
 * cfd_applied_map: A map of which CFDs have been applied to each cell in each iteration
-* current_iter: The current iteration number.
+* current_iter: The current iteration number
 OUTPUT:
 * d_rep: The fully cleaned version of the dataset.
 * cfd_applied_map: A map of which CFDs have been applied to each cell in each iteration, updated for this iteration
+* contradictions: A dictionary holding the contradictions that have occurred in the dataset through this cleaning iteration
+
 '''
 def applyCfdList(project_id, d_rep, cfd_list, cfd_id_list, cfd_applied_map, current_iter):
-    for i in range(0, len(cfd_list)):                                                                                       # for each selected CFD
-        d_rep, cfd_applied_map = applyCfd(project_id, d_rep, cfd_list[i], cfd_id_list[i], cfd_applied_map, current_iter)        # apply the CFD to the dataset
-    return d_rep, cfd_applied_map                                                                                           # return the cleaned dataset and the updated cell/CFD map
+    contradictions = dict()
+    for i in range(0, len(cfd_list)):                                                                                                       # for each selected CFD
+        d_rep, cfd_applied_map = applyCfd(project_id, d_rep, cfd_list[i], cfd_id_list[i], cfd_applied_map, current_iter, contradictions)        # apply the CFD to the dataset
+    return d_rep, cfd_applied_map, contradictions                                                                                           # return the cleaned dataset and the updated cell/CFD map
 
 
 '''
@@ -266,13 +269,16 @@ INPUT:
 * cfd: The CFD to be applied
 * cfd_id: The CFD ID of the CFD to be applied
 * cfd_applied_map: A map of which CFDs have been applied to each cell in each iteration
-* current_iter: The current iteration number.
+* current_iter: The current iteration number
+* contradictions: A dictionary holding the contradictions that have occurred in the dataset through this cleaning iteration
 OUTPUT:
 * d_rep: The fully cleaned version of the dataset.
 * cfd_applied_map: A map of which CFDs have been applied to each cell in each iteration, updated for this iteration
 '''
-def applyCfd(project_id, d_rep, cfd, cfd_id, cfd_applied_map, current_iter):
+def applyCfd(project_id, d_rep, cfd, cfd_id, cfd_applied_map, current_iter, contradictions):
     value_metadata = pickle.load( open('./store/' + project_id + '/value_metadata.p', 'rb') )                                   # load the cell value metadata object
+    tuple_metadata = pd.read_pickle('./store/' + project_id + '/tuple_metadata.p')                                              # load the tuple metadata DataFrame
+
 
     for idx, row in d_rep.iterrows():                                                                                           # for each row in the dataset
         if row['cover'] is not None and cfd in row['cover'].split('; '):                                                            # if this CFD is in the row's cover
@@ -284,8 +290,20 @@ def applyCfd(project_id, d_rep, cfd, cfd_id, cfd_applied_map, current_iter):
                     row[rh[0]] = rh[1]                                                                                                      # set this cell's value to the RHS attribute value of the CFD
                     cfd_applied_map[current_iter][idx][rh[0]] = cfd_id                                                                      # add a mapping for this cell in this iteration to this CFD's ID
                     value_metadata[idx][rh[0]]['history'].append(ValueHistory(rh[1], 'system', cfd_id, current_iter, True))                 # add this new value to this cell's value history, along with the CFD the resulted in it, the agent who made the change, the iteration number, and the fact that this value is the result of a change
+                    tuple_metadata.at[idx, 'weight'] += 1
+                    if value_metadata[idx][rh[0]]['history'][-2].iter == current_iter and value_metadata[idx][rh[0]]['history'][-2].value != rh[1] and value_metadata[idx][rh[0]]['history'][-2].agent == 'system':      # if a contradiction has occurred for this cell
+                        if (idx, col) in contradictions.keys():                             # if this is the first time this cell has a contradiction in this cleaning iteration
+                            if rh[1] not in contradictions[(idx, col)]:                         # if this value hasn't already been seen in the cleaning
+                                contradictions[(idx, col)].append(rh[1])
+                        else:
+                            contradictions[(idx, col)] = [value_metadata[idx][rh[0]]['history'][-2].value, rh[1]]
                 else:                                                                                                                   # if the RHS attribute value already holds in this row
                     value_metadata[idx][rh[0]]['history'].append(ValueHistory(rh[1], 'system', cfd_id, current_iter, False))                # add this value to this cell's value history, along with the CFD that was tested on it, the agent who did the test, the iteration number, and the fact that this value is NOT the result of a change (i.e. it holds from its previous state)
+
+
+    pickle.dump( value_metadata, open('./store/' + project_id + '/value_metadata.p', 'wb') )                                    # save the updated value metadata object
+    tuple_metadata.to_pickle('./store/' + project_id + '/tuple_metadata.p')                                                     # save the updated tuple metadata DataFrame
+
     return d_rep, cfd_applied_map                                                                                               # return the cleaned dataset and the cell/CFD map
 
 
@@ -308,7 +326,6 @@ def reinforceTuplesBasedOnContradiction(project_id, current_iter, d_latest):
             vspr_d = 0                                                                                                                                      # initialize the value spread delta (change in value spread from last iteration) to 0
             if curr_spread > prev_spread:                                                                                                                   # if the cell has a larger value spread now than it did in the previous iteration
                 vspr_d = 1                                                                                                                                      # set the value spread delta to 1
-
             cell_values = Counter([vh.value for vh in value_metadata[idx][col]['history']])                                                                 # calculate the frequency of each value in the cell's value history
             num_occurrences_mode = cell_values.most_common(1)[0][1]                                                                                         # find the mode of these values
             new_vdis = 1 - (num_occurrences_mode/len(value_metadata[idx][col]['history']))                                                                  # calculate the cell's new value disagreement (value disagreement through the current iteration)

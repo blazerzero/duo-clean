@@ -134,6 +134,8 @@ class Clean(Resource):
             for col in d_rep.columns:
                 cfd_applied_map[current_iter][idx][col] = None                                              # initialize the CFD mapping for each cell to None
 
+        contradictions = dict()                                                                             # initialize a dictionary of the contradictions that occur during cleaning
+
         if top_cfds is not None and isinstance(top_cfds, np.ndarray):                                       # XPlode successfully returned a non-empty array of discovered CFDs
             # Build query
             query = ''
@@ -156,7 +158,8 @@ class Clean(Resource):
                 with open('./store/' + project_id + '/applied_cfds.txt', 'a') as f:
                     np.savetxt(f, [c['cfd'] for c in picked_cfd_list], fmt="%s")                                                                            # Print selected CFDs into applied_cfds.txt
                 d_rep = helpers.buildCover(d_rep, picked_cfd_list)                                                                                      # Build the CFD cover for this iteration
-                d_rep, cfd_applied_map = helpers.applyCfdList(project_id, d_rep, picked_cfd_list, picked_cfd_id_list, cfd_applied_map, current_iter)    # Apply the selected CFDs to the dataset
+                d_dirty['cover'] = d_rep['cover']
+                d_rep, cfd_applied_map, contradictions = helpers.applyCfdList(project_id, d_dirty, picked_cfd_list, picked_cfd_id_list, cfd_applied_map, current_iter)    # Apply the selected CFDs to the dataset
             else:
                 pass
                 #with open('./store/' + project_id + '/applied_cfds.txt', 'w') as f:
@@ -185,6 +188,7 @@ class Clean(Resource):
         # return this data to the user
         returned_data = {
             'sample': s_out.to_json(orient='index'),
+            'contradictions': json.dumps(contradictions),
             'msg': '[SUCCESS] Successfully applied and generalized repair and retrived new sample.'
         }
         response = json.dumps(returned_data)
