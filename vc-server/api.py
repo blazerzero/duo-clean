@@ -94,6 +94,7 @@ class Sample(Resource):
         # return this data to the user
         returned_data = {
             'sample': s_out.to_json(orient='index'),
+            'contradictions': json.dumps([]),
             'msg': '[SUCCESS] Successfully retrieved sample.'
         }
         response = json.dumps(returned_data)                                                                                            # stringify returned data
@@ -185,12 +186,12 @@ class Clean(Resource):
         pickle.dump( current_iter, open('./store/' + project_id + '/current_iter.p', 'wb') )                                # save the current iteration number
         pickle.dump( cfd_applied_map, open('./store/' + project_id + '/cfd_applied_map.p', 'wb') )                          # save the updated cell/CFD map
 
-        contradictions = [{'row': k[0], 'col': k[1]} for k, v in contradictions.iteritems()]                                                         # convert keys of contradiction tracker into a serializable format; meeting criterion 2 of Roth and Erev 1995
+        contradictions = [{'row': k[0], 'col': k[1]} for k, v in contradictions.items()]                                    # convert keys of contradiction tracker into a serializable format; meeting criterion 2 of Roth and Erev 1995
 
         # return this data to the user
         returned_data = {
             'sample': s_out.to_json(orient='index'),
-            'contradictions': json.dumps(contradictions) if len(contradictions) > 0 else '[NONE]',
+            'contradictions': json.dumps(contradictions),
             'msg': '[SUCCESS] Successfully applied and generalized repair and retrived new sample.'
         }
         response = json.dumps(returned_data)

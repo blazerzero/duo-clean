@@ -17,10 +17,10 @@ import redo from '../images/corner-up-right.svg';
 class Results extends Component {
 
   state = {
-    dirtyData: {},
-    cleanData: {},
-    typeMap: {},
-    contradictionMap: {},
+    dirtyData: [],
+    cleanData: [],
+    typeMap: [],
+    contradictionMap: [],
     header: [],
     project_id: 0,
     modal: false,
@@ -38,6 +38,7 @@ class Results extends Component {
         .then(async(response) => {
           var { sample, contradictions, msg } = JSON.parse(response.data);
           var data = JSON.parse(sample);
+          contradictions = JSON.parse(contradictions);
           console.log(data);
           console.log(msg);
           for (var i in data) {
@@ -47,10 +48,10 @@ class Results extends Component {
             }
           }
           //var modMap = await this._buildModMap(data, data);
-          this.setState({ cleanData: data, /*modMap*/ }, () => {
+          var contradictionMap = await this._buildContradictionMap(data, contradictions);
+          this.setState({ cleanData: data, contradictionMap }, () => {
             var typeMap = this._buildTypeMap(this.state.cleanData);
-            var contradictionMap = this._buildContradictionMap(this.state.cleanData, contradictions);
-            this.setState({ typeMap, contradictionMap });
+            this.setState({ typeMap });
           });
         })
         .catch(error => {
@@ -101,13 +102,15 @@ class Results extends Component {
   }
 
   async _buildContradictionMap(data, contradictions) {
+    console.log(contradictions);
     var contradictionMap = {};
     var rows = Object.keys(data);
     var cols = this.state.header;
     for (var i in rows) {
       var tup = {};
       for (var j in cols) {
-        tup[cols[j]] = data.some(e => e.row == i && e.col = j)
+        console.log(contradictions.length);
+        tup[cols[j]] = contradictions.some(e => e.row == i && e.col == j)
       }
       contradictionMap[rows[i]] = tup;
     }
@@ -138,8 +141,9 @@ class Results extends Component {
     console.log(formData.get('project_id'));
     axios.post('http://localhost:5000/sample', formData)
         .then(async(response) => {
-          var { sample, msg } = JSON.parse(response.data);
+          var { sample, contradictions, msg } = JSON.parse(response.data);
           var data = JSON.parse(sample);
+          contradictions = JSON.parse(contradictions);
           console.log(data);
           console.log(msg);
           for (var i in data) {
@@ -150,7 +154,8 @@ class Results extends Component {
           }
           /*var modMap = await this._buildModMap(data, data);
           console.log(modMap);*/
-          this.setState({ dirtyData: data, cleanData: data, /*modMap*/ }, () => {
+          var contradictionMap = await this._buildContradictionMap(data, contradictions);
+          this.setState({ dirtyData: data, cleanData: data, contradictionMap }, () => {
             var typeMap = this._buildTypeMap(this.state.cleanData);
             this.setState({ typeMap });
           });
@@ -271,7 +276,7 @@ class Results extends Component {
                         var key = i.toString().concat('_', j);
                         return <td
                             key={key}
-                            style={{cursor: 'pointer'}}
+                            style={{cursor: 'pointer', color: (this.state.contradictionMap[i][j] && 'yellow')}}
                             onClick={this._handleCellClick.bind(this, key)}>{this.state.cleanData[i][j]}
                         </td>
                       }) }
