@@ -17,9 +17,10 @@ import redo from '../images/corner-up-right.svg';
 class Results extends Component {
 
   state = {
-    dirtyData: [],
-    cleanData: [],
-    typeMap: [],
+    dirtyData: {},
+    cleanData: {},
+    typeMap: {},
+    contradictionMap: {},
     header: [],
     project_id: 0,
     modal: false,
@@ -35,7 +36,7 @@ class Results extends Component {
     console.log(formData.get('project_id'));
     axios.post('http://localhost:5000/clean', formData)
         .then(async(response) => {
-          var { sample, msg } = JSON.parse(response.data);
+          var { sample, contradictions, msg } = JSON.parse(response.data);
           var data = JSON.parse(sample);
           console.log(data);
           console.log(msg);
@@ -48,8 +49,9 @@ class Results extends Component {
           //var modMap = await this._buildModMap(data, data);
           this.setState({ cleanData: data, /*modMap*/ }, () => {
             var typeMap = this._buildTypeMap(this.state.cleanData);
-            this.setState({ typeMap });
-          })
+            var contradictionMap = this._buildContradictionMap(this.state.cleanData, contradictions);
+            this.setState({ typeMap, contradictionMap });
+          });
         })
         .catch(error => {
           console.log(error);
@@ -96,6 +98,20 @@ class Results extends Component {
     }
     console.log(typeMap);
     return typeMap;
+  }
+
+  async _buildContradictionMap(data, contradictions) {
+    var contradictionMap = {};
+    var rows = Object.keys(data);
+    var cols = this.state.header;
+    for (var i in rows) {
+      var tup = {};
+      for (var j in cols) {
+        tup[cols[j]] = data.some(e => e.row == i && e.col = j)
+      }
+      contradictionMap[rows[i]] = tup;
+    }
+    return contradictionMap;
   }
 
   async _buildModMap(dirtyData, cleanData) {
