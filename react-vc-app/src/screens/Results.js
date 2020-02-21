@@ -9,8 +9,10 @@ import {
 } from 'react-bootstrap';
 import { BrowserRouter as Router, Route, Link } from 'react-router-dom';
 import axios from 'axios';
+import { BootstrapTable, TableHeaderColumn } from 'react-bootstrap-table';
 
 import '../css/App.css';
+import '../../node_modules/react-bootstrap-table/dist/react-bootstrap-table-all-min.css';
 import undo from '../images/corner-up-left.svg';
 import redo from '../images/corner-up-right.svg';
 
