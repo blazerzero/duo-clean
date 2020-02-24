@@ -1,7 +1,9 @@
 import React, { Component } from 'react';
 import {
+  Alert,
   Button,
   Col,
+  Dropdown,
   Form,
   Modal,
   Row,
@@ -9,10 +11,10 @@ import {
 } from 'react-bootstrap';
 import { BrowserRouter as Router, Route, Link } from 'react-router-dom';
 import axios from 'axios';
-import { BootstrapTable, TableHeaderColumn } from 'react-bootstrap-table';
+//import { BootstrapTable, TableHeaderColumn } from 'react-bootstrap-table';
 
 import '../css/App.css';
-import '../../node_modules/react-bootstrap-table/dist/react-bootstrap-table-all-min.css';
+//import '../../../node_modules/react-bootstrap-table/dist/react-bootstrap-table-all-min.css';
 import undo from '../images/corner-up-left.svg';
 import redo from '../images/corner-up-right.svg';
 
@@ -260,8 +262,12 @@ class Results extends Component {
           </Modal>
           <Row className='content-centered'>
             <div className='results-header box-blur'>
-              <span className='results-title'>CharmClean</span>
+              <span className='results-title'>DuoClean</span>
+              <p><strong>Project ID: </strong>{this.state.project_id}</p>
             </div>
+          </Row>
+          <Row className='content-centered'>
+            <Alert variant='warning' style={{border: '1px black solid'}}>Yellow cells indicate cells in which a<br/>contradiction occurred while the system<br/>was cleaning the dataset.</Alert>
           </Row>
           <div>
             <Table bordered responsive>

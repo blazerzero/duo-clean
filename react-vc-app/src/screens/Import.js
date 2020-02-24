@@ -32,6 +32,7 @@ class Import extends Component {
         .then(response => {
           var { header, project_id, msg } = JSON.parse(response.data);
           console.log(msg);
+          alert('Your Project ID is '.concat(project_id, '. This will be visible to you while you\'re working, but please write down your Project ID.'));
           history.push({
             pathname: '/results/',
             header: header,
@@ -62,7 +63,7 @@ class Import extends Component {
         <div className='site-page home'>
           <Row className='content-centered'>
             <div className='home-header box-blur'>
-              <span className='home-title'>CharmClean</span>
+              <span className='home-title'>DuoClean</span>
               <p className='home-subtitle'>Intelligently clean your data.</p>
             </div>
           </Row>
@@ -144,21 +145,21 @@ class Import extends Component {
           </div>
           <Modal size='lg' show={this.state.showModal} onHide={this._handleModalClose}>
             <Modal.Header closeButton>
-              <Modal.Title style={{ color: '#d73f09' }}>CharmClean</Modal.Title>
+              <Modal.Title style={{ color: '#d73f09' }}>DuoClean</Modal.Title>
             </Modal.Header>
             <Modal.Body>
               <Tabs defaultActiveKey="whatIs" id="uncontrolled-tab-example">
-                <Tab eventKey="whatIs" title="What is CharmClean?" className="modalText">
-                  CharmClean is an iterative and collaborative data cleaning platform.
-                  Unlike many existing data cleaning applications, CharmClean directly uses the repairs you make
+                <Tab eventKey="whatIs" title="What is DuoClean?" className="modalText">
+                  DuoClean is an iterative and collaborative data cleaning platform.
+                  Unlike many existing data cleaning applications, DuoClean directly uses the repairs you make
                   to build a cohesive list of candidate rules to apply to the dataset and intelligently decide
                   what parts of your dataset are important to analyze next.
                 </Tab>
-                <Tab eventKey="howDoesWork" title="How does CharmClean work?" className="modalText">
-                  CharmClean cleans your dataset using an interactive three-step process:
+                <Tab eventKey="howDoesWork" title="How does DuoClean work?" className="modalText">
+                  DuoClean cleans your dataset using an interactive three-step process:
                   optimal rule discovery, learning-based cleaning, and intelligent data sampling.
-                  All you have to worry about is cleaning the sample of your data that's shown to you. CharmClean
-                  directly analyzes the repairs your submit to iteratively build a list of possible rules to apply
+                  All you have to worry about is cleaning the sample of your data that's shown to you. DuoClean
+                  directly analyzes the repairs you submit to iteratively build a list of possible rules to apply
                   to the dataset as a whole. It then selects rules to apply based on the repairs you submitted and
                   how well rules have performed in the past, reinforcing rules that are particularly effective.
                   Then, it analyzes the history of each cell in the dataset to decide which tuples you should
