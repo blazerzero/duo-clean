@@ -53,9 +53,9 @@ class Results extends Component {
           }
           //var modMap = await this._buildModMap(data, data);
           var contradictionMap = await this._buildContradictionMap(data, contradictions);
-          this.setState({ cleanData: data, contradictionMap }, () => {
-            var typeMap = this._buildTypeMap(this.state.cleanData);
-            this.setState({ typeMap });
+          this.setState({ dirtyData: data, cleanData: data, contradictionMap }, () => {
+            //var typeMap = this._buildTypeMap(this.state.cleanData);
+            //this.setState({ typeMap });
           });
         })
         .catch(error => {
@@ -113,7 +113,7 @@ class Results extends Component {
     for (var i in rows) {
       var tup = {};
       for (var j in cols) {
-        console.log(contradictions.length);
+        //console.log(contradictions.length);
         tup[cols[j]] = contradictions.some(e => e.row == i && e.col == j)
       }
       contradictionMap[rows[i]] = tup;
@@ -130,7 +130,7 @@ class Results extends Component {
       for (var j in cols) {
         //console.log(dirtyData[rows[i]][cols[j]]);
         //console.log(cleanData[rows[i]][cols[j]]);
-        tup[cols[j]] = (dirtyData[rows[i]][cols[j]] === cleanData[rows[i]][cols[j]] ? 'not-modified-cell' : 'modified-cell');
+        tup[cols[j]] = (dirtyData[rows[i]][cols[j]] === cleanData[rows[i]][cols[j]]);
       }
       modMap[rows[i]] = tup;
     }
@@ -156,12 +156,22 @@ class Results extends Component {
               else if (typeof data[i][j] != 'string') data[i][j] = data[i][j].toString();
             }
           }
-          /*var modMap = await this._buildModMap(data, data);
-          console.log(modMap);*/
+          //var modMap = await this._buildModMap(data, data);
+          /*for (var i in modMap) {
+            for (var j in modMap[i]) {
+              j = j.trim();
+            }
+          }
+          for (var i in contradictionMap) {
+            for (var j in contradictionMap[i]) {
+              j = j.trim();
+            }
+          }*/
+          //console.log(modMap);
           var contradictionMap = await this._buildContradictionMap(data, contradictions);
           this.setState({ dirtyData: data, cleanData: data, contradictionMap }, () => {
-            var typeMap = this._buildTypeMap(this.state.cleanData);
-            this.setState({ typeMap });
+            //var typeMap = this._buildTypeMap(this.state.cleanData);
+            //this.setState({ typeMap });
           });
         })
         .catch(error => {
@@ -284,7 +294,7 @@ class Results extends Component {
                         var key = i.toString().concat('_', j);
                         return <td
                             key={key}
-                            style={{cursor: 'pointer', color: (this.state.contradictionMap[i][j] && 'yellow')}}
+                            style={{cursor: 'pointer', backgroundColor: (this.state.contradictionMap[i][j] && 'yellow')}}
                             onClick={this._handleCellClick.bind(this, key)}>{this.state.cleanData[i][j]}
                         </td>
                       }) }

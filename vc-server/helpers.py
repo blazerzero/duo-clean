@@ -98,7 +98,7 @@ FUNCTION: discoverCFDs
 PURPOSE: Run XPlode on the before-repair and after-repair versions of the dataset.
 INPUT:
 * project_id: The ID of the current interaction, used to retrieve the datasets.
-OUTPUT: 
+OUTPUT:
 * An array of JSON objects containing information on each discovered CFD
 (including CFD ID, CFd, and score), or None if there was an XPlode runtime error or no CFDs were found.
 '''
@@ -123,6 +123,55 @@ def discoverCFDs(project_id):
 
 
 '''
+FUNCTION: fd2cfd
+PURPOSE: Convert a pure FD (or a partial CFD, meaning not every attribute in the dependency has a condition present)
+to a collection of CFDs representing the patterns relevant to this dependency that occur in the dataset
+INPUT:
+* data: The dataset
+* lhs: The left-hand side of the dependency
+* rhs: The right-hand side of the dependency
+OUTPUT:
+* patterns: The list of CFDs representing the patterns relevant to this depedency that occur in the dataset
+'''
+def fd2cfd(data, lhs, rhs, value_metadata, current_iter):
+    patterns = dict()
+    for idx in data.index:
+        lhspattern = ''
+        rhspattern = ''
+        for clause in lhs:
+            if '=' in clause:
+                lhspattern += clause + ', '
+            else:
+                last = value_metadata[idx][clause][-1]
+                if last.iter == current_iter and last.agent == 'user':
+                    lhspattern += clause + '=' + last.value + ', '
+                else:
+                    lhspattern += clause + '=' + data.at[idx, clause] + ', '
+            lhspattern = lhspattern[:-2]
+        if '=' in rhs:
+            rhspattern = rhs
+        else:
+            last = value_metadata[idx][rhs][-1]
+            if last.iter == current_iter and last.agent == 'user':
+                rhspattern = rhs + '=' + last.value
+            else:
+                rhspattern = rhs + '=' + data.at[idx, rhs]
+        if lhspattern in patterns.keys():
+            patterns[lhspattern].append(rhspattern)
+        else:
+            patterns[lhspattern] = [rhspattern]
+    for k in patterns.keys():
+        counts = Counter(patterns[k])
+        get_mode = dict(counts)
+        patterns[k] = [k for k, v in get_mode.items() if v == max(list(counts.values()))]
+        if len(patterns[k]) == 1:
+            patterns[k] = patterns[k].pop()
+        else:
+            # TODO: More than one RHS mode exists for this pattern; check value history (last iteration and all iterations) to see which pattern to choose
+            pass
+    return patterns
+
+'''
 FUNCTION: addNewCfdsToList
 PURPOSE: Add the newly discovered CFDs to the list of discovered CFDs, and initialize/reinforce their weights based on
 its score from the last run of XPlode and how many times XPlode has returned the CFD
@@ -133,15 +182,21 @@ INPUT:
 * query: A formatted version of the rows the user modified; used for mapping repaired tuples to CFDs in the receiver
 OUTPUT: None
 '''
-def addNewCfdsToList(top_cfds, project_id, current_iter, query):
+def addNewCfdsToList(top_cfds, project_id, current_iter, query, d_rep):
     if os.path.isfile('./store/' + project_id + '/cfd_metadata.p'):                             # if CFD metadata object already exists (i.e. CFDs have been discovered in previous iterations)
         cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )       # load the CFD metadata object
         receiver = pickle.load( open('./store/' + project_id + '/receiver.p', 'rb') )               # load the system learning receiver
-        for c in [tc for tc in top_cfds if float(tc['score']) > 0]:                                 # for each CFD with a positive XPlode score
+        eligible_cfds = [tc for tc in top_cfds if float(tc['score']) > 0]
+        for c in eligible_cfds:                                 # for each CFD with a positive XPlode score
             exists = False
+            lhs = c['cfd'].split(' => ')[0][1:-1]
+            rhs = c['cfd'].split(' => ')[1]
+            if lhs.count('=') < len(lhs) or '=' not in rhs:
+                #patterns = fd2cfd(d_rep, lhs, rhs)
+                patterns = []
+                eligible_cfds.extend(patterns)
+                break
             for idx, cfd in enumerate(cfd_metadata):                                                    # for each previously discovered CFD
-                lhs = c['cfd'].split(' => ')[0][1:-1]
-                rhs = c['cfd'].split(' => ')[1]
                 if cfd['lhs'] == lhs and cfd['rhs'] == rhs:                                             # if the CFD has already been discovered
                     exists = True
                     cfd['num_found'] += 1                                                                   # increment the number of times this CFD has been found
@@ -299,7 +354,8 @@ def applyCfd(project_id, d_rep, cfd, cfd_id, cfd_applied_map, current_iter, cont
                             contradictions[(idx, col)] = [value_metadata[idx][rh[0]]['history'][-2].value, rh[1]]
                 else:                                                                                                                   # if the RHS attribute value already holds in this row
                     value_metadata[idx][rh[0]]['history'].append(ValueHistory(rh[1], 'system', cfd_id, current_iter, False))                # add this value to this cell's value history, along with the CFD that was tested on it, the agent who did the test, the iteration number, and the fact that this value is NOT the result of a change (i.e. it holds from its previous state)
-
+            #else:
+            #    pass        # TODO: FD functionality
 
     pickle.dump( value_metadata, open('./store/' + project_id + '/value_metadata.p', 'wb') )                                    # save the updated value metadata object
     tuple_metadata.to_pickle('./store/' + project_id + '/tuple_metadata.p')                                                     # save the updated tuple metadata DataFrame

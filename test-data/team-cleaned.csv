@@ -1,4 +1,4 @@
-﻿id,name,ssn,office,division,position,yrs_experience,pay
+﻿id,name,ssn,office,team,position,yrs_experience,pay
 1,Alex Habibi,546470152,Corvallis,Management,COO,5,"200,000"
 2,Jennifer Cotts,623413274,Corvallis,Management,CEO,7,"250,000"
 3,Andre Pollack,718867986,Corvallis,Management,CTO,6,"200,000"
