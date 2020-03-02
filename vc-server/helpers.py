@@ -1,4 +1,4 @@
-from random import randint
+from random import randint, choice
 from tqdm import tqdm
 import pprint
 import os
@@ -135,40 +135,78 @@ OUTPUT:
 '''
 def fd2cfd(data, lhs, rhs, value_metadata, current_iter):
     patterns = dict()
+    mappings = dict()
     for idx in data.index:
         lhspattern = ''
         rhspattern = ''
-        for clause in lhs:
+        for clause in lhs.split(', '):
             if '=' in clause:
                 lhspattern += clause + ', '
             else:
-                last = value_metadata[idx][clause][-1]
+                #print(idx)
+                #print(clause)
+                last = value_metadata[idx][clause]['history'][-1]
                 if last.iter == current_iter and last.agent == 'user':
                     lhspattern += clause + '=' + last.value + ', '
                 else:
                     lhspattern += clause + '=' + data.at[idx, clause] + ', '
-            lhspattern = lhspattern[:-2]
+        lhspattern = lhspattern[:-2]
         if '=' in rhs:
             rhspattern = rhs
         else:
-            last = value_metadata[idx][rhs][-1]
+            last = value_metadata[idx][rhs]['history'][-1]
             if last.iter == current_iter and last.agent == 'user':
                 rhspattern = rhs + '=' + last.value
             else:
                 rhspattern = rhs + '=' + data.at[idx, rhs]
         if lhspattern in patterns.keys():
             patterns[lhspattern].append(rhspattern)
+            if (lhspattern, rhspattern) in mappings.keys():
+                mappings[(lhspattern, rhspattern)].append(idx)
+            else:
+                mappings[(lhspattern, rhspattern)] = [idx]
         else:
             patterns[lhspattern] = [rhspattern]
-    for k in patterns.keys():
-        counts = Counter(patterns[k])
+            mappings[(lhspattern, rhspattern)] = [idx]
+    for key in patterns.keys():
+        counts = Counter(patterns[key])
         get_mode = dict(counts)
-        patterns[k] = [k for k, v in get_mode.items() if v == max(list(counts.values()))]
-        if len(patterns[k]) == 1:
-            patterns[k] = patterns[k].pop()
+        patterns[key] = [key for key, v in get_mode.items() if v == max(list(counts.values()))]
+        if len(patterns[key]) == 1:
+            patterns[key] = patterns[key].pop()
         else:
-            # TODO: More than one RHS mode exists for this pattern; check value history (last iteration and all iterations) to see which pattern to choose
-            pass
+            #curr_rhs_values = [r for l, r in mappings.keys() if l == key]
+            best_r = list()
+            max_occur = 0
+            print('all mappings:', mappings)
+            print('\nall rhs:', [rhs for (lhs, rhs) in mappings.keys()])
+            print('\nrelevant rhs:', [rhs for (lhs, rhs) in mappings.keys() if lhs == key])
+            for r in [rhs for (lhs, rhs) in mappings.keys() if lhs == key]:
+                count_r = 0
+                for idx in mappings[(lhs, r)]:
+                    count_r += sum([1/(int('0x' + current_iter, 0) - int('0x' + v.iter, 0)) for v in value_history[idx][r.split('=')[0]]['history'] if v.value == r.split('=')[1]])
+                if count_r >= max_occur:
+                    best_r.append(r)
+                    max_occur = count_r
+
+            if len(best_r) == 1:
+                patterns[key] = best_r
+            else:
+                best_r = list()
+                max_occur = 0
+                for r in [rhs for lhs, rhs in mappings.keys() if lhs == key]:
+                    count_r = 0
+                    for idx in mappings[(l, r)]:
+                        count_r += len([v for v in value_history[idx][r.split('=')[0]]['history'] if v.value == r.split('=')[1]])
+                    if count_r >= max_occur:
+                        best_r.append(r)
+                        max_occur = count_r
+                if len(best_r) == 1:
+                    patterns[key] = best_r
+                else:
+                    #selection = randint(0, len(patterns[key]))
+                    patterns[key] = random.choice(patterns[key])
+
     return patterns
 
 '''
@@ -182,7 +220,7 @@ INPUT:
 * query: A formatted version of the rows the user modified; used for mapping repaired tuples to CFDs in the receiver
 OUTPUT: None
 '''
-def addNewCfdsToList(top_cfds, project_id, current_iter, query, d_rep):
+def addNewCfdsToList(top_cfds, project_id, current_iter, query):
     if os.path.isfile('./store/' + project_id + '/cfd_metadata.p'):                             # if CFD metadata object already exists (i.e. CFDs have been discovered in previous iterations)
         cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )       # load the CFD metadata object
         receiver = pickle.load( open('./store/' + project_id + '/receiver.p', 'rb') )               # load the system learning receiver
@@ -268,27 +306,29 @@ INPUT:
 OUTPUT:
 * d_rep: The user-cleaned dataset, with a 'cover' column added to hold the cover map.
 '''
-def buildCover(d_rep, picked_cfds):
-    cover = np.empty(len(d_rep.index), dtype=str)               # initialize an empty NumPy array to hold the cover
-    print([c['cfd'] for c in picked_cfds])
-    just_cfds = np.array([c['cfd'] for c in picked_cfds])       # extract the CFD rules from the CFD objects
+def buildCover(d_rep, lhs, rhs, patterns):
     for idx, row in d_rep.iterrows():                           # for each row in the dataset
-        relevant_cfds = []                                      # create an empty list for the relevant CFDs for this row
-        for cfd in just_cfds:                                   # for each selected CFD
-            lhs = cfd.split(' => ')[0][1:-1]
-            rhs = cfd.split(' => ')[1]
-            applies = True
-            for lh in lhs.split(', '):                          # for each element of the CFD's LHS
-                if '=' in lh:                                       # if the element requires a specific value
-                    lh = np.array(lh.split('='))                        # split up this LHS attribute from its value
-                    if row[lh[0]] != lh[1]:                             # if this LHS attribute value does NOT hold in this row
-                        applies = False                                     # this CFD does NOT apply to this row
-                        break
-            if applies:                                         # if this CFD applies to this row
-                relevant_cfds.append(cfd)                           # add this CFD to list of relevant CFDs for this row
-        cover[idx] = '; '.join(relevant_cfds)                   # create this row's cover by stringifying the list of relevant CFDs for the row and delimiting them with a semicolon
-
-    d_rep['cover'] = cover                                  # add this row's cover to the DataFrame for this row
+        applies = True
+        for lh in lhs.split(', '):                          # for each element of the CFD's LHS
+            if '=' in lh:                                       # if the element requires a specific value
+                lh = np.array(lh.split('='))                        # split up this LHS attribute from its value
+                if row[lh[0]] != lh[1]:                             # if this LHS attribute value does NOT hold in this row
+                    applies = False                                     # this CFD does NOT apply to this row
+                    break
+        if applies:                                         # if this CFD applies to this row
+            d_rep[idx]['cover'].append('; (' + lhs + ') => ' + rhs)
+            #TODO: Check if CFD is not a pure CFD and, if not, find and append the corresponding pattern for this row
+            if lhs.count('=') < len(lhs.split(', ')) or '=' not in rhs:
+                key = ''
+                for lh in lhs.split(', '):
+                    if '=' in lh:
+                        key += ', ' + lh
+                    else:
+                        key += ', ' + d_rep[idx][lh]
+                key = key[2:]
+                d_rep[idx]['cover'].append(' | (' + key + ') => ' + patterns[key])
+            if d_rep[idx]['cover'][0] == ';':
+                d_rep[idx]['cover'] = d_rep[idx]['cover'][2:]
     return d_rep
 
 
@@ -336,7 +376,8 @@ def applyCfd(project_id, d_rep, cfd, cfd_id, cfd_applied_map, current_iter, cont
 
 
     for idx, row in d_rep.iterrows():                                                                                           # for each row in the dataset
-        if row['cover'] is not None and cfd in row['cover'].split('; '):                                                            # if this CFD is in the row's cover
+        cover = row['cover'].split('; ')
+        if row['cover'] is not None and cfd in [c.split(' | ')[0] for c in cover]:                                                            # if this CFD is in the row's cover
             lhs = cfd.split(' => ')[0][1:-1]                                                                                        # extract the CFD's LHS
             rhs = cfd.split(' => ')[1]                                                                                              # extract the CFD's RHS
             if '=' in rhs:                                                                                                          # if the RHS value pertains to a specific value
@@ -356,7 +397,21 @@ def applyCfd(project_id, d_rep, cfd, cfd_id, cfd_applied_map, current_iter, cont
                     value_metadata[idx][rh[0]]['history'].append(ValueHistory(rh[1], 'system', cfd_id, current_iter, False))                # add this value to this cell's value history, along with the CFD that was tested on it, the agent who did the test, the iteration number, and the fact that this value is NOT the result of a change (i.e. it holds from its previous state)
             #else:
             #    pass        # TODO: FD functionality
-
+            else:
+                cfd_index = [i for i, c in enumerate(cover) if cfd in c].pop()
+                pattern = cover[cfd_index].split(' | ')[1][1:-1]
+                rh = np.array(pattern.split(' => ')[1].split('='))
+                if row[rh[0]] != rh[1]:                                                                                                 # if the RHS attribute value does NOT hold in this row
+                    row[rh[0]] = rh[1]                                                                                                      # set this cell's value to the RHS attribute value of the CFD
+                    cfd_applied_map[current_iter][idx][rh[0]] = cfd_id                                                                      # add a mapping for this cell in this iteration to this CFD's ID
+                    value_metadata[idx][rh[0]]['history'].append(ValueHistory(rh[1], 'system', cfd_id, current_iter, True))                 # add this new value to this cell's value history, along with the CFD the resulted in it, the agent who made the change, the iteration number, and the fact that this value is the result of a change
+                    tuple_metadata.at[idx, 'weight'] += 1
+                    if value_metadata[idx][rh[0]]['history'][-2].iter == current_iter and value_metadata[idx][rh[0]]['history'][-2].value != rh[1] and value_metadata[idx][rh[0]]['history'][-2].agent == 'system':      # if a contradiction has occurred for this cell
+                        if (idx, col) in contradictions.keys():                             # if this is the first time this cell has a contradiction in this cleaning iteration
+                            if rh[1] not in contradictions[(idx, col)]:                         # if this value hasn't already been seen in the cleaning
+                                contradictions[(idx, col)].append(rh[1])
+                        else:
+                            contradictions[(idx, col)] = [value_metadata[idx][rh[0]]['history'][-2].value, rh[1]]
     pickle.dump( value_metadata, open('./store/' + project_id + '/value_metadata.p', 'wb') )                                    # save the updated value metadata object
     tuple_metadata.to_pickle('./store/' + project_id + '/tuple_metadata.p')                                                     # save the updated tuple metadata DataFrame
 

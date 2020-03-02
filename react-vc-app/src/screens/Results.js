@@ -249,26 +249,28 @@ class Results extends Component {
       <Route render={({ history }) => (
         <div className='site-page'>
           <Modal show={this.state.modal} onHide={this._closeModal} animation={false}>
-            <Modal.Header closeButton>
-              <Modal.Title>Edit Cell</Modal.Title>
-            </Modal.Header>
-            <Modal.Body>
-              <Form.Group>
-                <Form.Label><strong>Current Value: </strong>{this.state.modalCellValue}</Form.Label>
-              </Form.Group>
-              <Form.Group>
-                <Form.Label><strong>New Value</strong></Form.Label>
-                <Form.Control as="textarea" rows="3" ref={this.newCellValue} defaultValue={this.state.modalCellValue}></Form.Control>
-              </Form.Group>
-            </Modal.Body>
-            <Modal.Footer>
-              <Button variant="secondary" onClick={this._closeModal}>
-                Cancel
-              </Button>
-              <Button variant="primary" onClick={this._saveChange}>
-                Save
-              </Button>
-            </Modal.Footer>
+            <Form onSubmit={this._saveChange}>
+              <Modal.Header closeButton>
+                <Modal.Title>Edit Cell</Modal.Title>
+              </Modal.Header>
+              <Modal.Body>
+                <Form.Group>
+                  <Form.Label><strong>Current Value: </strong>{this.state.modalCellValue}</Form.Label>
+                </Form.Group>
+                <Form.Group>
+                  <Form.Label><strong>New Value</strong></Form.Label>
+                  <Form.Control ref={this.newCellValue} defaultValue={this.state.modalCellValue}></Form.Control>
+                </Form.Group>
+              </Modal.Body>
+              <Modal.Footer>
+                <Button variant='secondary' onClick={this._closeModal}>
+                  Cancel
+                </Button>
+                <Button variant='primary' type='submit'>
+                  Save
+                </Button>
+              </Modal.Footer>
+            </Form>
           </Modal>
           <Row className='content-centered'>
             <div className='results-header box-blur'>

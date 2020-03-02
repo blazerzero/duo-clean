@@ -158,7 +158,18 @@ class Clean(Resource):
             if picked_cfd_list is not None and len(picked_cfd_list) > 0:                                                                                # Successfully got CFDs from receiver
                 with open('./store/' + project_id + '/applied_cfds.txt', 'a') as f:
                     np.savetxt(f, [c['cfd'] for c in picked_cfd_list], fmt="%s")                                                                            # Print selected CFDs into applied_cfds.txt
-                d_rep = helpers.buildCover(d_rep, picked_cfd_list)                                                                                      # Build the CFD cover for this iteration
+                patterns = dict()
+                value_metadata = pickle.load( open('./store/' + project_id + '/value_metadata.p', 'rb') )
+                d_rep['cover'] = np.empty(len(d_rep.index), dtype=str)
+                for c in picked_cfd_list:
+                    lhs = c['cfd'].split(' => ')[0][1:-1]
+                    rhs = c['cfd'].split(' => ')[1]
+                    print(lhs)
+                    print(rhs)
+                    patterns.update(helpers.fd2cfd(d_rep, lhs, rhs, value_metadata, current_iter))
+
+                    #TODO: Integrate patterns into buildCover and applyCfd
+                    d_rep = helpers.buildCover(d_rep, lhs, rhs, patterns)                                                                                      # Build the CFD cover for this iteration
                 d_dirty['cover'] = d_rep['cover']
                 d_rep, cfd_applied_map, contradictions = helpers.applyCfdList(project_id, d_dirty, picked_cfd_list, picked_cfd_id_list, cfd_applied_map, current_iter)    # Apply the selected CFDs to the dataset
             else:

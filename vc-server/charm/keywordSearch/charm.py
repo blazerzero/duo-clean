@@ -56,6 +56,7 @@ OUTPUT:
 '''
 def getRules(receiver, query, sample_size):
     try:
+        print('Query:', query)
         rule_id_list = receiver.getTuples(query, sample_size)       # get rule IDs from receiver
         rules = []
 
