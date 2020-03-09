@@ -87,6 +87,12 @@ class Sample(Resource):
 
         s_out = data.sample(n=sample_size)                                                                                              # get sample for user
 
+        diffs = dict()
+        diffs['cells'] = list()
+        diffs['tups'] = list()
+        pickle.dump( diffs, open('./store/' + project_id + '/diffs.p', 'wb') )
+        helpers.calcDiffs(data, '../test-data/team-cleaned.csv', project_id, 'system', current_iter)
+
         tuple_metadata.to_pickle('./store/' + project_id + '/tuple_metadata.p')                                                         # save the tuple metadata DataFrame
         pickle.dump( value_metadata, open('./store/' + project_id + '/value_metadata.p', 'wb') )                                        # save the value metadata object
         pickle.dump( current_iter, open('./store/' + project_id + '/current_iter.p', 'wb') )                                            # save the current iteration number
@@ -117,6 +123,7 @@ class Clean(Resource):
         d_dirty = pd.read_csv('./store/' + project_id + '/before.csv', keep_default_na=False)               # read in dirty data as DataFrame
         s_df = pd.read_json(s_in, orient='index')                                                           # turn sample into DataFrame
         d_rep, changed_ids = helpers.applyUserRepairs(d_dirty, s_df, project_id, current_iter)              # map the user's cell repairs to the respective cells in the full dataset
+        helpers.calcDiffs(d_rep, '../test-data/team-cleaned.csv', project_id, 'user', current_iter)
         d_rep.to_csv('./store/' + project_id + '/after.csv', encoding='utf-8', index=False)                 # save the user-repaired full dataset as a csv file (for XPlode)
         top_cfds = helpers.discoverCFDs(project_id)                                                         # run XPlode to discover new CFDs for before and after-repair versions of the dataset
         d_rep['cover'] = None                                                                               # initialize the cover for each row
@@ -180,6 +187,8 @@ class Clean(Resource):
         d_rep = d_rep.drop(columns=['cover'])
         helpers.reinforceTuplesBasedOnContradiction(project_id, current_iter, d_rep)                                        # reinforce data tuples based on contradiction metrics for each individual cell
         d_rep.to_csv('./store/' + project_id + '/before.csv', encoding='utf-8', index=False)                                # save the cleaned dataset as a CSV file (this is the new "before" file for the next iteration)
+
+        helpers.calcDiffs(d_rep, '../test-data/team-cleaned.csv', project_id, 'system', current_iter)
 
         tuple_metadata = pd.read_pickle('./store/' + project_id + '/tuple_metadata.p')                                      # load the tuple metadata DataFrame
 

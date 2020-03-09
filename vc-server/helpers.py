@@ -22,6 +22,11 @@ class ValueHistory(object):
         self.iter = iter
         self.changed = changed
 
+class Diff(object):
+    def __init__(self, value, agent, iter):
+        self.value = value
+        self.agent = agent
+        self.iter = iter
 
 '''
 FUNCTION: applyUserRepairs
@@ -490,3 +495,24 @@ def buildSample(d_rep, sample_size, project_id, cfd_applied_map, current_iter):
 
     sample = d_rep.iloc[chosen_tups.index]                                                                                      # get the data rows that have the sampled tuple IDs
     return sample
+
+def calcDiffs(d_rep, clean_src, project_id, agent, iter):
+    diffs = pickle.load( open('./store/' + project_id + '/diffs.p', 'rb') )
+    d_clean = pd.read_csv(clean_src)
+    cell_diff_count = 0
+    tup_diff_count = 0
+    for idx in d_rep.index:
+        is_tup_diff = False
+        for col in d_rep.columns:
+            if d_rep.at[idx, col] != d_clean.at[idx, col]:
+                cell_diff_count += 1
+                is_tup_diff = True
+        if is_tup_diff is True:
+            tup_diff_count += 1
+    cell_diff_value = cell_diff_count / (len(d_rep.index) * len(d_rep.columns))
+    tup_diff_value = tup_diff_count / len(d_rep.index)
+    cell_diff = Diff(cell_diff_value, agent, iter)
+    tup_diff = Diff(tup_diff_value, agent, iter)
+    diffs['cells'].append(cell_diff)
+    diffs['tups'].append(tup_diff)
+    pickle.dump( diffs, open('./store/' + project_id + '/diffs.p', 'wb') )
