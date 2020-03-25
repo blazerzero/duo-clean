@@ -28,7 +28,7 @@ class Import extends Component {
           'content-type': 'multipart/form-data'
         }
       };
-      axios.post('http://localhost:5000/import', formData, config)
+      axios.post('http://167.71.155.153:5000/duo/api/import', formData, config)
         .then(response => {
           var { header, project_id, msg } = JSON.parse(response.data);
           console.log(msg);

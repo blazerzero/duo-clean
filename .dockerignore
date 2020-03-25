@@ -1,0 +1,14 @@
+*FD_Info.txt
+FD_Update.py
+'Properties and Axiomatization of Functional Dependencies.png'
+README.md
+__pycache__
+adult*
+cfdd*
+ctane.py
+mockup/
+old-vc/
+pip-requirements.txt
+react-vc-app/
+tane.py
+vc-venv/

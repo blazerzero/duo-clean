@@ -38,7 +38,7 @@ class Results extends Component {
     formData.append('data', JSON.stringify(this.state.cleanData));
     formData.append('sample_size', 10);
     console.log(formData.get('project_id'));
-    axios.post('http://localhost:5000/clean', formData)
+    axios.post('http://167.71.155.153:5000/duo/api/clean', formData)
         .then(async(response) => {
           var { sample, contradictions, msg } = JSON.parse(response.data);
           var data = JSON.parse(sample);
@@ -66,7 +66,7 @@ class Results extends Component {
   async _handleDownload() {
     const formData = new FormData();
     formData.append('project_id', this.state.project_id);
-    axios.post('http://localhost:5000/download', formData, {
+    axios.post('http://167.71.155.153:5000/duo/api/download', formData, {
       responseType: 'arraybuffer',
       headers: {
         'Content-Type': 'multipart/form-data',
@@ -143,7 +143,7 @@ class Results extends Component {
     formData.append('project_id', project_id);
     formData.append('sample_size', sample_size);
     console.log(formData.get('project_id'));
-    axios.post('http://localhost:5000/sample', formData)
+    axios.post('http://167.71.155.153:5000/duo/api/sample', formData)
         .then(async(response) => {
           var { sample, contradictions, msg } = JSON.parse(response.data);
           var data = JSON.parse(sample);

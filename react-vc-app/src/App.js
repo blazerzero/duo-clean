@@ -20,8 +20,8 @@ class App extends Component {
               <Header />
             </div>*/}
 
-            <Route path='/' exact component={Import} />
-            <Route path='/results/' component={Results} />
+            <Route path='/duo/' exact component={Import} />
+            <Route path='/duo/results/' component={Results} />
           </Router>
         </PersistGate>
       </Provider>

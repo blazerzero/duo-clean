@@ -235,10 +235,10 @@ class Download(Resource):
         return send_file(finalZip, attachment_filename='charm_cleaned.zip', as_attachment=True)
 
 
-api.add_resource(Import, '/import')
-api.add_resource(Sample, '/sample')
-api.add_resource(Clean, '/clean')
-api.add_resource(Download, '/download')
+api.add_resource(Import, '/duo/api/import')
+api.add_resource(Sample, '/duo/api/sample')
+api.add_resource(Clean, '/duo/api/clean')
+api.add_resource(Download, '/duo/api/download')
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0')
