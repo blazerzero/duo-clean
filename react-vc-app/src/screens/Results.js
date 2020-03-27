@@ -114,7 +114,7 @@ class Results extends Component {
       var tup = {};
       for (var j in cols) {
         //console.log(contradictions.length);
-        tup[cols[j]] = contradictions.some(e => e.row == i && e.col == j)
+        tup[cols[j]] = contradictions.some(e => e.row === i && e.col === j)
       }
       contradictionMap[rows[i]] = tup;
     }

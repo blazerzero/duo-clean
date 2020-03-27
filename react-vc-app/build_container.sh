@@ -1,4 +1,4 @@
 #!/bin/bash
 
-docker build -t duoclean .
-docker run -it -d duoclean -p 8000:3000 --name duoclean
+docker image build -t duoclean-front .
+docker container run -p 3000:3000 -d duoclean-front

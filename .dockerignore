@@ -12,3 +12,9 @@ pip-requirements.txt
 react-vc-app/
 tane.py
 vc-venv/
+vc-server/store/
+vc-server/Band*
+vc-server/TANE*
+vc-server/DFD*
+vc-server/vc-venv/
+vc-server/FD*

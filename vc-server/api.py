@@ -18,9 +18,8 @@ import math
 import shutil
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/duo/api/*": {"origins": "*"}})
 api = Api(app)
-
 
 class Import(Resource):
     def get(self):

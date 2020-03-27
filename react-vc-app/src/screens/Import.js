@@ -34,7 +34,7 @@ class Import extends Component {
           console.log(msg);
           alert('Your Project ID is '.concat(project_id, '. This will be visible to you while you\'re working, but please write down your Project ID.'));
           history.push({
-            pathname: '/results/',
+            pathname: '/duo/results/',
             header: header,
             project_id: project_id
           });
