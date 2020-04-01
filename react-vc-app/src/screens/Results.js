@@ -25,6 +25,7 @@ class Results extends Component {
     cleanData: [],
     typeMap: [],
     contradictionMap: [],
+    repairMap: [],
     header: [],
     project_id: 0,
     modal: false,
@@ -40,7 +41,7 @@ class Results extends Component {
     console.log(formData.get('project_id'));
     axios.post('http://167.71.155.153:5000/duo/api/clean', formData)
         .then(async(response) => {
-          var { sample, contradictions, msg } = JSON.parse(response.data);
+          var { sample, contradictions, changes, msg } = JSON.parse(response.data);
           var data = JSON.parse(sample);
           contradictions = JSON.parse(contradictions);
           console.log(data);
@@ -53,7 +54,8 @@ class Results extends Component {
           }
           //var modMap = await this._buildModMap(data, data);
           var contradictionMap = await this._buildContradictionMap(data, contradictions);
-          this.setState({ dirtyData: data, cleanData: data, contradictionMap }, () => {
+          var repairMap = await this._buildRepairMap(data, changes);
+          this.setState({ dirtyData: data, cleanData: data, contradictionMap, repairMap }, () => {
             //var typeMap = this._buildTypeMap(this.state.cleanData);
             //this.setState({ typeMap });
           });
@@ -119,6 +121,21 @@ class Results extends Component {
       contradictionMap[rows[i]] = tup;
     }
     return contradictionMap;
+  }
+
+  async _buildRepairMap(data, changes) {
+    var repairMap = {};
+    var rows = Object.keys(data);
+    var cols = this.state.header;
+    for (var i in rows) {
+      var tup = {};
+      for (var j in cols) {
+        cell = changes.find(e => return e.row === i && e.col === j);
+        tup[cols[j]] = cell.repaired;
+      }
+      repairMap[rows[i]] = tup;
+    }
+    return repairMap;
   }
 
   async _buildModMap(dirtyData, cleanData) {
@@ -296,7 +313,7 @@ class Results extends Component {
                         var key = i.toString().concat('_', j);
                         return <td
                             key={key}
-                            style={{cursor: 'pointer', backgroundColor: (this.state.contradictionMap[i][j] && 'yellow')}}
+                            style={{cursor: 'pointer', backgroundColor: (this.state.contradictionMap[i][j] ? 'yellow' : (this.state.repairMap[i][j] ? 'green' : 'white)}}
                             onClick={this._handleCellClick.bind(this, key)}>{this.state.cleanData[i][j]}
                         </td>
                       }) }

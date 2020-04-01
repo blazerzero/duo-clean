@@ -33,7 +33,6 @@ class Import extends Component {
           var { header, project_id, msg } = JSON.parse(response.data);
           console.log(msg);
           alert('Your Project ID is '.concat(project_id, '. This will be visible to you while you\'re working, but please write down your Project ID.'));
-          alert(window.location.href);
           history.push({
             pathname: '/duo/results/',
             header: header,
