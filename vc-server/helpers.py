@@ -112,7 +112,9 @@ def discoverCFDs(project_id):
     clean_fp = './store/' + project_id + '/after.csv'       # "repaired" dataset
     print('about to run xplode')
     process = sp.Popen(['./xplode-master/CTane', dirty_fp, clean_fp, '0.25', '2'], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})     # run XPlode
-    output = process.communicate()[0].decode("utf-8")       # get output of XPlode
+    res = process.communicate()       # get output of XPlode
+    print(res[1].decode("utf-8"))
+    output = res[0].decode("utf-8")
     if process.returncode == 0:                             # if XPlode exited successfully
         if output == '[NO CFDS FOUND]':                         # if no CFDs were found
             print(output)
@@ -351,13 +353,17 @@ OUTPUT:
 * d_rep: The fully cleaned version of the dataset.
 * cfd_applied_map: A map of which CFDs have been applied to each cell in each iteration, updated for this iteration
 * contradictions: A dictionary holding the contradictions that have occurred in the dataset through this cleaning iteration
-
+* changes: A dictionary holding the locations of system repairs
 '''
 def applyCfdList(project_id, d_rep, cfd_list, cfd_id_list, cfd_applied_map, current_iter):
     contradictions = dict()
-    for i in range(0, len(cfd_list)):                                                                                                       # for each selected CFD
-        d_rep, cfd_applied_map = applyCfd(project_id, d_rep, cfd_list[i], cfd_id_list[i], cfd_applied_map, current_iter, contradictions)        # apply the CFD to the dataset
-    return d_rep, cfd_applied_map, contradictions                                                                                           # return the cleaned dataset and the updated cell/CFD map
+    changes = dict()
+    for i in d_rep.index:
+        for j in d_rep.columns:
+            changes[(i, j)] = False
+    for i in range(0, len(cfd_list)):                                                                                                               # for each selected CFD
+        d_rep, cfd_applied_map, changes = applyCfd(project_id, d_rep, cfd_list[i], cfd_id_list[i], cfd_applied_map, current_iter, contradictions, changes)   # apply the CFD to the dataset
+    return d_rep, cfd_applied_map, contradictions, changes                                                                                          # return the cleaned dataset and the updated cell/CFD map
 
 
 '''
@@ -375,7 +381,7 @@ OUTPUT:
 * d_rep: The fully cleaned version of the dataset.
 * cfd_applied_map: A map of which CFDs have been applied to each cell in each iteration, updated for this iteration
 '''
-def applyCfd(project_id, d_rep, cfd, cfd_id, cfd_applied_map, current_iter, contradictions):
+def applyCfd(project_id, d_rep, cfd, cfd_id, cfd_applied_map, current_iter, contradictions, changes):
     value_metadata = pickle.load( open('./store/' + project_id + '/value_metadata.p', 'rb') )                                   # load the cell value metadata object
     tuple_metadata = pd.read_pickle('./store/' + project_id + '/tuple_metadata.p')                                              # load the tuple metadata DataFrame
 
@@ -389,6 +395,7 @@ def applyCfd(project_id, d_rep, cfd, cfd_id, cfd_applied_map, current_iter, cont
                 rh = np.array(rhs.split('='))                                                                                           # split up the RHS attribute from its value
                 if row[rh[0]] != rh[1]:                                                                                                 # if the RHS attribute value does NOT hold in this row
                     row[rh[0]] = rh[1]                                                                                                      # set this cell's value to the RHS attribute value of the CFD
+                    changes[(i, j)] = True
                     cfd_applied_map[current_iter][idx][rh[0]] = cfd_id                                                                      # add a mapping for this cell in this iteration to this CFD's ID
                     value_metadata[idx][rh[0]]['history'].append(ValueHistory(rh[1], 'system', cfd_id, current_iter, True))                 # add this new value to this cell's value history, along with the CFD the resulted in it, the agent who made the change, the iteration number, and the fact that this value is the result of a change
                     tuple_metadata.at[idx, 'weight'] += 1
@@ -408,6 +415,7 @@ def applyCfd(project_id, d_rep, cfd, cfd_id, cfd_applied_map, current_iter, cont
                 rh = np.array(pattern.split(' => ')[1].split('='))
                 if row[rh[0]] != rh[1]:                                                                                                 # if the RHS attribute value does NOT hold in this row
                     row[rh[0]] = rh[1]                                                                                                      # set this cell's value to the RHS attribute value of the CFD
+                    changes[(i, j)] = True
                     cfd_applied_map[current_iter][idx][rh[0]] = cfd_id                                                                      # add a mapping for this cell in this iteration to this CFD's ID
                     value_metadata[idx][rh[0]]['history'].append(ValueHistory(rh[1], 'system', cfd_id, current_iter, True))                 # add this new value to this cell's value history, along with the CFD the resulted in it, the agent who made the change, the iteration number, and the fact that this value is the result of a change
                     tuple_metadata.at[idx, 'weight'] += 1
@@ -420,7 +428,7 @@ def applyCfd(project_id, d_rep, cfd, cfd_id, cfd_applied_map, current_iter, cont
     pickle.dump( value_metadata, open('./store/' + project_id + '/value_metadata.p', 'wb') )                                    # save the updated value metadata object
     tuple_metadata.to_pickle('./store/' + project_id + '/tuple_metadata.p')                                                     # save the updated tuple metadata DataFrame
 
-    return d_rep, cfd_applied_map                                                                                               # return the cleaned dataset and the cell/CFD map
+    return d_rep, cfd_applied_map, changes                                                                                      # return the cleaned dataset and the cell/CFD map
 
 
 '''

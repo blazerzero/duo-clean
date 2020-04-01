@@ -1,7 +1,8 @@
 from flask import Flask, request, send_file, jsonify
 from flask_restful import Resource, Api, reqparse, abort
-# from flask_restful.utils import cors
 from flask_cors import CORS, cross_origin
+# from flask_restful.utils import cors
+
 from flask_csv import send_csv
 from random import sample
 from pprint import pprint
@@ -127,13 +128,14 @@ class Clean(Resource):
         project_id = request.form.get('project_id')
         s_in = request.form.get('data')
         sample_size = int(request.form.get('sample_size'))
+        changes = dict()
 
         current_iter = pickle.load(open('./store/' + project_id + '/current_iter.p', 'rb'))                 # load the current iteration number
         current_iter = "{:08x}".format(int('0x'+current_iter, 0)+1)                                         # new iteration, so increment the current iteration number
 
         d_dirty = pd.read_csv('./store/' + project_id + '/before.csv', keep_default_na=False)               # read in dirty data as DataFrame
         s_df = pd.read_json(s_in, orient='index')                                                           # turn sample into DataFrame
-        d_rep, changed_ids = helpers.applyUserRepairs(d_dirty, s_df, project_id, current_iter)              # map the user's cell repairs to the respective cells in the full dataset
+        d_rep, changed_ids, changes = helpers.applyUserRepairs(d_dirty, s_df, project_id, current_iter, changes)              # map the user's cell repairs to the respective cells in the full dataset
         helpers.calcDiffs(d_rep, './test/team-clean.csv', project_id, 'user', current_iter)
         d_rep.to_csv('./store/' + project_id + '/after.csv', encoding='utf-8', index=False)                 # save the user-repaired full dataset as a csv file (for XPlode)
         top_cfds = helpers.discoverCFDs(project_id)                                                         # run XPlode to discover new CFDs for before and after-repair versions of the dataset
@@ -189,7 +191,7 @@ class Clean(Resource):
                     #TODO: Integrate patterns into buildCover and applyCfd
                     d_rep = helpers.buildCover(d_rep, lhs, rhs, patterns)                                                                                      # Build the CFD cover for this iteration
                 d_dirty['cover'] = d_rep['cover']
-                d_rep, cfd_applied_map, contradictions = helpers.applyCfdList(project_id, d_dirty, picked_cfd_list, picked_cfd_id_list, cfd_applied_map, current_iter)    # Apply the selected CFDs to the dataset
+                d_rep, cfd_applied_map, contradictions, changes = helpers.applyCfdList(project_id, d_dirty, picked_cfd_list, picked_cfd_id_list, cfd_applied_map, current_iter)    # Apply the selected CFDs to the dataset
             else:
                 pass
                 #with open('./store/' + project_id + '/applied_cfds.txt', 'w') as f:
@@ -218,11 +220,13 @@ class Clean(Resource):
         pickle.dump( cfd_applied_map, open('./store/' + project_id + '/cfd_applied_map.p', 'wb') )                          # save the updated cell/CFD map
 
         contradictions = [{'row': k[0], 'col': k[1]} for k, v in contradictions.items()]                                    # convert keys of contradiction tracker into a serializable format; meeting criterion 2 of Roth and Erev 1995
+        changes = [{'row': k[0], 'col': k[1], 'repaired': v} for k, v in changes.items()]
 
         # return this data to the user
         returned_data = {
             'sample': s_out.to_json(orient='index'),
             'contradictions': json.dumps(contradictions),
+            'changes': json.dumps(changes),
             'msg': '[SUCCESS] Successfully applied and generalized repair and retrived new sample.'
         }
         response = json.dumps(returned_data)
