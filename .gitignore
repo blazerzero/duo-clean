@@ -1,7 +1,6 @@
 .DS_Store
 vc-venv/
-vc-app-old/
-vc-server/TANE/boost_1_71_0
+vc-server/vc-venv/
 vc-server/xplode-master/CMake*
 vc-server/xplode-master/cmake*
 vc-server/xplode-master/Make*
@@ -10,5 +9,4 @@ vc-server/cfddiscovery-master/CMake*
 vc-server/cfddiscovery-master/cmake*
 vc-server/cfddiscovery-master/Make*
 vc-server/cfddiscovery-master/make*
-venv/
 vc-server/store/

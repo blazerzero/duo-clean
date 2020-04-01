@@ -1,6 +1,7 @@
-from flask import Flask, request, send_file
+from flask import Flask, request, send_file, jsonify
 from flask_restful import Resource, Api, reqparse, abort
-from flask_cors import CORS
+# from flask_restful.utils import cors
+from flask_cors import CORS, cross_origin
 from flask_csv import send_csv
 from random import sample
 from pprint import pprint
@@ -16,14 +17,25 @@ import numpy as np
 import pickle
 import math
 import shutil
+import logging
 
 app = Flask(__name__)
-CORS(app, resources={r"/duo/api/*": {"origins": "*"}})
+CORS(app, resources={r"/*": {"origins": "*"}})
 api = Api(app)
+
+logging.getLogger('flask_cors').level = logging.DEBUG
+
+class TestLive(Resource):
+    def get(self):
+        return {'msg': '[SUCCESS] The server is live'}
+
+class TestCORSLive(Resource):
+    def get(self):
+        return {'msg': '[SUCCESS] The server is live with CORS!'}
 
 class Import(Resource):
     def get(self):
-        return {'msg': '[SUCCESS] Import test success!'}
+        return {'msg': '[SUCCESS] This endpoint is live!'}
 
     def post(self):
         existingProjects = [('0x' + d) for d in os.listdir('./store/') if os.path.isdir(os.path.join('./store/', d))]
@@ -59,7 +71,7 @@ class Import(Resource):
         }
         response = json.dumps(returned_data)
         pprint(response)
-        return response, 200
+        return response, 200, {'Access-Control-Allow-Origin': '*'}
 
 
 class Sample(Resource):
@@ -90,7 +102,7 @@ class Sample(Resource):
         diffs['cells'] = list()
         diffs['tups'] = list()
         pickle.dump( diffs, open('./store/' + project_id + '/diffs.p', 'wb') )
-        helpers.calcDiffs(data, '../test-data/team-clean.csv', project_id, 'system', current_iter)
+        helpers.calcDiffs(data, './test/team-clean.csv', project_id, 'system', current_iter)
 
         tuple_metadata.to_pickle('./store/' + project_id + '/tuple_metadata.p')                                                         # save the tuple metadata DataFrame
         pickle.dump( value_metadata, open('./store/' + project_id + '/value_metadata.p', 'wb') )                                        # save the value metadata object
@@ -104,7 +116,7 @@ class Sample(Resource):
         }
         response = json.dumps(returned_data)                                                                                            # stringify returned data
         pprint(response)
-        return response, 200
+        return response, 200, {'Access-Control-Allow-Origin': '*'}
 
 
 class Clean(Resource):
@@ -122,7 +134,7 @@ class Clean(Resource):
         d_dirty = pd.read_csv('./store/' + project_id + '/before.csv', keep_default_na=False)               # read in dirty data as DataFrame
         s_df = pd.read_json(s_in, orient='index')                                                           # turn sample into DataFrame
         d_rep, changed_ids = helpers.applyUserRepairs(d_dirty, s_df, project_id, current_iter)              # map the user's cell repairs to the respective cells in the full dataset
-        helpers.calcDiffs(d_rep, '../test-data/team-clean.csv', project_id, 'user', current_iter)
+        helpers.calcDiffs(d_rep, './test/team-clean.csv', project_id, 'user', current_iter)
         d_rep.to_csv('./store/' + project_id + '/after.csv', encoding='utf-8', index=False)                 # save the user-repaired full dataset as a csv file (for XPlode)
         top_cfds = helpers.discoverCFDs(project_id)                                                         # run XPlode to discover new CFDs for before and after-repair versions of the dataset
         d_rep['cover'] = None                                                                               # initialize the cover for each row
@@ -187,7 +199,7 @@ class Clean(Resource):
         helpers.reinforceTuplesBasedOnContradiction(project_id, current_iter, d_rep)                                        # reinforce data tuples based on contradiction metrics for each individual cell
         d_rep.to_csv('./store/' + project_id + '/before.csv', encoding='utf-8', index=False)                                # save the cleaned dataset as a CSV file (this is the new "before" file for the next iteration)
 
-        helpers.calcDiffs(d_rep, '../test-data/team-clean.csv', project_id, 'system', current_iter)
+        helpers.calcDiffs(d_rep, './test/team-clean.csv', project_id, 'system', current_iter)
 
         tuple_metadata = pd.read_pickle('./store/' + project_id + '/tuple_metadata.p')                                      # load the tuple metadata DataFrame
 
@@ -215,7 +227,7 @@ class Clean(Resource):
         }
         response = json.dumps(returned_data)
         pprint(response)
-        return response, 200
+        return response, 200, {'Access-Control-Allow-Origin': '*'}
 
 
 class Download(Resource):
@@ -226,14 +238,17 @@ class Download(Resource):
         project_id = request.form.get('project_id')
         finalZip = BytesIO()
 
-        with ZipFile(finalZip, 'w') as zf:
-            zf.write('./store/' + project_id + '/after.csv')
-            zf.write('./store/' + project_id + '/applied_cfds.txt')
-        finalZip.seek(0)
+        # with ZipFile(finalZip, 'w') as zf:
+        #    zf.write('./store/' + project_id + '/after.csv')
+            # zf.write('./store/' + project_id + '/applied_cfds.txt')
+        # finalZip.seek(0)
 
-        return send_file(finalZip, attachment_filename='charm_cleaned.zip', as_attachment=True)
+        #return send_file(finalZip, attachment_filename='charm_cleaned.zip', as_attachment=True), 200, {'Access-Control-Allow-Origin': '*'}
+        return send_file('./store/' + project_id + '/after.csv', attachment_filename='charm_cleaned.csv', as_attachment=True), 200, {'Access-Control-Allow-Origin': '*'}
 
 
+api.add_resource(TestLive, '/duo/api/test')
+api.add_resource(TestCORSLive, '/duo/api/testcors')
 api.add_resource(Import, '/duo/api/import')
 api.add_resource(Sample, '/duo/api/sample')
 api.add_resource(Clean, '/duo/api/clean')
