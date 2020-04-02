@@ -39,11 +39,12 @@ class Results extends Component {
     formData.append('data', JSON.stringify(this.state.cleanData));
     formData.append('sample_size', 10);
     console.log(formData.get('project_id'));
-    axios.post('http://167.71.155.153:5000/duo/api/clean', formData)
+    axios.post('http://localhost:5000/duo/api/clean', formData)
         .then(async(response) => {
           var { sample, contradictions, changes, msg } = JSON.parse(response.data);
           var data = JSON.parse(sample);
           contradictions = JSON.parse(contradictions);
+          changes = JSON.parse(changes);
           console.log(data);
           console.log(msg);
           for (var i in data) {
@@ -68,7 +69,7 @@ class Results extends Component {
   async _handleDownload() {
     const formData = new FormData();
     formData.append('project_id', this.state.project_id);
-    axios.post('http://167.71.155.153:5000/duo/api/download', formData, {
+    axios.post('http://localhost:5000/duo/api/download', formData, {
       responseType: 'arraybuffer',
       headers: {
         'Content-Type': 'multipart/form-data',
@@ -112,11 +113,11 @@ class Results extends Component {
     var contradictionMap = {};
     var rows = Object.keys(data);
     var cols = this.state.header;
-    for (var i in rows) {
+    for (var i = 0; i < rows.length; i++) {
       var tup = {};
-      for (var j in cols) {
+      for (var j = 0; j < cols.length; j++) {
         //console.log(contradictions.length);
-        tup[cols[j]] = contradictions.some(e => e.row === i && e.col === j)
+        tup[cols[j]] = contradictions.some(e => e.row === parseInt(rows[i]) && e.col === cols[j]);
       }
       contradictionMap[rows[i]] = tup;
     }
@@ -124,13 +125,17 @@ class Results extends Component {
   }
 
   async _buildRepairMap(data, changes) {
+    console.log(changes);
     var repairMap = {};
     var rows = Object.keys(data);
     var cols = this.state.header;
-    for (var i in rows) {
+    for (var i = 0; i < rows.length; i++) {
+      //console.log(typeof(i));
       var tup = {};
-      for (var j in cols) {
-        cell = changes.find(e => return e.row === i && e.col === j);
+      for (var j = 0; j < cols.length; j++) {
+        //console.log(cols[j]);
+        var cell = changes.find(e => e.row === parseInt(rows[i]) && e.col === cols[j]);
+        //console.log(cell);
         tup[cols[j]] = cell.repaired;
       }
       repairMap[rows[i]] = tup;
@@ -160,11 +165,12 @@ class Results extends Component {
     formData.append('project_id', project_id);
     formData.append('sample_size', sample_size);
     console.log(formData.get('project_id'));
-    axios.post('http://167.71.155.153:5000/duo/api/sample', formData)
+    axios.post('http://localhost:5000/duo/api/sample', formData)
         .then(async(response) => {
-          var { sample, contradictions, msg } = JSON.parse(response.data);
+          var { sample, contradictions, changes, msg } = JSON.parse(response.data);
           var data = JSON.parse(sample);
           contradictions = JSON.parse(contradictions);
+          changes = JSON.parse(changes);
           console.log(data);
           console.log(msg);
           for (var i in data) {
@@ -186,7 +192,8 @@ class Results extends Component {
           }*/
           //console.log(modMap);
           var contradictionMap = await this._buildContradictionMap(data, contradictions);
-          this.setState({ dirtyData: data, cleanData: data, contradictionMap }, () => {
+          var repairMap = await this._buildRepairMap(data, changes);
+          this.setState({ dirtyData: data, cleanData: data, contradictionMap, repairMap }, () => {
             //var typeMap = this._buildTypeMap(this.state.cleanData);
             //this.setState({ typeMap });
           });
@@ -211,6 +218,10 @@ class Results extends Component {
       modalCellKey: key,
       modal: true
     });
+  }
+
+  async _handleDone(key, event) {
+    alert('Thank you for participating! Please revisit your instructions to see next steps.');
   }
 
   async _closeModal() {
@@ -296,7 +307,12 @@ class Results extends Component {
             </div>
           </Row>
           <Row className='content-centered'>
-            <Alert variant='warning' style={{border: '1px black solid'}}>Yellow cells indicate cells in which a<br/>contradiction occurred while the system<br/>was cleaning the dataset.</Alert>
+            <Col>
+              <Alert variant='success' style={{border: '1px black solid'}}>Green cells indicate cells that<br/>the system repaired.</Alert>
+            </Col>
+            <Col>
+              <Alert variant='warning' style={{border: '1px black solid'}}>Yellow cells indicate cells in which <br/>contradicting values occurred while the system<br/>was repairing the dataset.</Alert>
+            </Col>
           </Row>
           <div>
             <Table bordered responsive>
@@ -313,7 +329,7 @@ class Results extends Component {
                         var key = i.toString().concat('_', j);
                         return <td
                             key={key}
-                            style={{cursor: 'pointer', backgroundColor: (this.state.contradictionMap[i][j] ? 'yellow' : (this.state.repairMap[i][j] ? 'green' : 'white)}}
+                            style={{cursor: 'pointer', backgroundColor: (this.state.contradictionMap[i][j] ? '#FFF3CD' : (this.state.repairMap[i][j] ? '#D4EDDA' : 'white'))}}
                             onClick={this._handleCellClick.bind(this, key)}>{this.state.cleanData[i][j]}
                         </td>
                       }) }
@@ -335,9 +351,16 @@ class Results extends Component {
                 variant='success'
                 className='btn-round right box-blur'
                 size='lg'
+                onClick={this._handleDone}>
+              DONE
+            </Button>
+            {/*<Button
+                variant='success'
+                className='btn-round right box-blur'
+                size='lg'
                 onClick={this._handleDownload}>
               DOWNLOAD
-            </Button>
+            </Button>*/}
           </div>
         </div>
       )} />

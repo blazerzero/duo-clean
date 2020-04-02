@@ -109,10 +109,18 @@ class Sample(Resource):
         pickle.dump( value_metadata, open('./store/' + project_id + '/value_metadata.p', 'wb') )                                        # save the value metadata object
         pickle.dump( current_iter, open('./store/' + project_id + '/current_iter.p', 'wb') )                                            # save the current iteration number
 
+        changes = dict()
+        for i in data.index:
+            for j in data.columns:
+                changes[(i, j)] = False
+
+        changes = [{'row': k[0], 'col': k[1], 'repaired': v} for k, v in changes.items()]
+
         # return this data to the user
         returned_data = {
             'sample': s_out.to_json(orient='index'),
             'contradictions': json.dumps([]),
+            'changes': json.dumps(changes),
             'msg': '[SUCCESS] Successfully retrieved sample.'
         }
         response = json.dumps(returned_data)                                                                                            # stringify returned data
@@ -128,14 +136,13 @@ class Clean(Resource):
         project_id = request.form.get('project_id')
         s_in = request.form.get('data')
         sample_size = int(request.form.get('sample_size'))
-        changes = dict()
 
         current_iter = pickle.load(open('./store/' + project_id + '/current_iter.p', 'rb'))                 # load the current iteration number
         current_iter = "{:08x}".format(int('0x'+current_iter, 0)+1)                                         # new iteration, so increment the current iteration number
 
         d_dirty = pd.read_csv('./store/' + project_id + '/before.csv', keep_default_na=False)               # read in dirty data as DataFrame
         s_df = pd.read_json(s_in, orient='index')                                                           # turn sample into DataFrame
-        d_rep, changed_ids, changes = helpers.applyUserRepairs(d_dirty, s_df, project_id, current_iter, changes)              # map the user's cell repairs to the respective cells in the full dataset
+        d_rep, changed_ids = helpers.applyUserRepairs(d_dirty, s_df, project_id, current_iter)              # map the user's cell repairs to the respective cells in the full dataset
         helpers.calcDiffs(d_rep, './test/team-clean.csv', project_id, 'user', current_iter)
         d_rep.to_csv('./store/' + project_id + '/after.csv', encoding='utf-8', index=False)                 # save the user-repaired full dataset as a csv file (for XPlode)
         top_cfds = helpers.discoverCFDs(project_id)                                                         # run XPlode to discover new CFDs for before and after-repair versions of the dataset
@@ -156,6 +163,10 @@ class Clean(Resource):
                 cfd_applied_map[current_iter][idx][col] = None                                              # initialize the CFD mapping for each cell to None
 
         contradictions = dict()                                                                             # initialize a dictionary of the contradictions that occur during cleaning
+        changes = dict()
+        for i in d_rep.index:
+            for j in d_rep.columns:
+                changes[(i, j)] = False
 
         if top_cfds is not None and isinstance(top_cfds, np.ndarray):                                       # XPlode successfully returned a non-empty array of discovered CFDs
             # Build query
