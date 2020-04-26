@@ -61,7 +61,6 @@ def getRules(receiver, query, sample_size):
         rules = []
 
         for rule_id in rule_id_list:
-            #print(receiver.data[rule_id])
             rule = receiver.data[rule_id]       # get the rule that corresponds with this rule ID
             rules.append(rule)                  # add the rule to the list of selected rules
         return rules, rule_id_list

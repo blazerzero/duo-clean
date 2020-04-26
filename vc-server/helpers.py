@@ -17,7 +17,7 @@ import charm
 class ValueHistory(object):
     def __init__(self, value, agent, cfd_applied, iter, changed):
         self.value = value
-        self.agent = agent
+        self.agent = agent      # user or system
         self.cfd_applied = cfd_applied
         self.iter = iter
         self.changed = changed
@@ -25,7 +25,7 @@ class ValueHistory(object):
 class Diff(object):
     def __init__(self, value, agent, iter):
         self.value = value
-        self.agent = agent
+        self.agent = agent      # user or system
         self.iter = iter
 
 '''
@@ -47,21 +47,21 @@ def applyUserRepairs(d_dirty, s_df, project_id, current_iter):
     changed_ids = list()
     value_metadata = pickle.load(open('./store/' + project_id + '/value_metadata.p', 'rb'))
 
-    if current_iter == '00000001':    # If this is the first iteration, no CFDs have been applied in this interaction yet, so map the user's repairs on the sample to the full dataset, keeping track of which tuples have been modified
+    if current_iter == '00000001':    # First iteration, so no CFDs have been applied yet
         for idx in s_df.index:
             for col in s_df.columns:
                 if d_rep.at[idx, col] != s_df.at[idx, col]:     # If the user modified the value of this cell
-                    d_rep.at[idx, col] = s_df.at[idx, col]          # Save the user's new value
-                    value_metadata[idx][col]['history'].append(ValueHistory(s_df.at[idx, col], 'user', None, current_iter, True))   # Add the new value to the history of this cell
+                    d_rep.at[idx, col] = s_df.at[idx, col]      # Save the user's new value
+                    value_metadata[idx][col]['history'].append(ValueHistory(s_df.at[idx, col], 'user', None, current_iter, True))   # Save value to cell's value history
                     if idx not in changed_ids:      # If this is the first cell in this row the user modified
-                        changed_ids.append(idx)         # Add the row's index to the list of changed tuple IDs
+                        changed_ids.append(idx)     # Add the row's index to the list of changed tuple IDs
 
-    else:      # If this is not the first iteration, CFDs may have been applied previously, so reinforce CFDs based on the user's feedback
+    else:
         try:
-            receiver = pickle.load( open('./store/' + project_id + '/receiver.p', 'rb') )   # load the system learning receiver
+            receiver = pickle.load( open('./store/' + project_id + '/receiver.p', 'rb') )   # load learning store
         except FileNotFoundError:
-            receiver = None     # no CFDs have been applied in previous iterations, so there is no receiver yet
-        cfd_applied_map = pickle.load( open('./store/' + project_id + '/cfd_applied_map.p', 'rb') )     # load the CFD application map
+            receiver = None     # no learning store yet, since no CFDs applied yet
+        cfd_applied_map = pickle.load( open('./store/' + project_id + '/cfd_applied_map.p', 'rb') )
         prev_iter = "{:08x}".format(int('0x' + current_iter, 0) - 1)
 
         # Count the number of rows in the sample each CFD from the previous iteration was applied to
@@ -76,21 +76,26 @@ def applyUserRepairs(d_dirty, s_df, project_id, current_iter):
         # Map the user's repairs on the sample to the full dataset, keeping track of which tuples have been modified
         for idx in s_df.index:
             for col in s_df.columns:
-                if d_rep.at[idx, col] != s_df.at[idx, col]:     # If the user modified the value of this cell
-                    if idx not in changed_ids:                      # If this is the first cell in this row the user modified
-                        changed_ids.append(idx)                         # Add the row's index to the list of changed tuple IDs
+                if d_rep.at[idx, col] != s_df.at[idx, col]:
+                    if idx not in changed_ids:
+                        changed_ids.append(idx)
                     try:
-                        latest_match_idx = next(i for i in reversed(range(len(value_metadata[idx][col]['history']))) if value_metadata[idx][col]['history'][i].value == s_df.at[idx, col])      # Get the most recent CFD that resulted in the same value declared by the user
-                        if receiver is not None and value_metadata[idx][col]['history'][latest_match_idx].cfd_applied is not None:                                                              # is a CFD actually resulted in this value
-                            charm.reinforce(receiver, value_metadata[idx][col]['history'][latest_match_idx].cfd_applied, latest_match_idx/(len(value_metadata[idx][col]['history']) - 1))         # Reinforce this CFD based on how recently it was applied
-                        value_metadata[idx][col]['history'].append(ValueHistory(s_df.at[idx, col], 'user', None, current_iter, True))                                                           # Add the new value to the history of this cell
+                        # Get the most recent CFD that resulted in the same value declared by the user
+                        latest_match_idx = next(i for i in reversed(range(len(value_metadata[idx][col]['history']))) if value_metadata[idx][col]['history'][i].value == s_df.at[idx, col])
+
+                        # if a CFD resulted in this value, reinforce the CFD based on how recently it was applied
+                        if receiver is not None and value_metadata[idx][col]['history'][latest_match_idx].cfd_applied is not None:
+                            charm.reinforce(receiver, value_metadata[idx][col]['history'][latest_match_idx].cfd_applied, latest_match_idx/(len(value_metadata[idx][col]['history']) - 1))
+                        value_metadata[idx][col]['history'].append(ValueHistory(s_df.at[idx, col], 'user', None, current_iter, True))   # Save value to cell's value history
                     except StopIteration:      # This is the first time this cell has had this value
                         pass
                     d_rep.at[idx, col] = s_df.at[idx, col]      # Map the user's cell repair to the appropriate cell in the full dataset
-                else:       # If the user did not modify the value of this cell
-                    last_cfd_id = value_metadata[idx][col]['history'][-1].cfd_applied       # Get the cfd_id of the CFD that was just applied to this cell
+
+                # Reinforce the last CFD that was applied to this cell
+                else:
+                    last_cfd_id = value_metadata[idx][col]['history'][-1].cfd_applied
                     if receiver is not None and last_cfd_id is not None:
-                        charm.reinforce(receiver, last_cfd_id, 1/num_times_applied_each_cfd[last_cfd_id])       # Reinforce this CFD
+                        charm.reinforce(receiver, last_cfd_id, 1/num_times_applied_each_cfd[last_cfd_id])
 
         if receiver is not None:
             pickle.dump(receiver, open('./store/' + project_id + '/receiver.p', 'wb'))
@@ -110,21 +115,24 @@ OUTPUT:
 def discoverCFDs(project_id):
     dirty_fp = './store/' + project_id + '/before.csv'      # "dirty" dataset
     clean_fp = './store/' + project_id + '/after.csv'       # "repaired" dataset
-    print('about to run xplode')
-    process = sp.Popen(['./xplode-master/CTane', dirty_fp, clean_fp, '0.25', '2'], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})     # run XPlode
-    res = process.communicate()       # get output of XPlode
+
+    # run XPlode
+    process = sp.Popen(['./xplode-master/CTane', dirty_fp, clean_fp, '0.25', '2'], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})
+    res = process.communicate()
     print(res[1].decode("utf-8"))
     output = res[0].decode("utf-8")
-    if process.returncode == 0:                             # if XPlode exited successfully
-        if output == '[NO CFDS FOUND]':                         # if no CFDs were found
+
+    if process.returncode == 0:     # XPlode exited successfully
+        if output == '[NO CFDS FOUND]':  # if no CFDs were found
             print(output)
             return None
-        else:                                                   # if there were CFDs found
+        else:   # if there were CFDs found
             output = np.array(output.split('\n'))[:-1]          # split the output into a list by newlines
-            scores = output[:int(len(output)/2)]                # extract the scores (they are listed in the same order as the CFDs)
-            top_cfds = output[int(len(output)/2):]              # extract the CFDs
+            scores = output[:int(len(output)/2)]                # extract scores
+            top_cfds = output[int(len(output)/2):]              # extract CFDs
             return np.array([{'cfd_id': i, 'cfd': top_cfds[i], 'score': scores[i]} for i in range(0, len(top_cfds))])       # return a dictionary holding the CFDs and their scores
-    else:                                                   # if there was some error during XPlode execution
+
+    else:   # XPlode did not exit successfully
         print('[ERROR] CFD DISCOVERY FAILURE')
         return None
 
@@ -143,6 +151,8 @@ OUTPUT:
 def fd2cfd(data, lhs, rhs, value_metadata, current_iter):
     patterns = dict()
     mappings = dict()
+
+    # Gather all the possible patterns present in the dataset for each pure FD or partial CFD
     for idx in data.index:
         lhspattern = ''
         rhspattern = ''
@@ -175,14 +185,19 @@ def fd2cfd(data, lhs, rhs, value_metadata, current_iter):
         else:
             patterns[lhspattern] = [rhspattern]
             mappings[(lhspattern, rhspattern)] = [idx]
+
+    # Pick RHS patterns for each LHS from these candidates
     for key in patterns.keys():
         counts = Counter(patterns[key])
         get_mode = dict(counts)
         patterns[key] = [key for key, v in get_mode.items() if v == max(list(counts.values()))]
+
+        # If there is only one top RHS pattern for this LHS, pick it
         if len(patterns[key]) == 1:
             patterns[key] = patterns[key].pop()
+
+        # If there is more than one top RHS pattern for this LHS, pick the pattern that has generally occurred more recently
         else:
-            #curr_rhs_values = [r for l, r in mappings.keys() if l == key]
             best_r = list()
             max_occur = 0
             print('all mappings:', mappings)
@@ -191,27 +206,33 @@ def fd2cfd(data, lhs, rhs, value_metadata, current_iter):
             for r in [rhs for (lhs, rhs) in mappings.keys() if lhs == key]:
                 count_r = 0
                 for idx in mappings[(lhs, r)]:
-                    count_r += sum([1/(int('0x' + current_iter, 0) - int('0x' + v.iter, 0)) for v in value_history[idx][r.split('=')[0]]['history'] if v.value == r.split('=')[1]])
+                    count_r += sum([1/(int('0x' + current_iter, 0) - int('0x' + v.iter, 0)) for v in value_metadata[idx][r.split('=')[0]]['history'] if v.value == r.split('=')[1]])
                 if count_r >= max_occur:
                     best_r.append(r)
                     max_occur = count_r
 
+            # If there is now only one top RHS pattern for this LHS, pick it
             if len(best_r) == 1:
                 patterns[key] = best_r
+
+            # If there is still more than one top RHS pattern for this LHS, pick the pattern that has occurred more frequently
             else:
                 best_r = list()
                 max_occur = 0
                 for r in [rhs for lhs, rhs in mappings.keys() if lhs == key]:
                     count_r = 0
                     for idx in mappings[(l, r)]:
-                        count_r += len([v for v in value_history[idx][r.split('=')[0]]['history'] if v.value == r.split('=')[1]])
+                        count_r += len([v for v in value_metadata[idx][r.split('=')[0]]['history'] if v.value == r.split('=')[1]])
                     if count_r >= max_occur:
                         best_r.append(r)
                         max_occur = count_r
+
+                # If there is now only one top RHS pattern for this LHS, pick it
                 if len(best_r) == 1:
                     patterns[key] = best_r
+
+                # If there is still more than one top RHS pattern for this LHS, pick randomly
                 else:
-                    #selection = randint(0, len(patterns[key]))
                     patterns[key] = random.choice(patterns[key])
 
     return patterns
@@ -228,59 +249,59 @@ INPUT:
 OUTPUT: None
 '''
 def addNewCfdsToList(top_cfds, project_id, current_iter, query):
-    if os.path.isfile('./store/' + project_id + '/cfd_metadata.p'):                             # if CFD metadata object already exists (i.e. CFDs have been discovered in previous iterations)
-        cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )       # load the CFD metadata object
-        receiver = pickle.load( open('./store/' + project_id + '/receiver.p', 'rb') )               # load the system learning receiver
-        eligible_cfds = [tc for tc in top_cfds if float(tc['score']) > 0]
-        for c in eligible_cfds:                                 # for each CFD with a positive XPlode score
+
+    # If any CFDs have previously been discovered, add/update discovered CFDs based on latest XPlode results
+    eligible_cfds = [tc for tc in top_cfds if float(tc['score']) > 0]  # we do not consider CFDs with a negative XPlode score
+
+    if len(cfd_metadata) > 0:
+        cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
+        receiver = pickle.load( open('./store/' + project_id + '/receiver.p', 'rb') )
+        for c in eligible_cfds:
             exists = False
             lhs = c['cfd'].split(' => ')[0][1:-1]
             rhs = c['cfd'].split(' => ')[1]
-            if lhs.count('=') < len(lhs) or '=' not in rhs:
-                #patterns = fd2cfd(d_rep, lhs, rhs)
-                patterns = []
-                eligible_cfds.extend(patterns)
-                break
-            for idx, cfd in enumerate(cfd_metadata):                                                    # for each previously discovered CFD
-                if cfd['lhs'] == lhs and cfd['rhs'] == rhs:                                             # if the CFD has already been discovered
+            for idx, cfd in enumerate(cfd_metadata):    # for each previously discovered CFD
+                if cfd['lhs'] == lhs and cfd['rhs'] == rhs:     # if the CFD has already been discovered
                     exists = True
-                    cfd['num_found'] += 1                                                                   # increment the number of times this CFD has been found
-                    cfd['num_changes'][current_iter] = 0                                                    # initialize the number of changes this CFD has made in this iteration
-                    charm.reinforce(receiver, idx, float(c['score'])/cfd['num_found'])                      # reinforce this CFD's weight using its latest XPlode score and the number of times it's been discovered
+                    cfd['num_found'] += 1
+                    cfd['num_changes'][current_iter] = 0
+
+                    # reinforce this CFD's weight using its latest XPlode score and the number of times it's been discovered
+                    charm.reinforce(receiver, idx, float(c['score'])/cfd['num_found'])
                     break
             if not exists:
-                cfd_metadata.append(dict())                                                             # create a new metadata dictionary for the new CFD
-                cfd_metadata[-1]['lhs'] = c['cfd'].split(' => ')[0][1:-1]                               # save the CFD's LHS
-                cfd_metadata[-1]['rhs'] = c['cfd'].split(' => ')[1]                                     # save the CFD's RHS
-                cfd_metadata[-1]['num_found'] = 1                                                       # initialize the number of times this CFD has been found
-                cfd_metadata[-1]['num_changes'] = dict()                                                # create a dictionary for changes made by this CFD over various iterations
-                cfd_metadata[-1]['num_changes'][current_iter] = 0                                       # initialize the number of changes this CFD has made in this iteration
+                cfd_metadata.append(dict())                                 # create a new metadata dictionary for the new CFD
+                cfd_metadata[-1]['lhs'] = c['cfd'].split(' => ')[0][1:-1]
+                cfd_metadata[-1]['rhs'] = c['cfd'].split(' => ')[1]
+                cfd_metadata[-1]['num_found'] = 1
+                cfd_metadata[-1]['num_changes'] = dict()
+                cfd_metadata[-1]['num_changes'][current_iter] = 0
 
-                c['cfd_id'] = len(cfd_metadata) - 1                                                     # create this CFD's ID
-                charm.updateReceiver(receiver, [c], query)                                              # add this CFD to the receiver's CFD store
-                charm.reinforce(receiver, c['cfd_id'], float(c['score']))                               # initialize this CFD's weight to its XPlode score
+                c['cfd_id'] = len(cfd_metadata) - 1
+                charm.updateReceiver(receiver, [c], query)                  # add this CFD to the receiver's CFD store
+                charm.reinforce(receiver, c['cfd_id'], float(c['score']))   # initialize this CFD's weight to its XPlode score
 
-        pickle.dump( receiver, open('./store/' + project_id + '/receiver.p', 'wb') )                    # save the updated receiver
-        pickle.dump( cfd_metadata, open('./store/' + project_id + '/cfd_metadata.p', 'wb') )            # save the updated CFD metadata object
+        pickle.dump( receiver, open('./store/' + project_id + '/receiver.p', 'wb') )
+        pickle.dump( cfd_metadata, open('./store/' + project_id + '/cfd_metadata.p', 'wb') )
 
-    else:                                                                                       # if the CFD metadata dictionary does NOT already exist (i.e. no CFDs have been discovered in previous iterations, or this is the first iteration)
-        cfd_metadata = list()                                                                       # create the CFD metadata object
-        for c in [tc for tc in top_cfds if float(tc['score']) > 0]:                                 # for each CFD with a positive XPlode
-            cfd_metadata.append(dict())                                                                 # create a new metadata dictionary for the CFD
-            cfd_metadata[-1]['lhs'] = c['cfd'].split(' => ')[0][1:-1]                                   # save the CFD's LHS
-            cfd_metadata[-1]['rhs'] = c['cfd'].split(' => ')[1]                                         # save the CFD's RHS
-            cfd_metadata[-1]['num_found'] = 1                                                           # initialize the number of times this CFD has been found
-            cfd_metadata[-1]['num_changes'] = dict()                                                    # create a dictionary for changes made by this CFD over various iterations
-            cfd_metadata[-1]['num_changes'][current_iter] = 0                                           # initialize the number of changes this CFD has made in this iteration
+    # If no CFDs have previously been discovered
+    else:
+        for c in eligible_cfds:
+            cfd_metadata.append(dict())                                 # create a new metadata dictionary for the CFD
+            cfd_metadata[-1]['lhs'] = c['cfd'].split(' => ')[0][1:-1]
+            cfd_metadata[-1]['rhs'] = c['cfd'].split(' => ')[1]
+            cfd_metadata[-1]['num_found'] = 1
+            cfd_metadata[-1]['num_changes'] = dict()
+            cfd_metadata[-1]['num_changes'][current_iter] = 0
 
-        scores = [float(c['score']) for c in top_cfds if float(c['score']) > 0]                     # extract the CFDs' scores
+        scores = [float(c['score']) for c in eligible_cfds]
 
-        receiver = charm.prepareReceiver(project_id, top_cfds, query)                               # initialize the system learning receiver object
-        for idx, _ in enumerate(cfd_metadata):                                                      # for each CFD
-            charm.reinforce(receiver, idx, scores[idx])                                                 # initialize the CFD's weight to its XPlode score
+        receiver = charm.prepareReceiver(project_id, top_cfds, query)   # initialize the learning store
+        for idx, _ in enumerate(cfd_metadata):
+            charm.reinforce(receiver, idx, scores[idx])     # initialize the CFD's weight to its XPlode score
 
-        pickle.dump( receiver, open('./store/' + project_id + '/receiver.p', 'wb') )                # save the receiver
-        pickle.dump( cfd_metadata, open('./store/' + project_id + '/cfd_metadata.p', 'wb') )        # save the CFD metadata object
+        pickle.dump( receiver, open('./store/' + project_id + '/receiver.p', 'wb') )
+        pickle.dump( cfd_metadata, open('./store/' + project_id + '/cfd_metadata.p', 'wb') )
 
 
 '''
@@ -295,11 +316,11 @@ OUTPUT:
 * rule_id_list: The CFD IDs of the selected CFDs
 '''
 def pickCfds(project_id, query, num_cfds):
-    receiver = pickle.load( open('./store/' + project_id + '/receiver.p', 'rb') )       # load the system learning receiver
-    rules, rule_id_list = charm.getRules(receiver, query, num_cfds)                     # get CFDs and their IDs from the receiver
+    receiver = pickle.load( open('./store/' + project_id + '/receiver.p', 'rb') )
+    rules, rule_id_list = charm.getRules(receiver, query, num_cfds)
     print('Rules: ' + str(rules))
     print('Rule IDs: ' + str(rule_id_list))
-    pickle.dump( receiver, open('./store/' + project_id + '/receiver.p', 'wb') )        # save the receiver
+    pickle.dump( receiver, open('./store/' + project_id + '/receiver.p', 'wb') )
     return rules, rule_id_list
 
 
@@ -314,17 +335,22 @@ OUTPUT:
 * d_rep: The user-cleaned dataset, with a 'cover' column added to hold the cover map.
 '''
 def buildCover(d_rep, lhs, rhs, patterns):
-    for idx, row in d_rep.iterrows():                           # for each row in the dataset
+    for idx, row in d_rep.iterrows():
         applies = True
-        for lh in lhs.split(', '):                          # for each element of the CFD's LHS
-            if '=' in lh:                                       # if the element requires a specific value
-                lh = np.array(lh.split('='))                        # split up this LHS attribute from its value
-                if row[lh[0]] != lh[1]:                             # if this LHS attribute value does NOT hold in this row
-                    applies = False                                     # this CFD does NOT apply to this row
+        for lh in lhs.split(', '):
+
+            # If this element of the CFD is constant
+            if '=' in lh:
+                lh = np.array(lh.split('='))
+                if row[lh[0]] != lh[1]:     # CFD does not apply to this row
+                    applies = False
                     break
-        if applies:                                         # if this CFD applies to this row
+
+        # If this CFD applies to this row
+        if applies:
             d_rep[idx]['cover'].append('; (' + lhs + ') => ' + rhs)
-            #TODO: Check if CFD is not a pure CFD and, if not, find and append the corresponding pattern for this row
+
+            # if not a constant CFD
             if lhs.count('=') < len(lhs.split(', ')) or '=' not in rhs:
                 key = ''
                 for lh in lhs.split(', '):
@@ -333,9 +359,10 @@ def buildCover(d_rep, lhs, rhs, patterns):
                     else:
                         key += ', ' + d_rep[idx][lh]
                 key = key[2:]
-                d_rep[idx]['cover'].append(' | (' + key + ') => ' + patterns[key])
+                d_rep[idx]['cover'].append(' | (' + key + ') => ' + patterns[key])      # Find the proper RHS pattern for this tuple
             if d_rep[idx]['cover'][0] == ';':
-                d_rep[idx]['cover'] = d_rep[idx]['cover'][2:]
+                d_rep[idx]['cover'] = d_rep[idx]['cover'][2:]   # Remove leading '; '
+
     return d_rep
 
 
@@ -361,9 +388,9 @@ def applyCfdList(project_id, d_rep, cfd_list, cfd_id_list, cfd_applied_map, curr
     for i in d_rep.index:
         for j in d_rep.columns:
             changes[(i, j)] = False
-    for i in range(0, len(cfd_list)):                                                                                                               # for each selected CFD
-        d_rep, cfd_applied_map, changes = applyCfd(project_id, d_rep, cfd_list[i], cfd_id_list[i], cfd_applied_map, current_iter, contradictions, changes)   # apply the CFD to the dataset
-    return d_rep, cfd_applied_map, contradictions, changes                                                                                          # return the cleaned dataset and the updated cell/CFD map
+    for i in range(0, len(cfd_list)):
+        d_rep, cfd_applied_map, changes = applyCfd(project_id, d_rep, cfd_list[i], cfd_id_list[i], cfd_applied_map, current_iter, contradictions, changes)
+    return d_rep, cfd_applied_map, contradictions, changes
 
 
 '''
@@ -382,53 +409,70 @@ OUTPUT:
 * cfd_applied_map: A map of which CFDs have been applied to each cell in each iteration, updated for this iteration
 '''
 def applyCfd(project_id, d_rep, cfd, cfd_id, cfd_applied_map, current_iter, contradictions, changes):
-    value_metadata = pickle.load( open('./store/' + project_id + '/value_metadata.p', 'rb') )                                   # load the cell value metadata object
-    tuple_metadata = pd.read_pickle('./store/' + project_id + '/tuple_metadata.p')                                              # load the tuple metadata DataFrame
+    value_metadata = pickle.load( open('./store/' + project_id + '/value_metadata.p', 'rb') )
+    tuple_metadata = pd.read_pickle('./store/' + project_id + '/tuple_metadata.p')
+    cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
 
-
-    for idx, row in d_rep.iterrows():                                                                                           # for each row in the dataset
+    for idx, row in d_rep.iterrows():
         cover = row['cover'].split('; ')
-        if row['cover'] is not None and cfd in [c.split(' | ')[0] for c in cover]:                                                            # if this CFD is in the row's cover
-            lhs = cfd.split(' => ')[0][1:-1]                                                                                        # extract the CFD's LHS
-            rhs = cfd.split(' => ')[1]                                                                                              # extract the CFD's RHS
-            if '=' in rhs:                                                                                                          # if the RHS value pertains to a specific value
-                rh = np.array(rhs.split('='))                                                                                           # split up the RHS attribute from its value
-                if row[rh[0]] != rh[1]:                                                                                                 # if the RHS attribute value does NOT hold in this row
-                    row[rh[0]] = rh[1]                                                                                                      # set this cell's value to the RHS attribute value of the CFD
-                    changes[(i, j)] = True
-                    cfd_applied_map[current_iter][idx][rh[0]] = cfd_id                                                                      # add a mapping for this cell in this iteration to this CFD's ID
-                    value_metadata[idx][rh[0]]['history'].append(ValueHistory(rh[1], 'system', cfd_id, current_iter, True))                 # add this new value to this cell's value history, along with the CFD the resulted in it, the agent who made the change, the iteration number, and the fact that this value is the result of a change
+
+        # If this CFD applies to this tuple and is violated, apply it
+        if row['cover'] is not None and cfd in [c.split(' | ')[0] for c in cover]:
+            lhs = cfd.split(' => ')[0][1:-1]
+            rhs = cfd.split(' => ')[1]
+
+            # If the RHS of the CFD is a constant
+            if '=' in rhs:
+                rh = np.array(rhs.split('='))
+
+                # if the CFD is violated, enforce it
+                if row[rh[0]] != rh[1]:
+                    row[rh[0]] = rh[1]
+                    changes[(idx, rh[0])] = True
+                    cfd_applied_map[current_iter][idx][rh[0]].append(cfd_id)      # Add a mapping for this cell in this iteration to this CFD's ID
+                    cfd_metadata[cfd_id]['num_changes'][current_iter] += 1
+                    value_metadata[idx][rh[0]]['history'].append(ValueHistory(rh[1], 'system', cfd_id, current_iter, True))     # Save the specifics of this modification to the cell's value history
                     tuple_metadata.at[idx, 'weight'] += 1
-                    if value_metadata[idx][rh[0]]['history'][-2].iter == current_iter and value_metadata[idx][rh[0]]['history'][-2].value != rh[1] and value_metadata[idx][rh[0]]['history'][-2].agent == 'system':      # if a contradiction has occurred for this cell
-                        if (idx, col) in contradictions.keys():                             # if this is the first time this cell has a contradiction in this cleaning iteration
-                            if rh[1] not in contradictions[(idx, col)]:                         # if this value hasn't already been seen in the cleaning
+
+                    # If the system has already repaired this cell in this iteration, check for a contradiction
+                    if value_metadata[idx][rh[0]]['history'][-2].iter == current_iter and value_metadata[idx][rh[0]]['history'][-2].value != rh[1] and value_metadata[idx][rh[0]]['history'][-2].agent == 'system':
+                        if (idx, col) in contradictions.keys():
+                            if rh[1] not in contradictions[(idx, col)]:
                                 contradictions[(idx, col)].append(rh[1])
                         else:
                             contradictions[(idx, col)] = [value_metadata[idx][rh[0]]['history'][-2].value, rh[1]]
-                else:                                                                                                                   # if the RHS attribute value already holds in this row
-                    value_metadata[idx][rh[0]]['history'].append(ValueHistory(rh[1], 'system', cfd_id, current_iter, False))                # add this value to this cell's value history, along with the CFD that was tested on it, the agent who did the test, the iteration number, and the fact that this value is NOT the result of a change (i.e. it holds from its previous state)
-            #else:
-            #    pass        # TODO: FD functionality
+                else:
+                    value_metadata[idx][rh[0]]['history'].append(ValueHistory(rh[1], 'system', cfd_id, current_iter, False))    # Save the specifics of this modification to the cell's value history
+
+            # If this CFD is not a constant CFD
             else:
                 cfd_index = [i for i, c in enumerate(cover) if cfd in c].pop()
-                pattern = cover[cfd_index].split(' | ')[1][1:-1]
+                pattern = cover[cfd_index].split(' | ')[1][1:-1]        # Get the pattern that corresponds to this tuple for the CFD
                 rh = np.array(pattern.split(' => ')[1].split('='))
-                if row[rh[0]] != rh[1]:                                                                                                 # if the RHS attribute value does NOT hold in this row
-                    row[rh[0]] = rh[1]                                                                                                      # set this cell's value to the RHS attribute value of the CFD
-                    changes[(i, j)] = True
-                    cfd_applied_map[current_iter][idx][rh[0]] = cfd_id                                                                      # add a mapping for this cell in this iteration to this CFD's ID
-                    value_metadata[idx][rh[0]]['history'].append(ValueHistory(rh[1], 'system', cfd_id, current_iter, True))                 # add this new value to this cell's value history, along with the CFD the resulted in it, the agent who made the change, the iteration number, and the fact that this value is the result of a change
+                if row[rh[0]] != rh[1]:
+                    row[rh[0]] = rh[1]
+                    changes[(idx, rh[0])] = True
+                    cfd_applied_map[current_iter][idx][rh[0]].append(cfd_id)      # Add a mapping for this cell in this iteration to this CFD's ID
+                    cfd_metadata[cfd_id]['num_changes'][current_iter] += 1
+                    value_metadata[idx][rh[0]]['history'].append(ValueHistory(rh[1], 'system', cfd_id, current_iter, True))     # Save the specifics of this modification to the cell's value history
                     tuple_metadata.at[idx, 'weight'] += 1
-                    if value_metadata[idx][rh[0]]['history'][-2].iter == current_iter and value_metadata[idx][rh[0]]['history'][-2].value != rh[1] and value_metadata[idx][rh[0]]['history'][-2].agent == 'system':      # if a contradiction has occurred for this cell
-                        if (idx, col) in contradictions.keys():                             # if this is the first time this cell has a contradiction in this cleaning iteration
-                            if rh[1] not in contradictions[(idx, col)]:                         # if this value hasn't already been seen in the cleaning
+
+                    # If the system has already repaired this cell in this iteration, check for a contradiction
+                    if value_metadata[idx][rh[0]]['history'][-2].iter == current_iter and value_metadata[idx][rh[0]]['history'][-2].value != rh[1] and value_metadata[idx][rh[0]]['history'][-2].agent == 'system':
+                        if (idx, col) in contradictions.keys():
+                            if rh[1] not in contradictions[(idx, col)]:
                                 contradictions[(idx, col)].append(rh[1])
                         else:
                             contradictions[(idx, col)] = [value_metadata[idx][rh[0]]['history'][-2].value, rh[1]]
-    pickle.dump( value_metadata, open('./store/' + project_id + '/value_metadata.p', 'wb') )                                    # save the updated value metadata object
-    tuple_metadata.to_pickle('./store/' + project_id + '/tuple_metadata.p')                                                     # save the updated tuple metadata DataFrame
 
-    return d_rep, cfd_applied_map, changes                                                                                      # return the cleaned dataset and the cell/CFD map
+                else:
+                    value_metadata[idx][rh[0]]['history'].append(ValueHistory(rh[1], 'system', cfd_id, current_iter, False))    # Save the specifics of this modification to the cell's value history
+
+    pickle.dump( value_metadata, open('./store/' + project_id + '/value_metadata.p', 'wb') )
+    tuple_metadata.to_pickle('./store/' + project_id + '/tuple_metadata.p')
+    pickle.dump(cfd_metadata, open('./store/' + project_id + '/cfd_metadata.p', 'wb'))
+
+    return d_rep, cfd_applied_map, changes
 
 
 '''
@@ -440,33 +484,35 @@ INPUT:
 OUTPUT: None
 '''
 def reinforceTuplesBasedOnContradiction(project_id, current_iter, d_latest):
-    tuple_metadata = pd.read_pickle('./store/' + project_id + '/tuple_metadata.p')                                                                  # load the tuple metadata DataFrame
-    value_metadata = pickle.load( open('./store/' + project_id + '/value_metadata.p', 'rb') )                                                       # load the cell value metadata object
-    for idx in d_latest.index:                                                                                                                      # for each row in the cleaned dataset
-        reinforcementValue = 0                                                                                                                          # initialize the reinforcement value for this row to 0
-        for col in d_latest.columns:                                                                                                                    # for each column in the dataset
-            prev_spread = len(set([v.value for v in value_metadata[idx][col]['history'] if int('0x' + v.iter, 0) < int('0x' + current_iter, 0)]))           # calculate the set of values in this cell's value history, NOT including the current iteration
-            curr_spread = len(set([v.value for v in value_metadata[idx][col]['history']]))                                                                  # calculate the set of values in this cell's value history, including the current iteration
-            vspr_d = 0                                                                                                                                      # initialize the value spread delta (change in value spread from last iteration) to 0
-            if curr_spread > prev_spread:                                                                                                                   # if the cell has a larger value spread now than it did in the previous iteration
-                vspr_d = 1                                                                                                                                      # set the value spread delta to 1
-            cell_values = Counter([vh.value for vh in value_metadata[idx][col]['history']])                                                                 # calculate the frequency of each value in the cell's value history
-            num_occurrences_mode = cell_values.most_common(1)[0][1]                                                                                         # find the mode of these values
-            new_vdis = 1 - (num_occurrences_mode/len(value_metadata[idx][col]['history']))                                                                  # calculate the cell's new value disagreement (value disagreement through the current iteration)
-            vdis_d = new_vdis - value_metadata[idx][col]['disagreement']                                                                                    # calculate the cell's value disagreement delta (change in value disagreement from last iteration)
-            value_metadata[idx][col]['disagreement'] = new_vdis                                                                                             # update this cell's value disagreement to the new value
-            if vdis_d < 0:                                                                                                                                  # if the cell's value disagreement delta is negative
-                vdis_d = 0                                                                                                                                      # set the cell's value disagreement to 0 so as to disallow negative tuple weights
+    tuple_metadata = pd.read_pickle('./store/' + project_id + '/tuple_metadata.p')
+    value_metadata = pickle.load( open('./store/' + project_id + '/value_metadata.p', 'rb') )
+    for idx in d_latest.index:
+        reinforcementValue = 0
+        for col in d_latest.columns:
+            prev_spread = len(set([v.value for v in value_metadata[idx][col]['history'] if int('0x' + v.iter, 0) < int('0x' + current_iter, 0)]))           # Calculate the value spread through the previous iteration
+            curr_spread = len(set([v.value for v in value_metadata[idx][col]['history']]))      # Calculate the value spread through the current iteration
+            vspr_d = curr_spread - prev_spread      # Calculate the difference in value spread between iterations
 
-            reinforcementValue += (vspr_d + new_vdis + vdis_d)                                      # update the reinforcement value for this row by adding the value spread delta, new value disagreement, and value disagreement delta
+            # Find the mode in the cell's value history and the percentage of time it's there --> value agreement
+            cell_values = Counter([vh.value for vh in value_metadata[idx][col]['history']])
+            num_occurrences_mode = cell_values.most_common(1)[0][1]
+            new_vdis = 1 - (num_occurrences_mode/len(value_metadata[idx][col]['history']))
+            vdis_d = new_vdis - value_metadata[idx][col]['disagreement']
+            value_metadata[idx][col]['disagreement'] = new_vdis
 
-        tuple_metadata.at[idx, 'weight'] += reinforcementValue                                  # update the weight for this row
+            # Check to disallow the possibility of negative tuple weights
+            if vdis_d < 0:
+                vdis_d = 0
+
+            reinforcementValue += (vspr_d + new_vdis + vdis_d)
+
+        tuple_metadata.at[idx, 'weight'] += reinforcementValue
 
     print('Tuple weights:')
     pprint(tuple_metadata['weight'])
     print()
-    tuple_metadata.to_pickle('./store/' + project_id + '/tuple_metadata.p')                     # save the updated tuple metadata DataFrame
-    pickle.dump( value_metadata, open('./store/' + project_id + '/value_metadata.p', 'wb') )    # save the updated value metadata object
+    tuple_metadata.to_pickle('./store/' + project_id + '/tuple_metadata.p')
+    pickle.dump( value_metadata, open('./store/' + project_id + '/value_metadata.p', 'wb') )
 
 
 '''
@@ -481,27 +527,27 @@ OUTPUT:
 * sample: The created sample.
 '''
 def buildSample(d_rep, sample_size, project_id, cfd_applied_map, current_iter):
-    tuple_metadata = pd.read_pickle('./store/' + project_id + '/tuple_metadata.p')                                              # load the tuple metadata DataFrame
-    try:
-        cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )                                       # load the CFD metadata object if it exists
-    except FileNotFoundError:                                                                                                   # if the CFD metadata object does not exist
-        cfd_metadata = None                                                                                                         # set cfd_metadata to None
-    chosen_tups = tuple_metadata.sample(n=sample_size, weights='weight')                                                        # generate the list of tuple IDs in the sample; tuples with a larger weight (a.k.a. larger value in the 'weight' column of tuple_metadata) are more likely to be chosen
+    tuple_metadata = pd.read_pickle('./store/' + project_id + '/tuple_metadata.p')
+    #try:
+    #    cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
+    #except FileNotFoundError:
+    #    cfd_metadata = None
+    chosen_tups = tuple_metadata.sample(n=sample_size, weights='weight')        # select a new set of tuple IDs
     print('Chosen example indexes:')
     pprint(chosen_tups.index)
 
-    if cfd_metadata is not None:                                                                                                # if the CFD metadata object exists
-        for idx in chosen_tups.index:                                                                                               # for each row in the sample
-            seen = list()                                                                                                               # create an empty list to hold the list of CFDs that were applied in the latest iteration and resulted in the values in this sample
-            for col in d_rep.columns:                                                                                                   # for each column in the dataset
+    #if cfd_metadata is not None:
+    #    for idx in chosen_tups.index:
+            #seen = list()       # create an empty list to hold the list of CFDs that were applied in the latest iteration and resulted in the values in this sample
+    #        for col in d_rep.columns:
             # Calculate how many rows the CFD was applied to in the sample
-                if cfd_applied_map[current_iter][idx][col] is not None and cfd_applied_map[current_iter][idx][col] not in seen:             # if a CFD was applied to this cell in the last iteration and this is the first row in the sample this CFD was applied to
-                    seen.append(cfd_applied_map[current_iter][idx][col])                                                                        # add this CFD to the list of seen CFDs
-                    cfd_metadata[cfd_applied_map[current_iter][idx][col]]['num_changes'][current_iter] += 1                                     # increment the change count for this CFD for this iteration
+    #            if cfd_applied_map[current_iter][idx][col] is not None and cfd_applied_map[current_iter][idx][col] not in seen:             # if a CFD was applied to this cell in the last iteration and this is the first row in the sample this CFD was applied to
+                    #seen.append(cfd_applied_map[current_iter][idx][col])                                                                        # add this CFD to the list of seen CFDs
+    #                cfd_metadata[cfd_applied_map[current_iter][idx][col]]['num_changes'][current_iter] += 1                                     # increment the change count for this CFD for this iteration
 
-        pickle.dump(cfd_metadata, open('./store/' + project_id + '/cfd_metadata.p', 'wb') )                                         # save the updated CFD metadata object
+    #    pickle.dump(cfd_metadata, open('./store/' + project_id + '/cfd_metadata.p', 'wb') )                                         # save the updated CFD metadata object
 
-    sample = d_rep.iloc[chosen_tups.index]                                                                                      # get the data rows that have the sampled tuple IDs
+    sample = d_rep.iloc[chosen_tups.index]      # get the tuples that correspond to the tuple IDs from above
     return sample
 
 def calcDiffs(d_rep, clean_src, project_id, agent, iter):

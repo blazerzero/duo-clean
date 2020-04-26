@@ -443,7 +443,8 @@ class ReceiverCharmCFD(object):
 			returnedCFD = self.pickSingleReturn(cfdWeights)		# pick one CFD
 			if returnedCFD not in returnedCFDs:
 				returnedCFDs.append(returnedCFD)		# if not already picked, add to list of CFDs to return
-			if len(returnedCFDs) >= len(cfdIDs):	# if every possible CFD has been selected, break out of the while loop
+			if len(returnedCFDs) >= len(cfdIDs):
+				# if every possible CFD has been selected, break out of the while loop
 				break
 
 		self.returnedCFDs = returnedCFDs
