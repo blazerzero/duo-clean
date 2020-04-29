@@ -195,7 +195,7 @@ class Clean(Resource):
                 word = "('" + q + "')"
                 formatted_query.append(word)
 
-            helpers.addNewCfdsToList(top_cfds, project_id, current_iter, formatted_query)       # Update receiver with new CFDs
+            helpers.updateReceiver(top_cfds, project_id, current_iter, formatted_query)       # Update receiver with new CFDs
             picked_cfd_list, picked_cfd_id_list = helpers.pickCfds(project_id, formatted_query, 3)  # Get CFDs from receiver
 
             if picked_cfd_list is not None and len(picked_cfd_list) > 0:

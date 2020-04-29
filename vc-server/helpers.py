@@ -80,7 +80,7 @@ def applyUserRepairs(d_dirty, s_df, project_id, current_iter):
                     if idx not in changed_ids:
                         changed_ids.append(idx)
                     try:
-                        # Get the most recent CFD that resulted in the same value declared by the user
+                        # Get the most recent instance in the cell's history where the value is equal to the current value
                         latest_match_idx = next(i for i in reversed(range(len(value_metadata[idx][col]['history']))) if value_metadata[idx][col]['history'][i].value == s_df.at[idx, col])
 
                         # if a CFD resulted in this value, reinforce the CFD based on how recently it was applied
@@ -248,14 +248,14 @@ INPUT:
 * query: A formatted version of the rows the user modified; used for mapping repaired tuples to CFDs in the receiver
 OUTPUT: None
 '''
-def addNewCfdsToList(top_cfds, project_id, current_iter, query):
+def updateReceiver(top_cfds, project_id, current_iter, query):
+
+    eligible_cfds = [tc for tc in top_cfds if float(tc['score']) > 0]  # we do not consider CFDs with a negative XPlode score
+    cfd_metadata = pickle.load(open('./store/' + project_id + '/cfd_metadata.p', 'rb'))
+    receiver = pickle.load(open('./store/' + project_id + '/receiver.p', 'rb'))
 
     # If any CFDs have previously been discovered, add/update discovered CFDs based on latest XPlode results
-    eligible_cfds = [tc for tc in top_cfds if float(tc['score']) > 0]  # we do not consider CFDs with a negative XPlode score
-
     if len(cfd_metadata) > 0:
-        cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
-        receiver = pickle.load( open('./store/' + project_id + '/receiver.p', 'rb') )
         for c in eligible_cfds:
             exists = False
             lhs = c['cfd'].split(' => ')[0][1:-1]
