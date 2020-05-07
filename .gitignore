@@ -1,6 +1,8 @@
 .DS_Store
 vc-venv/
+venv/
 vc-server/vc-venv/
+vc-server/venv/
 vc-server/xplode-master/CMakeCache.txt
 vc-server/xplode-master/CMakeFiles/
 vc-server/xplode-master/cmake*
@@ -12,3 +14,5 @@ vc-server/cfddiscovery-master/cmake*
 vc-server/cfddiscovery-master/Make*
 vc-server/cfddiscovery-master/make*
 vc-server/store/
+vc-server/cfddiscovery-master/
+vc-server/xplode-master/.*

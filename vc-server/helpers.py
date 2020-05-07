@@ -508,6 +508,8 @@ def reinforceTuplesBasedOnContradiction(project_id, current_iter, d_latest):
 
         tuple_metadata.at[idx, 'weight'] += reinforcementValue
 
+    tuple_metadata['weight'] = tuple_metadata['weight'] / tuple_weight['weight'].sum()      # Normalize tuple weights
+
     print('Tuple weights:')
     pprint(tuple_metadata['weight'])
     print()
@@ -528,27 +530,41 @@ OUTPUT:
 '''
 def buildSample(d_rep, sample_size, project_id, cfd_applied_map, current_iter):
     tuple_metadata = pd.read_pickle('./store/' + project_id + '/tuple_metadata.p')
-    #try:
-    #    cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
-    #except FileNotFoundError:
-    #    cfd_metadata = None
-    chosen_tups = tuple_metadata.sample(n=sample_size, weights='weight')        # select a new set of tuple IDs
+
+    tuple_weights = tuple_metadata['weight']
+    chosen_tuples = list()
+
+    while len(chosen_tuples) < sample_size:
+        returned_tuple = pickSingleReturn(tuple_weights)		# pick one tuple
+        if returned_tuple not in chosen_tuples:
+            chosen_tuples.append(returned_tuple)		# if not already picked, add to list of tuples to return
+        if len(chosen_tuples) >= len(tuple_weights.index):
+            # if every possible tuples has been selected, break out of the while loop
+            break
+
     print('Chosen example indexes:')
-    pprint(chosen_tups.index)
+    pprint(chosen_tuples)
 
-    #if cfd_metadata is not None:
-    #    for idx in chosen_tups.index:
-            #seen = list()       # create an empty list to hold the list of CFDs that were applied in the latest iteration and resulted in the values in this sample
-    #        for col in d_rep.columns:
-            # Calculate how many rows the CFD was applied to in the sample
-    #            if cfd_applied_map[current_iter][idx][col] is not None and cfd_applied_map[current_iter][idx][col] not in seen:             # if a CFD was applied to this cell in the last iteration and this is the first row in the sample this CFD was applied to
-                    #seen.append(cfd_applied_map[current_iter][idx][col])                                                                        # add this CFD to the list of seen CFDs
-    #                cfd_metadata[cfd_applied_map[current_iter][idx][col]]['num_changes'][current_iter] += 1                                     # increment the change count for this CFD for this iteration
-
-    #    pickle.dump(cfd_metadata, open('./store/' + project_id + '/cfd_metadata.p', 'wb') )                                         # save the updated CFD metadata object
-
-    sample = d_rep.iloc[chosen_tups.index]      # get the tuples that correspond to the tuple IDs from above
+    sample = d_rep.iloc[chosen_tuples]      # get the tuples that correspond to the tuple IDs from above
     return sample
+
+'''
+FUNCTION: pickSingleReturn
+PURPOSE: Pick one tuple to return
+INPUT:
+* tuple_weights: The weights of each tuple in the dataset
+OUTPUT:
+* tuple_id: The ID of the selected tuple
+'''
+def pickSingleReturn(self, tuple_weights):
+    chance = random.uniform(0, 1)
+    cumulative = 0
+    total = sum(tuple_weights.values())
+    for tuple_id in tuple_weights:
+        cumulative += tuple_weights[tuple_id]/total
+        if cumulative > chance:
+            del tuple_weights[tuple_id]
+            return tuple_id
 
 def calcDiffs(d_rep, clean_src, project_id, agent, iter):
     diffs = pickle.load( open('./store/' + project_id + '/diffs.p', 'rb') )

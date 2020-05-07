@@ -1,0 +1,43 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="16.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="C:\Users\habibelo\Desktop\grad\thesis\duo-clean\vc-server\cfddiscovery-master\main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\habibelo\Desktop\grad\thesis\duo-clean\vc-server\cfddiscovery-master\data\cfd.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\habibelo\Desktop\grad\thesis\duo-clean\vc-server\cfddiscovery-master\data\database.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\habibelo\Desktop\grad\thesis\duo-clean\vc-server\cfddiscovery-master\data\databasereader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\habibelo\Desktop\grad\thesis\duo-clean\vc-server\cfddiscovery-master\data\types.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\habibelo\Desktop\grad\thesis\duo-clean\vc-server\cfddiscovery-master\algorithms\cfddiscovery.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\habibelo\Desktop\grad\thesis\duo-clean\vc-server\cfddiscovery-master\algorithms\minernode.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\habibelo\Desktop\grad\thesis\duo-clean\vc-server\cfddiscovery-master\algorithms\partitiontable.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\habibelo\Desktop\grad\thesis\duo-clean\vc-server\cfddiscovery-master\util\setutil.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\habibelo\Desktop\grad\thesis\duo-clean\vc-server\cfddiscovery-master\util\stringutil.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\habibelo\Desktop\grad\thesis\duo-clean\vc-server\cfddiscovery-master\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{EDB78A0E-BE18-3097-B4EB-6676757F49C5}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
