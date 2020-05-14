@@ -31,7 +31,7 @@ print(df)
 print("The number of updated values with 5% noise: ", counter5)
 print("The ratio of updated values with 5% noise: ", ratio5)
 
-export_csv = df.to_csv(sys.argv[1] + '-dirty_5.csv', encoding='utf-8', index=False, header=True)
+export_csv = df.to_csv(sys.argv[1] + '-dirty_05.csv', encoding='utf-8', index=False, header=True)
 
 df = pd.read_csv(file_name, encoding="latin_1")
 counter10 = 0
