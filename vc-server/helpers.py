@@ -117,7 +117,7 @@ def discoverCFDs(project_id):
     clean_fp = './store/' + project_id + '/after.csv'       # "repaired" dataset
 
     # run XPlode
-    process = sp.Popen(['./xplode-master/CTane', dirty_fp, clean_fp, '0.25', '2'], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})
+    process = sp.Popen(['./xplode/CTane', dirty_fp, clean_fp, '0.25', '2'], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})
     res = process.communicate()
     print(res[1].decode("utf-8"))
     output = res[0].decode("utf-8")

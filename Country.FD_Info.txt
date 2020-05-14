@@ -1,4 +1,0 @@
-Table : Country
-Columns : CountryCode, ShortName, TableName, LongName, Alpha2Code, CurrencyUnit, SpecialNotes, Region, IncomeGroup, Wb2Code, NationalAccountsBaseYear, NationalAccountsReferenceYear, SnaPriceValuation, LendingCategory, OtherGroups, SystemOfNationalAccounts, AlternativeConversionFactor, PppSurveyYear, BalanceOfPaymentsManualInUse, ExternalDebtReportingStatus, SystemOfTrade, GovernmentAccountingConcept, ImfDataDisseminationStandard, LatestPopulationCensus, LatestHouseholdSurvey, SourceOfMostRecentIncomeAndExpenditureData, VitalRegistrationComplete, LatestAgriculturalCensus, LatestIndustrialData, LatestTradeData, LatestWaterWithdrawalData
-
-Functional Dependencies: 
