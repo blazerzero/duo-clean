@@ -17,7 +17,7 @@ Darla Feil,Stores Supervisor,306,770-4449,PO BOX 1030,Saskatchewan,Swift Current
 Atef Abdallah,Visiting Scientist,403,327-4561,PO BOX 3000,Alberta,Lethbridge,T1J 4B1,AAFC-AAC,Agriculture and Agri-Food Canada,SPS-SPD,Sustainable Production Systems
 Elizabeth Routly,Technician,613,759-1707,960 CARLING AVE,Ontario,Ottawa,K1A 0C6,AAFC-AAC,Agriculture and Agri-Food Canada,CP-CL,Cereal and Pulse
 Melissa Petit,Manager,613,773-0938,1305 BASELINE RD TOWER 5,Ontario,Ottawa,K1A 0C5,AAFC-AAC,Agriculture and Agri-Food Canada,PAU-SBA,Procurement and Assets Unit
-Chad Cairns,General Labourer,902,365-8541,32 MAIN ST,Nova Scotia,Kentville,B4N 1J5,AAFC-AAC,Agriculture and Agri-Food Canada,IR-IR,Innovation and Renewal
+Chad Cairns,General Labourer,902,365-8541,32 MAIN ST,Nova Scotia,Saskatoon,B4N 1J5,AAFC-AAC,Agriculture and Agri-Food Canada,IR-IR,Innovation and Renewal
 Kate Wetzel,FSWEP Student-Plant Biology,306,385-9408,107 SCIENCE PL,Saskatchewan,Saskatoon,S7N 0X2,AAFC-AAC,Agriculture and Agri-Food Canada,SPS-SPD,Sustainable Production Systems
 Abdoul Sow,Physical Specialist,613,759-6930,960 CARLING AVE,Ontario,Ottawa,K1A 0C6,AAFC-AAC,Agriculture and Agri-Food Canada,AD-DAE,Agrienvironment Division
 Nadine Hoedel,Contracts Coordinator,306,992-0209,2010 12TH AVE,Saskatchewan,Regina,S4P 0M3,AAFC-AAC,Agriculture and Agri-Food Canada,RS-RS,"Regina, Saskatchewan"
@@ -39,14 +39,14 @@ Dave Melanson,Divisional Assistant,204,259-5769,PO BOX 6100,Manitoba,Winnipeg,R3
 Ken O'Connor,Revenue and Document Control Processor,204,259-5608,PO BOX 6100,Manitoba,Winnipeg,R3C 4N3,AAFC-AAC,Agriculture and Agri-Food Canada,DI-ID,Data Integrity
 Jordan Gallant,Informatics Support Analyst,506,460-4443,P.O. BOX 20280,New Brunswick,Fredericton,E3B 4Z7,AAFC-AAC,Agriculture and Agri-Food Canada,ICSER-SCTRE,IT Client Services - Eastern Region
 Heather Blewett,Research Scientist,204,237-2954,369 TACHE AVE,Manitoba,Winnipeg,R2H 2A6,AAFC-AAC,Agriculture and Agri-Food Canada,CCARHM-CCRASM,Canadian Centre for Agri-Food Research in Health and Medicine
-Christopher May,Document Delivery Clerk,613,773-1424,1339 BASELINE RD TOWER 6,Ontario,Ottawa,K1A 0C5,AAFC-AAC,Agriculture and Agri-Food Canada,PC-PC,Publications and Collections
-Elijah Atuku,Research Assistant,306,770-4491,PO BOX 1030,Saskatchewan,Swift Current,S9H 3X2,AAFC-AAC,Agriculture and Agri-Food Canada,SCRDC-CRDSW,Swift Current Research and Development Centre
-Michelle Bielik,Director,204,259-4198,303 MAIN ST,Manitoba,Winnipeg,R3C 3G7,AAFC-AAC,Agriculture and Agri-Food Canada,CSCPD-DPCCA,Crop and Supply Chain Policy Division
-Lorraine Morris,Communications Advisor,613,773-2637,1341 BASELINE RD TOWER 7,Ontario,Ottawa,K1A 0C5,AAFC-AAC,Agriculture and Agri-Food Canada,MPS-SMP,Marketing and Publishing Services
+Christopher May,Document Delivery Clerk,613,773-1424,1339 BASELINE RD TOWER 6,Ontario,Swift Current,K1A 0C5,AAFC-AAC,Agriculture and Agri-Food Canada,PC-PC,Publications and Collections
+Elijah Atuku,Research Assistant,306,770-4491,PO BOX 1030,Saskatchewan,Winnipeg,S9H 3X2,AAFC-AAC,Agriculture and Agri-Food Canada,SCRDC-CRDSW,Swift Current Research and Development Centre
+Michelle Bielik,Director,204,259-4198,303 MAIN ST,Ontario,Winnipeg,R3C 3G7,AAFC-AAC,Agriculture and Agri-Food Canada,CSCPD-DPCCA,Crop and Supply Chain Policy Division
+Lorraine Morris,Communications Advisor,613,773-2637,1341 BASELINE RD TOWER 7,Ontario,Agassiz,K1A 0C5,AAFC-AAC,Agriculture and Agri-Food Canada,MPS-SMP,Marketing and Publishing Services
 Anthony Friesen,Research Technician,604,796-6048,PO BOX 1000,British Columbia,Agassiz,V0M 1A0,AAFC-AAC,Agriculture and Agri-Food Canada,EH-SE,Environmental Health
 Jaeju Yu,NSERC - Post Doctoral Fellow,519,953-6617,1391 SANDFORD ST,Ontario,London,N5V 4T3,AAFC-AAC,Agriculture and Agri-Food Canada,GB-GB,Genomics and Biotechnology
 Alexanne Drouin,Human Resources Advisor,613,773-3443,1285 BASELINE RD TOWER 4,Ontario,Ottawa,K1A 0C5,AAFC-AAC,Agriculture and Agri-Food Canada,WWP-PMMT,Workplace Wellness Programs
-Jeremy Dettman,Research Scientist,613,759-1380,960 CARLING AVE,Ontario,Ottawa,K1A 0C6,AAFC-AAC,Agriculture and Agri-Food Canada,BB-BB,Biodiversity and Bioresources
+Jeremy Dettman,Research Scientist,613,759-1380,960 CARLING AVE,Alberta,Ottawa,K1A 0C6,AAFC-AAC,Agriculture and Agri-Food Canada,BB-BB,Biodiversity and Bioresources
 Marie-Eve St-Germain,Operations Coordinator,403,390-0492,220 4TH AVE SOUTH EAST SUITE 750,Alberta,Calgary,T2G 4X3,AAFC-AAC,Agriculture and Agri-Food Canada,PR-RP,Prairie Region
 Terry Attewell,Facility Manager,519,738-1314,2585 COUNTY RD 20,Ontario,Harrow,N0R 1G0,AAFC-AAC,Agriculture and Agri-Food Canada,HRDC-CRDH,Harrow Research and Development Centre
 Marjolaine Rouleau,Integrated Services Manager,450,768-7901,3600 CASAVANT BLVD WEST,Quebec,Saint-Hyacinthe,J2S 8E3,AAFC-AAC,Agriculture and Agri-Food Canada,SHRDC-CRDSH,Saint-Hyacinthe Research and Development Centre
@@ -57,7 +57,7 @@ Oscar Lopez Campos,Research Scientist,403,782-8195,6000 C AND E TRAIL,Alberta,La
 Roland Kroebel,Research Scientist,403,317-3434,PO BOX 3000,Alberta,Lethbridge,T1J 4B1,AAFC-AAC,Agriculture and Agri-Food Canada,BB-PPB,Bio-Products and Bio-Processes
 Doug Friebel,Research Technician,403,317-2161,PO BOX 3000,Alberta,Lethbridge,T1J 4B1,AAFC-AAC,Agriculture and Agri-Food Canada,SPS-SPD,Sustainable Production Systems
 Chaturangi Brahmanage,Casual,306,385-9455,107 SCIENCE PL,Saskatchewan,Saskatoon,S7N 0X2,AAFC-AAC,Agriculture and Agri-Food Canada,BP-PBT,BioProducts and Bioprocessing
-Marc Gervais,Deputy Director,613,773-1527,1305 BASELINE RD TOWER 5,Ontario,Ottawa,K1A 0C5,AAFC-AAC,Agriculture and Agri-Food Canada,GA-AMM,Global Analysis
+Marc Gervais,Deputy Director,613,773-1527,1305 BASELINE RD TOWER 5,Quebec,Ottawa,K1A 0C5,AAFC-AAC,Agriculture and Agri-Food Canada,GA-AMM,Global Analysis
 Noemie Vanacker,RAP Student,819,565-9174,2000 COLLEGE ST,Quebec,Sherbrooke,J1M 0C8,AAFC-AAC,Agriculture and Agri-Food Canada,LSS-PSL,Laboratory Support Staff
 Catherine Perreault,Executive Assistant,418,210-5023,2560 HOCHELAGA BLVD,Quebec,Quebec,G1V 2J3,AAFC-AAC,Agriculture and Agri-Food Canada,LLD-DLV,Living Laboratories Division
 Tarigh Afrand,Systems Analyst - MM,613,759-6278,960 CARLING AVE,Ontario,Ottawa,K1A 0C6,AAFC-AAC,Agriculture and Agri-Food Canada,SAD-ACS,SAP Application and Design
@@ -65,7 +65,7 @@ Benoit Bizimungu,Research Scientist,506,460-4472,PO BOX 20280,New Brunswick,Fred
 Lesley Hepworth,Strategic Planning Analyst,613,773-2078,1285 BASELINE RD TOWER 4,Ontario,Ottawa,K1A 0C5,AAFC-AAC,Agriculture and Agri-Food Canada,PR-PR,Planning and Reporting
 Rick Pella,Facility Officer,613,759-6517,960 CARLING AVE,Ontario,Ottawa,K1A 0C6,AAFC-AAC,Agriculture and Agri-Food Canada,CTS-SIF,CEF Integrated Services
 Kim Rempel,Acting Executive Assistant,204,822-7581,101 ROUTE 100,Manitoba,Morden,R6M 1Y5,AAFC-AAC,Agriculture and Agri-Food Canada,PR-RP,Prairie Region
-James Tucker,"Biologist, Barley Pathology",204,578-6592,PO BOX 1000A RR 3,Manitoba,Brandon,R7A 5Y3,AAFC-AAC,Agriculture and Agri-Food Canada,BA-RA,Breeding and Agronomy
+James Tucker,"Biologist, Barley Pathology",204,578-6592,PO BOX 1000A RR 3,Ontario,Brandon,R7A 5Y3,AAFC-AAC,Agriculture and Agri-Food Canada,BA-RA,Breeding and Agronomy
 Irene Parisien,Research Assistant,613,715-5153,960 CARLING AVE,Ontario,Ottawa,K1A 0C6,AAFC-AAC,Agriculture and Agri-Food Canada,CP-CL,Cereal and Pulse
 Robert Graf,Research Scientist,403,317-2258,PO BOX 3000,Alberta,Lethbridge,T1J 4B1,AAFC-AAC,Agriculture and Agri-Food Canada,SPS-SPD,Sustainable Production Systems
 Yaw Siow,Research Scientist,204,235-3457,351 TACHE AVE,Manitoba,Winnipeg,R2H 2A6,AAFC-AAC,Agriculture and Agri-Food Canada,CCARHM-CCRASM,Canadian Centre for Agri-Food Research in Health and Medicine
