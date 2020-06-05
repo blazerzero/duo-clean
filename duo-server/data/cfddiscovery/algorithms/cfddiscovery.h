@@ -19,7 +19,9 @@ class CFDDiscovery {
 public:
     CFDDiscovery(Database&);
     int nrCFDs() const;
+    int nrCFDsPlus() const;
     CFDList getCFDs() const;
+    CFDPlusList getCFDsWithConfidence() const;
     void ctane(int minsup, int maxsize, double conf = 1);
     void integratedDFS(int minsup, int maxsize, double conf = 1);
     void itemsetsFirstBFS(int minsup, int maxsize, SUBSTRATEGY= SUBSTRATEGY::BFS, double conf = 1);
@@ -59,6 +61,7 @@ private:
     double fMinConf;
     Database& fDb;
     CFDList fCFDs;
+    CFDPlusList fCFDsPlus;
 
     GeneratorStore<int> fGens;
     std::map<Itemset,PartitionTidList> fStore;

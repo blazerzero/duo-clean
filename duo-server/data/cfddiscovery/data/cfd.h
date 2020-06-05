@@ -4,7 +4,9 @@
 #include "types.h"
 
 typedef std::pair<Itemset, int> CFD;
+typedef std::pair<CFD, double> CFDPlus;
 typedef std::vector<CFD> CFDList;
+typedef std::vector<CFDPlus> CFDPlusList;
 bool isValid(const Itemset& lhs, int rhs);
 
 #endif //DATA_CFD_H_

@@ -82,7 +82,8 @@ public:
     XPlode(Database&, Database&, unsigned optimize = ALL_SCORES | FAST_TIDS | CONVERT_EQ);
     XPlode(Database&, Database&, std::vector<int>);
     CFD explain(int, double=1, bool=true);
-    CFDList postExplain(int, double=1, bool=true);
+    /* CFDList postExplain(int, double=1, bool=true); */
+    CFDPlusList postExplain(int, double=1, bool=true);
 
     Itemset getDiffs();
     void computeModifications();

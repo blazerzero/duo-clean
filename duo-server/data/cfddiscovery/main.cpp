@@ -71,11 +71,17 @@ int main(int argc, char *argv[]) {
         }
         auto t2 = std::chrono::high_resolution_clock::now();
         auto time = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
-        CFDList cfds = cfdd.getCFDs();
+        /*CFDList cfds = cfdd.getCFDs();*/
+        CFDPlusList cfds = cfdd.getCFDsWithConfidence();
+        sort(cfds.begin(), cfds.end(), Output::sortByConfidence);
+        std::cout << "{\n\t\"cfds\": [" << std::endl;
         for (const auto& c : cfds) {
+            std::cout << "\t\t";
             Output::printCFD(c, db);
         }
-        std::cout << "Mined " << cfds.size() << " cfds in " << time << " milliseconds" << std::endl;
+        std::cout << "\t],\n\t";
+        std::cout << "\"msg\": " << "\"Mined " << cfds.size() << " cfds in " << time << " milliseconds\"" << std::endl;
+        std::cout << "}";
     }
     else {
         std::cout << "[ERROR] Wrong number of Arguments: " << (argc-1) << " instead of 4 [5]" << std::endl;

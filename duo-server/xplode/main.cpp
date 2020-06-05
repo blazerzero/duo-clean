@@ -21,14 +21,19 @@ int main(int argc, char *argv[]) {
         int delta = atoi(argv[4]);
         XPlode xplode(dirtyDb, cleanDb);
         //CFD expl = xplode.explain(delta, 1.0-epsilon);
-        CFDList explList = xplode.postExplain(delta, 1.0-epsilon);
+        //CFDList explList = xplode.postExplain(delta, 1.0-epsilon);
+        CFDPlusList explList = xplode.postExplain(delta, 1.0-epsilon);
         //std::cout << "Best Explanation: " << std::endl;
         //Output::printCFD(expl, cleanDb);
+        sort(explList.begin(), explList.end(), Output::sortByConfidence);
         if (explList.size() > 0) {
+            std::cout << "{\n\t\"cfds\": [" << std::endl;
             Output::printCFDList(explList, cleanDb);
+            std::cout << "\t]\n";
+            std::cout << "}";
         }
         else {
-            std::cout << "[NO CFDS FOUND]";
+            std::cout << "{\n\t\"msg\": \"[NO CFDS FOUND]\"\n}";
         }
     }
     return 0;

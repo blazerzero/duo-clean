@@ -36,13 +36,19 @@ public:
         for (uint ix = 0; ix < items.size(); ix++) {
             int item = items[ix];
             if (item < 0) {
-                parts.push_back(db.getAttrName(-1-item));
+                std::string attr = db.getAttrName(-1-item);
+                attr.erase(std::remove(attr.begin(), attr.end(), '\r'), attr.end());
+                parts.push_back(attr);
             }
             else if (item == 0) {
-                parts.push_back(db.getAttrName(ix) + "=N/A");
+                std::string attr = db.getAttrName(ix);
+                attr.erase(std::remove(attr.begin(), attr.end(), '\r'), attr.end());
+                parts.push_back(attr + "=N/A");
             }
             else {
-                parts.push_back(db.getAttrName(db.getAttrIndex(item)) + "=" + db.getValue(item));
+                std::string attr = db.getAttrName(db.getAttrIndex(item));
+                attr.erase(std::remove(attr.begin(), attr.end(), '\r'), attr.end());
+                parts.push_back(attr + "=" + db.getValue(item));
             }
         }
         printCollection(parts, ", ", out);
@@ -62,18 +68,51 @@ public:
         printCFD(c.first, c.second, db, out, endl);
     }
 
+    static void printCFD(const CFDPlus& c, const Database& db, std::ostream& out=std::cout, bool endl=true) {
+        printCFDWithConfidence(c.first.first, c.first.second, c.second, db, out, endl);
+    }
+
     static void printCFD(const Itemset& lhs, const int rhs, const Database& db, std::ostream& out=std::cout, bool endl=true) {
         printItemset(lhs, db, out, false);
         out << " => ";
         if (rhs < 0) {
-            out << db.getAttrName(-1-rhs);
+            std::string rhsAttr = db.getAttrName(-1-rhs);
+            rhsAttr.erase(remove(rhsAttr.begin(), rhsAttr.end(), '\r'), rhsAttr.end());
+            out << rhsAttr;
         }
         else {
-            out << (db.getAttrName(db.getAttrIndex(rhs)) + "=" + db.getValue(rhs));
+            std::string rhsAttr = db.getAttrName(db.getAttrIndex(rhs));
+            rhsAttr.erase(remove(rhsAttr.begin(), rhsAttr.end(), '\r'), rhsAttr.end());
+            out << (rhsAttr + "=" + db.getValue(rhs));
         }
         if (endl) {
             out << std::endl;
         }
+    }
+
+    static void printCFDWithConfidence(const Itemset& lhs, const int rhs, const double conf, const Database& db, std::ostream& out=std::cout, bool endl=true) {
+        out << "{\"cfd\": \"";
+        printItemset(lhs, db, out, false);
+        out << " => ";
+        if (rhs < 0) {
+            std::string rhsAttr = db.getAttrName(-1-rhs);
+            rhsAttr.erase(remove(rhsAttr.begin(), rhsAttr.end(), '\r'), rhsAttr.end());
+            out << rhsAttr;
+        }
+        else {
+            std::string rhsAttr = db.getAttrName(db.getAttrIndex(rhs));
+            rhsAttr.erase(remove(rhsAttr.begin(), rhsAttr.end(), '\r'), rhsAttr.end());
+            out << (rhsAttr + '=' + db.getValue(rhs));
+        }
+        out << "\", ";
+        out << ("\"conf\": " + std::to_string(conf) + "},");
+        if (endl) {
+            out << std::endl;
+        }
+    }
+
+    static bool sortByConfidence(const std::pair<CFD, double> &a, const std::pair<CFD, double> &b) {
+        return (a.second > b.second);
     }
 };
 

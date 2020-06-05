@@ -6,7 +6,9 @@
 #include "../util/stringutil.h"
 
 typedef std::pair<Itemset, int> CFD;
+typedef std::pair<CFD, double> CFDPlus;
 typedef std::vector<CFD> CFDList;
+typedef std::vector<CFDPlus> CFDPlusList;
 
 SimpleTidList getConstantVio(const Itemset&, int, const SimpleTidList&, const Database&);
 SimpleTidList getVariableVio(const Itemset&, int, const SimpleTidList&, const Database&);

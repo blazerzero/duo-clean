@@ -443,7 +443,8 @@ std::vector<PartitionTidList> XPlode::tidListIntersections(const PartitionTidLis
     return res;
 }
 
-CFDList XPlode::postExplain(int minsup, double minconf, bool variable) {
+// CFDList XPlode::postExplain(int minsup, double minconf, bool variable) {
+CFDPlusList XPlode::postExplain(int minsup, double minconf, bool variable) {
     fDb.toFront(fRepairs);
     fDirty.toFront(fRepairs);
 
@@ -452,6 +453,7 @@ CFDList XPlode::postExplain(int minsup, double minconf, bool variable) {
     fMinSup = minsup;
     fMinConf = minconf;
     CFDList globalExplanations;
+    CFDPlusList globalExplanationsPlus;
     std::map<Itemset,PartitionTidList> tidmap;
     std::map<Itemset,PartitionTidList> dirtyTidmap;
     std::unordered_map<CFD, SimpleTidList> violations;
@@ -529,7 +531,9 @@ CFDList XPlode::postExplain(int minsup, double minconf, bool variable) {
                                 double dirtyE = PartitionTable::partitionError(dirtySub, dirtySet);
                                 double dirtyConf = 1 - (dirtyE / support(dirtySub));
                                 if (dirtyConf < conf-(1.0/fDb.size())) {
-                                    globalExplanations.emplace_back(sub, out);
+                                    // globalExplanations.emplace_back(sub, out);
+                                    CFD subAsCFD = std::make_pair(sub, out);
+                                    globalExplanationsPlus.emplace_back(subAsCFD, conf);
                                     violations[cfd] = vios;
                                     fCPMap[cfd] = convertCFD(sub, out, inode.fTids);
                                 }
@@ -549,7 +553,9 @@ CFDList XPlode::postExplain(int minsup, double minconf, bool variable) {
                             if (vios.size() && vios[0] <= fRepairs.back()) {
                                 double dirtyConf = 1 - ((double) vios.size() / (double) support(dirtySub));
                                 if (dirtyConf < conf) {
-                                    globalExplanations.emplace_back(sub, out);
+                                    // globalExplanations.emplace_back(sub, out);
+                                    CFD subAsCFD = std::make_pair(sub, out);
+                                    globalExplanationsPlus.emplace_back(subAsCFD, conf);
                                     violations[cfd] = vios;
                                     auto sSub = sub;
                                     std::sort(sSub.begin(), sSub.end(),
@@ -636,11 +642,11 @@ CFDList XPlode::postExplain(int minsup, double minconf, bool variable) {
               });
     //return globalExplanations.back();
     //std::vector<std::tuple<CFD,auto> > globalExplTuples;
-    for (std::vector<CFD>::iterator it = globalExplanations.begin(); it != globalExplanations.end(); ++it) {
+    /* for (std::vector<CFD>::iterator it = globalExplanations.begin(); it != globalExplanations.end(); ++it) {
       CFD c = *it;
-      std::cout << score(c.first, c.second, violations.at(c)) << std::endl;
-    }
-    return globalExplanations;
+      std::cout << score(c.first, c.second, violations.at(c))  << std::endl;
+    } */
+    return globalExplanationsPlus;
 }
 
 std::map<Itemset, int> XPlode::convertCFD(const Itemset &lhs, int rhs, const PartitionTidList &tids) {

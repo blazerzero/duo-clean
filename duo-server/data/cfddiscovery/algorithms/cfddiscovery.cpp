@@ -11,8 +11,16 @@ int CFDDiscovery::nrCFDs() const {
     return fCFDs.size();
 }
 
+int CFDDiscovery::nrCFDsPlus() const {
+    return fCFDsPlus.size();
+}
+
 CFDList CFDDiscovery::getCFDs() const {
     return fCFDs;
+}
+
+CFDPlusList CFDDiscovery::getCFDsWithConfidence() const {
+    return fCFDsPlus;
 }
 
 bool CFDDiscovery::precedes(const Itemset& a, const Itemset& b) {
@@ -125,8 +133,12 @@ void CFDDiscovery::ctane(int minsup, int maxSize, double minconf) {
                     double e = (out < 0) ? PartitionTable::partitionError(storedSub->second, inode.fTids)
                                          : setdiff(storedSub->second.fTids, inode.fTids.fTids).size();
                     double conf = 1 - (e / support(storedSub->second));
-                    if (conf >= fMinConf) {
+                    /*if (conf >= fMinConf) {
                         fCFDs.emplace_back(sub, out);
+                    }*/
+                    if (conf >= fMinConf) {
+                        CFD subAsCFD = std::make_pair(sub, out);
+                        fCFDsPlus.emplace_back(subAsCFD, conf);
                     }
                     if (conf >= 1) {
                         inode.fCands = intersection(inode.fCands, sub);
@@ -262,8 +274,12 @@ void CFDDiscovery::integratedDFS(const Itemset &prefix, std::vector<MinerNode<Pa
             if (!lhsGen) continue;
 
 
-            if (conf >= fMinConf) {
+            /*if (conf >= fMinConf) {
                 fCFDs.emplace_back(cSub, out);
+            }*/
+            if (conf >= fMinConf) {
+                CFD subAsCFD = std::make_pair(cSub, out);
+                fCFDsPlus.emplace_back(subAsCFD, conf);
             }
             if (conf >= 1) {
                 fRules[out].push_back(cSub);
@@ -453,8 +469,12 @@ void CFDDiscovery::itemsetsFirstDFS(const Itemset &prefix, std::vector<MinerNode
                 double e = setdiff(storedSub->second, inode.fTids).size();
                 double conf = 1 - (e / support(storedSub->second));
 
-                if (conf >= fMinConf) {
+                /*if (conf >= fMinConf) {
                     fCFDs.emplace_back(sub, out);
+                }*/
+                if (conf >= fMinConf) {
+                    CFD subAsCFD = std::make_pair(sub, out);
+                    fCFDsPlus.emplace_back(subAsCFD, conf);
                 }
                 if (conf >= 1) {
                     fRules[out].push_back(sub);
@@ -588,8 +608,12 @@ void CFDDiscovery::mineFDsDFS(std::vector<MinerNode<PartitionTidList> > &items, 
                 if (!lhsGen) continue;
                 double e = PartitionTable::partitionError(storedSub->second, inode.fTids);
                 double conf = 1 - (e / support(storedSub->second));
-                if (conf >= fMinConf) {
+                /*if (conf >= fMinConf) {
                     fCFDs.emplace_back(cSub, out);
+                }*/
+                if (conf >= fMinConf) {
+                    CFD subAsCFD = std::make_pair(cSub, out);
+                    fCFDsPlus.emplace_back(subAsCFD, conf);
                 }
                 if (conf >= 1) {
                     fRules[out].push_back(cSub);
@@ -721,8 +745,12 @@ void CFDDiscovery::itemsetsFirstBFS(int minsup, int maxSize, SUBSTRATEGY ss, dou
                     double e = setdiff(storedSub->second, inode.fTids).size();
                     double conf = 1 - (e / support(storedSub->second));
 
-                    if (conf >= fMinConf) {
+                    /*if (conf >= fMinConf) {
                         fCFDs.emplace_back(cSub, out);
+                    }*/
+                    if (conf >= fMinConf) {
+                        CFD subAsCFD = std::make_pair(cSub, out);
+                        fCFDsPlus.emplace_back(subAsCFD, conf);
                     }
                     if (conf >= 1) {
                         fRules[out].push_back(sub);
@@ -863,8 +891,12 @@ void CFDDiscovery::mineFDs(const SimpleTidList& tids, const Itemset& tp, const I
                     if (!lhsGen) continue;
                     double e = PartitionTable::partitionError(storedSub->second, inode.fTids);
                     double conf = 1 - (e / support(storedSub->second));
-                    if (conf >= fMinConf) {
+                    /*if (conf >= fMinConf) {
                         fCFDs.emplace_back(cSub, out);
+                    }*/
+                    if (conf >= fMinConf) {
+                        CFD subAsCFD = std::make_pair(cSub, out);
+                        fCFDsPlus.emplace_back(subAsCFD, conf);
                     }
                     if (conf >= 1) {
                         fRules[out].push_back(cSub);
@@ -989,8 +1021,12 @@ void CFDDiscovery::fdsFirstDFS(const Itemset &prefix, std::vector<MinerNode<Part
             if (lhsGen) {
                 double e = PartitionTable::partitionError(storedSub->second, inode.fTids);
                 double conf = 1 - (e / support(storedSub->second));
-                if (conf >= fMinConf) {
+                /*if (conf >= fMinConf) {
                     fCFDs.emplace_back(sub, out);
+                }*/
+                if (conf >= fMinConf) {
+                    CFD subAsCFD = std::make_pair(sub, out);
+                    fCFDsPlus.emplace_back(subAsCFD, conf);
                 }
                 if (conf >= 1) {
                     fRules[out].push_back(sub);
@@ -1111,8 +1147,12 @@ void CFDDiscovery::fdsFirstBFS(int minsup, int maxSize, SUBSTRATEGY ss, double m
                 if (lhsGen) {
                     double e = PartitionTable::partitionError(storedSub->second, inode.fTids);
                     double conf = 1 - (e / support(storedSub->second));
-                    if (conf >= fMinConf) {
+                    /*if (conf >= fMinConf) {
                         fCFDs.emplace_back(sub, out);
+                    }*/
+                    if (conf >= fMinConf) {
+                        CFD subAsCFD = std::make_pair(sub, out);
+                        fCFDsPlus.emplace_back(subAsCFD, conf);
                     }
                     if (conf >= 1) {
                         fRules[out].push_back(sub);
@@ -1336,8 +1376,12 @@ void CFDDiscovery::minePatternsBFS(const Itemset &lhs, int rhs, const PartitionT
                 if (lhsGen) {
                     int e = getPartitionError(inode.fTids, partitions);
                     double conf = 1.0 - ((double) e / (double) inode.fSupp);
-                    if (conf >= fMinConf) {
+                    /*if (conf >= fMinConf) {
                         fCFDs.emplace_back(sub, out);
+                    }*/
+                    if (conf >= fMinConf) {
+                        CFD subAsCFD = std::make_pair(sub, out);
+                        fCFDsPlus.emplace_back(subAsCFD, conf);
                     }
                     if (conf >= 1) {
                         fRules[out].push_back(sub);
@@ -1487,8 +1531,12 @@ void CFDDiscovery::minePatternsDFS(const Itemset &prefix, std::vector<MinerNode<
             if (lhsGen) {
                 int e = getPartitionError(inode.fTids, partitions);
                 double conf = 1.0 - ((double) e / (double) inode.fSupp);
-                if (conf >= fMinConf) {
+                /*if (conf >= fMinConf) {
                     fCFDs.emplace_back(sub, out);
+                }*/
+                if (conf >= fMinConf) {
+                    CFD subAsCFD = std::make_pair(sub, out);
+                    fCFDsPlus.emplace_back(subAsCFD, conf);
                 }
                 if (conf >= 1) {
                     fRules[out].push_back(sub);
