@@ -1,6 +1,10 @@
 import React, { Component } from 'react';
 import BootstrapTable from 'react-bootstrap-table-next';
-import { Table, Row, Col } from 'react-bootstrap';
+import {
+  Table as RBTable,
+  Row,
+  Col
+} from 'react-bootstrap';
 
 export default class Table extends Component {
     
@@ -24,10 +28,12 @@ export default class Table extends Component {
             text: 'Product Price'
         }]; */
         return (
-          {/* <BootstrapTable keyField='id' data={ products } columns={ columns } />*/}
-          <Table>
+          <RBTable bordered responsive>
             <thead>
-              <th>Noisy Tuple?</th>
+              <tr>
+                <th>Noisy Tuple?</th>
+                {  }
+              </tr>
             </thead>
             <tbody>
               <tr>
@@ -36,7 +42,7 @@ export default class Table extends Component {
                 </td>
               </tr>
             </tbody>
-          </Table>
+          </RBTable>
         )
     }
 }
