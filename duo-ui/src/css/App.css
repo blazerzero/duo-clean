@@ -1,0 +1,181 @@
+.App {
+  text-align: center;
+}
+
+.App-logo {
+  animation: App-logo-spin infinite 20s linear;
+  height: 40vmin;
+  pointer-events: none;
+}
+
+.App-header {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.body-section {
+  padding: 1vw;
+}
+
+.modalText {
+  text-indent: 50px;
+  padding-bottom: 1em;
+  padding-left: 1em;
+  padding-right: 1em;
+  padding-top: 2em;
+}
+
+.content-centered {
+  text-align: center;
+  justify-content: center;
+  padding: 1vw;
+}
+.content-centered.title { font-weight: bold; }
+.content-centered.body-content { padding: 0.1vw; }
+
+.top-level {
+  padding: 1vw;
+}
+
+.dirty-color-line {
+  height: 1.5vw;
+  background-image: linear-gradient(to right, #ffe5e5, #ff0000);
+}
+
+.upload-btn-wrapper {
+  position: relative;
+  overflow: hidden;
+  display: inline-block;
+  cursor: pointer;
+}
+
+.btn-round {
+  border-radius: 20px;
+  cursor: pointer;
+  font-family: 'Rubik Medium', sans-serif;
+}
+
+.btn-round.left {
+  margin-right: 0.5vw;
+}
+.btn-round.right {
+  margin-left: 0.5vw;
+}
+
+.general-btn {
+  background-color: #d73f09;
+  border-color: #d73f09;
+}
+
+.general-btn:hover {
+  background-color: #c03000;
+  border-color: #c03000;
+}
+
+.filename-area {
+  font-family: 'Rubik', sans-serif;
+  text-align: left;
+}
+
+.site-page {
+  height: 100vh;
+  width: auto;
+}
+
+.home {
+  background-image: url('../images/columbia.jpg');
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.home-header {
+  background-color: #fff;
+  border-radius: 50px;
+  width: 25em;
+  padding-top: 0.5vw;
+}
+
+.results-header {
+  background-color: #fff;
+  border-color: #000;
+  border-radius: 50px;
+  border-width: 2px;
+  border-style: solid;
+  width: 20em;
+}
+
+.home-title {
+  font-size: 2em;
+  font-family: 'Rubik Medium', sans-serif;
+  color: #d73f09;
+}
+
+.box-blur { box-shadow: 0px 5px 10px grey; }
+
+.results-title {
+  font-size: 2em;
+  font-family: 'Rubik', sans-serif;
+  color: #d73f09;
+}
+
+.suggested-dep-title {
+  font-size: 1.5em;
+  font-family: 'Rubik', sans-serif;
+}
+
+.sub-suggested-dep-title {
+  font-size: 1em;
+  font-family: 'Rubik Medium', sans-serif;
+  color: #d73f09;
+}
+
+.home-subtitle {
+  font-size: 1.25em;
+  font-family: 'Rubik', sans-serif;
+}
+
+.bottom-content, .lower-bottom-content {
+  bottom: 0;
+  position: absolute;
+  margin-bottom: 25vh;
+  width: 100vw;
+}
+
+.upper-bottom-content {
+  bottom: 0;
+  position: absolute;
+  margin-bottom: 35vh;
+  width: 100vw;
+}
+
+.default-file-upload {
+  display: none;
+}
+
+.modified-cell {
+  font-weight: bold;
+}
+
+.not-modified-cell {
+  font-weight: normal;
+}
