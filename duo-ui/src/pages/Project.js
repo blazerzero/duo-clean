@@ -39,8 +39,9 @@ export default class Project extends Component {
             .then(async(response) => {
                 var res = JSON.parse(response.data);
                 var { sample, changes, msg } = pick(res, ['sample', 'changes', 'msg']);
+                sample = JSON.parse(sample);
                 changes = JSON.parse(changes);
-                var changeMap = await this._buildChangeMap(data, changes);
+                var changeMap = await this._buildChangeMap(sample, changes);
                 this.setState({
                     data: sample,
                     changeMap
@@ -86,8 +87,10 @@ export default class Project extends Component {
             .then(async(response) => {
                 var res = JSON.parse(response.data);
                 var { sample, changes, msg } = pick(res, ['sample', 'changes', 'msg']);
+                sample = JSON.parse(sample);
                 changes = JSON.parse(changes);
                 var changeMap = this._buildChangeMap(sample, changes);
+                console.log(sample);
                 this.setState({
                     data: sample,
                     changeMap
@@ -114,13 +117,14 @@ export default class Project extends Component {
     }
 
     _renderHeader = async() => {
-        return this.state.header.map((item, idx) = <th key={'header_'.concat(idx)}>{item}</th>);
+        console.log('render header');
+        return this.state.header.map((item, idx) => <th key={'header_'.concat(idx)}>{item}</th>);
     }
 
     componentDidMount() {
         const { header, project_id } = this.props.location;
         this.setState({ header, project_id }, async() => {
-            await this._getSampleData(this.state.project_id, this.state.sample_size);
+            await this._getSampleData(this.state.project_id, 10);
         });
     }
 
@@ -137,7 +141,7 @@ export default class Project extends Component {
                                 <Form.Label><strong>Current Value; </strong>{this.state.modalCellValue}</Form.Label>
                             </Form.Group>
                             <Form.Group>
-                                <Form.Lavel><strong>New Value: </strong></Form.Lavel>
+                                <Form.Label><strong>New Value: </strong></Form.Label>
                                 <Form.Control defaultValue={this.state.modalCellValue} />
                             </Form.Group>
                         </Modal.Body>
@@ -165,15 +169,17 @@ export default class Project extends Component {
                         <thead>
                             <tr>
                                 <th>Noisy Tuple?</th>
-                                { this._renderHeader }
+                                {this.state.header.map((item, idx) => <th key={'header_'.concat(idx)}>{item}</th>)}
                             </tr>
                         </thead>
                         <tbody>
                             { Object.keys(this.state.data).map((i) => {
+                                console.log(this.state.data[i]['Name']);
                                 return (
                                     <tr key={i}>
                                         { Object.keys(this.state.data[i]).map((j) => {
                                             var key = i.toString().concat('_', j);
+                                            console.log(key);
                                             return (
                                                 <td
                                                     key={key} style={{cursor: 'pointer', backgroundColor: (this.state.changeMap[i][j] ? '#FFF3CD' : 'white')}}
@@ -184,7 +190,7 @@ export default class Project extends Component {
                                         })}
                                     </tr>
                                 )
-                            })}
+                            }) }
                         </tbody>
                     </Table>
                 </div>

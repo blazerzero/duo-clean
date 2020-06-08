@@ -110,7 +110,7 @@ class Sample(Resource):
         diffs['cells'] = list()
         diffs['tups'] = list()
         pickle.dump( diffs, open('./store/' + project_id + '/diffs.p', 'wb') )
-        helpers.calcDiffs(data, './test/team-clean.csv', project_id, 'system', current_iter)
+        # helpers.calcDiffs(data, './test/team-clean.csv', project_id, 'system', current_iter)
 
         tuple_metadata.to_pickle('./store/' + project_id + '/tuple_metadata.p')
         pickle.dump( value_metadata, open('./store/' + project_id + '/value_metadata.p', 'wb') )
@@ -120,8 +120,8 @@ class Sample(Resource):
 
         # No changes have been made yet, so changes = False for every cell
         changes = dict()
-        for i in data.index:
-            for j in data.columns:
+        for i in s_out.index:
+            for j in s_out.columns:
                 changes[(i, j)] = False
 
         # Represent in serializable format
@@ -158,7 +158,7 @@ class Clean(Resource):
 
         # Map the user's cell repairs to the respective cells in the full dataset
         d_rep, changed_ids = helpers.applyUserRepairs(d_dirty, s_df, project_id, current_iter)
-        helpers.calcDiffs(d_rep, './test/team-clean.csv', project_id, 'user', current_iter)
+        # helpers.calcDiffs(d_rep, './test/team-clean.csv', project_id, 'user', current_iter)
 
         d_rep.to_csv('./store/' + project_id + '/after.csv', encoding='utf-8', index=False)     # Save the user-repaired full dataset as a csv file (for XPlode)
         top_cfds = helpers.discoverCFDs(project_id)         # Run XPlode to discover new CFDs for before and after-repair versions of the dataset
@@ -220,7 +220,7 @@ class Clean(Resource):
         helpers.reinforceTuplesBasedOnContradiction(project_id, current_iter, d_rep)
         d_rep.to_csv('./store/' + project_id + '/before.csv', encoding='utf-8', index=False)
 
-        helpers.calcDiffs(d_rep, './test/team-clean.csv', project_id, 'system', current_iter)
+        # helpers.calcDiffs(d_rep, './test/team-clean.csv', project_id, 'system', current_iter)
 
         tuple_metadata = pd.read_pickle('./store/' + project_id + '/tuple_metadata.p')
 

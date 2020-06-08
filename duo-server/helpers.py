@@ -3,6 +3,7 @@ from tqdm import tqdm
 import pprint
 import os
 import json
+import random
 import subprocess as sp
 import pandas as pd
 import numpy as np
@@ -68,10 +69,11 @@ def applyUserRepairs(d_dirty, s_df, project_id, current_iter):
         num_times_applied_each_cfd = dict()
         for idx in s_df.index:
             for col in s_df.columns:
-                if cfd_applied_map[prev_iter][idx][col] in num_times_applied_each_cfd.keys():
-                    num_times_applied_each_cfd[cfd_applied_map[prev_iter][idx][col]] += 1
-                else:
-                    num_times_applied_each_cfd[cfd_applied_map[prev_iter][idx][col]] = 1
+                if len(cfd_applied_map[prev_iter][idx][col]) > 0:
+                    if cfd_applied_map[prev_iter][idx][col] in num_times_applied_each_cfd.keys():
+                        num_times_applied_each_cfd[cfd_applied_map[prev_iter][idx][col]] += 1
+                    else:
+                        num_times_applied_each_cfd[cfd_applied_map[prev_iter][idx][col]] = 1
 
         # Map the user's repairs on the sample to the full dataset, keeping track of which tuples have been modified
         for idx in s_df.index:
@@ -508,7 +510,7 @@ def reinforceTuplesBasedOnContradiction(project_id, current_iter, d_latest):
 
         tuple_metadata.at[idx, 'weight'] += reinforcementValue
 
-    tuple_metadata['weight'] = tuple_metadata['weight'] / tuple_weight['weight'].sum()      # Normalize tuple weights
+    tuple_metadata['weight'] = tuple_metadata['weight'] / tuple_metadata['weight'].sum()      # Normalize tuple weights
 
     print('Tuple weights:')
     pprint(tuple_metadata['weight'])
@@ -545,7 +547,7 @@ def buildSample(d_rep, sample_size, project_id, cfd_applied_map, current_iter):
     print('Chosen example indexes:')
     pprint(chosen_tuples)
 
-    sample = d_rep.iloc[chosen_tuples]      # get the tuples that correspond to the tuple IDs from above
+    sample = d_rep.iloc[[c[0] for c in chosen_tuples]]      # get the tuples that correspond to the tuple IDs from above
     return sample
 
 '''
@@ -556,15 +558,15 @@ INPUT:
 OUTPUT:
 * tuple_id: The ID of the selected tuple
 '''
-def pickSingleReturn(self, tuple_weights):
+def pickSingleReturn(tuple_weights):
     chance = random.uniform(0, 1)
     cumulative = 0
-    total = sum(tuple_weights.values())
-    for tuple_id in tuple_weights:
-        cumulative += tuple_weights[tuple_id]/total
+    total = sum(tuple_weights)
+    for id, weight in np.ndenumerate(tuple_weights):
+        cumulative += weight/total
         if cumulative > chance:
-            del tuple_weights[tuple_id]
-            return tuple_id
+            del weight
+            return id
 
 def calcDiffs(d_rep, clean_src, project_id, agent, iter):
     diffs = pickle.load( open('./store/' + project_id + '/diffs.p', 'rb') )

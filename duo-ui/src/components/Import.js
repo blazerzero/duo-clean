@@ -31,20 +31,20 @@ export default class Import extends React.Component {
                     'content-type': 'multipart/form-data'
                 }
             };
-            {/*axios.post(global.API.concat('/import'), formData, config)
+            axios.post(global.API.concat('/import'), formData, config)
                 .then(response => {
                     var { header, project_id, msg } = JSON.parse(response.data);
                     console.log(msg);
                     history.push({
-                        pathname: '/duo/project'.concat(this.state.projectId),
+                        pathname: '/duo/project',
                         header,
                         project_id,
                     })
                 })
-                .catch(error => console.log(error));*/}
-            history.push({
+                .catch(error => console.log(error));
+            {/* history.push({
                 pathname: '/duo/project'.concat(this.state.projectId),
-            });
+            });*/ }
         }
     }
 

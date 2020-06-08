@@ -21,14 +21,12 @@ import redo from '../images/corner-up-right.svg';
 class Results extends Component {
 
   state = {
-    dirtyData: [],
-    cleanData: [],
-    typeMap: [],
+    data: [],
     contradictionMap: [],
     repairMap: [],
     header: [],
     project_id: 0,
-    modal: false,
+    isModalOpen: false,
     modalCellValue: null,
     modalCellKey: null,
   };
@@ -36,87 +34,36 @@ class Results extends Component {
   async _handleSubmit() {
     const formData = new FormData();
     formData.append('project_id', this.state.project_id);
-    formData.append('data', JSON.stringify(this.state.cleanData));
+    formData.append('data', JSON.stringify(this.state.data));
     formData.append('sample_size', 10);
-    console.log(formData.get('project_id'));
     axios.post('http://localhost:5000/duo/api/clean', formData)
         .then(async(response) => {
           var { sample, contradictions, changes, msg } = JSON.parse(response.data);
           var data = JSON.parse(sample);
           contradictions = JSON.parse(contradictions);
           changes = JSON.parse(changes);
-          console.log(data);
-          console.log(msg);
           for (var i in data) {
             for (var j in data[i]) {
               if (data[i][j] == null) data[i][j] = '';
               else if (typeof data[i][j] != 'string') data[i][j] = data[i][j].toString();
             }
           }
-          //var modMap = await this._buildModMap(data, data);
           var contradictionMap = await this._buildContradictionMap(data, contradictions);
           var repairMap = await this._buildRepairMap(data, changes);
-          this.setState({ dirtyData: data, cleanData: data, contradictionMap, repairMap }, () => {
-            //var typeMap = this._buildTypeMap(this.state.cleanData);
-            //this.setState({ typeMap });
-          });
+          this.setState({ data, contradictionMap, repairMap });
         })
         .catch(error => {
           console.log(error);
         });
   }
 
-  async _handleDownload() {
-    const formData = new FormData();
-    formData.append('project_id', this.state.project_id);
-    axios.post('http://localhost:5000/duo/api/download', formData, {
-      responseType: 'arraybuffer',
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      }
-    })
-        .then((response) => {
-          const url = window.URL.createObjectURL(new Blob([response.data]));
-          const link = document.createElement('a');
-          link.href = url;
-          link.setAttribute('download', 'charm_cleaned.csv');
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-        })
-        .catch(error => {
-          console.log(error);
-        })
-  }
-
-  async _handleRefresh() {
-
-  }
-
-  async _buildTypeMap(data) {
-    var typeMap = {};
-    var rows = Object.keys(data);
-    var cols = this.state.header;
-    for (var i in rows) {
-      var tup = {};
-      for (var j in cols) {
-        tup[cols[j]] = typeof(data[rows[i]][cols[j]])
-      }
-      typeMap[rows[i]] = tup;
-    }
-    console.log(typeMap);
-    return typeMap;
-  }
-
   async _buildContradictionMap(data, contradictions) {
-    console.log(contradictions);
     var contradictionMap = {};
     var rows = Object.keys(data);
     var cols = this.state.header;
     for (var i = 0; i < rows.length; i++) {
       var tup = {};
       for (var j = 0; j < cols.length; j++) {
-        //console.log(contradictions.length);
         tup[cols[j]] = contradictions.some(e => e.row === parseInt(rows[i]) && e.col === cols[j]);
       }
       contradictionMap[rows[i]] = tup;
@@ -125,39 +72,18 @@ class Results extends Component {
   }
 
   async _buildRepairMap(data, changes) {
-    console.log(changes);
     var repairMap = {};
     var rows = Object.keys(data);
     var cols = this.state.header;
     for (var i = 0; i < rows.length; i++) {
-      //console.log(typeof(i));
       var tup = {};
       for (var j = 0; j < cols.length; j++) {
-        //console.log(cols[j]);
         var cell = changes.find(e => e.row === parseInt(rows[i]) && e.col === cols[j]);
-        //console.log(cell);
         tup[cols[j]] = cell.repaired;
       }
       repairMap[rows[i]] = tup;
     }
     return repairMap;
-  }
-
-  async _buildModMap(dirtyData, cleanData) {
-    var modMap = {};
-    var rows = Object.keys(cleanData);
-    var cols = this.state.header;
-    for (var i in rows) {
-      var tup = {};
-      for (var j in cols) {
-        //console.log(dirtyData[rows[i]][cols[j]]);
-        //console.log(cleanData[rows[i]][cols[j]]);
-        tup[cols[j]] = (dirtyData[rows[i]][cols[j]] === cleanData[rows[i]][cols[j]]);
-      }
-      modMap[rows[i]] = tup;
-    }
-    console.log(modMap);
-    return modMap;
   }
 
   async _getSampleData(project_id, sample_size) {
@@ -179,24 +105,9 @@ class Results extends Component {
               else if (typeof data[i][j] != 'string') data[i][j] = data[i][j].toString();
             }
           }
-          //var modMap = await this._buildModMap(data, data);
-          /*for (var i in modMap) {
-            for (var j in modMap[i]) {
-              j = j.trim();
-            }
-          }
-          for (var i in contradictionMap) {
-            for (var j in contradictionMap[i]) {
-              j = j.trim();
-            }
-          }*/
-          //console.log(modMap);
           var contradictionMap = await this._buildContradictionMap(data, contradictions);
           var repairMap = await this._buildRepairMap(data, changes);
-          this.setState({ dirtyData: data, cleanData: data, contradictionMap, repairMap }, () => {
-            //var typeMap = this._buildTypeMap(this.state.cleanData);
-            //this.setState({ typeMap });
-          });
+          this.setState({ data, contradictionMap, repairMap });
         })
         .catch(error => {
           console.log(error);
@@ -214,9 +125,9 @@ class Results extends Component {
     var idx = parseInt(pieces.shift());
     var attr = pieces.join('_');
     this.setState({
-      modalCellValue: this.state.cleanData[idx][attr],
+      modalCellValue: this.state.data[idx][attr],
       modalCellKey: key,
-      modal: true
+      isModalOpen: true
     });
   }
 
@@ -225,32 +136,29 @@ class Results extends Component {
   }
 
   async _closeModal() {
-    this.setState({ modal: false });
+    this.setState({ isModalOpen: false });
   }
 
   async _saveChange() {
     var newCellValue = this.newCellValue.current.value;
-    var cleanData = this.state.cleanData;
+    var data = this.state.data;
     var keyPieces = this.state.modalCellKey.split('_');
     var idx = parseInt(keyPieces.shift());
     var attr = keyPieces.join('_');
-    cleanData[idx][attr] = newCellValue;
+    data[idx][attr] = newCellValue;
 
-    for (var i in cleanData) {
-      for (var j in cleanData[i]) {
-        if (cleanData[i][j] == null) cleanData[i][j] = '';
-        else if (typeof cleanData[i][j] != 'string') cleanData[i][j] = cleanData[i][j].toString();
+    for (var i in data) {
+      for (var j in data[i]) {
+        if (data[i][j] == null) data[i][j] = '';
+        else if (typeof data[i][j] != 'string') data[i][j] = data[i][j].toString();
       }
     }
 
-    //var modMap = await this._buildModMap(this.state.dirtyData, cleanData);
-
     this.setState({
-      cleanData,
+      data,
       modalCellValue: null,
       modalCellKey: null,
-      modal: false,
-      //modMap,
+      isModalOpen: false,
     });
   }
 
@@ -269,14 +177,13 @@ class Results extends Component {
     this._closeModal = this._closeModal.bind(this);
     this._saveChange = this._saveChange.bind(this);
     this._handleSubmit = this._handleSubmit.bind(this);
-    this._handleDownload = this._handleDownload.bind(this);
   }
 
   render() {
     return (
       <Route render={({ history }) => (
         <div className='site-page'>
-          <Modal show={this.state.modal} onHide={this._closeModal} animation={false}>
+          <Modal show={this.state.isModalOpen} onHide={this._closeModal} animation={false}>
             <Form onSubmit={this._saveChange}>
               <Modal.Header closeButton>
                 <Modal.Title>Edit Cell</Modal.Title>
@@ -322,15 +229,15 @@ class Results extends Component {
                 }) }</tr>
               </thead>
               <tbody>
-              { Object.keys(this.state.cleanData).map((i) => {
+              { Object.keys(this.state.data).map((i) => {
                 return (
                     <tr key={i}>
-                      { Object.keys(this.state.cleanData[i]).map((j) => {
+                      { Object.keys(this.state.data[i]).map((j) => {
                         var key = i.toString().concat('_', j);
                         return <td
                             key={key}
                             style={{cursor: 'pointer', backgroundColor: (this.state.contradictionMap[i][j] ? '#FFF3CD' : (this.state.repairMap[i][j] ? '#D4EDDA' : 'white'))}}
-                            onClick={this._handleCellClick.bind(this, key)}>{this.state.cleanData[i][j]}
+                            onClick={this._handleCellClick.bind(this, key)}>{this.state.data[i][j]}
                         </td>
                       }) }
                     </tr>
