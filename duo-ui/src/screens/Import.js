@@ -11,13 +11,13 @@ import {
 import axios from 'axios';
 
 class Import extends Component {
-  state = {
-    importedFile: null,
-    showModal: false,
+
+  constructor(props) {
+    super(props);
   }
 
-  async _handleSubmit(history) {
-    if (this.state.importedFile != null) {
+  _handleSubmit = async(history) => {
+    if (this.state.importedFile != null && !isNaN(this.state.scenarioID)) {
       const formData = new FormData();
       formData.append('file', this.state.importedFile);
       console.log(formData.get('file'));
@@ -38,24 +38,48 @@ class Import extends Component {
           });
         })
         .catch(error => console.log(error));
+    } else {
+      alert('Please make sure you\'ve uploaded a dataset and entered a integer scenario ID.');
     }
   };
 
-  _handleGetStartedClick() {
+  _handleGetStartedClick = () => {
     document.getElementById('welcomeDiv').style.display = 'none';
     document.getElementById('importDiv').style.display = 'block';
   }
 
-  _handleBackClick() {
+  _handleBackClick = () => {
     document.getElementById('welcomeDiv').style.display = 'block';
     document.getElementById('importDiv').style.display = 'none';
+  }
+
+  _handleDatasetUpload = (event) => {
+    console.log(event.target.files);
+    var importedFile = event.target.files[0];
+    this.setState({ importedFile }, () => {
+      console.log(this.state);
+      document.getElementById('findRulesBtn').style.cursor = 'pointer';
+    });
+  }
+
+  _handleScenarioIDChange = (event) => {
+    console.log(event.target.value);
+    var scenarioID = event.target.value;
+    this.setState({ scenarioID });
   }
 
   _handleModalShow = () => this.setState({ showModal: true });
   _handleModalClose = () => this.setState({ showModal: false });
 
-  render() {
+  componentDidMount() {
+    this.state = {
+      importedFile: null,
+      showModal: false,
+      scenarioID: null,
+    }
+  }
 
+  render() {
     return (
       <Route render={({ history }) => (
         <div className='site-page home'>
@@ -118,13 +142,21 @@ class Import extends Component {
                     accept='.csv'
                     className='default-file-upload box-blur'
                     id='fileUploaderHandler'
-                    onChange={(e) => {
-                      console.log(e.target.files);
-                      this.setState({ importedFile: e.target.files[0] }, () => {
-                        console.log(this.state);
-                        document.getElementById('findRulesBtn').style.cursor = 'pointer';
-                      });
-                    }}/>
+                    onChange={this._handleDatasetUpload}/>
+                </Row>
+                <Row className='content-centered'>
+                  <InputGroup>
+                    <InputGroup.Prepend>
+                      <InputGroup.Text>Scenario ID: </InputGroup.Text>
+                    </InputGroup.Prepend>
+                    <Form.Control
+                      type='text'
+                      aria-label='Enter scenario ID here.'
+                      required
+                      feedback='You must enter a scenario ID.'
+                      onChange={this._handleScenarioIDChange}
+                      />
+                  </InputGroup>
                 </Row>
                 <Row className='content-centered'>
                   <Button
@@ -173,21 +205,4 @@ class Import extends Component {
   }
 }
 
-/*const mapStateToProps = (state) => {
-  console.log(state);
-  return {
-    uploadedFile: state.importReducer.uploadedFile,
-  };
-};
-
-const mapDispatchToProps = (dispatch) => {
-  return {
-    importFile: (payload) => dispatch({
-      type: 'IMPORT_FILE',
-      payload: payload
-    }),
-  };
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(Import);*/
 export default Import;
