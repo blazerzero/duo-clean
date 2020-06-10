@@ -14,4 +14,10 @@ duo-server/data/cfddiscovery/CFDD*
 duo-server/data/cfddiscovery/.*
 duo-server/store/
 duo-server/venv/
+duo-server-new/xplode/CTane*
+duo-server-new/xplode/.*
+duo-server-new/data/cfddiscovery/CFDD*
+duo-server-new/data/cfddiscovery/.*
+duo-server-new/store/
+duo-server-new/venv/
 duo-ui/src/global.js

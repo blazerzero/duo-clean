@@ -6,7 +6,7 @@ import { store, persistor } from './store.js';
 import './css/App.css';
 
 import Import from './screens/Import';
-import Project from './screens/Project';
+import Clean from './screens/Clean';
 
 class App extends Component {
   render() {
@@ -15,7 +15,7 @@ class App extends Component {
         <PersistGate loading={null} persistor={persistor}>
           <Router>
             <Route path='/duo/' exact component={Import} />
-            <Route path='/duo/project/' component={Project} />
+            <Route path='/duo/clean/' component={Clean} />
           </Router>
         </PersistGate>
       </Provider>
