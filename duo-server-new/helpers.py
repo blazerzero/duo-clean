@@ -13,10 +13,10 @@ sys.path.insert(0, './charm/keywordSearch/')
 import charm
 
 class ValueHistory(object):
-    def __init__(self, value, agent, cfd_applied, iter_num, changed):
+    def __init__(self, value, agent, iter_num, changed):
         self.value = value      # the value
         self.agent = agent      # who set this cell to this value at this point, user or system
-        self.cfd_applied = cfd_applied      # the CFD that resulted in this value
+        # self.cfd_applied = cfd_applied      # the CFD that resulted in this value
         self.iter = iter_num                # the iteration number for this value
         self.changed = changed              # whether this value is a change from the previous state
 
@@ -24,6 +24,11 @@ class TupleNoiseHistory(object):
     def __init__(self, noisy, iter_num):
         self.noisy = noisy
         self.iter_num = iter_num
+
+class CFDConfidenceHistory(object):
+    def __init__(self, iter_num, conf):
+        self.iter_num = iter_num
+        self.conf = conf
 
 def applyUserRepairs(d_prev, s_in, project_id, current_iter):
     d_curr = d_prev
@@ -33,9 +38,9 @@ def applyUserRepairs(d_prev, s_in, project_id, current_iter):
         for col in s_in.columns:
             if d_curr.at[idx, col] != s_in.at[idx, col]:
                 d_curr.at[idx, col] = s_in.at[idx, col]
-                value_metadata[idx][col]['history'].append(ValueHistory(s_in.at[idx, col], 'user', None, current_iter, True))
+                value_metadata[idx][col]['history'].append(ValueHistory(s_in.at[idx, col], 'user', current_iter, True))
             else:
-                value_metadata[idx][col]['history'].append(ValueHistory(s_in.at[idx, col], 'user', None, current_iter, False))
+                value_metadata[idx][col]['history'].append(ValueHistory(s_in.at[idx, col], 'user', current_iter, False))
 
     pickle.dump( value_metadata, open('./store/' + project_id + '/value_metadata.p', 'wb') )
     return d_curr
@@ -49,7 +54,31 @@ def applyNoiseFeedback(data, noisy_tuples, project_id, current_iter):
         else:
             tuple_metadata[idx]['noise_history'].append(TupleNoiseHistory(False, current_iter))
 
-    pickle.dumps( tuple_metadata, open('./store/' + project_id + '/tuple_metadata.p', 'rb') )
+    pickle.dumps( tuple_metadata, open('./store/' + project_id + '/tuple_metadata.p', 'wb') )
+
+def runCFDDiscovery(data, project_id, current_iter):
+    fp = './store/' + project_id + '/in_progress.csv'
+
+    process = sp.Popen(['./data/cfddiscovery/CFDD', fp, str(0.7*len(data.index)), '0.7', '4'])
+    res = process.communicate()
+
+    if process.returncode == 0 and '[ERROR]' not in res[0]:
+        cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
+        output = json.loads(res[0].decode('latin-1'))
+        cfds = output['cfds']
+        for c in cfds:
+            if c['cfd'] not in cfd_metadata.keys():
+                cfd_metadata[c['cfd']] = dict()
+                cfd_metadata[c['cfd']]['history'] = list()
+            cfd_metadata[c['cfd']]['history'].append(CFDConfidenceHistory(current_iter, c['conf']))
+        
+        pickle.dumps( cfd_metadata, open('./store/' + project_id + '/cfd_metadata.p', 'wb') )
+    
+        return cfds
+    
+    else:
+        return None
+        
 
 def buildSample(data, sample_size, project_id):
     tuple_metadata = pickle.load( open('./store/' + project_id + '/tuple_metadata.p', 'rb') )

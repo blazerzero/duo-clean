@@ -39,11 +39,20 @@ class Import(Resource):
         else:
             project_ids = [int(d, 0) for d in projects]
             new_project_id = '{:08x}'.format(max(project_ids) + 1)
-        new_project_dir = './store/' + new_project_id + ''
+        new_project_dir = './store/' + new_project_id
         try:
             os.mkdir(new_project_dir)
         except OSError:
             return {'msg': '[ERROR] Unable to create a directory for this project.'}
+
+        # Read the scenario number and initialize the scenario accordingly
+        # scenario_number = request.form.get('scenario_number')     # USE THIS WHEN FRONTEND IS READY
+        scenario_number = "1" # TEMPORARY
+        with open('scenarios.json', 'r') as f:
+            scenarios_list = json.load(f)
+        scenario = scenarios_list[scenario_number]
+        with open(new_project_dir + '/scenario.p', 'w') as f:
+            json.dump(scenario, f)
 
         # Read and save the imported dataset to the new project directory
         imported_file = request.files['file']
@@ -77,11 +86,11 @@ class Import(Resource):
             for col in data.columns:
                 value_metadata[idx][col] = dict()
                 value_metadata[idx][col]['history'] = list()
-                value_metadata[idx][col]['history'].append(helpers.ValueHistory(data.at[idx, col], 'user', None, current_iter, False))
+                value_metadata[idx][col]['history'].append(helpers.ValueHistory(data.at[idx, col], 'user', current_iter, False))
                 # value_metadata[idx][col]['disagreement'] = 0
                 
         # Initialize CFD metadata object
-        cfd_metadata = list()
+        cfd_metadata = dict()
 
         # Initialize other metrics/metadata needed in study
 
@@ -90,6 +99,11 @@ class Import(Resource):
         pickle.dump( value_metadata, open(new_project_dir + '/value_metadata.p', 'wb') )
         pickle.dump( cfd_metadata, open(new_project_dir + '/cfd_metadata.p', 'wb') )
         pickle.dump( current_iter, open(new_project_dir + '/current_iter.p', 'wb') )
+
+        # Calculate initial CFD confidence levels
+        cfds = helpers.runCFDDiscovery(data, new_project_id, current_iter)
+        print("CFDs:")
+        pprint(cfds)
         
         # Return information to the user
         returned_data = {
@@ -134,7 +148,6 @@ class Sample(Resource):
         pprint(response)
         return response, 200, {'Access-Control-Allow-Origin': '*'}
 
-
 class Clean(Resource):
     def get(self):
         return {'msg': '[SUCCESS] This endpoint is live!'}
@@ -146,6 +159,9 @@ class Clean(Resource):
 
         current_iter = pickle.load( open('./store/' + project_id + '/current_iter.p', 'rb') )
         current_iter = '{:08x}'.format(int('0x' + current_iter, 0) + 1)
+
+        with open(project_id + '/scenario.json', 'r') as f:
+            scenario = json.load(f)
         
         d_prev = pd.read_csv('./store/' + project_id + '/in_progress.csv', keep_default_na=False)
         d_orig = pd.read_csv('./store/' + project_id + '/data.csv', keep_default_na=False)
@@ -155,7 +171,16 @@ class Clean(Resource):
         d_curr = helpers.applyUserRepairs(d_prev, s_in, project_id, current_iter)
         d_curr.to_csv('./store/' + project_id + '/in_progress.csv', encoding='latin-1', index=False)
 
-        # TODO: If confidence threshold for relevant CFD(s) IS NOT met, build new sample based on tuple weights
+        # Run CFD discovery algorithm to determine confidence of relevant CFD(s)
+        cfds = helpers.runCFDDiscovery(d_curr, project_id, current_iter)
+        for c in cfds:
+            if scenario['cfd'] == c['cfd']:
+                # If threshold IS met, return completion message to user
+                if c['conf'] >= scenario['conf_threshold']:
+                    return {'msg': '[DONE]'}
+                break
+
+        # If confidence threshold for relevant CFD(s) IS NOT met, build new sample based on tuple weights
         s_out = helpers.buildSample(d_curr, sample_size, project_id)
         changes = list()
         for idx in s_out.index:
@@ -165,10 +190,6 @@ class Clean(Resource):
                     'col': col,
                     'changed': bool(s_out.at[idx, col] != d_orig.at[idx, col])
                 })
-
-        # If threshold IS met, return completion message to user
-        # else:
-        #     return {'msg': '[DONE]'}
 
         # Return information to the user
         returned_data = {
