@@ -36,8 +36,8 @@ def applyUserRepairs(d_prev, s_in, project_id, current_iter):
 
     for idx in s_in.index:
         for col in s_in.columns:
-            if d_curr.at[idx, col] != s_in.at[idx, col]:
-                d_curr.at[idx, col] = s_in.at[idx, col]
+            if d_curr[idx][col] != s_in.at[idx, col]:
+                d_curr[idx][col] = s_in.at[idx, col]
                 value_metadata[idx][col]['history'].append(ValueHistory(s_in.at[idx, col], 'user', current_iter, True))
             else:
                 value_metadata[idx][col]['history'].append(ValueHistory(s_in.at[idx, col], 'user', current_iter, False))
@@ -56,23 +56,27 @@ def applyNoiseFeedback(data, noisy_tuples, project_id, current_iter):
 
     pickle.dumps( tuple_metadata, open('./store/' + project_id + '/tuple_metadata.p', 'wb') )
 
-def runCFDDiscovery(data, project_id, current_iter):
+def runCFDDiscovery(num_rows, project_id, current_iter):
     fp = './store/' + project_id + '/in_progress.csv'
 
-    process = sp.Popen(['./data/cfddiscovery/CFDD', fp, str(0.7*len(data.index)), '0.7', '4'])
+    process = sp.Popen(['./data/cfddiscovery/CFDD', fp, str(0.7*num_rows), '0.7', '4'], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})
     res = process.communicate()
+    print('res:', res[0])
 
-    if process.returncode == 0 and '[ERROR]' not in res[0]:
+    if process.returncode == 0 and '[ERROR]' not in res[0].decode('latin-1'):
         cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
-        output = json.loads(res[0].decode('latin-1'))
-        cfds = output['cfds']
+        output = res[0].decode('latin-1')
+        polished_output = output.replace(',]', ']')
+        cfds = json.loads(polished_output)['cfds']
+        # output = json.loads(res[0].decode('latin-1'))
+        # cfds = output['cfds']
         for c in cfds:
             if c['cfd'] not in cfd_metadata.keys():
                 cfd_metadata[c['cfd']] = dict()
                 cfd_metadata[c['cfd']]['history'] = list()
             cfd_metadata[c['cfd']]['history'].append(CFDConfidenceHistory(current_iter, c['conf']))
         
-        pickle.dumps( cfd_metadata, open('./store/' + project_id + '/cfd_metadata.p', 'wb') )
+        pickle.dump( cfd_metadata, open('./store/' + project_id + '/cfd_metadata.p', 'wb') )
     
         return cfds
     

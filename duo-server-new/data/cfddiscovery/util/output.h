@@ -106,9 +106,6 @@ public:
         }
         out << "\", ";
         out << ("\"conf\": " + std::to_string(conf) + "},");
-        if (endl) {
-            out << std::endl;
-        }
     }
 
     static bool sortByConfidence(const std::pair<CFD, double> &a, const std::pair<CFD, double> &b) {

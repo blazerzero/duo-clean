@@ -7,6 +7,8 @@ import {
   Row,
   Tab,
   Tabs,
+  InputGroup,
+  Spinner,
 } from 'react-bootstrap';
 import axios from 'axios';
 
@@ -14,12 +16,21 @@ class Import extends Component {
 
   constructor(props) {
     super(props);
+
+    this.state = {
+      importedFile: null,
+      showModal: false,
+      scenarioID: null,
+      isProcessing: false,
+    }
   }
 
   _handleSubmit = async(history) => {
     if (this.state.importedFile != null && !isNaN(this.state.scenarioID)) {
+      this.setState({ isProcessing: true });
       const formData = new FormData();
       formData.append('file', this.state.importedFile);
+      formData.append('scenario_id', this.state.scenarioID);
       console.log(formData.get('file'));
       const config = {
         headers: {
@@ -28,6 +39,7 @@ class Import extends Component {
       };
       axios.post('http://localhost:5000/duo/api/import', formData, config)
         .then(response => {
+          this.setState({ isProcessing: false });
           var { header, project_id, msg } = JSON.parse(response.data);
           console.log(msg);
           alert('Your Project ID is '.concat(project_id, '. This will be visible to you while you\'re working, but please write down your Project ID.'));
@@ -71,22 +83,20 @@ class Import extends Component {
   _handleModalShow = () => this.setState({ showModal: true });
   _handleModalClose = () => this.setState({ showModal: false });
 
-  componentDidMount() {
-    this.state = {
-      importedFile: null,
-      showModal: false,
-      scenarioID: null,
-    }
-  }
-
   render() {
     return (
       <Route render={({ history }) => (
         <div className='site-page home'>
+          <Modal show={this.state.isProcessing} animation={false} backdrop='static'>
+            <Modal.Body>
+              <p><strong>Processing...</strong></p>
+              <Spinner animation='border' />
+            </Modal.Body>
+          </Modal>
           <Row className='content-centered'>
             <div className='home-header box-blur'>
               <span className='home-title'>DuoClean</span>
-              <p className='home-subtitle'>Intelligently clean your data.</p>
+              {/* <p className='home-subtitle'>Intelligently clean your data.</p> */}
             </div>
           </Row>
           <div className='body-section'>
@@ -144,7 +154,7 @@ class Import extends Component {
                     id='fileUploaderHandler'
                     onChange={this._handleDatasetUpload}/>
                 </Row>
-                <Row className='content-centered'>
+                <Row className='content-centered small'>
                   <InputGroup>
                     <InputGroup.Prepend>
                       <InputGroup.Text>Scenario ID: </InputGroup.Text>

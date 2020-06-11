@@ -51,6 +51,10 @@
 }
 .content-centered.title { font-weight: bold; }
 .content-centered.body-content { padding: 0.1vw; }
+.content-centered.small { 
+  padding-left: 35%;
+  padding-right: 35%;
+}
 
 .top-level {
   padding: 1vw;
@@ -112,7 +116,7 @@
   background-color: #fff;
   border-radius: 50px;
   width: 25em;
-  padding-top: 0.5vw;
+  padding: 0.5vw;
 }
 
 .results-header {
@@ -122,6 +126,7 @@
   border-width: 2px;
   border-style: solid;
   width: 20em;
+  padding-top: 0.5vw;
 }
 
 .home-title {
@@ -178,4 +183,14 @@
 
 .not-modified-cell {
   font-weight: normal;
+}
+
+.loading-overlay {
+  position: absolute;
+  height: 100vh;
+  width: 100vw;
+  background-color: #888888;
+  opacity: 0.3;
+  z-index: 999;
+  margin: auto;
 }

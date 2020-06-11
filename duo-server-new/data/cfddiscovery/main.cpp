@@ -74,13 +74,12 @@ int main(int argc, char *argv[]) {
         /*CFDList cfds = cfdd.getCFDs();*/
         CFDPlusList cfds = cfdd.getCFDsWithConfidence();
         sort(cfds.begin(), cfds.end(), Output::sortByConfidence);
-        std::cout << "{\n\t\"cfds\": [" << std::endl;
+        std::cout << "{\"cfds\": [";
         for (const auto& c : cfds) {
-            std::cout << "\t\t";
             Output::printCFD(c, db);
         }
-        std::cout << "\t],\n\t";
-        std::cout << "\"msg\": " << "\"Mined " << cfds.size() << " cfds in " << time << " milliseconds\"" << std::endl;
+        std::cout << "],";
+        std::cout << "\"msg\": " << "\"Mined " << cfds.size() << " cfds in " << time << " milliseconds\"";
         std::cout << "}";
     }
     else {

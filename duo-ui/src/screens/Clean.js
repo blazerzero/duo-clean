@@ -7,7 +7,7 @@ import {
   Modal,
   Row,
   Table,
-  InputGroup,
+  Spinner,
 } from 'react-bootstrap';
 import { BrowserRouter as Router, Route, Link } from 'react-router-dom';
 import axios from 'axios';
@@ -16,6 +16,7 @@ import { pick } from 'lodash';
 class Clean extends Component {
 
   _handleSubmit = async() => {
+    this.setState({ isProcessing: true });
     const formData = new FormData();
     formData.append('project_id', this.state.project_id);
     formData.append('data', JSON.stringify(this.state.data));
@@ -23,6 +24,7 @@ class Clean extends Component {
     formData.append('sample_size', 10);
     axios.post('http://localhost:5000/duo/api/clean', formData)
         .then(async(response) => {
+          console.log(response.data);
           var res = JSON.parse(response.data);
           var { msg } = pick(res, ['msg'])
           if (msg == '[DONE]') {
@@ -44,7 +46,13 @@ class Clean extends Component {
             }
             var contradictionMap = await this._buildContradictionMap(data, contradictions);
             var changeMap = await this._buildChangeMap(data, changes);
-            this.setState({ data, noisyTuples, contradictionMap, changeMap });
+            this.setState({ 
+              data,
+              noisyTuples,
+              contradictionMap,
+              changeMap,
+              isProcessing: false
+            });
           }
         })
         .catch(error => {
@@ -73,7 +81,10 @@ class Clean extends Component {
     for (var i = 0; i < rows.length; i++) {
       var tup = {};
       for (var j = 0; j < cols.length; j++) {
-        var cell = changes.find(e => e.row === parseInt(rows[i]) && e.col === cols[j]);
+        var cell = changes.find(e => {
+          var trimmedCol = cols[j].replace(/[\n\r]+/g, '');
+          return e.row === parseInt(rows[i]) && e.col === trimmedCol;
+        });
         tup[cols[j]] = cell.changed;
       }
       changeMap[rows[i]] = tup;
@@ -102,7 +113,9 @@ class Clean extends Component {
             for (var j in data[i]) {
               if (data[i][j] == null) data[i][j] = '';
               else if (typeof data[i][j] != 'string') data[i][j] = data[i][j].toString();
-              if (!isNaN(data[i][j]) && Math.ceil(parseFloat(data[i][j])) - parseFloat(data[i][j]) === 0) data[i][j] = Math.ceil(data[i][j]).toString();
+              if (!isNaN(data[i][j]) && Math.ceil(parseFloat(data[i][j])) - parseFloat(data[i][j]) === 0) {
+                data[i][j] = Math.ceil(data[i][j]).toString();
+              }
             }
           }
           var contradictionMap = await this._buildContradictionMap(data, contradictions);
@@ -194,6 +207,7 @@ class Clean extends Component {
       isModalOpen: false,
       modalCellValue: null,
       modalCellKey: null,
+      isProcessing: false,
     };
 
     this.newCellValue = React.createRef();
@@ -206,6 +220,12 @@ class Clean extends Component {
     return (
       <Route render={({ history }) => (
         <div className='site-page'>
+          <Modal show={this.state.isProcessing} animation={false} backdrop='static'>
+            <Modal.Body>
+              <p><strong>Processing...</strong></p>
+              <Spinner animation='border' />
+            </Modal.Body>
+          </Modal>
           <Row className='content-centered'>
             <div className='results-header box-blur'>
               <span className='results-title'>DuoClean</span>
