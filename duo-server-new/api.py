@@ -116,7 +116,7 @@ class Import(Resource):
         pickle.dump( current_iter, open(new_project_dir + '/current_iter.p', 'wb') )
 
         # Calculate initial CFD confidence levels
-        cfds = helpers.runCFDDiscovery(len(data), new_project_id, current_iter)
+        helpers.runCFDDiscovery(len(data), new_project_id, current_iter)
         #print("CFDs:")
         #pprint(cfds)
         
@@ -171,6 +171,7 @@ class Clean(Resource):
         project_id = request.form.get('project_id')
         sample = request.form.get('data')
         sample_size = int(request.form.get('sample_size'))
+        noisy_tuples = int(request.form.get('noisy_tuples'))
 
         current_iter = pickle.load( open('./store/' + project_id + '/current_iter.p', 'rb') )
         current_iter = '{:08x}'.format(int('0x' + current_iter, 0) + 1)
@@ -178,7 +179,6 @@ class Clean(Resource):
         with open('./store/' + project_id + '/scenario.json', 'r') as f:
             scenario = json.load(f)
         
-        # d_prev = pd.read_csv('./store/' + project_id + '/in_progress.csv', keep_default_na=False)
         d_orig = pd.read_csv('./store/' + project_id + '/data.csv', keep_default_na=False)
         header = d_orig.columns
         with open('./store/' + project_id + '/in_progress.csv', 'r+') as f:
@@ -189,10 +189,16 @@ class Clean(Resource):
 
             # Map any user-specified repairs from the sample to the full dataset
             d_curr = helpers.applyUserRepairs(d_prev, s_in, project_id, current_iter)
-            # d_curr.to_csv('./store/' + project_id + '/in_progress.csv', 'latin-1', index=False)
             writer = csv.DictWriter(f, header)
             writer.writeheader()
             writer.writerows(d_curr)
+
+        # Update tuple weights
+        # TODO
+
+        # Analyze noise 
+        helpers.applyNoiseFeedback(d_curr, noisy_tuples, project_id, current_iter)
+        # TODO
 
         # Run CFD discovery algorithm to determine confidence of relevant CFD(s)
         cfds = helpers.runCFDDiscovery(len(d_curr), project_id, current_iter)
