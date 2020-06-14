@@ -9,8 +9,8 @@ import sys
 import pickle
 from collections import Counter
 
-sys.path.insert(0, './charm/keywordSearch/')
-import charm
+# sys.path.insert(0, './charm/keywordSearch/')
+# import charm
 
 # CELL VALUE HISTORY OBJECT
 class ValueHistory(object):
