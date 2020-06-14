@@ -102,7 +102,7 @@ class Import(Resource):
                 value_metadata[idx][col] = dict()
                 value_metadata[idx][col]['history'] = list()
                 value_metadata[idx][col]['history'].append(helpers.ValueHistory(data[idx][col], 'user', current_iter, False))
-                # value_metadata[idx][col]['disagreement'] = 0
+                value_metadata[idx][col]['disagreement'] = 0
                 
         # Initialize CFD metadata object
         cfd_metadata = dict()
@@ -139,8 +139,10 @@ class Sample(Resource):
         sample_size = int(request.form.get('sample_size'))
         data = pd.read_csv('./store/' + project_id + '/in_progress.csv', keep_default_na=False)
         
-        # Build sample
+        # Build sample and update tuple weights post-sampling
+        current_iter = pickle.load( open('./store/' + project_id + '/current_iter.p', 'rb') )
         s_out = helpers.buildSample(data, sample_size, project_id)
+        helpers.reinforceTuplesPostSample(s_out, project_id, current_iter)
 
         # No changes have been made yet, so changes = False for every cell
         changes = list()
@@ -171,7 +173,7 @@ class Clean(Resource):
         project_id = request.form.get('project_id')
         sample = request.form.get('data')
         sample_size = int(request.form.get('sample_size'))
-        noisy_tuples = int(request.form.get('noisy_tuples'))
+        noisy_tuples = json.loads(request.form.get('noisy_tuples'))
 
         current_iter = pickle.load( open('./store/' + project_id + '/current_iter.p', 'rb') )
         current_iter = '{:08x}'.format(int('0x' + current_iter, 0) + 1)
@@ -193,9 +195,6 @@ class Clean(Resource):
             writer.writeheader()
             writer.writerows(d_curr)
 
-        # Update tuple weights
-        # TODO
-
         # Analyze noise 
         helpers.applyNoiseFeedback(d_curr, noisy_tuples, project_id, current_iter)
         # TODO
@@ -215,8 +214,18 @@ class Clean(Resource):
                 break
 
         # If confidence threshold for relevant CFD(s) IS NOT met, build new sample based on tuple weights
+        
+        # Update tuple weights pre-sampling
         d_curr = pd.DataFrame(d_curr)
+        helpers.reinforceTuplesPreSample(d_curr, project_id, current_iter)
+
+        # Build sample
         s_out = helpers.buildSample(d_curr, sample_size, project_id)
+
+        # Update tuple weights post-sampling
+        helpers.reinforceTuplesPostSample(s_out, project_id, current_iter)
+
+        # Build changes map for front-end
         changes = list()
         for idx in s_out.index:
             for col in s_out.columns:
