@@ -107,7 +107,7 @@ class Import(Resource):
         # Initialize CFD metadata object
         cfd_metadata = dict()
 
-        # Initialize other metrics/metadata needed in study
+        # TODO: Initialize other metrics/metadata needed in study
 
         # Save metadata
         pickle.dump( tuple_metadata, open(new_project_dir + '/tuple_metadata.p', 'wb') )
@@ -195,15 +195,14 @@ class Clean(Resource):
             writer.writeheader()
             writer.writerows(d_curr)
 
-        # Analyze noise 
+        # TODO: Analyze noise 
         helpers.applyNoiseFeedback(d_curr, noisy_tuples, project_id, current_iter)
-        # TODO
 
         # Run CFD discovery algorithm to determine confidence of relevant CFD(s)
         cfds = helpers.runCFDDiscovery(len(d_curr), project_id, current_iter)
         for c in cfds:
             if scenario['cfd'] == c['cfd']:
-                # If threshold IS met, return completion message to user
+                # If confidence threshold for relevant CFD(s) IS met, return completion message to user
                 if c['conf'] >= scenario['conf_threshold']:
                     returned_data = {
                         'msg': '[DONE]'
@@ -213,7 +212,7 @@ class Clean(Resource):
                     return response, 200, {'Access-Control-Allow-Origin': '*'}
                 break
 
-        # If confidence threshold for relevant CFD(s) IS NOT met, build new sample based on tuple weights
+        # Confidence threshold for relevant CFD(s) IS NOT met, so build new sample based on tuple weights
         
         # Update tuple weights pre-sampling
         d_curr = pd.DataFrame(d_curr)

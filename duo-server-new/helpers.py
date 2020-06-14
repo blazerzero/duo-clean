@@ -12,6 +12,7 @@ from collections import Counter
 sys.path.insert(0, './charm/keywordSearch/')
 import charm
 
+# CELL VALUE HISTORY OBJECT
 class ValueHistory(object):
     def __init__(self, value, agent, iter_num, changed):
         self.value = value      # the value
@@ -20,16 +21,18 @@ class ValueHistory(object):
         self.iter_num = iter_num                # the iteration number for this value
         self.changed = changed              # whether this value is a change from the previous state
 
+# TUPLE NOISE HISTORY OBJECT
 class TupleNoiseHistory(object):
     def __init__(self, noisy, iter_num):
-        self.noisy = noisy
-        self.iter_num = iter_num
+        self.noisy = noisy          # whether or not the tuple is noisy at iteration = iter_num
+        self.iter_num = iter_num    # iteration number
 
 class CFDConfidenceHistory(object):
     def __init__(self, iter_num, conf):
         self.iter_num = iter_num
         self.conf = conf
 
+# MAP USER-SUBMITTED REPAIRS FROM SAMPLE TO FULL DATASET
 def applyUserRepairs(d_prev, s_in, project_id, current_iter):
     d_curr = d_prev
     value_metadata = pickle.load( open('./store/' + project_id + '/value_metadata.p', 'rb') )
@@ -45,6 +48,7 @@ def applyUserRepairs(d_prev, s_in, project_id, current_iter):
     pickle.dump( value_metadata, open('./store/' + project_id + '/value_metadata.p', 'wb') )
     return d_curr
 
+# APPLY NOISE FEEDBACK FROM USER
 def applyNoiseFeedback(data, noisy_tuples, project_id, current_iter):
     tuple_metadata = pickle.load( open('./store/' + project_id + '/tuple_metadata.p', 'rb') )
 
@@ -56,6 +60,7 @@ def applyNoiseFeedback(data, noisy_tuples, project_id, current_iter):
 
     pickle.dump( tuple_metadata, open('./store/' + project_id + '/tuple_metadata.p', 'wb') )
 
+# DISCOVER CFDS THAT COULD APPLY OVER DATASET AND THEIR CONFIDENCES
 def runCFDDiscovery(num_rows, project_id, current_iter):
     fp = './store/' + project_id + '/in_progress.csv'
 
@@ -68,8 +73,6 @@ def runCFDDiscovery(num_rows, project_id, current_iter):
         output = res[0].decode('latin-1')
         polished_output = output.replace(',]', ']')
         cfds = json.loads(polished_output)['cfds']
-        # output = json.loads(res[0].decode('latin-1'))
-        # cfds = output['cfds']
         for c in cfds:
             if c['cfd'] not in cfd_metadata.keys():
                 cfd_metadata[c['cfd']] = dict()
@@ -83,16 +86,20 @@ def runCFDDiscovery(num_rows, project_id, current_iter):
     else:
         return None
 
+# UPDATE TUPLE WEIGHTS BASED ON INTERACTION STATISTICS
 def reinforceTuplesPreSample(data, project_id, current_iter):
     tuple_metadata = pickle.load( open('./store/' + project_id + '/tuple_metadata.p', 'rb') )
     value_metadata = pickle.load( open('./store/' + project_id + '/value_metadata.p', 'rb') )
     for idx in data.index:
         reinforcementValue = 0
         for col in data.columns:
+
+            # Value spread
             vspr_prev = len(set([vh.value for vh in value_metadata[idx][col]['history'] if int('0x' + vh.iter_num, 0) < int('0x' + current_iter, 0)]))
             vspr_curr = len(set([vh.value for vh in value_metadata[idx][col]['history']]))
             vspr_delta = vspr_curr - vspr_prev
 
+            # Value disagreement (overall and delta)
             historical_values = Counter([vh.value for vh in value_metadata[idx][col]['history']])
             num_occurrences_mode = historical_values.most_common(1)[0][1]
             vdis_prev = value_metadata[idx][col]['disagreement']
@@ -103,6 +110,7 @@ def reinforceTuplesPreSample(data, project_id, current_iter):
             if vdis_delta < 0:
                 vdis_delta = 0
 
+            # Check if the user changed the value of the cell from the last iteration
             curr_value = [h for h in historical_values if h[0] == data.at[idx, col]].pop()
             prev_value = [h for h in historical_values if h[0] == value_metadata[idx][col]['history'][-2].value].pop()
 
@@ -111,6 +119,7 @@ def reinforceTuplesPreSample(data, project_id, current_iter):
 
             reinforcementValue += (vspr_delta + vdis_curr + vdis_delta)
 
+        # Based on noise feedback
         for nh in tuple_metadata[idx]['noise_history']:
             if nh.noisy == True:
                 reinforcementValue += (int('0x' + nh.iter_num, 0) / len(tuple_metadata[idx]['noise_history']))
@@ -124,7 +133,7 @@ def reinforceTuplesPreSample(data, project_id, current_iter):
     pickle.dump( tuple_metadata, open('./store/' + project_id + '/tuple_metadata.p', 'wb') )
     pickle.dump( value_metadata, open('./store/' + project_id + '/value_metadata.p', 'wb') )
         
-
+# BUILD PROBABILISTIC SAMPLE
 def buildSample(data, sample_size, project_id):
     tuple_metadata = pickle.load( open('./store/' + project_id + '/tuple_metadata.p', 'rb') )
     tuple_weights = {k: v['weight'] for k, v in tuple_metadata.items()}
@@ -143,6 +152,7 @@ def buildSample(data, sample_size, project_id):
     s_out = data.iloc[chosen_tuples]
     return s_out
 
+# SELECT ONE TUPLE TO ADD TO SAMPLE
 def pickSingleTuple(tuple_weights):
     chance = random.uniform(0, 1)
     cumulative = 0
@@ -155,10 +165,12 @@ def pickSingleTuple(tuple_weights):
             print(tup)
             return tup
 
+# UPDATE TUPLE WEIGHTS BASED ON EXPLORATION
 def reinforceTuplesPostSample(sample, project_id, current_iter):
     tuple_metadata = pickle.load( open('./store/' + project_id + '/tuple_metadata.p', 'rb') )
     iter_num = int('0x' + current_iter, 0)
 
+    # Based on exploration frequency of each tuple
     for idx in sample.index:
         expl_freq = tuple_metadata[idx]['expl_freq']
         tuple_metadata[idx]['weight'] += (1 - expl_freq/(iter_num+1))
@@ -170,6 +182,7 @@ def reinforceTuplesPostSample(sample, project_id, current_iter):
 
     pickle.dump( tuple_metadata, open('./store/' + project_id + '/tuple_metadata.p', 'wb') )
 
+# NORMALIZE TUPLE WEIGHTS BETWEEN 0 AND 1
 def normalizeTupleWeights(tm_unnormalized):
     tm_normalized = tm_unnormalized
     tm_weight_sum = sum([v['weight'] for _, v in tm_unnormalized.items()])
