@@ -7,6 +7,7 @@ import pandas as pd
 import numpy as np
 import sys
 import pickle
+from math import isnan
 from collections import Counter
 
 # sys.path.insert(0, './charm/keywordSearch/')
@@ -90,9 +91,16 @@ def runCFDDiscovery(num_rows, project_id, current_iter):
 def reinforceTuplesPreSample(data, project_id, current_iter):
     tuple_metadata = pickle.load( open('./store/' + project_id + '/tuple_metadata.p', 'rb') )
     value_metadata = pickle.load( open('./store/' + project_id + '/value_metadata.p', 'rb') )
+    iter_num = int('0x' + current_iter, 0)
     for idx in data.index:
         reinforcementValue = 0
+        expl_score = (iter_num - tuple_metadata[idx]['expl_freq']) / iter_num
+        reinforcementValue += expl_score
         for col in data.columns:
+
+            # Occurrence of null value in cell
+            if data.at[idx, col] == '' or isnan(data.at[idx, col]):
+                reinforcementValue += (1 / len(data.columns))
 
             # Value spread
             vspr_prev = len(set([vh.value for vh in value_metadata[idx][col]['history'] if int('0x' + vh.iter_num, 0) < int('0x' + current_iter, 0)]))
@@ -107,14 +115,12 @@ def reinforceTuplesPreSample(data, project_id, current_iter):
             vdis_delta = vdis_curr - vdis_prev
             value_metadata[idx][col]['disagreement'] = vdis_curr
 
-            if vdis_delta < 0:
-                vdis_delta = 0
+            # Stops weight underflow
+            vdis_delta = abs(vdis_delta)
 
             # Check if the user changed the value of the cell from the last iteration
-            curr_value = [h for h in historical_values if h[0] == data.at[idx, col]].pop()
-            prev_value = [h for h in historical_values if h[0] == value_metadata[idx][col]['history'][-2].value].pop()
-
-            if curr_value != prev_value:
+            latest_value = value_metadata[idx][col]['history'][-1]
+            if latest_value.changed == True:
                 reinforcementValue += (1 / len(data.columns))
 
             reinforcementValue += (vspr_delta + vdis_curr + vdis_delta)
@@ -122,7 +128,7 @@ def reinforceTuplesPreSample(data, project_id, current_iter):
         # Based on noise feedback
         for nh in tuple_metadata[idx]['noise_history']:
             if nh.noisy == True:
-                reinforcementValue += (int('0x' + nh.iter_num, 0) / len(tuple_metadata[idx]['noise_history']))
+                reinforcementValue += (iter_num / len(tuple_metadata[idx]['noise_history']))
                 
         tuple_metadata.at[idx, 'weight'] += reinforcementValue
 
