@@ -87,7 +87,7 @@ class Import(Resource):
 
         # Initialize tuple metadata and value metadata objects
         tuple_metadata = dict()
-        value_metadata = dict()
+        cell_metadata = dict()
         for idx in range(0, len(data)):
 
             # Tuple metadata
@@ -97,12 +97,13 @@ class Import(Resource):
             tuple_metadata[idx]['noise_history'] = list()
 
             # Value metadata
-            value_metadata[idx] = dict()
+            cell_metadata[idx] = dict()
             for col in header:
-                value_metadata[idx][col] = dict()
-                value_metadata[idx][col]['history'] = list()
-                value_metadata[idx][col]['history'].append(helpers.ValueHistory(data[idx][col], 'user', current_iter, False))
-                value_metadata[idx][col]['disagreement'] = 0
+                cell_metadata[idx][col] = dict()
+                cell_metadata[idx][col]['history'] = list()
+                cell_metadata[idx][col]['history'].append(helpers.ValueHistory(value=data[idx][col], iter_num=current_iter, changed=False))
+                cell_metadata[idx][col]['stats'] = list()
+                cell_metadata[idx][col]['stats'].append(helpers.CellStatistic(vocc=1, vspr=1, vdis=0, iter_num=current_iter))
                 
         # Initialize CFD metadata object
         cfd_metadata = dict()
@@ -111,7 +112,7 @@ class Import(Resource):
 
         # Save metadata
         pickle.dump( tuple_metadata, open(new_project_dir + '/tuple_metadata.p', 'wb') )
-        pickle.dump( value_metadata, open(new_project_dir + '/value_metadata.p', 'wb') )
+        pickle.dump( cell_metadata, open(new_project_dir + '/cell_metadata.p', 'wb') )
         pickle.dump( cfd_metadata, open(new_project_dir + '/cfd_metadata.p', 'wb') )
         pickle.dump( current_iter, open(new_project_dir + '/current_iter.p', 'wb') )
 
@@ -177,6 +178,7 @@ class Clean(Resource):
 
         current_iter = pickle.load( open('./store/' + project_id + '/current_iter.p', 'rb') )
         current_iter = '{:08x}'.format(int('0x' + current_iter, 0) + 1)
+        pickle.dump( current_iter, open('./store/' + project_id + '/current_iter.p', 'wb') )
 
         with open('./store/' + project_id + '/scenario.json', 'r') as f:
             scenario = json.load(f)
@@ -190,7 +192,7 @@ class Clean(Resource):
             f.seek(0)
 
             # Map any user-specified repairs from the sample to the full dataset
-            d_curr = helpers.applyUserRepairs(d_prev, s_in, project_id, current_iter)
+            d_curr = helpers.applyUserModFeedback(d_prev, s_in, project_id, current_iter)
             writer = csv.DictWriter(f, header)
             writer.writeheader()
             writer.writerows(d_curr)
@@ -200,29 +202,30 @@ class Clean(Resource):
 
         # Run CFD discovery algorithm to determine confidence of relevant CFD(s)
         cfds = helpers.runCFDDiscovery(len(d_curr), project_id, current_iter)
-        for c in cfds:
-            if scenario['cfd'] == c['cfd']:
-                # If confidence threshold for relevant CFD(s) IS met, return completion message to user
-                if c['conf'] >= scenario['conf_threshold']:
-                    returned_data = {
-                        'msg': '[DONE]'
-                    }
-                    response = json.dumps(returned_data)
-                    pprint(response)
-                    return response, 200, {'Access-Control-Allow-Origin': '*'}
-                break
+        if cfds is not None:
+            for c in cfds:
+                if scenario['cfd'] == c['cfd']:
+                    # If confidence threshold for relevant CFD(s) IS met, return completion message to user
+                    if c['conf'] >= scenario['conf_threshold']:
+                        returned_data = {
+                            'msg': '[DONE]'
+                        }
+                        response = json.dumps(returned_data)
+                        pprint(response)
+                        return response, 200, {'Access-Control-Allow-Origin': '*'}
+                    break
 
         # Confidence threshold for relevant CFD(s) IS NOT met, so build new sample based on tuple weights
         
         # Update tuple weights pre-sampling
         d_curr = pd.DataFrame(d_curr)
-        helpers.reinforceTuplesPreSample(d_curr, project_id, current_iter)
+        helpers.reinforceTuples(d_curr, project_id, current_iter)
 
         # Build sample
         s_out = helpers.buildSample(d_curr, sample_size, project_id)
 
         # Update tuple weights post-sampling
-        helpers.reinforceTuplesPostSample(s_out, project_id, current_iter)
+        # helpers.reinforceTuplesPostSample(s_out, project_id, current_iter)
 
         # Build changes map for front-end
         changes = list()
