@@ -141,9 +141,9 @@ class Sample(Resource):
         data = pd.read_csv('./store/' + project_id + '/in_progress.csv', keep_default_na=False)
         
         # Build sample and update tuple weights post-sampling
-        current_iter = pickle.load( open('./store/' + project_id + '/current_iter.p', 'rb') )
+        # current_iter = pickle.load( open('./store/' + project_id + '/current_iter.p', 'rb') )
         s_out = helpers.buildSample(data, sample_size, project_id)
-        helpers.reinforceTuplesPostSample(s_out, project_id, current_iter)
+        # helpers.reinforceTuplesPostSample(s_out, project_id, current_iter)
 
         # No changes have been made yet, so changes = False for every cell
         changes = list()

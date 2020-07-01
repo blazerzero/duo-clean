@@ -23,7 +23,8 @@ for i in range(0, data_len-1):
         value = random.randint(0,data_len-1)
         threshold = math.floor(data_len*0.05)
         if value < threshold:
-            df.at[i,j] = df.at[i+1, j]
+            rand_row = random.randint(0, 99)
+            df.at[i,j] = df.at[rand_row, j]
             counter5 += 1
 
 ratio5 = counter5/(data_len * num_cols)
@@ -42,7 +43,8 @@ for i in range(0, data_len-1):
         value = random.randint(0,data_len-1)
         threshold = math.floor(data_len*0.1)
         if value < threshold:
-            df.at[i,j] = df.at[i+1, j]
+            rand_row = random.randint(0, 99)
+            df.at[i,j] = df.at[rand_row, j]
             counter10 += 1
 
 ratio10 = counter10/(data_len * num_cols)
@@ -61,7 +63,8 @@ for i in range(0, data_len-1):
         value = random.randint(0,data_len-1)
         threshold = math.floor(data_len*0.2)
         if value < threshold:
-            df.at[i,j] = df.at[i+1, j]
+            rand_row = random.randint(0, 99)
+            df.at[i,j] = df.at[rand_row, j]
             counter20 += 1
 
 ratio20 = counter20/(data_len * num_cols)
@@ -80,7 +83,8 @@ for i in range(0, data_len-1):
         value = random.randint(0,data_len-1)
         threshold = math.floor(data_len*0.25)
         if value < threshold:
-            df.at[i,j] = df.at[i+1, j]
+            rand_row = random.randint(0, 99)
+            df.at[i,j] = df.at[rand_row, j]
             counter25 += 1
 
 ratio25 = counter25/(data_len * num_cols)
@@ -99,7 +103,8 @@ for i in range(0, data_len-1):
         value = random.randint(0,data_len-1)
         threshold = math.floor(data_len*0.3)
         if value < threshold:
-            df.at[i,j] = df.at[i+1, j]
+            rand_row = random.randint(0, 99)
+            df.at[i,j] = df.at[rand_row, j]
             counter30 += 1
 
 ratio30 = counter30/(data_len * num_cols)
