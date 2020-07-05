@@ -14,8 +14,7 @@ print(df)
 counter5 = 0
 data_len = len(df.index)
 num_cols = 0
-scenario = '-S' + sys.argv[2]
-columns = sys.argv[3:] if len(sys.argv) > 2 else df.columns
+columns = sys.argv[2:] if len(sys.argv) > 2 else df.columns
 num_cols = len(columns)
 
 for i in range(0, data_len-1):
@@ -33,7 +32,7 @@ print(df)
 print("The number of updated values with 5% noise: ", counter5)
 print("The ratio of updated values with 5% noise: ", ratio5)
 
-export_csv = df.to_csv(sys.argv[1] + '-dirty_05' + scenario + '.csv', encoding='utf-8', index=False, header=True)
+export_csv = df.to_csv(sys.argv[1] + '-dirty_05.csv', encoding='utf-8', index=False, header=True)
 
 df = pd.read_csv(file_name, encoding="latin_1")
 counter10 = 0
@@ -53,7 +52,7 @@ print(df)
 print("The number of updated values with 10% noise: ", counter10)
 print("The ratio of updated values with 10% noise: ", ratio10)
 
-export_csv = df.to_csv(sys.argv[1] + '-dirty_10' + scenario + '.csv', encoding='utf-8', index=False, header=True)
+export_csv = df.to_csv(sys.argv[1] + '-dirty_10.csv', encoding='utf-8', index=False, header=True)
 
 df = pd.read_csv(file_name, encoding="latin_1")
 counter20 = 0
@@ -73,7 +72,7 @@ print(df)
 print("The number of updated values with 20% noise: ", counter20)
 print("The ratio of updated values with 20% noise: ", ratio20)
 
-export_csv = df.to_csv(sys.argv[1] + '-dirty_20' + scenario + '.csv', encoding='utf-8', index=False, header=True)
+export_csv = df.to_csv(sys.argv[1] + '-dirty_20.csv', encoding='utf-8', index=False, header=True)
 
 df = pd.read_csv(file_name, encoding="latin_1")
 counter25 = 0
@@ -93,7 +92,7 @@ print(df)
 print("The number of updated values with 25% noise: ", counter25)
 print("The ratio of updated values with 25% noise: ", ratio25)
 
-export_csv = df.to_csv(sys.argv[1] + '-dirty_25' + scenario + '.csv', encoding='utf-8', index=False, header=True)
+export_csv = df.to_csv(sys.argv[1] + '-dirty_25.csv', encoding='utf-8', index=False, header=True)
 
 df = pd.read_csv(file_name, encoding="latin_1")
 counter30 = 0
@@ -113,4 +112,4 @@ print(df)
 print("The number of updated values with 30% noise: ", counter30)
 print("The ratio of updated values with 30% noise: ", ratio30)
 
-export_csv = df.to_csv(sys.argv[1] + '-dirty_30' + scenario + '.csv', encoding='utf-8', index=False, header=True)
+export_csv = df.to_csv(sys.argv[1] + '-dirty_30.csv', encoding='utf-8', index=False, header=True)
