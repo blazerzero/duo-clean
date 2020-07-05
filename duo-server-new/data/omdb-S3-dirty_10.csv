@@ -1,6 +1,6 @@
 Title,Year,Rating,Director,Type
 Force of Execution,2013,R,Keoni Waxman,movie
-Patient Zero,2014,TV-14,Adam Davidson,episode
+Patient Zero,2014,R,Adam Davidson,episode
 Gold Crash,2013,TV-14,Anthony Mastanduno,episode
 A Good Man,2014,R,Keoni Waxman,episode
 State vs Queen,2013,TV-14,Bethany Rooney,episode
@@ -13,7 +13,7 @@ Final Shot,2013,TV-14,Bethany Rooney,episode
 Unknown Journeys,2014,Not Rated,Keith Munden,movie
 Trust Is Complicated,2014,Not Rated,Chris Hollo,episode
 Emily,2013,Not Rated,Chris Hollo,episode
-Tyler Perry's A Madea Christmas,2013,PG-13,Tyler Perry,movie
+Tyler Perry's A Madea Christmas,2013,TV-14,Tyler Perry,movie
 Breakdown at Tiffany's,2013,TV-14,Anthony Mastanduno,movie
 All-American Jewelry and Loan,2013,TV-14,Anthony Mastanduno,episode
 High School Possession,2014,R,Peter Sullivan,movie
@@ -25,18 +25,18 @@ The Life We've Chosen,2013,TV-14,Brad Turner,episode
 Little Fish,2014,TV-MA,Greg Yaitanes,episode
 Children of the Night,2013,TV-MA,Deran Sarafian,episode
 A Typical Night,2014,Not Rated,Keith Munden,movie
-Final Shot,2013,TV-14,Bethany Rooney,episode
+Final Shot,2013,Not Rated,Bethany Rooney,episode
 Back to the Hustle,2013,TV-14,Anthony Mastanduno,episode
 The Drive II: 395 Miles from L.A.,2013,Not Rated,Scott Shaw,movie
 Tick Tock,2014,Not Rated,Keith Munden,episode
-Jarhead 2: Field of Fire,2014,R,Don Michael Paul,movie
+Jarhead 2: Field of Fire,2014,PG,Don Michael Paul,movie
 The Haunting,2014,TV-14,Brad Turner,episode
 Here We Go,2013,Not Rated,Chris Hollo,movie
 Aftermath,2013,TV-14,Brad Turner,episode
 Frame by Frame,2013,TV-14,Alec Smight,episode
 Safe Place,2014,Not Rated,Keith Munden,movie
-Donald G. Jackson: Confessions,2014,Not Rated,Scott Shaw,movie
-Hell Bent for Leather,2013,TV-MA,David Von Ancken,movie
+Donald G. Jackson: Confessions,2014,R,Scott Shaw,movie
+Hell Bent for Leather,2013,TV-14,David Von Ancken,movie
 Family Conference,2013,TV-PG,Chris Koch,episode
 Harold's Gamble,2013,TV-14,Anthony Mastanduno,episode
 Dead of the Class,2013,TV-14,Alec Smight,episode
@@ -57,7 +57,7 @@ In the Clouds,2013,TV-MA,David Von Ancken,episode
 Temptation: Confessions of a Marriage Counselor,2013,PG-13,Tyler Perry,movie
 Camping,2013,TV-PG,Chris Koch,episode
 The Devil and D.B. Russell,2013,TV-14,Alec Smight,movie
-The Walking Dead,2013,TV-14,Rob Hardy,episode
+The Walking Dead,2013,PG-13,Rob Hardy,episode
 The Prince,2014,R,Brian A Miller,movie
 Computer Crash,2013,TV-14,Anthony Mastanduno,episode
 Homecoming,2014,TV-MA,Greg Yaitanes,episode
@@ -83,8 +83,8 @@ Seth Snaps,2013,TV-14,Anthony Mastanduno,episode
 Seth in Charge,2013,TV-14,Anthony Mastanduno,episode
 Woman on Top,2013,TV-14,Gail Mancuso,episode
 The Crucible,2013,TV-MA,Deran Sarafian,episode
-The Back Nine,2013,TV-PG,Chris Koch,episode
-The Single Moms Club,2014,PG-13,Tyler Perry,movie
+The Back Nine,2013,TV-14,Chris Koch,episode
+The Single Moms Club,2014,TV-14,Tyler Perry,movie
 Back in Action,2013,TV-14,Anthony Mastanduno,episode
 12 Rounds 2: Reloaded,2013,R,Roel Reine,episode
 "Batman: The Dark Knight Returns, Part 2",2013,PG-13,Jay Oliva,episode
