@@ -3,13 +3,12 @@ import {
   Alert,
   Button,
   Col,
-  Form,
   Modal,
   Row,
   Table,
   Spinner,
 } from 'react-bootstrap';
-import { BrowserRouter as Router, Route, Link } from 'react-router-dom';
+import { Route } from 'react-router-dom';
 import axios from 'axios';
 import { pick } from 'lodash';
 
@@ -27,30 +26,27 @@ class Clean extends Component {
           console.log(response.data);
           var res = JSON.parse(response.data);
           var { msg } = pick(res, ['msg'])
-          if (msg == '[DONE]') {
+          if (msg === '[DONE]') {
             alert('Thank you for participating! Please revisit your instructions to see next steps.');
           }
           else {
-            var { sample, contradictions, changes } = pick(res, ['sample', 'contradictions', 'changes'])
+            var { sample, contradictions, feedback } = pick(res, ['sample', 'contradictions', 'feedback'])
             var data = JSON.parse(sample);
             contradictions = JSON.parse(contradictions);
-            changes = JSON.parse(changes);
+            feedback = JSON.parse(feedback);
 
-            var noisyTuples = {};
             for (var i in data) {
-              noisyTuples[i] = false;
               for (var j in data[i]) {
                 if (data[i][j] == null) data[i][j] = '';
                 else if (typeof data[i][j] != 'string') data[i][j] = data[i][j].toString();
               }
             }
             var contradictionMap = await this._buildContradictionMap(data, contradictions);
-            var changeMap = await this._buildChangeMap(data, changes);
+            var feedbackMap = await this._buildFeedbackMap(data, feedback);
             this.setState({ 
               data,
-              noisyTuples,
               contradictionMap,
-              changeMap,
+              feedbackMap,
               isProcessing: false
             });
           }
@@ -64,9 +60,9 @@ class Clean extends Component {
     var contradictionMap = {};
     var rows = Object.keys(data);
     var cols = this.state.header;
-    for (var i = 0; i < rows.length; i++) {
+    for (let i = 0; i < rows.length; i++) {
       var tup = {};
-      for (var j = 0; j < cols.length; j++) {
+      for (let j = 0; j < cols.length; j++) {
         tup[cols[j]] = contradictions.some(e => e.row === parseInt(rows[i]) && e.col === cols[j]);
       }
       contradictionMap[rows[i]] = tup;
@@ -74,22 +70,22 @@ class Clean extends Component {
     return contradictionMap;
   }
 
-  _buildChangeMap = async(data, changes) => {
-    var changeMap = {};
+  _buildFeedbackMap = async(data, feedback) => {
+    var feedbackMap = {};
     var rows = Object.keys(data);
     var cols = this.state.header;
-    for (var i = 0; i < rows.length; i++) {
+    for (let i = 0; i < rows.length; i++) {
       var tup = {};
-      for (var j = 0; j < cols.length; j++) {
-        var cell = changes.find(e => {
+      for (let j = 0; j < cols.length; j++) {
+        var cell = feedback.find(e => {
           var trimmedCol = cols[j].replace(/[\n\r]+/g, '');
           return e.row === parseInt(rows[i]) && e.col === trimmedCol;
         });
-        tup[cols[j]] = cell.changed;
+        tup[cols[j]] = cell.marked;
       }
-      changeMap[rows[i]] = tup;
+      feedbackMap[rows[i]] = tup;
     }
-    return changeMap;
+    return feedbackMap;
   }
 
   _getSampleData = async(project_id, sample_size) => {
@@ -100,16 +96,14 @@ class Clean extends Component {
     axios.post('http://localhost:5000/duo/api/sample', formData)
         .then(async(response) => {
           var res = JSON.parse(response.data);
-          var { sample, contradictions, changes, msg } = pick(res, ['sample', 'contradictions', 'changes', 'msg'])
+          var { sample, contradictions, feedback, msg } = pick(res, ['sample', 'contradictions', 'feedback', 'msg'])
           var data = JSON.parse(sample);
           contradictions = JSON.parse(contradictions);
-          changes = JSON.parse(changes);
+          feedback = JSON.parse(feedback);
           console.log(data);
           console.log(msg);
 
-          var noisyTuples = {};
           for (var i in data) {
-            noisyTuples[i] = false;
             for (var j in data[i]) {
               if (data[i][j] == null) data[i][j] = '';
               else if (typeof data[i][j] != 'string') data[i][j] = data[i][j].toString();
@@ -119,8 +113,8 @@ class Clean extends Component {
             }
           }
           var contradictionMap = await this._buildContradictionMap(data, contradictions);
-          var changeMap = await this._buildChangeMap(data, changes);
-          this.setState({ data, contradictionMap, changeMap });
+          var feedbackMap = await this._buildFeedbackMap(data, feedback);
+          this.setState({ data, contradictionMap, feedbackMap });
         })
         .catch(error => {
           console.log(error);
@@ -137,52 +131,14 @@ class Clean extends Component {
     var pieces = key.split('_');
     var idx = parseInt(pieces.shift());
     var attr = pieces.join('_');
-    this.setState({
-      modalCellValue: this.state.data[idx][attr],
-      modalCellKey: key,
-      isModalOpen: true
-    });
+    var feedbackMap = this.state.feedbackMap;
+    feedbackMap[idx][attr] = !feedbackMap[idx][attr]
+    this.setState({ feedbackMap });
   }
 
-  _handleNoisyCheckboxClick = (event) => {
-    var idx = parseInt(event.target.value);
-    var noisyTuples = this.state.noisyTuples;
-    noisyTuples[idx] = !noisyTuples[idx];
-    console.log(noisyTuples);
-    this.setState({ noisyTuples });
-  }
-
-  _closeModal = async() => {
-    this.setState({ isModalOpen: false });
-  }
-
-  _saveChange = async() => {
-    var newCellValue = this.newCellValue.current.value;
-    var data = this.state.data;
-    var keyPieces = this.state.modalCellKey.split('_');
-    var idx = parseInt(keyPieces.shift());
-    var attr = keyPieces.join('_');
-    data[idx][attr] = newCellValue;
-
-    for (var i in data) {
-      for (var j in data[i]) {
-        if (typeof data[i][j] == 'number') data[i][j] = Math.trunc(data[i][j]);
-        if (data[i][j] == null) data[i][j] = '';
-        else if (typeof data[i][j] != 'string') data[i][j] = data[i][j].toString();
-      }
-    }
-
-    var noisyTuples = this.state.noisyTuples;
-    noisyTuples[idx] = true;
-    console.log(noisyTuples);
-
-    this.setState({
-      data,
-      noisyTuples,
-      modalCellValue: null,
-      modalCellKey: null,
-      isModalOpen: false,
-    });
+  _handleNoNewFeedbackClick = async() => {
+    var isNewFeedback = !this.state.isNewFeedback;
+    this.setState({ isNewFeedback });
   }
 
   componentDidMount() {
@@ -199,21 +155,13 @@ class Clean extends Component {
 
     this.state = {
       data: [],
-      noisyTuples: {},
+      feedbackMap: {},
       contradictionMap: [],
-      changeMap: [],
       header: [],
       project_id: 0,
-      isModalOpen: false,
-      modalCellValue: null,
-      modalCellKey: null,
       isProcessing: false,
+      isNewFeedback: false,
     };
-
-    this.newCellValue = React.createRef();
-    this._closeModal = this._closeModal.bind(this);
-    this._saveChange = this._saveChange.bind(this);
-    this._handleSubmit = this._handleSubmit.bind(this);
   }
 
   render() {
@@ -229,48 +177,21 @@ class Clean extends Component {
           <Row className='content-centered'>
             <div className='results-header box-blur'>
               <span className='results-title'>DuoClean</span>
+              <p><strong>Scenario #: </strong>{this.state.scenario_number}</p>
               <p><strong>Project ID: </strong>{this.state.project_id}</p>
             </div>
           </Row>
           <Row className='content-centered'>
-            <Col>
-              <Alert variant='success' style={{border: '1px black solid'}}>Green cells indicate cells that<br/>the system repaired.</Alert>
-            </Col>
-            <Col>
+            <Col md={6}>
               <Alert variant='warning' style={{border: '1px black solid'}}>Yellow cells indicate cells in which <br/>contradicting values occurred while the system<br/>was repairing the dataset.</Alert>
             </Col>
           </Row>
           {Object.keys(this.state.data).length > 0 && (
             <div>
-              <Modal show={this.state.isModalOpen} onHide={this._closeModal} animation={false}>
-                <Form onSubmit={this._saveChange}>
-                  <Modal.Header closeButton>
-                    <Modal.Title>Edit Cell</Modal.Title>
-                  </Modal.Header>
-                  <Modal.Body>
-                    <Form.Group>
-                      <Form.Label><strong>Current Value: </strong>{this.state.modalCellValue}</Form.Label>
-                    </Form.Group>
-                    <Form.Group>
-                      <Form.Label><strong>New Value</strong></Form.Label>
-                      <Form.Control ref={this.newCellValue} defaultValue={this.state.modalCellValue}></Form.Control>
-                    </Form.Group>
-                  </Modal.Body>
-                  <Modal.Footer>
-                    <Button variant='secondary' onClick={this._closeModal}>
-                      Cancel
-                    </Button>
-                    <Button variant='primary' type='submit'>
-                      Save
-                    </Button>
-                  </Modal.Footer>
-                </Form>
-              </Modal>
               <div>
                 <Table bordered responsive>
                   <thead>
                     <tr>
-                      <th>Noisy Tuple?</th>
                       { this.state.header.map((item) => {
                         return <th key={'header_'.concat(item)}>{item}</th>
                       }) }
@@ -279,52 +200,42 @@ class Clean extends Component {
                   <tbody>
                   { Object.keys(this.state.data).map((i) => {
                     return (
-                        <tr key={i}>
-                          <td name={i.toString().concat('_noisy')}>
-                            <input
-                              type='checkbox'
-                              value={i}
-                              checked={!!this.state.noisyTuples[i]}
-                              onChange={this._handleNoisyCheckboxClick.bind(this)}
-                              />
+                      <tr key={i}>
+                        { Object.keys(this.state.data[i]).map((j) => {
+                          var key = i.toString().concat('_', j);
+                          return <td
+                              key={key}
+                              style={{cursor: 'pointer', backgroundColor: (!!this.state.contradictionMap[i][j] ? '#FFF3CD' : (this.state.feedbackMap[i][j] ? '#D4EDDA' : 'white'))}}
+                              onClick={this._handleCellClick.bind(this, key)}>
+                              {this.state.data[i][j]}
                           </td>
-                          { Object.keys(this.state.data[i]).map((j) => {
-                            var key = i.toString().concat('_', j);
-                            return <td
-                                key={key}
-                                style={{cursor: 'pointer', backgroundColor: (!!this.state.contradictionMap[i][j] ? '#FFF3CD' : (this.state.changeMap[i][j] ? '#D4EDDA' : 'white'))}}
-                                onClick={this._handleCellClick.bind(this, key)}>{this.state.data[i][j]}
-                            </td>
-                          }) }
-                        </tr>
+                        }) }
+                      </tr>
                     )
                   }) }
                   </tbody>
                 </Table>
               </div>
-              <div className='content-centered'>
-                <Button
-                    variant='primary'
-                    className='btn-round right box-blur'
-                    size='lg'
-                    onClick={this._handleSubmit}>
-                  SUBMIT CHANGES AND SEE NEW EXAMPLES
-                </Button>
-                {/* <Button
-                    variant='success'
-                    className='btn-round right box-blur'
-                    size='lg'
-                    onClick={this._handleDone}>
-                  DONE
-                </Button>
-                <Button
-                    variant='success'
-                    className='btn-round right box-blur'
-                    size='lg'
-                    onClick={this._handleDownload}>
-                  DOWNLOAD
-                </Button> */}
-              </div>
+              <Row className='content-centered'>
+                <Col md={4}>
+                  <label>
+                    <input
+                      type='checkbox'
+                      defaultChecked={this.state.isNewFeedback}
+                      onChange={this._handleNoNewFeedbackClick}
+                      />
+                  </label>
+                </Col>
+                <Col md={{ span: 4, offset: 4 }}>
+                  <Button
+                      variant='primary'
+                      className='btn-round right box-blur'
+                      size='lg'
+                      onClick={this._handleSubmit}>
+                    SUBMIT
+                  </Button>
+                </Col>
+              </Row>
             </div>
           )}
         </div>
