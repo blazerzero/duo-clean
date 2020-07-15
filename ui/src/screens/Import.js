@@ -23,7 +23,7 @@ class Import extends Component {
   }
 
   _handleSubmit = async(history) => {
-    if (this.state.importedFile != null && !isNaN(this.state.scenarioID)) {
+    if (!isNaN(this.state.scenarioID) || this.state.participantName.length === 0) {
       this.setState({ isProcessing: true });
       const formData = new FormData();
       formData.append('scenario_id', this.state.scenarioID);
@@ -43,7 +43,8 @@ class Import extends Component {
           history.push({
             pathname: '/duo/clean/',
             header: header,
-            project_id: project_id
+            project_id: project_id,
+            scenario_id: this.state.scenarioID
           });
         })
         .catch(error => console.log(error));

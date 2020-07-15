@@ -18,9 +18,8 @@ class Clean extends Component {
     this.setState({ isProcessing: true });
     const formData = new FormData();
     formData.append('project_id', this.state.project_id);
-    formData.append('data', JSON.stringify(this.state.data));
-    formData.append('noisy_tuples', JSON.stringify(this.state.noisyTuples));
-    formData.append('sample_size', 10);
+    formData.append('feedback', JSON.stringify(this.state.feedbackMap));
+    formData.append('no_new_feedback', this.state.isNewFeedback);
     axios.post('http://localhost:5000/duo/api/clean', formData)
         .then(async(response) => {
           console.log(response.data);
@@ -30,10 +29,11 @@ class Clean extends Component {
             alert('Thank you for participating! Please revisit your instructions to see next steps.');
           }
           else {
-            var { sample, contradictions, feedback } = pick(res, ['sample', 'contradictions', 'feedback'])
+            var { sample, feedback, leaderboard } = pick(res, ['sample', 'feedback', 'leaderboard'])
             var data = JSON.parse(sample);
-            contradictions = JSON.parse(contradictions);
+            leaderboard = JSON.parse(leaderboard);
             feedback = JSON.parse(feedback);
+            console.log(msg);
 
             for (var i in data) {
               for (var j in data[i]) {
@@ -41,33 +41,22 @@ class Clean extends Component {
                 else if (typeof data[i][j] != 'string') data[i][j] = data[i][j].toString();
               }
             }
-            var contradictionMap = await this._buildContradictionMap(data, contradictions);
+            console.log(data);
+
             var feedbackMap = await this._buildFeedbackMap(data, feedback);
             this.setState({ 
               data,
-              contradictionMap,
               feedbackMap,
-              isProcessing: false
+              isProcessing: false,
+              leaderboard
+            }, () => {
+              console.log(this.state.leaderboard);
             });
           }
         })
         .catch(error => {
           console.log(error);
         });
-  }
-
-  _buildContradictionMap = async(data, contradictions) => {
-    var contradictionMap = {};
-    var rows = Object.keys(data);
-    var cols = this.state.header;
-    for (let i = 0; i < rows.length; i++) {
-      var tup = {};
-      for (let j = 0; j < cols.length; j++) {
-        tup[cols[j]] = contradictions.some(e => e.row === parseInt(rows[i]) && e.col === cols[j]);
-      }
-      contradictionMap[rows[i]] = tup;
-    }
-    return contradictionMap;
   }
 
   _buildFeedbackMap = async(data, feedback) => {
@@ -88,19 +77,17 @@ class Clean extends Component {
     return feedbackMap;
   }
 
-  _getSampleData = async(project_id, sample_size) => {
+  _getSampleData = async(project_id) => {
     const formData = new FormData();
     formData.append('project_id', project_id);
-    formData.append('sample_size', sample_size);
     console.log(formData.get('project_id'));
     axios.post('http://localhost:5000/duo/api/sample', formData)
         .then(async(response) => {
           var res = JSON.parse(response.data);
-          var { sample, contradictions, feedback, msg } = pick(res, ['sample', 'contradictions', 'feedback', 'msg'])
+          var { sample, feedback, msg, leaderboard } = pick(res, ['sample', 'feedback', 'msg', 'leaderboard'])
           var data = JSON.parse(sample);
-          contradictions = JSON.parse(contradictions);
+          leaderboard = JSON.parse(leaderboard);
           feedback = JSON.parse(feedback);
-          console.log(data);
           console.log(msg);
 
           for (var i in data) {
@@ -112,9 +99,12 @@ class Clean extends Component {
               }
             }
           }
-          var contradictionMap = await this._buildContradictionMap(data, contradictions);
+          console.log(data);
+
           var feedbackMap = await this._buildFeedbackMap(data, feedback);
-          this.setState({ data, contradictionMap, feedbackMap });
+          this.setState({ data, feedbackMap, leaderboard }, () => {
+            console.log(this.state.leaderboard);
+          });
         })
         .catch(error => {
           console.log(error);
@@ -142,9 +132,9 @@ class Clean extends Component {
   }
 
   componentDidMount() {
-    const { header, project_id } = this.props.location;
-    this.setState({ header, project_id }, async() => {
-      await this._getSampleData(this.state.project_id, 10);
+    const { header, project_id, scenario_id } = this.props.location;
+    this.setState({ header, project_id, scenario_id }, async() => {
+      await this._getSampleData(this.state.project_id);
       console.log('got sample');
       console.log(this.state);
     });
@@ -156,11 +146,12 @@ class Clean extends Component {
     this.state = {
       data: [],
       feedbackMap: {},
-      contradictionMap: [],
       header: [],
       project_id: 0,
+      scenario_id: 0,
       isProcessing: false,
       isNewFeedback: false,
+      leaderboard: {},
     };
   }
 
@@ -177,63 +168,95 @@ class Clean extends Component {
           <Row className='content-centered'>
             <div className='results-header box-blur'>
               <span className='results-title'>DuoClean</span>
-              <p><strong>Scenario #: </strong>{this.state.scenario_number}</p>
+              <p><strong>Scenario #: </strong>{this.state.scenario_id}</p>
               <p><strong>Project ID: </strong>{this.state.project_id}</p>
             </div>
           </Row>
           <Row className='content-centered'>
             <Col md={6}>
-              <Alert variant='warning' style={{border: '1px black solid'}}>Yellow cells indicate cells in which <br/>contradicting values occurred while the system<br/>was repairing the dataset.</Alert>
+              <Alert variant='warning' style={{border: '1px black solid'}}>Yellow cells indicate cells you marked as noisy.</Alert>
             </Col>
           </Row>
           {Object.keys(this.state.data).length > 0 && (
             <div>
-              <div>
-                <Table bordered responsive>
-                  <thead>
-                    <tr>
-                      { this.state.header.map((item) => {
-                        return <th key={'header_'.concat(item)}>{item}</th>
-                      }) }
-                    </tr>
-                  </thead>
-                  <tbody>
-                  { Object.keys(this.state.data).map((i) => {
-                    return (
-                      <tr key={i}>
-                        { Object.keys(this.state.data[i]).map((j) => {
-                          var key = i.toString().concat('_', j);
-                          return <td
-                              key={key}
-                              style={{cursor: 'pointer', backgroundColor: (!!this.state.contradictionMap[i][j] ? '#FFF3CD' : (this.state.feedbackMap[i][j] ? '#D4EDDA' : 'white'))}}
-                              onClick={this._handleCellClick.bind(this, key)}>
-                              {this.state.data[i][j]}
-                          </td>
-                        }) }
-                      </tr>
-                    )
-                  }) }
-                  </tbody>
-                </Table>
-              </div>
               <Row className='content-centered'>
-                <Col md={4}>
-                  <label>
-                    <input
-                      type='checkbox'
-                      defaultChecked={this.state.isNewFeedback}
-                      onChange={this._handleNoNewFeedbackClick}
-                      />
-                  </label>
+                <Col md={8}>
+                  <Row>
+                    <Table bordered responsive>
+                      <thead>
+                        <tr>
+                          { this.state.header.map((item) => {
+                            return <th key={'header_'.concat(item)}>{item}</th>
+                          }) }
+                        </tr>
+                      </thead>
+                      <tbody>
+                      { Object.keys(this.state.data).map((i) => {
+                        return (
+                          <tr key={i}>
+                            { Object.keys(this.state.data[i]).map((j) => {
+                              var key = i.toString().concat('_', j);
+                              return <td
+                                  key={key}
+                                  style={{cursor: 'pointer', backgroundColor: (!!this.state.feedbackMap[i][j] ? '#FFF3CD' : 'white')}}
+                                  onClick={this._handleCellClick.bind(this, key)}>
+                                  {this.state.data[i][j]}
+                              </td>
+                            }) }
+                          </tr>
+                        )
+                      }) }
+                      </tbody>
+                    </Table>
+                  </Row>
+                  <Row>
+                    <Col md={4}>
+                      <label>
+                        <input
+                          type='checkbox'
+                          defaultChecked={this.state.isNewFeedback}
+                          onChange={this._handleNoNewFeedbackClick}
+                          />
+                          No new feedback
+                      </label>
+                    </Col>
+                    <Col md={{ span: 4, offset: 4 }}>
+                      <Button
+                          variant='primary'
+                          className='btn-round right box-blur'
+                          size='lg'
+                          onClick={this._handleSubmit}>
+                        SUBMIT
+                      </Button>
+                    </Col>
+                  </Row>
                 </Col>
-                <Col md={{ span: 4, offset: 4 }}>
-                  <Button
-                      variant='primary'
-                      className='btn-round right box-blur'
-                      size='lg'
-                      onClick={this._handleSubmit}>
-                    SUBMIT
-                  </Button>
+                <Col md={4}>
+                  <div className='results-header box-blur'>
+                    <p><strong>Leaderboard</strong></p>
+                    <hr />
+                    <Table responsive>
+                      <thead>
+                        <tr>
+                          <th><p><strong>Rank</strong></p></th>
+                          <th><p><strong>Name</strong></p></th>
+                          <th><p><strong>Score</strong></p></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        { this.state.leaderboard.map((ranking, idx) => {
+                          var key = 'leader'.concat(idx);
+                          return (
+                            <tr key={key}>
+                              <td key={key.concat('_rank')}>{ranking.rank}</td>
+                              <td key={key.concat('_name')}>{ranking.name}</td>
+                              <td key={key.concat('_score')}>{ranking.score}</td>
+                            </tr>
+                          )
+                        }) }
+                      </tbody>
+                    </Table>
+                  </div>
                 </Col>
               </Row>
             </div>

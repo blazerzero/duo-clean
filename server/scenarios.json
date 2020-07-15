@@ -1,9 +1,34 @@
 {
     "1": {
-        "cfd": "(Owner, City, Region, Type) => OwnerAddress",
-        "conf_threshold": 0.9
+        "cfds": [
+            "(Region, Manager) => Owner"
+        ],
+        "dataset": "./data/airport-S1-dirty_20.csv"
     },
     "2": {
-        "cfd": ""
+        "cfds": [
+            "(Owner) => Use"
+        ],
+        "dataset": "./data/airport-S2-dirty_20.csv"
+    },
+    "4": {
+        "cfds": [
+            "(Title, Director) => Rating",
+            "(Title, Director) => Year"
+        ],
+        "dataset": "omdb-S4-dirty.csv"
+    },
+    "5": {
+        "cfds": [
+            "(ListingNumber) => Director"
+        ],
+        "dataset": "omdb-S5-dirty.csv"
+    },
+    "6": {
+        "cfds": [
+            "(Title, Director) => PrimaryActor"
+        ],
+        "dataset": "omdb-S6-dirty.csv"
+         
     }
 }

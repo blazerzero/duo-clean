@@ -14,26 +14,24 @@ from collections import Counter
 # import charm
 
 # CELL VALUE HISTORY OBJECT
-class ValueHistory(object):
-    def __init__(self, value, iter_num, changed):
-        self.value = value      # the value
-        # self.agent = agent      # who set this cell to this value at this point, user or system
-        # self.cfd_applied = cfd_applied      # the CFD that resulted in this value
-        self.iter_num = iter_num                # the iteration number for this value
-        self.changed = changed              # whether this value is a change from the previous state
+# class ValueHistory(object):
+#     def __init__(self, value, iter_num, changed):
+#         self.value = value      # the value
+#         self.agent = agent      # who set this cell to this value at this point, user or system
+#         self.cfd_applied = cfd_applied      # the CFD that resulted in this value
+#         self.iter_num = iter_num                # the iteration number for this value
+#         self.changed = changed              # whether this value is a change from the previous state
 
-class CellStatistic(object):
-    def __init__(self, vocc, vspr, vdis, iter_num):
-        self.vocc = vocc            # value occurrence
-        self.vspr = vspr            # value spread
-        self.vdis = vdis            # value disagreement
+class CellFeedback(object):
+    def __init__(self, marked, iter_num):
+        self.marked = marked            # whether or not the user marked the cell as noisy in this iteration
         self.iter_num = iter_num    # iteration number
 
 # TUPLE NOISE HISTORY OBJECT
-class TupleNoiseHistory(object):
-    def __init__(self, noisy, iter_num):
-        self.noisy = noisy          # whether or not the tuple is noisy at iteration = iter_num
-        self.iter_num = iter_num    # iteration number
+# class TupleNoiseHistory(object):
+#     def __init__(self, noisy, iter_num):
+#         self.noisy = noisy          # whether or not the tuple is noisy at iteration = iter_num
+#         self.iter_num = iter_num    # iteration number
 
 class CFDConfidenceHistory(object):
     def __init__(self, iter_num, conf):
@@ -41,32 +39,42 @@ class CFDConfidenceHistory(object):
         self.conf = conf
 
 # MAP USER-SUBMITTED REPAIRS FROM SAMPLE TO FULL DATASET
-def applyUserModFeedback(d_prev, s_in, project_id, current_iter):
-    d_curr = d_prev
+# def applyUserModFeedback(d_prev, s_in, project_id, current_iter):
+#     d_curr = d_prev
+#     cell_metadata = pickle.load( open('./store/' + project_id + '/cell_metadata.p', 'rb') )
+
+#     for idx in s_in.index:
+#         for col in s_in.columns:
+#             if d_curr[idx][col] != s_in.at[idx, col]:
+#                 d_curr[idx][col] = s_in.at[idx, col]
+#                 cell_metadata[idx][col]['history'].append(ValueHistory(value=s_in.at[idx, col], iter_num=current_iter, changed=True))
+#             else:
+#                 cell_metadata[idx][col]['history'].append(ValueHistory(value=d_curr[idx][col], iter_num=current_iter, changed=False))
+
+#     pickle.dump( cell_metadata, open('./store/' + project_id + '/cell_metadata.p', 'wb') )
+#     return d_curr
+
+# SAVE NOISE FEEDBACK FROM USER
+def saveNoiseFeedback(data, feedback, project_id, current_iter):
     cell_metadata = pickle.load( open('./store/' + project_id + '/cell_metadata.p', 'rb') )
+    print(feedback)
+    for idx in feedback.index:
+        for col in feedback.columns:
+            cell_metadata[int(idx)][col]['feedback_history'].append(CellFeedback(feedback.at[idx, col], current_iter))
 
-    for idx in s_in.index:
-        for col in s_in.columns:
-            if d_curr[idx][col] != s_in.at[idx, col]:
-                d_curr[idx][col] = s_in.at[idx, col]
-                cell_metadata[idx][col]['history'].append(ValueHistory(value=s_in.at[idx, col], iter_num=current_iter, changed=True))
-            else:
-                cell_metadata[idx][col]['history'].append(ValueHistory(value=d_curr[idx][col], iter_num=current_iter, changed=False))
-
-    pickle.dump( cell_metadata, open('./store/' + project_id + '/cell_metadata.p', 'wb') )
-    return d_curr
+    pickle.dump( cell_metadata, open('./store/' + project_id + '/cell_metadata.p', 'wb') ) 
 
 # APPLY NOISE FEEDBACK FROM USER
-def applyNoiseFeedback(data, noisy_tuples, project_id, current_iter):
-    tuple_metadata = pickle.load( open('./store/' + project_id + '/tuple_metadata.p', 'rb') )
+# def applyNoiseFeedback(data, noisy_tuples, project_id, current_iter):
+#     tuple_metadata = pickle.load( open('./store/' + project_id + '/tuple_metadata.p', 'rb') )
 
-    for idx in range(0, len(data)):
-        if idx in noisy_tuples.keys():
-            tuple_metadata[idx]['noise_history'].append(TupleNoiseHistory(noisy=noisy_tuples[idx], iter_num=current_iter))
-        else:
-            tuple_metadata[idx]['noise_history'].append(TupleNoiseHistory(noisy=False, iter_num=current_iter))
+#     for idx in range(0, len(data)):
+#         if idx in noisy_tuples.keys():
+#             tuple_metadata[idx]['noise_history'].append(TupleNoiseHistory(noisy=noisy_tuples[idx], iter_num=current_iter))
+#         else:
+#             tuple_metadata[idx]['noise_history'].append(TupleNoiseHistory(noisy=False, iter_num=current_iter))
 
-    pickle.dump( tuple_metadata, open('./store/' + project_id + '/tuple_metadata.p', 'wb') )
+#     pickle.dump( tuple_metadata, open('./store/' + project_id + '/tuple_metadata.p', 'wb') )
 
 # DISCOVER CFDS THAT COULD APPLY OVER DATASET AND THEIR CONFIDENCES
 def runCFDDiscovery(num_rows, project_id, current_iter):
@@ -95,66 +103,36 @@ def runCFDDiscovery(num_rows, project_id, current_iter):
         return None
 
 # UPDATE TUPLE WEIGHTS BASED ON INTERACTION STATISTICS
-def reinforceTuples(data, project_id, current_iter):
+def reinforceTuples(data, project_id, current_iter, is_new_feedback):
     tuple_metadata = pickle.load( open('./store/' + project_id + '/tuple_metadata.p', 'rb') )
     cell_metadata = pickle.load( open('./store/' + project_id + '/cell_metadata.p', 'rb') )
-    iter_num = int('0x' + current_iter, 0)
     for idx in data.index:
         reinforcementValue = 0
 
         # Evaluate exploration frequency
-        expl_score = (iter_num - tuple_metadata[idx]['expl_freq']) / iter_num
+        expl_score = (current_iter - tuple_metadata[idx]['expl_freq']) / current_iter
+ 
+        # TODO: Noise feedback consistency
+        feedback_consistency = 0
         for col in data.columns:
+            for i in range(1, len(cell_metadata[idx][col]['feedback_history'])):
+                if cell_metadata[idx][col]['feedback_history'][i].marked != cell_metadata[idx][col]['feedback_history'][i-1].marked:
+                    feedback_consistency += 1/(current_iter-i)
 
-            # Occurrence of null value in cell
-            occur_null = 0
-            if data.at[idx, col] == '' or isnan(data.at[idx, col]):
-                occur_null = (1 / len(data.columns))
-
-            # Value occurrence
-            vocc_prev = cell_metadata[idx][col]['stats'][-1].vocc
-            vocc_curr = len(set([vh.value for vh in cell_metadata[idx][col]['history']]))
-            vocc_delta = vocc_curr - vocc_prev
-
-            # Value spread
-            vspr_curr = vocc_curr / iter_num
-
-            # Value disagreement (overall and delta)
-            cell_history = Counter([vh.value for vh in cell_metadata[idx][col]['history']])
-            num_occurrences_mode = cell_history.most_common(1)[0][1]
-            vdis_prev = cell_metadata[idx][col]['stats'][-1].vdis
-            vdis_curr = 1 - (num_occurrences_mode/len(cell_metadata[idx][col]['history']))
-            vdis_delta = vdis_curr - vdis_prev
-            # cell_metadata[idx][col]['disagreement'] = vdis_curr
-            cell_metadata[idx][col]['stats'].append(CellStatistic(vocc=vocc_curr, vspr=vspr_curr, vdis=vdis_curr, iter_num=current_iter))
-
-            # Stops weight underflow
-            if vdis_delta < 0:
-                vdis_delta = 0
-
-            # Check if the user changed the value of the cell from the last iteration
-            latest_value = cell_metadata[idx][col]['history'][-1]
-            user_mod_score = 0
-            if latest_value.changed == True:
-                user_mod_score = (1 / len(data.columns))
-
-            reinforcementValue += (occur_null + vocc_delta + vspr_curr + vdis_curr + vdis_delta + user_mod_score)
-
-        reinforcementValue += expl_score
+        reinforcementValue += expl_score + feedback_consistency
 
         # Based on noise feedback
-        for nh in tuple_metadata[idx]['noise_history']:
-            if nh.noisy == True:
-                reinforcementValue += (nh.iter_num / len(tuple_metadata[idx]['noise_history']))
+        # for nh in tuple_metadata[idx]['noise_history']:
+        #     if nh.noisy == True:
+        #         reinforcementValue += (nh.iter_num / len(tuple_metadata[idx]['noise_history']))
                 
-        tuple_metadata.at[idx, 'weight'] += reinforcementValue
+        tuple_metadata[idx]['weight'] += reinforcementValue
 
     tuple_metadata = normalizeTupleWeights(tuple_metadata)
 
     print('Tuple weights:')
     pprint([v['weight'] for _, v in tuple_metadata.items()])
     pickle.dump( tuple_metadata, open('./store/' + project_id + '/tuple_metadata.p', 'wb') )
-    pickle.dump( cell_metadata, open('./store/' + project_id + '/cell_metadata.p', 'wb') )
         
 # BUILD PROBABILISTIC SAMPLE
 def buildSample(data, sample_size, project_id):
@@ -213,3 +191,25 @@ def normalizeTupleWeights(tm_unnormalized):
         tm_normalized[idx]['weight'] = tm_normalized[idx]['weight'] / tm_weight_sum
 
     return tm_normalized
+
+# BUILD LEADERBOARD
+def buildLeaderboard(scenario_id):
+    leaderboard = list()
+    project_ids = [d for d in os.listdir('./store') if os.path.isdir(os.path.join('./store/', d))]
+    for project_id in project_ids:
+        with open('./store/' + project_id + '/project_info.json') as f:
+            project_info = json.load(f)
+        if project_info['scenario_id'] == scenario_id:
+            leaderboard.append({
+                'project_id': project_id,
+                'name': project_info['participant_name'],
+                'score': project_info['score']
+            })
+    sortedLeaderboard = sorted(leaderboard, key=lambda x: x['score'], reverse=True)
+    sortedLeaderboardWithRank = [{
+        'rank': idx+1,
+        'name': l['name'],
+        'score': l['score']
+    } for idx, l in enumerate(sortedLeaderboard)]
+    return sortedLeaderboardWithRank
+

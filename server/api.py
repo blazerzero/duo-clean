@@ -52,38 +52,29 @@ class Import(Resource):
             return response, 500, {'Access-Control-Allow-Origin': '*'}
 
         # Read the scenario number and initialize the scenario accordingly
-        # scenario_id = request.form.get('scenario_id')     # USE THIS WHEN FRONTEND IS READY
-        scenario_id = "1" # TEMPORARY
+        scenario_id = request.form.get('scenario_id')     # USE THIS WHEN FRONTEND IS READY
+        participant_name = request.form.get('participant_name')
         with open('scenarios.json', 'r') as f:
             scenarios_list = json.load(f)
+            print(scenarios_list)
         scenario = scenarios_list[scenario_id]
-        with open(new_project_dir + '/scenario.json', 'w') as f:
-            json.dump(scenario, f)
+        project_info = {
+            'participant_name': participant_name,
+            'scenario_id': scenario_id,
+            'scenario': scenario,
+            'score': 0
+        }
+        with open(new_project_dir + '/project_info.json', 'w') as f:
+            json.dump(project_info, f)
 
-        # Read and save the imported dataset to the new project directory
-        imported_file = request.files['file']
-        f = open(new_project_dir + '/data.csv', 'w')
-        imported_data = imported_file.read().decode('latin-1').split('\n')
-        header = imported_data[0].split(',')
-        header = [h.rstrip() for h in header]
-        lines = [l for l in imported_data if len(l) > 0]
-        for line in lines:
-            f.write(line + '\n')
-        f.close()
-        shutil.copyfile(new_project_dir + '/data.csv', new_project_dir + '/in_progress.csv')
+        # Extract the header
+        with open(scenario['dataset']) as f:
+            reader = csv.DictReader(f)
+            header = reader.fieldnames
+            data = list(reader)
 
         # Initialize iteration counter
-        current_iter = '00000000'
-
-        # data = pd.read_csv(new_project_dir + '/in_progress.csv')
-        # data.to_csv(new_project_dir + '/in_progress.csv', encoding='latin-1', index=False)
-        with open(new_project_dir + '/in_progress.csv', 'r') as f:
-            reader = csv.DictReader(f)
-            data = list(reader)
-            # with open(new_project_dir + '/in_progress.csv', 'w') as f:
-            #     writer = csv.DictWriter(f, header)
-            #     writer.writeheader()
-            #     writer.writerows(data)
+        current_iter = 0
 
         # Initialize tuple metadata and value metadata objects
         tuple_metadata = dict()
@@ -94,32 +85,23 @@ class Import(Resource):
             tuple_metadata[idx] = dict()
             tuple_metadata[idx]['weight'] = 1/len(data)
             tuple_metadata[idx]['expl_freq'] = 0
-            tuple_metadata[idx]['noise_history'] = list()
 
-            # Value metadata
+            # Cell metadata
             cell_metadata[idx] = dict()
             for col in header:
                 cell_metadata[idx][col] = dict()
-                cell_metadata[idx][col]['history'] = list()
-                cell_metadata[idx][col]['history'].append(helpers.ValueHistory(value=data[idx][col], iter_num=current_iter, changed=False))
-                cell_metadata[idx][col]['stats'] = list()
-                cell_metadata[idx][col]['stats'].append(helpers.CellStatistic(vocc=1, vspr=1, vdis=0, iter_num=current_iter))
+                cell_metadata[idx][col]['feedback_history'] = list()
                 
-        # Initialize CFD metadata object
-        cfd_metadata = dict()
+        # FD metadata
+        fd_metadata = dict()
 
         # TODO: Initialize other metrics/metadata needed in study
 
         # Save metadata
         pickle.dump( tuple_metadata, open(new_project_dir + '/tuple_metadata.p', 'wb') )
         pickle.dump( cell_metadata, open(new_project_dir + '/cell_metadata.p', 'wb') )
-        pickle.dump( cfd_metadata, open(new_project_dir + '/cfd_metadata.p', 'wb') )
+        pickle.dump( fd_metadata, open(new_project_dir + '/fd_metadata.p', 'wb') )
         pickle.dump( current_iter, open(new_project_dir + '/current_iter.p', 'wb') )
-
-        # Calculate initial CFD confidence levels
-        helpers.runCFDDiscovery(len(data), new_project_id, current_iter)
-        #print("CFDs:")
-        #pprint(cfds)
         
         # Return information to the user
         returned_data = {
@@ -137,29 +119,32 @@ class Sample(Resource):
 
     def post(self):
         project_id = request.form.get('project_id')
-        sample_size = int(request.form.get('sample_size'))
-        data = pd.read_csv('./store/' + project_id + '/in_progress.csv', keep_default_na=False)
+        sample_size = 10
+        with open('./store/' + project_id + '/project_info.json') as f:
+            project_info = json.load(f)
+            
+        data = pd.read_csv(project_info['scenario']['dataset'], keep_default_na=False)
         
         # Build sample and update tuple weights post-sampling
-        # current_iter = pickle.load( open('./store/' + project_id + '/current_iter.p', 'rb') )
         s_out = helpers.buildSample(data, sample_size, project_id)
-        # helpers.reinforceTuplesPostSample(s_out, project_id, current_iter)
 
         # No changes have been made yet, so changes = False for every cell
-        changes = list()
+        feedback = list()
         for idx in s_out.index:
             for col in s_out.columns:
-                changes.append({
+                feedback.append({
                     'row': idx,
                     'col': col,
-                    'changed': False
+                    'marked': False
                 })
+
+        leaderboard = helpers.buildLeaderboard(project_info['scenario_id'])
         
         # Return information to the user
         returned_data = {
             'sample': s_out.to_json(orient='index'),
-            'contradictions': json.dumps([]),
-            'changes': json.dumps(changes),
+            'feedback': json.dumps(feedback),
+            'leaderboard': json.dumps(leaderboard),
             'msg': '[SUCCESS] Successfully built sample.'
         }
         response = json.dumps(returned_data)
@@ -172,77 +157,72 @@ class Clean(Resource):
 
     def post(self):
         project_id = request.form.get('project_id')
-        sample = request.form.get('data')
-        sample_size = int(request.form.get('sample_size'))
-        noisy_tuples = json.loads(request.form.get('noisy_tuples'))
+        feedback = json.loads(request.form.get('feedback'))
+        is_new_feedback = request.form.get('is_new_feedback')
+        feedback = pd.DataFrame.from_dict(feedback, orient='index')
+        sample_size = 10
 
         current_iter = pickle.load( open('./store/' + project_id + '/current_iter.p', 'rb') )
-        current_iter = '{:08x}'.format(int('0x' + current_iter, 0) + 1)
+        current_iter += 1
         pickle.dump( current_iter, open('./store/' + project_id + '/current_iter.p', 'wb') )
 
-        with open('./store/' + project_id + '/scenario.json', 'r') as f:
-            scenario = json.load(f)
+        with open('./store/' + project_id + '/project_info.json', 'r') as f:
+            project_info = json.load(f)
         
-        d_orig = pd.read_csv('./store/' + project_id + '/data.csv', keep_default_na=False)
-        header = d_orig.columns
-        with open('./store/' + project_id + '/in_progress.csv', 'r+') as f:
-            reader = csv.DictReader(f)
-            d_prev = list(reader)
-            s_in = pd.read_json(sample, orient='index')
-            f.seek(0)
+        # with open(project_info['scenario']['dataset'], 'r+') as f:
+        #     reader = csv.DictReader(f)
+        #     data = list(reader)
+        data = pd.read_csv(project_info['scenario']['dataset'], keep_default_na=False)
 
-            # Map any user-specified repairs from the sample to the full dataset
-            d_curr = helpers.applyUserModFeedback(d_prev, s_in, project_id, current_iter)
-            writer = csv.DictWriter(f, header)
-            writer.writeheader()
-            writer.writerows(d_curr)
-
-        # TODO: Analyze noise 
-        helpers.applyNoiseFeedback(d_curr, noisy_tuples, project_id, current_iter)
+        # Save noise feedback
+        if is_new_feedback is True:
+            helpers.saveNoiseFeedback(data, feedback, project_id, current_iter)
 
         # Run CFD discovery algorithm to determine confidence of relevant CFD(s)
-        cfds = helpers.runCFDDiscovery(len(d_curr), project_id, current_iter)
-        if cfds is not None:
-            for c in cfds:
-                if scenario['cfd'] == c['cfd']:
-                    # If confidence threshold for relevant CFD(s) IS met, return completion message to user
-                    if c['conf'] >= scenario['conf_threshold']:
-                        returned_data = {
-                            'msg': '[DONE]'
-                        }
-                        response = json.dumps(returned_data)
-                        pprint(response)
-                        return response, 200, {'Access-Control-Allow-Origin': '*'}
-                    break
+        # cfds = helpers.runCFDDiscovery(len(d_curr), project_id, current_iter)
+        # if cfds is not None:
+        #     for c in cfds:
+        #        if scenario['cfd'] == c['cfd']:
+        #             # If confidence threshold for relevant CFD(s) IS met, return completion message to user
+        #             if c['conf'] >= scenario['conf_threshold']:
+        #                 returned_data = {
+        #                     'msg': '[DONE]'
+        #                 }
+        #                 response = json.dumps(returned_data)
+        #                 pprint(response)
+        #                 return response, 200, {'Access-Control-Allow-Origin': '*'}
+        #             break
 
         # Confidence threshold for relevant CFD(s) IS NOT met, so build new sample based on tuple weights
         
         # Update tuple weights pre-sampling
-        d_curr = pd.DataFrame(d_curr)
-        helpers.reinforceTuples(d_curr, project_id, current_iter)
+        helpers.reinforceTuples(data, project_id, current_iter, is_new_feedback)
 
         # Build sample
-        s_out = helpers.buildSample(d_curr, sample_size, project_id)
+        s_out = helpers.buildSample(data, sample_size, project_id)
 
         # Update tuple weights post-sampling
         # helpers.reinforceTuplesPostSample(s_out, project_id, current_iter)
 
         # Build changes map for front-end
-        changes = list()
+        feedback = list()
+        cell_metadata = pickle.load( open('./store/' + project_id + '/cell_metadata.p', 'rb') )
         for idx in s_out.index:
             for col in s_out.columns:
-                changes.append({
+                feedback.append({
                     'row': idx,
                     'col': col,
-                    'changed': bool(s_out.at[idx, col] != d_orig.at[idx, col])
+                    'marked': bool(cell_metadata[idx][col]['feedback_history'][-1].marked) if len(cell_metadata[idx][col]['feedback_history']) > 0 else False
                 })
+
+        leaderboard = helpers.buildLeaderboard(project_info['scenario_id'])
 
         # Return information to the user
         returned_data = {
             'sample': s_out.to_json(orient='index'),
-            'contradictions': json.dumps([]),
-            'changes': json.dumps(changes),
-            'msg': '[DONE]'
+            'feedback': json.dumps(feedback),
+            'leaderboard': json.dumps(leaderboard),
+            'msg': '[SUCCESS]: Saved feedback and built new sample.'
         }
         response = json.dumps(returned_data)
         pprint(response)
