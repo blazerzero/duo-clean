@@ -7,7 +7,8 @@ import pandas as pd
 import numpy as np
 import sys
 import pickle
-from math import isnan
+import math
+import statistics
 from collections import Counter
 
 # sys.path.insert(0, './charm/keywordSearch/')
@@ -107,24 +108,31 @@ def reinforceTuples(data, project_id, current_iter, is_new_feedback):
     tuple_metadata = pickle.load( open('./store/' + project_id + '/tuple_metadata.p', 'rb') )
     cell_metadata = pickle.load( open('./store/' + project_id + '/cell_metadata.p', 'rb') )
     for idx in data.index:
-        reinforcementValue = 0
 
         # Evaluate exploration frequency
-        expl_score = (current_iter - tuple_metadata[idx]['expl_freq']) / current_iter
+        expl_score = current_iter / (tuple_metadata[idx]['expl_freq'] + 1)
  
         # TODO: Noise feedback consistency
         feedback_consistency = 0
+        entropy = 0
         for col in data.columns:
+            if cell_metadata[idx][col]['feedback_history'][-1].marked:
+                cellEntropyList = list()
+                for val in data[col].unique():
+                    p = len([v for v in data[col] if v == val].to_list()) / len(data.index)
+                    cellEntropy = (p * math.log(p))
+                    cellEntropyList.append(cellEntropy)
+                averageCellEntropy = statistics.mean(cellEntropyList)
+                entropy -= averageCellEntropy
+            else:
+                p = len([v for v in data[col] if v == data.at[idx, col]].to_list()) / len(data.index)
+                entropy -= (p * math.log(p))
+            
             for i in range(1, len(cell_metadata[idx][col]['feedback_history'])):
                 if cell_metadata[idx][col]['feedback_history'][i].marked != cell_metadata[idx][col]['feedback_history'][i-1].marked:
                     feedback_consistency += 1/(current_iter-i)
 
-        reinforcementValue += expl_score + feedback_consistency
-
-        # Based on noise feedback
-        # for nh in tuple_metadata[idx]['noise_history']:
-        #     if nh.noisy == True:
-        #         reinforcementValue += (nh.iter_num / len(tuple_metadata[idx]['noise_history']))
+        reinforcementValue = expl_score + entropy + feedback_consistency
                 
         tuple_metadata[idx]['weight'] += reinforcementValue
 
