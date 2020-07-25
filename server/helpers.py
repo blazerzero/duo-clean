@@ -147,22 +147,24 @@ def buildSample(data, sample_size, project_id, sampling_method):
     if sampling_method == 'RANDOM-PURE':
         return samplingRandomPure(data, sample_size, project_id)
     elif sampling_method == 'RANDOM-UB':
-        return sampleRandomUB(data, sample_size, project_id)
+        return samplingRandomUB(data, sample_size, project_id)
     '''
     elif sampling_method == 'DUO':
-        return sampleDuo(data, sample_size, project_id)
+        return samplingDuo(data, sample_size, project_id)
     '''
     else:
         return samplingRandomPure(data, sample_size, project_id)
     
 # BUILD PURELY RANDOM SAMPLE
 def samplingRandomPure(data, sample_size, project_id):
-    tuple_metadata = pickle.load( open('./store/' + project_id + '/tuple_metadata.p', 'rb') )
+    print('RANDOM-PURE')
+    # tuple_metadata = pickle.load( open('./store/' + project_id + '/tuple_metadata.p', 'rb') )
     s_out = data.sample(n=sample_size, random_state=1)
     return s_out
 
 # BUILD PROBABILISTIC SAMPLE BASED SOLELY ON METRICS FROM FEEDBACK AND TUPLES SHOWN
 def samplingRandomUB(data, sample_size, project_id):
+    print('RANDOM-UB')
     tuple_metadata = pickle.load( open('./store/' + project_id + '/tuple_metadata.p', 'rb') )
     tuple_weights = {k: v['weight'] for k, v in tuple_metadata.items()}
     chosen_tuples = list()
@@ -178,6 +180,14 @@ def samplingRandomUB(data, sample_size, project_id):
     pickle.dump( tuple_metadata, open('./store/' + project_id + '/tuple_metadata.p', 'wb') )
 
     s_out = data.iloc[chosen_tuples]
+    return s_out
+
+# BUILD PROBABILISTIC SAMPLE BASED ON INTERACTION METRICS AND ACTIVE LEARNING
+# OF FDs/CFDs BY SYSTEM
+def samplingDuo(data, sample_size, project_id):
+    #TODO: Sampling process
+    #TEMP: Random
+    s_out = data.sample(n=sample_size, random_state=1)
     return s_out
 
 # SELECT ONE TUPLE TO ADD TO SAMPLE
