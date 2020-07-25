@@ -143,7 +143,19 @@ def reinforceTuples(data, project_id, current_iter, is_new_feedback):
     pickle.dump( tuple_metadata, open('./store/' + project_id + '/tuple_metadata.p', 'wb') )
         
 # BUILD PROBABILISTIC SAMPLE
-def buildSample(data, sample_size, project_id):
+def buildSample(data, sample_size, project_id, sampling_method):
+    if sampling_method == 'RANDOM-PURE':
+        return samplingRandomPure(data, sample_size, project_id)
+    '''
+    elif sampling_method == 'RANDOM-UB':
+        return sampleRandomUB(data, sample_size, project_id)
+    elif sampling_method == 'DUO':
+        return sampleDuo(data, sample_size, project_id)
+    '''
+    else:
+        return samplingRandomPure(data, sample_size, project_id)
+
+def samplingRandomPure(data, sample_size, project_id):
     tuple_metadata = pickle.load( open('./store/' + project_id + '/tuple_metadata.p', 'rb') )
     tuple_weights = {k: v['weight'] for k, v in tuple_metadata.items()}
     chosen_tuples = list()
