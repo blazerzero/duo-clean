@@ -124,9 +124,10 @@ class Sample(Resource):
             project_info = json.load(f)
             
         data = pd.read_csv(project_info['scenario']['dataset'], keep_default_na=False)
+        sampling_method = project_info['scenario']['sampling_method']
         
         # Build sample and update tuple weights post-sampling
-        s_out = helpers.buildSample(data, sample_size, project_id)
+        s_out = helpers.buildSample(data, sample_size, project_id, sampling_method)
 
         # No changes have been made yet, so changes = False for every cell
         feedback = list()
@@ -199,7 +200,8 @@ class Clean(Resource):
         helpers.reinforceTuples(data, project_id, current_iter, is_new_feedback)
 
         # Build sample
-        s_out = helpers.buildSample(data, sample_size, project_id)
+        sampling_method = project_info['scenario']['sampling_method']
+        s_out = helpers.buildSample(data, sample_size, project_id, sampling_method)
 
         # Update tuple weights post-sampling
         # helpers.reinforceTuplesPostSample(s_out, project_id, current_iter)
