@@ -66,7 +66,8 @@ def saveNoiseFeedback(data, feedback, project_id, current_iter):
     with open('./store/' + project_id + '/project_info.json', 'r') as f:
         project_info = json.load(f)
         clean_dataset = pd.read_csv(project_info['scenario']['clean_dataset'], keep_default_na=False)
-        
+    
+    # scoring function: score based on number of true errors correctly identified
     score = 0
     for idx in data.index:
         for col in data.columns:
