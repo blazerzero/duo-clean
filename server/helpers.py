@@ -62,6 +62,20 @@ def saveNoiseFeedback(data, feedback, project_id, current_iter):
     for idx in feedback.index:
         for col in feedback.columns:
             cell_metadata[int(idx)][col]['feedback_history'].append(CellFeedback(feedback.at[idx, col], current_iter))
+            
+    with open('./store/' + project_id + '/project_info.json', 'r') as f:
+        project_info = json.load(f)
+        clean_dataset = pd.read_csv('./data/' + project_info['scenario']['clean_dataset'], keep_default_na=False)
+        
+    score = 0
+    for idx in data.index:
+        for col in data.columns:
+            if data.at[idx, col] != clean_dataset[idx, col] and cell_metadata[int(idx)][col]['feedback_history'][-1].marked is True:
+                score += 1
+                                  
+    project_info['score'] = score
+    with open('./store/' + project_id + '/project_info.json', 'w') as f:
+        json.dump(project_info, f)
 
     pickle.dump( cell_metadata, open('./store/' + project_id + '/cell_metadata.p', 'wb') ) 
 
