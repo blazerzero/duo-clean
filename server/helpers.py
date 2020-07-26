@@ -61,7 +61,7 @@ def saveNoiseFeedback(data, feedback, project_id, current_iter):
     print(feedback)
     for idx in feedback.index:
         for col in feedback.columns:
-            cell_metadata[int(idx)][col]['feedback_history'].append(CellFeedback(feedback.at[idx, col], current_iter))
+            cell_metadata[int(idx)][col]['feedback_history'].append(CellFeedback(marked=feedback.at[idx, col], iter_num=current_iter))
             
     with open('./store/' + project_id + '/project_info.json', 'r') as f:
         project_info = json.load(f)
@@ -118,6 +118,30 @@ def runCFDDiscovery(num_rows, project_id, current_iter):
     else:
         return None
 
+# DISCOVER CFDs THAT BEST EXPLAIN THE FEEDBACK GIVEN BY THE USER
+def explainFeedback(sample, project_id, current_iter):
+    cell_metadata = pickle.load( open('./store/' + project_id + '/cell_metadata.p', 'wb') )
+    with open('./store/' + project_id + '/project_info.json', 'r') as f:
+        project_info = json.load(f)
+    dirty_data = sample
+    dirty_dataset_fp = './store/' + project_id + 'temp_dirty_sample.csv'
+    dirty_data.to_csv(dirty_dataset_fp, index=False)
+    rep_data = dirty_data
+    for idx in dirty_data.index:
+        for col in dirty_data.columns:
+            if cell_metadata[int(idx)][col]['feedback_history'][-1].marked is True:
+                rep_data.at[idx, col] = np.nan
+                
+    rep_dataset_fp = './store/' + project_id + 'temp_feedback_sample.csv'
+    rep_data.to_csv(clean_dataset_fp, index=False)
+    
+    process = sp.Popen(['./xplode/CTane', dirty_dataset_fp, rep_dataset_fp, str(0.7*len(dirty_data.index)), '0.7'], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})
+    res = process.communicate()
+    print('res:', res[0])
+    
+    # PROCESS RESULTS OF XPLODE
+    
+    
 # UPDATE TUPLE WEIGHTS BASED ON INTERACTION STATISTICS
 def reinforceTuples(data, project_id, current_iter, is_new_feedback):
     tuple_metadata = pickle.load( open('./store/' + project_id + '/tuple_metadata.p', 'rb') )
