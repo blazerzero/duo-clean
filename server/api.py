@@ -123,7 +123,7 @@ class Sample(Resource):
         with open('./store/' + project_id + '/project_info.json') as f:
             project_info = json.load(f)
             
-        data = pd.read_csv(project_info['scenario']['dataset'], keep_default_na=False)
+        data = pd.read_csv(project_info['scenario']['dirty_dataset'], keep_default_na=False)
         sampling_method = project_info['scenario']['sampling_method']
         
         # Build sample and update tuple weights post-sampling
@@ -173,7 +173,7 @@ class Clean(Resource):
         # with open(project_info['scenario']['dataset'], 'r+') as f:
         #     reader = csv.DictReader(f)
         #     data = list(reader)
-        data = pd.read_csv(project_info['scenario']['dataset'], keep_default_na=False)
+        data = pd.read_csv(project_info['scenario']['dirty_dataset'], keep_default_na=False)
 
         # Save noise feedback
         if is_new_feedback is True:
