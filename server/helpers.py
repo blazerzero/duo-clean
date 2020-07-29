@@ -28,16 +28,15 @@ class CellFeedback(object):
         self.marked = marked            # whether or not the user marked the cell as noisy in this iteration
         self.iter_num = iter_num    # iteration number
 
-# TUPLE NOISE HISTORY OBJECT
-# class TupleNoiseHistory(object):
-#     def __init__(self, noisy, iter_num):
-#         self.noisy = noisy          # whether or not the tuple is noisy at iteration = iter_num
-#         self.iter_num = iter_num    # iteration number
-
 class CFDConfidenceHistory(object):
     def __init__(self, iter_num, conf):
         self.iter_num = iter_num
         self.conf = conf
+
+class CFDScore(object):
+    def __init__(self, iter_num, score):
+        self.iter_num = iter_num
+        self.score = score
 
 # MAP USER-SUBMITTED REPAIRS FROM SAMPLE TO FULL DATASET
 # def applyUserModFeedback(d_prev, s_in, project_id, current_iter):
@@ -54,6 +53,7 @@ class CFDConfidenceHistory(object):
 
 #     pickle.dump( cell_metadata, open('./store/' + project_id + '/cell_metadata.p', 'wb') )
 #     return d_curr
+
 
 # SAVE NOISE FEEDBACK FROM USER
 def saveNoiseFeedback(data, feedback, project_id, current_iter):
@@ -80,17 +80,6 @@ def saveNoiseFeedback(data, feedback, project_id, current_iter):
 
     pickle.dump( cell_metadata, open('./store/' + project_id + '/cell_metadata.p', 'wb') ) 
 
-# APPLY NOISE FEEDBACK FROM USER
-# def applyNoiseFeedback(data, noisy_tuples, project_id, current_iter):
-#     tuple_metadata = pickle.load( open('./store/' + project_id + '/tuple_metadata.p', 'rb') )
-
-#     for idx in range(0, len(data)):
-#         if idx in noisy_tuples.keys():
-#             tuple_metadata[idx]['noise_history'].append(TupleNoiseHistory(noisy=noisy_tuples[idx], iter_num=current_iter))
-#         else:
-#             tuple_metadata[idx]['noise_history'].append(TupleNoiseHistory(noisy=False, iter_num=current_iter))
-
-#     pickle.dump( tuple_metadata, open('./store/' + project_id + '/tuple_metadata.p', 'wb') )
 
 # DISCOVER CFDS THAT COULD APPLY OVER DATASET AND THEIR CONFIDENCES
 def runCFDDiscovery(num_rows, project_id, current_iter):
@@ -118,14 +107,15 @@ def runCFDDiscovery(num_rows, project_id, current_iter):
     else:
         return None
 
+
 # DISCOVER CFDs THAT BEST EXPLAIN THE FEEDBACK GIVEN BY THE USER
 def explainFeedback(sample, project_id, current_iter):
     cell_metadata = pickle.load( open('./store/' + project_id + '/cell_metadata.p', 'wb') )
-    with open('./store/' + project_id + '/project_info.json', 'r') as f:
-        project_info = json.load(f)
+    
     dirty_data = sample
     dirty_dataset_fp = './store/' + project_id + 'temp_dirty_sample.csv'
     dirty_data.to_csv(dirty_dataset_fp, index=False)
+    
     rep_data = dirty_data
     for idx in dirty_data.index:
         for col in dirty_data.columns:
@@ -133,36 +123,52 @@ def explainFeedback(sample, project_id, current_iter):
                 rep_data.at[idx, col] = np.nan
                 
     rep_dataset_fp = './store/' + project_id + 'temp_feedback_sample.csv'
-    rep_data.to_csv(clean_dataset_fp, index=False)
+    rep_data.to_csv(rep_dataset_fp, index=False)
     
     process = sp.Popen(['./xplode/CTane', dirty_dataset_fp, rep_dataset_fp, str(0.7*len(dirty_data.index)), '0.7'], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})
     res = process.communicate()
     print('res:', res[0])
+
+    if process.returncode == 0:
+        cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
+        output = res[0].decode('latin_1').replace(',]', ']')
+        cfds = json.loads(output)['cfds']
+        for c in cfds:
+            if c['cfd'] not in cfd_metadata.keys():
+                cfd_metadata[c['cfd']] = dict()
+                cfd_metadata[c['cfd']]['history'] = list()
+            cfd_metadata[c['cfd']]['history'].append(CFDScore(iter_num=current_iter, score=c['score']))
+
+        pickle.load( cfd_metadata, open('./store' + project_id + 'cfd_metadata.p', 'wb') )
     
-    # PROCESS RESULTS OF XPLODE
+    else:
+        print('[ERROR] There was an error running XPlode')    
     
-    
+
 # UPDATE TUPLE WEIGHTS BASED ON INTERACTION STATISTICS
-def reinforceTuples(data, project_id, current_iter, is_new_feedback):
+def reinforceTuplesBasedOnInteraction(data, project_id, current_iter, is_new_feedback):
+    if is_new_feedback is False:
+        return
+    
     tuple_metadata = pickle.load( open('./store/' + project_id + '/tuple_metadata.p', 'rb') )
     cell_metadata = pickle.load( open('./store/' + project_id + '/cell_metadata.p', 'rb') )
     for idx in data.index:
 
         # Evaluate exploration frequency
         expl_score = current_iter / (tuple_metadata[idx]['expl_freq'] + 1)
- 
-        # TODO: Noise feedback consistency
+
+        # Entropy and feedback consistency
         feedback_consistency = 0
         entropy = 0
         for col in data.columns:
             if cell_metadata[idx][col]['feedback_history'][-1].marked:
-                cellEntropyList = list()
+                cell_entropy_list = list()
                 for val in data[col].unique():
                     p = len([v for v in data[col] if v == val].to_list()) / len(data.index)
-                    cellEntropy = (p * math.log(p))
-                    cellEntropyList.append(cellEntropy)
-                averageCellEntropy = statistics.mean(cellEntropyList)
-                entropy -= averageCellEntropy
+                    cell_entropy = (p * math.log(p))
+                    cell_entropy_list.append(cell_entropy)
+                average_cell_entropy = statistics.mean(cell_entropy_list)
+                entropy -= average_cell_entropy
             else:
                 p = len([v for v in data[col] if v == data.at[idx, col]].to_list()) / len(data.index)
                 entropy -= (p * math.log(p))
@@ -171,29 +177,60 @@ def reinforceTuples(data, project_id, current_iter, is_new_feedback):
                 if cell_metadata[idx][col]['feedback_history'][i].marked != cell_metadata[idx][col]['feedback_history'][i-1].marked:
                     feedback_consistency += 1/(current_iter-i)
 
-        reinforcementValue = expl_score + entropy + feedback_consistency
+        reinforcement_value = expl_score + entropy + feedback_consistency
                 
-        tuple_metadata[idx]['weight'] += reinforcementValue
+        tuple_metadata[idx]['weight'] += reinforcement_value
 
-    tuple_metadata = normalizeTupleWeights(tuple_metadata)
+    tuple_metadata = normalizeWeights(tuple_metadata)
 
     print('Tuple weights:')
     pprint([v['weight'] for _, v in tuple_metadata.items()])
     pickle.dump( tuple_metadata, open('./store/' + project_id + '/tuple_metadata.p', 'wb') )
-        
+
+
+# REINFORCE TUPLES BASED ON DEPENDENCIES
+def reinforceTuplesBasedOnDependencies(data, project_id, current_iter, is_new_feedback):
+    if is_new_feedback is False:
+        return
+
+    tuple_metadata = pickle.load( open('./store/' + project_id + '/tuple_metadata.p', 'rb') )
+    cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
+
+    for cfd in cfd_metadata.keys():
+        # Bias towards simpler rules
+        lhs = cfd.split('=>')[0][1:-1].split(', ')
+        num_attributes = len(lhs) + 1
+        complexity_bias = 1 / num_attributes
+
+        # System's weighted prior on rule confidence
+        weighted_conf = 0
+        for h in cfd['history']:
+            weighted_conf += (h.score / (current_iter - h.iter_num + 1))
+
+        cfd['weight'] = complexity_bias + weighted_conf
+    
+    cfd_metadata = normalizeWeights(cfd_metadata)
+
+    for cfd in cfd_metadata.keys():
+        # Update tuple weights based on whether tuple violates CFD and confidence of the CFD
+        pass
+
+    pickle.dump( tuple_metadata, open('./store/' + project_id + '/tuple_metadata.p', 'wb') )
+    pickle.dump( cfd_metadata, open('./store/' + project_id + '/cfd_metadata.p', 'wb') )
+    
+
 # BUILD SAMPLE
 def buildSample(data, sample_size, project_id, sampling_method):
     if sampling_method == 'RANDOM-PURE':
         return samplingRandomPure(data, sample_size, project_id)
     elif sampling_method == 'RANDOM-UB':
         return samplingRandomUB(data, sample_size, project_id)
-    '''
     elif sampling_method == 'DUO':
         return samplingDuo(data, sample_size, project_id)
-    '''
     else:
         return samplingRandomPure(data, sample_size, project_id)
     
+
 # BUILD PURELY RANDOM SAMPLE
 def samplingRandomPure(data, sample_size, project_id):
     print('Sampling method: RANDOM-PURE')
@@ -207,11 +244,13 @@ def samplingRandomPure(data, sample_size, project_id):
     
     return s_out
 
+
 # BUILD PROBABILISTIC SAMPLE BASED SOLELY ON METRICS FROM FEEDBACK AND TUPLES SHOWN
 def samplingRandomUB(data, sample_size, project_id):
     print('Sampling method: RANDOM-UB')
     s_out = returnTuples(data, sample_size, project_id)
     return s_out
+
 
 # BUILD PROBABILISTIC SAMPLE BASED ON INTERACTION METRICS AND ACTIVE LEARNING
 # OF FDs/CFDs BY SYSTEM
@@ -220,6 +259,7 @@ def samplingDuo(data, sample_size, project_id):
     #TODO: DUO-specific weight modifications
     s_out = returnTuples(data, sample_size, project_id)
     return s_out
+
 
 # RETURN TUPLES BASED ON WEIGHT
 def returnTuples(data, sample_size, project_id):
@@ -240,6 +280,7 @@ def returnTuples(data, sample_size, project_id):
     s_out = data.iloc[chosen_tuples]
     return s_out
 
+
 # SELECT ONE TUPLE TO ADD TO SAMPLE
 def pickSingleTuple(tuple_weights):
     chance = random.uniform(0, 1)
@@ -253,31 +294,16 @@ def pickSingleTuple(tuple_weights):
             print(tup)
             return tup
 
-# UPDATE TUPLE WEIGHTS BASED ON EXPLORATION
-# def reinforceTuplesPostSample(sample, project_id, current_iter):
-#     tuple_metadata = pickle.load( open('./store/' + project_id + '/tuple_metadata.p', 'rb') )
-#     iter_num = int('0x' + current_iter, 0)
 
-    # Based on exploration frequency of each tuple
-#     for idx in sample.index:
-#         expl_freq = tuple_metadata[idx]['expl_freq']
-#         tuple_metadata[idx]['weight'] += (1 - expl_freq/(iter_num+1))
+# NORMALIZE WEIGHTS BETWEEN 0 AND 1
+def normalizeWeights(m_unnormalized):
+    m_normalized = m_unnormalized
+    m_weight_sum = sum([v['weight'] for _, v in m_unnormalized.items()])
+    for k in m_normalized.keys():
+        m_normalized[k]['weight'] = m_normalized[k]['weight'] / m_weight_sum
 
-#     tuple_metadata = normalizeTupleWeights(tuple_metadata)
-    
-#     print('Tuple weights:')
-#     pprint([v['weight'] for _, v in tuple_metadata.items()])
+    return m_normalized
 
-#     pickle.dump( tuple_metadata, open('./store/' + project_id + '/tuple_metadata.p', 'wb') )
-
-# NORMALIZE TUPLE WEIGHTS BETWEEN 0 AND 1
-def normalizeTupleWeights(tm_unnormalized):
-    tm_normalized = tm_unnormalized
-    tm_weight_sum = sum([v['weight'] for _, v in tm_unnormalized.items()])
-    for idx in tm_normalized.keys():
-        tm_normalized[idx]['weight'] = tm_normalized[idx]['weight'] / tm_weight_sum
-
-    return tm_normalized
 
 # BUILD LEADERBOARD
 def buildLeaderboard(scenario_id):

@@ -193,11 +193,16 @@ class Clean(Resource):
         #                 pprint(response)
         #                 return response, 200, {'Access-Control-Allow-Origin': '*'}
         #             break
+        
+        # EXPLAIN FEEDBACK
+        s_in = data.iloc[feedback.index]
+        helpers.explainFeedback(s_in, project_id, current_iter)
 
         # Confidence threshold for relevant CFD(s) IS NOT met, so build new sample based on tuple weights
         
         # Update tuple weights pre-sampling
-        helpers.reinforceTuples(data, project_id, current_iter, is_new_feedback)
+        helpers.reinforceTuplesBasedOnInteraction(data, project_id, current_iter, is_new_feedback)
+        helpers.reinforceTuplesBasedOnDependencies(data, project_id, current_iter, is_new_feedback)
 
         # Build sample
         sampling_method = project_info['scenario']['sampling_method']

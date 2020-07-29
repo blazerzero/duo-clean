@@ -112,7 +112,7 @@ public:
             out << (rhsAttr + '=' + db.getValue(rhs));
         }
         out << "\", ";
-        out << ("\"conf\": " + std::to_string(conf) + "},");
+        out << ("\"score\": " + std::to_string(conf) + "},");
         if (endl) {
             out << std::endl;
         }
