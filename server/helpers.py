@@ -198,7 +198,7 @@ def reinforceTuplesBasedOnDependencies(data, project_id, current_iter, is_new_fe
 
     for cfd in cfd_metadata.keys():
         # Bias towards simpler rules
-        lhs = cfd.split('=>')[0][1:-1].split(', ')
+        lhs = cfd.split(' => ')[0][1:-1].split(', ')
         num_attributes = len(lhs) + 1
         complexity_bias = 1 / num_attributes
 
@@ -213,11 +213,110 @@ def reinforceTuplesBasedOnDependencies(data, project_id, current_iter, is_new_fe
 
     for cfd in cfd_metadata.keys():
         # Update tuple weights based on whether tuple violates CFD and confidence of the CFD
-        pass
+        lhs = cfd.split(' => ')[0][1:-1].split(', ')
+        rhs = cfd.split(' => ')[1]
+
+        patterns = fd2cfd(data, lhs, rhs)
+        cover, violations = buildCover(data, lhs, rhs, patterns)
+        for idx in cover:
+            reinforcement_decision = random.random()
+            if reinforcement_decision <= cfd['weight']:     # ensures that CFDs with higher weight influence the sample more
+                tuple_metadata[idx]['weight'] += 0.5
+            if idx in violations:
+                tuple_metadata[idx]['weight'] += 0.5
+
+    tuple_metadata = normalizeWeights(tuple_metadata)
 
     pickle.dump( tuple_metadata, open('./store/' + project_id + '/tuple_metadata.p', 'wb') )
     pickle.dump( cfd_metadata, open('./store/' + project_id + '/cfd_metadata.p', 'wb') )
-    
+
+
+# CONVERT FD OR PARTIAL CFD TO FULL CFD
+def fd2cfd(data, lhs, rhs):
+    patterns = dict()
+    mappings = dict()
+
+    # Gather all the possible patterns present in the dataset for each pure FD or partial CFD
+    for idx in data.index:
+        lhspattern = ''
+        rhspattern = ''
+        for clause in lhs.split(', '):
+            if '=' in clause:
+                lhspattern += clause + ', '
+            else:
+                lhspattern += clause + '=' + data.at[idx, clause] + ', '
+        lhspattern = lhspattern[:-2]
+        if '=' in rhs:
+            rhspattern = rhs
+        else:
+            rhspattern = rhs + '=' + data.at[idx, rhs]
+        if lhspattern in patterns.keys():
+            patterns[lhspattern].append(rhspattern)
+            if (lhspattern, rhspattern) in mappings.keys():
+                mappings[(lhspattern, rhspattern)].append(idx)
+            else:
+                mappings[(lhspattern, rhspattern)] = [idx]
+        else:
+            patterns[lhspattern] = [rhspattern]
+            mappings[(lhspattern, rhspattern)] = [idx]
+
+    # Pick RHS patterns for each LHS from these candidates
+    for key in patterns.keys():
+        counts = Counter(patterns[key])
+        get_mode = dict(counts)
+        patterns[key] = [key for key, v in get_mode.items() if v == max(list(counts.values()))]
+
+        # If there is only one top RHS pattern for this LHS, pick it
+        if len(patterns[key]) == 1:
+            patterns[key] = patterns[key].pop()
+        else:
+            random_idx = random.randint(0, len(patterns[key]))
+            patterns[key] = patterns[key][random_idx]
+
+    return patterns
+
+
+# BUILD COVER AND VIOLATIONS
+def buildCover(data, lhs, rhs, patterns):
+    cover = list()
+    violations = list()
+    for idx in data.index():
+        applies = True
+        for lh in lhs.split(', '):
+
+            # If this element of the CFD is constant
+            if '=' in lh:
+                lh = np.array(lh.split('='))
+                if data.at[idx, lh[0]] != lh[1]:     # CFD does not apply to this row
+                    applies = False
+                    break
+
+        # If this CFD applies to this row
+        if applies:
+            cover.append(idx)
+            if lhs.count('=') == len(lhs.split(', ')) and '=' in rhs:
+                rh = np.array(rhs.split('='))
+                if data.at[idx, rh[0]] != rh[1]:
+                    violations.append(idx)
+            elif lhs.count('=') == len(lhs.split(', ')) and '=' not in rhs:
+                rh_attribute = rhs.split('=')[0]
+                applicable_rhv = patterns[lhs].split('=')[1]
+                if data.at[idx, rh_attribute] != applicable_rhv:
+                    violations.append(idx)
+            elif lhs.count('=') < len(lhs.split(', ')):
+                applicable_lhs = ''
+                for lh in lhs:
+                    if '=' in lh:
+                        applicable_lhs += lh + ', '
+                    else:
+                        applicable_lhs += lh + '=' + data.at[idx, lh] + ', '
+                applicable_lhs = applicable_lhs[:-2]
+                applicable_rhs = patterns[applicable_lhs]
+                rh = applicable_rhs.split('=')
+                if data.at[idx, rh[0]] != rh[1]:
+                    violations.append(idx)
+
+    return cover, violations
 
 # BUILD SAMPLE
 def buildSample(data, sample_size, project_id, sampling_method):
