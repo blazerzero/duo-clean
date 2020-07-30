@@ -24,10 +24,10 @@
     <dependencies>
 <![CDATA[
 DCs:
-// FD: (Region, Manager) -> Owner
-e1: airport-s1(Type: $t1, Region: $r1, FacilityName: $fn1, Owner: $o1, OwnerType: $ot1, Manager: $m1), 
-airport-s1(Type: $t2, Region: $r2, FacilityName: $fn2, Owner: $o2, OwnerType: $ot2, Manager: $m2), 
-    $r1 == $r2, $m1 == $m2, $o1 != $o2 -> #fail.
+// FD: (ListingNumber) -> Director
+e1: omdb-s5(ListingNumber: $ln1, Title: $t1, Year: $y1, Director: $d1), 
+omdb-s5(ListingNumber: $ln2, Title: $t2, Year: $y2, Director: $d2), 
+    $ln1 == $ln2, $d1 != $d2 -> #fail.
 ]]>
     </dependencies>
 
@@ -81,15 +81,11 @@ airport-s1(Type: $t2, Region: $r2, FacilityName: $fn2, Owner: $o2, OwnerType: $o
             <defaultPercentage>0.0</defaultPercentage>
             <vioGenQueries>
                 <vioGenQuery id="e1">
-                    <comparison>(r1 == r2)</comparison>
+                    <comparison>(ln1 == ln2)</comparison>
                     <percentage>1.0</percentage> 
                 </vioGenQuery>
                 <vioGenQuery id="e1">
-                    <comparison>(m1 == m2)</comparison>
-                    <percentage>1.0</percentage> 
-                </vioGenQuery>
-                <vioGenQuery id="e1">
-                    <comparison>(o1 != o2)</comparison>
+                    <comparison>(d1 != d2)</comparison>
                     <percentage>1.0</percentage> 
                 </vioGenQuery>
             </vioGenQueries>
