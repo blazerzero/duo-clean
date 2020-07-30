@@ -112,20 +112,25 @@ def runCFDDiscovery(num_rows, project_id, current_iter):
 def explainFeedback(sample, project_id, current_iter):
     cell_metadata = pickle.load( open('./store/' + project_id + '/cell_metadata.p', 'wb') )
     
-    dirty_data = sample
-    dirty_dataset_fp = './store/' + project_id + 'temp_dirty_sample.csv'
-    dirty_data.to_csv(dirty_dataset_fp, index=False)
+    dirty_sample = sample
     
-    rep_data = dirty_data
-    for idx in dirty_data.index:
-        for col in dirty_data.columns:
-            if cell_metadata[int(idx)][col]['feedback_history'][-1].marked is True:
-                rep_data.at[idx, col] = np.nan
-                
-    rep_dataset_fp = './store/' + project_id + 'temp_feedback_sample.csv'
-    rep_data.to_csv(rep_dataset_fp, index=False)
+    rep_sample = dirty_sample
+    for idx in dirty_sample.index:
+        for col in dirty_sample.columns:
+            cell = cell_metadata[int(idx)][col]
+            if current_iter > 1 and len(cell['feedback_history']) > 1 and cell['feedback_history'][-1].iter_num == current_iter and cell['feedback_history'][-2].marked is True:
+                dirty_sample.at[idx, col] = 'N/A'
+
+            if cell['feedback_history'][-1].marked is True:
+                rep_sample.at[idx, col] = 'N/A'
+
+    dirty_sample_fp = './store/' + project_id + 'temp_sample_w_o_feedback.csv'
+    dirty_sample.to_csv(dirty_sample_fp, index=False)
+
+    rep_sample_fp = './store/' + project_id + 'temp_sample_w_feedback.csv'
+    rep_sample.to_csv(rep_sample_fp, index=False)
     
-    process = sp.Popen(['./xplode/CTane', dirty_dataset_fp, rep_dataset_fp, str(0.7*len(dirty_data.index)), '0.7'], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})
+    process = sp.Popen(['./xplode/CTane', dirty_sample_fp, rep_sample_fp, str(0.7*len(dirty_sample.index)), '0.7'], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})
     res = process.communicate()
     print('res:', res[0])
 

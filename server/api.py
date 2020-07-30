@@ -170,9 +170,6 @@ class Clean(Resource):
         with open('./store/' + project_id + '/project_info.json', 'r') as f:
             project_info = json.load(f)
         
-        # with open(project_info['scenario']['dataset'], 'r+') as f:
-        #     reader = csv.DictReader(f)
-        #     data = list(reader)
         data = pd.read_csv(project_info['scenario']['dirty_dataset'], keep_default_na=False)
 
         # Save noise feedback
@@ -202,10 +199,11 @@ class Clean(Resource):
         
         # Update tuple weights pre-sampling
         helpers.reinforceTuplesBasedOnInteraction(data, project_id, current_iter, is_new_feedback)
-        helpers.reinforceTuplesBasedOnDependencies(data, project_id, current_iter, is_new_feedback)
+        sampling_method = project_info['scenario']['sampling_method']
+        if sampling_method == 'DUO':
+            helpers.reinforceTuplesBasedOnDependencies(data, project_id, current_iter, is_new_feedback)
 
         # Build sample
-        sampling_method = project_info['scenario']['sampling_method']
         s_out = helpers.buildSample(data, sample_size, project_id, sampling_method)
 
         # Update tuple weights post-sampling
