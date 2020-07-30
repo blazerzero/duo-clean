@@ -17,9 +17,7 @@ for i in range(0, data_len-1):
     value = random.randint(0,data_len-1)
     threshold = math.floor(data_len*dup_level)
     if value < threshold:
-        for j in df.columns:
-                df.at[i,j] = df.at[rand_row, j]
-                counter += 1
+        df[i] = df[rand_row]
 
-export_csv = df.to_csv('out.csv', encoding='utf-8', index=False, header=True)
+export_csv = df.to_csv(sys.argv[3], encoding='utf-8', index=False, header=True)
 
