@@ -47,8 +47,8 @@ class Import(Resource):
             returned_data = {
                 'msg': '[ERROR] Unable to create a directory for this project.'
             }
+            pprint(returned_data)
             response = json.dumps(returned_data)
-            pprint(response)
             return response, 500, {'Access-Control-Allow-Origin': '*'}
 
         # Read the scenario number and initialize the scenario accordingly
@@ -56,7 +56,6 @@ class Import(Resource):
         participant_name = request.form.get('participant_name')
         with open('scenarios.json', 'r') as f:
             scenarios_list = json.load(f)
-            print(scenarios_list)
         scenario = scenarios_list[scenario_id]
         project_info = {
             'participant_name': participant_name,
@@ -68,7 +67,7 @@ class Import(Resource):
             json.dump(project_info, f)
 
         # Extract the header
-        with open(scenario['dataset']) as f:
+        with open(scenario['dirty_dataset']) as f:
             reader = csv.DictReader(f)
             header = reader.fieldnames
             data = list(reader)
@@ -93,14 +92,14 @@ class Import(Resource):
                 cell_metadata[idx][col]['feedback_history'] = list()
                 
         # FD metadata
-        fd_metadata = dict()
+        cfd_metadata = dict()
 
         # TODO: Initialize other metrics/metadata needed in study
 
         # Save metadata
         pickle.dump( tuple_metadata, open(new_project_dir + '/tuple_metadata.p', 'wb') )
         pickle.dump( cell_metadata, open(new_project_dir + '/cell_metadata.p', 'wb') )
-        pickle.dump( fd_metadata, open(new_project_dir + '/fd_metadata.p', 'wb') )
+        pickle.dump( cfd_metadata, open(new_project_dir + '/cfd_metadata.p', 'wb') )
         pickle.dump( current_iter, open(new_project_dir + '/current_iter.p', 'wb') )
         
         # Return information to the user
@@ -148,8 +147,8 @@ class Sample(Resource):
             'leaderboard': json.dumps(leaderboard),
             'msg': '[SUCCESS] Successfully built sample.'
         }
+        pprint(returned_data)
         response = json.dumps(returned_data)
-        pprint(response)
         return response, 200, {'Access-Control-Allow-Origin': '*'}
 
 class Clean(Resource):
@@ -159,7 +158,7 @@ class Clean(Resource):
     def post(self):
         project_id = request.form.get('project_id')
         feedback = json.loads(request.form.get('feedback'))
-        is_new_feedback = request.form.get('is_new_feedback')
+        is_new_feedback = bool(request.form.get('is_new_feedback'))
         feedback = pd.DataFrame.from_dict(feedback, orient='index')
         sample_size = 10
 
@@ -198,14 +197,14 @@ class Clean(Resource):
         # Confidence threshold for relevant CFD(s) IS NOT met, so build new sample based on tuple weights
         
         # Update tuple weights pre-sampling
-        helpers.reinforceTuplesBasedOnInteraction(data, project_id, current_iter, is_new_feedback)
         sampling_method = project_info['scenario']['sampling_method']
+        if sampling_method != 'RANDOM-PURE':
+            helpers.reinforceTuplesBasedOnInteraction(data, project_id, current_iter, is_new_feedback)
         if sampling_method == 'DUO':
             helpers.reinforceTuplesBasedOnDependencies(data, project_id, current_iter, is_new_feedback)
 
         # Build sample
         s_out = helpers.buildSample(data, sample_size, project_id, sampling_method)
-
         # Update tuple weights post-sampling
         # helpers.reinforceTuplesPostSample(s_out, project_id, current_iter)
 
@@ -217,7 +216,7 @@ class Clean(Resource):
                 feedback.append({
                     'row': idx,
                     'col': col,
-                    'marked': bool(cell_metadata[idx][col]['feedback_history'][-1].marked) if len(cell_metadata[idx][col]['feedback_history']) > 0 else False
+                    'marked': bool(cell_metadata[int(idx)][col]['feedback_history'][-1].marked) if len(cell_metadata[int(idx)][col]['feedback_history']) > 0 else False
                 })
 
         leaderboard = helpers.buildLeaderboard(project_info['scenario_id'])
@@ -229,8 +228,8 @@ class Clean(Resource):
             'leaderboard': json.dumps(leaderboard),
             'msg': '[SUCCESS]: Saved feedback and built new sample.'
         }
+        pprint(returned_data)
         response = json.dumps(returned_data)
-        pprint(response)
         return response, 200, {'Access-Control-Allow-Origin': '*'}
 
 api.add_resource(Test, '/duo/api/')

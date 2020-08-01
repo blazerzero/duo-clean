@@ -19,7 +19,7 @@ class Clean extends Component {
     const formData = new FormData();
     formData.append('project_id', this.state.project_id);
     formData.append('feedback', JSON.stringify(this.state.feedbackMap));
-    formData.append('no_new_feedback', this.state.isNewFeedback);
+    formData.append('is_new_feedback', !this.state.noNewFeedback);
     axios.post('http://localhost:5000/duo/api/clean', formData)
         .then(async(response) => {
           console.log(response.data);
@@ -127,8 +127,8 @@ class Clean extends Component {
   }
 
   _handleNoNewFeedbackClick = async() => {
-    var isNewFeedback = !this.state.isNewFeedback;
-    this.setState({ isNewFeedback });
+    var noNewFeedback = !this.state.noNewFeedback;
+    this.setState({ noNewFeedback });
   }
 
   componentDidMount() {
@@ -150,7 +150,7 @@ class Clean extends Component {
       project_id: 0,
       scenario_id: 0,
       isProcessing: false,
-      isNewFeedback: false,
+      noNewFeedback: false,
       leaderboard: {},
     };
   }
@@ -173,8 +173,8 @@ class Clean extends Component {
             </div>
           </Row>
           <Row className='content-centered'>
-            <Col md={6}>
-              <Alert variant='warning' style={{border: '1px black solid'}}>Yellow cells indicate cells you marked as noisy.</Alert>
+            <Col md={7}>
+              <Alert variant='warning' style={{border: '1px black solid'}}>Yellow cells indicate cells you've currently marked as noisy.</Alert>
             </Col>
           </Row>
           {Object.keys(this.state.data).length > 0 && (
@@ -214,7 +214,7 @@ class Clean extends Component {
                       <label>
                         <input
                           type='checkbox'
-                          defaultChecked={this.state.isNewFeedback}
+                          defaultChecked={this.state.noNewFeedback}
                           onChange={this._handleNoNewFeedbackClick}
                           />
                           No new feedback

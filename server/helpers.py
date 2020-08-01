@@ -58,10 +58,9 @@ class CFDScore(object):
 # SAVE NOISE FEEDBACK FROM USER
 def saveNoiseFeedback(data, feedback, project_id, current_iter):
     cell_metadata = pickle.load( open('./store/' + project_id + '/cell_metadata.p', 'rb') )
-    print(feedback)
     for idx in feedback.index:
         for col in feedback.columns:
-            cell_metadata[int(idx)][col]['feedback_history'].append(CellFeedback(marked=feedback.at[idx, col], iter_num=current_iter))
+            cell_metadata[int(idx)][col]['feedback_history'].append(CellFeedback(marked=bool(feedback.at[idx, col]), iter_num=current_iter))
             
     with open('./store/' + project_id + '/project_info.json', 'r') as f:
         project_info = json.load(f)
@@ -71,9 +70,9 @@ def saveNoiseFeedback(data, feedback, project_id, current_iter):
     score = 0
     for idx in data.index:
         for col in data.columns:
-            if data.at[idx, col] != clean_dataset[idx, col] and cell_metadata[int(idx)][col]['feedback_history'][-1].marked is True:
+            if data.at[idx, col] != clean_dataset.at[idx, col] and len(cell_metadata[int(idx)][col]['feedback_history']) > 0 and cell_metadata[int(idx)][col]['feedback_history'][-1].marked is True:
                 score += 1
-                                  
+
     project_info['score'] = score
     with open('./store/' + project_id + '/project_info.json', 'w') as f:
         json.dump(project_info, f)
@@ -110,7 +109,7 @@ def runCFDDiscovery(num_rows, project_id, current_iter):
 
 # DISCOVER CFDs THAT BEST EXPLAIN THE FEEDBACK GIVEN BY THE USER
 def explainFeedback(sample, project_id, current_iter):
-    cell_metadata = pickle.load( open('./store/' + project_id + '/cell_metadata.p', 'wb') )
+    cell_metadata = pickle.load( open('./store/' + project_id + '/cell_metadata.p', 'rb') )
     
     dirty_sample = sample
     
@@ -121,7 +120,7 @@ def explainFeedback(sample, project_id, current_iter):
             if current_iter > 1 and len(cell['feedback_history']) > 1 and cell['feedback_history'][-1].iter_num == current_iter and cell['feedback_history'][-2].marked is True:
                 dirty_sample.at[idx, col] = 'N/A'
 
-            if cell['feedback_history'][-1].marked is True:
+            if len(cell['feedback_history']) >= 1 and cell['feedback_history'][-1].marked is True:
                 rep_sample.at[idx, col] = 'N/A'
 
     dirty_sample_fp = './store/' + project_id + 'temp_sample_w_o_feedback.csv'
@@ -144,7 +143,7 @@ def explainFeedback(sample, project_id, current_iter):
                 cfd_metadata[c['cfd']]['history'] = list()
             cfd_metadata[c['cfd']]['history'].append(CFDScore(iter_num=current_iter, score=c['score']))
 
-        pickle.load( cfd_metadata, open('./store' + project_id + 'cfd_metadata.p', 'wb') )
+        pickle.dump( cfd_metadata, open('./store' + project_id + 'cfd_metadata.p', 'wb') )
     
     else:
         print('[ERROR] There was an error running XPlode')    
@@ -166,7 +165,7 @@ def reinforceTuplesBasedOnInteraction(data, project_id, current_iter, is_new_fee
         feedback_consistency = 0
         entropy = 0
         for col in data.columns:
-            if cell_metadata[idx][col]['feedback_history'][-1].marked:
+            if len(cell_metadata[idx][col]['feedback_history']) > 0 and cell_metadata[idx][col]['feedback_history'][-1].marked:
                 cell_entropy_list = list()
                 for val in data[col].unique():
                     p = len([v for v in data[col] if v == val].to_list()) / len(data.index)
@@ -175,7 +174,7 @@ def reinforceTuplesBasedOnInteraction(data, project_id, current_iter, is_new_fee
                 average_cell_entropy = statistics.mean(cell_entropy_list)
                 entropy -= average_cell_entropy
             else:
-                p = len([v for v in data[col] if v == data.at[idx, col]].to_list()) / len(data.index)
+                p = len([v for v in data[col] if v == data.at[idx, col]]) / len(data.index)
                 entropy -= (p * math.log(p))
             
             for i in range(1, len(cell_metadata[idx][col]['feedback_history'])):
@@ -338,14 +337,7 @@ def buildSample(data, sample_size, project_id, sampling_method):
 # BUILD PURELY RANDOM SAMPLE
 def samplingRandomPure(data, sample_size, project_id):
     print('Sampling method: RANDOM-PURE')
-    tuple_metadata = pickle.load( open('./store/' + project_id + '/tuple_metadata.p', 'rb') )
-    
-    s_out = data.sample(n=sample_size, random_state=1)
-    for idx in s_out.index:
-        tuple_metadata[idx]['expl_freq'] += 1
-        
-    pickle.dump( tuple_metadata, open('./store/' + project_id + '/tuple_metadata.p', 'wb') )
-    
+    s_out = returnTuples(data, sample_size, project_id)
     return s_out
 
 
