@@ -1,5 +1,6 @@
 #include "stringutil.h"
 #include <algorithm>
+#include <functional>
 
 // trim from start
 std::string& ltrim(std::string &s) {

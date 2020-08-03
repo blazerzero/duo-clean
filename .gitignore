@@ -10,6 +10,11 @@ ZERO*
 __pycache__/
 server/xplode/CTane*
 server/xplode/.*
+server/xplode/xplode.sln
+server/xplode/xplode.v*
+server/xplode/x64/
+server/xplode/out/
+server/xplode/Debug/
 server/data/cfddiscovery/CFDD*
 server/data/cfddiscovery/.*
 server/store/

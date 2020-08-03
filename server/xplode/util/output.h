@@ -38,17 +38,42 @@ public:
             if (item < 0) {
                 std::string attr = db.getAttrName(-1-item);
                 attr.erase(std::remove(attr.begin(), attr.end(), '\r'), attr.end());
+                attr.erase(std::remove(attr.begin(), attr.end(), '\t'), attr.end());
+                attr.erase(std::remove(attr.begin(), attr.end(), '\n'), attr.end());
+                char attrEnd = attr.back();
+                if ((int)attrEnd < 65 || (int)attrEnd > 122) {
+                    attr.pop_back();
+                }
                 parts.push_back(attr);
             }
             else if (item == 0) {
                 std::string attr = db.getAttrName(ix);
                 attr.erase(std::remove(attr.begin(), attr.end(), '\r'), attr.end());
+                attr.erase(std::remove(attr.begin(), attr.end(), '\t'), attr.end());
+                attr.erase(std::remove(attr.begin(), attr.end(), '\n'), attr.end());
+                char attrEnd = attr.back();
+                if ((int)attrEnd < 65 || (int)attrEnd > 122) {
+                    attr.pop_back();
+                }
                 parts.push_back(attr + "=N/A");
             }
             else {
                 std::string attr = db.getAttrName(db.getAttrIndex(item));
-                attr.erase(std::remove(attr.begin(), attr.end(), '\r'), attr.end());
-                parts.push_back(attr + "=" + db.getValue(item));
+                attr.erase(remove(attr.begin(), attr.end(), '\r'), attr.end());
+                attr.erase(remove(attr.begin(), attr.end(), '\t'), attr.end());
+                attr.erase(remove(attr.begin(), attr.end(), '\n'), attr.end());
+                char attrEnd = attr.back();
+                if ((int)attrEnd < 65 || (int)attrEnd > 122) {
+                    attr.pop_back();
+                }
+                std::string value = db.getValue(item);
+                value.erase(remove(value.begin(), value.end(), '\r'), value.end());
+                value.erase(remove(value.begin(), value.end(), '\t'), value.end());
+                value.erase(remove(value.begin(), value.end(), '\n'), value.end());
+                if ((int)value.back() < 65 || (int)value.back() > 122) {
+                    value.pop_back();
+                }
+                parts.push_back(attr + "=" + value);
             }
         }
         printCollection(parts, ", ", out);
@@ -104,12 +129,31 @@ public:
         if (rhs < 0) {
             std::string rhsAttr = db.getAttrName(-1-rhs);
             rhsAttr.erase(remove(rhsAttr.begin(), rhsAttr.end(), '\r'), rhsAttr.end());
+            rhsAttr.erase(remove(rhsAttr.begin(), rhsAttr.end(), '\t'), rhsAttr.end());
+            rhsAttr.erase(remove(rhsAttr.begin(), rhsAttr.end(), '\n'), rhsAttr.end());
+            char attrEnd = rhsAttr.back();
+            if ((int)attrEnd < 65 || (int)attrEnd > 122) {
+                rhsAttr.pop_back();
+            }
             out << rhsAttr;
         }
         else {
             std::string rhsAttr = db.getAttrName(db.getAttrIndex(rhs));
             rhsAttr.erase(remove(rhsAttr.begin(), rhsAttr.end(), '\r'), rhsAttr.end());
-            out << (rhsAttr + '=' + db.getValue(rhs));
+            rhsAttr.erase(remove(rhsAttr.begin(), rhsAttr.end(), '\t'), rhsAttr.end());
+            rhsAttr.erase(remove(rhsAttr.begin(), rhsAttr.end(), '\n'), rhsAttr.end());
+            char attrEnd = rhsAttr.back();
+            if ((int)attrEnd < 65 || (int)attrEnd > 122) {
+                rhsAttr.pop_back();
+            }
+            std::string rhsValue = db.getValue(rhs);
+            rhsValue.erase(remove(rhsValue.begin(), rhsValue.end(), '\r'), rhsValue.end());
+            rhsValue.erase(remove(rhsValue.begin(), rhsValue.end(), '\t'), rhsValue.end());
+            rhsValue.erase(remove(rhsValue.begin(), rhsValue.end(), '\n'), rhsValue.end());
+            if ((int)rhsValue.back() < 65 || (int)rhsValue.back() > 122) {
+                rhsValue.pop_back();
+            }
+            out << (rhsAttr + '=' + rhsValue);
         }
         out << "\", ";
         out << ("\"score\": " + std::to_string(conf) + "},");

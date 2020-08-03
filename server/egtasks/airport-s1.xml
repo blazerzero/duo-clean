@@ -8,8 +8,8 @@
         <type>DBMS</type>
         <access-configuration>
             <driver>org.postgresql.Driver</driver>
-            <uri>jdbc:postgresql:omeed-pg</uri>
-            <schema>duoclean</schema>
+            <uri>jdbc:postgresql:duo</uri>
+            <schema>public</schema>
             <login>postgres</login>
             <password>BlazersPass</password>
         </access-configuration>
@@ -50,12 +50,12 @@ airport-s1(Type: $t2, Region: $r2, FacilityName: $fn2, Owner: $o2, OwnerType: $o
 
         <!-- To export the dirty db -->
         <exportDirtyDB>true</exportDirtyDB>
-        <exportDirtyDBPath>/Temp/bart/example/</exportDirtyDBPath>
+        <exportDirtyDBPath>example/</exportDirtyDBPath>
         <exportDirtyDBType>CSV</exportDirtyDBType>
 
         <!-- To export the changes -->
         <exportCellChanges>true</exportCellChanges>
-        <exportCellChangesPath>/Temp/bart/example/changes.csv</exportCellChangesPath>
+        <exportCellChangesPath>changes.csv</exportCellChangesPath>
 
         <!-- To compute an estimate of the reparability (default = false) -->
         <estimateRepairability>true</estimateRepairability>
@@ -98,13 +98,23 @@ airport-s1(Type: $t2, Region: $r2, FacilityName: $fn2, Owner: $o2, OwnerType: $o
         <!-- To control the way in which changing the value -->
         <dirtyStrategies>
             <defaultStrategy>
-                <strategy>TypoActiveDomain</strategy>
-            </defaultStrategy> 
-            <!-- <attributeStrategy>
-                <attribute table="person" name="city">
+                <strategy>TypoRandom</strategy>
+            </defaultStrategy>
+            <attributeStrategy>
+                <attribute table="airport-s1-test" name="Manager">
                     <strategy>TypoActiveDomain</strategy>
                 </attribute>
-            </attributeStrategy> -->
+            </attributeStrategy>
+            <attributeStrategy>
+                <attribute table="airport-s1-test" name="Owner">
+                    <strategy>TypoActiveDomain</strategy>
+                </attribute>
+            </attributeStrategy>
+            <attributeStrategy>
+                <attribute table="airport-s1-test" name="Region">
+                    <strategy>TypoActiveDomain</strategy>
+                </attribute>
+            </attributeStrategy>
             <!-- possible strategies
                 <strategy chars="*" charsToAdd="3">TypoAddString</strategy>
                 <strategy chars="*" charsToAdd="3">TypoAppendString</strategy>

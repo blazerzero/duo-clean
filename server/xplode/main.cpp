@@ -13,32 +13,30 @@ int main(int argc, char *argv[]) {
         std::cout << "\t For Example: ./CTane abalone-dirty.csv abalone-cleaned.csv 0.1 100" << std::endl;
     }
     else {
-        std::cout << "Test" << std::endl;
         std::ifstream dirtyFile(argv[1]);
         Database dirtyDb = DatabaseReader::fromTable(dirtyFile, ',');
-        std::cout << "Test" << std::endl;
         std::ifstream cleanFile(argv[2]);
         Database cleanDb = DatabaseReader::fromTable(cleanFile, dirtyDb, ',');
-        std::cout << "Test" << std::endl;
         double epsilon = atof(argv[3]);
         int delta = atoi(argv[4]);
-        std::cout << "Test" << std::endl;
         XPlode xplode(dirtyDb, cleanDb);
         //CFD expl = xplode.explain(delta, 1.0-epsilon);
         //CFDList explList = xplode.postExplain(delta, 1.0-epsilon);
-        std::cout << "Test" << std::endl;
         CFDPlusList explList = xplode.postExplain(delta, 1.0-epsilon);
         //std::cout << "Best Explanation: " << std::endl;
         //Output::printCFD(expl, cleanDb);
         sort(explList.begin(), explList.end(), Output::sortByConfidence);
+        std::cout << "{\n\t\"cfds\": [" << std::endl;
         if (explList.size() > 0) {
-            std::cout << "{\n\t\"cfds\": [" << std::endl;
             Output::printCFDList(explList, cleanDb);
-            std::cout << "\t]\n";
+            std::cout << "\t],\n";
+            std::cout << "\t\"msg\": \"[SUCCESS]\"\n";
             std::cout << "}";
         }
+        
         else {
-            std::cout << "{\n\t\"msg\": \"[NO CFDS FOUND]\"\n}";
+            std::cout << "\t],\n";
+            std::cout << "\t\"msg\": \"[NO CFDS FOUND]\"\n}";
         }
     }
     return 0;
