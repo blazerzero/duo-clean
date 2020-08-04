@@ -4,5 +4,6 @@ RUN apt-get update -y && \
 COPY . /app
 WORKDIR /app
 RUN pip3 install -r requirements.txt
+RUN rm -rdf store && mkdir store
 ENTRYPOINT ["python3"]
 CMD ["api.py"]
