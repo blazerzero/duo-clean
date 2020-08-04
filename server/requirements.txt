@@ -6,4 +6,3 @@ pandas==1.0.3
 numpy==1.18.2
 Flask_RESTful==0.3.7
 jellyfish==0.7.2
-omdb==0.10.1
