@@ -186,7 +186,7 @@ int PartitionTable::partitionError(const PartitionTidList& x, const PartitionTid
     //bigt.reserve(xa.fNrSets);
     int count = 0;
     for (int pi = 0; pi <= xa.fTids.size(); pi++) {
-        if (pi == xa.fTids.size() || xa.fTids[pi] == PartitionTidList::SEP) {
+        if (pi > 0 && (pi == xa.fTids.size() || xa.fTids[pi] == PartitionTidList::SEP)) {
             bigt[xa.fTids[pi-1]] = count;
             count = 0;
         }

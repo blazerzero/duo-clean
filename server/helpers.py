@@ -6,6 +6,7 @@ import subprocess as sp
 import pandas as pd
 import numpy as np
 import sys
+import csv
 import pickle
 import math
 import statistics
@@ -108,12 +109,11 @@ def runCFDDiscovery(num_rows, project_id, current_iter):
 
 
 # DISCOVER CFDs THAT BEST EXPLAIN THE FEEDBACK GIVEN BY THE USER
-def explainFeedback(sample, project_id, current_iter):
+def explainFeedback(dirty_sample, project_id, current_iter):
     cell_metadata = pickle.load( open('./store/' + project_id + '/cell_metadata.p', 'rb') )
     
-    dirty_sample = sample
+    rep_sample = dirty_sample.copy(deep=True)
     
-    rep_sample = dirty_sample
     for idx in dirty_sample.index:
         for col in dirty_sample.columns:
             cell = cell_metadata[int(idx)][col]
@@ -123,13 +123,35 @@ def explainFeedback(sample, project_id, current_iter):
             if len(cell['feedback_history']) >= 1 and cell['feedback_history'][-1].marked is True:
                 rep_sample.at[idx, col] = 'N/A'
 
-    dirty_sample_fp = './store/' + project_id + 'temp_sample_w_o_feedback.csv'
-    dirty_sample.to_csv(dirty_sample_fp, index=False)
+    dirty_sample_fp = './store/' + project_id + '/temp_sample_w_o_feedback.csv'
+    rep_sample_fp = './store/' + project_id + '/temp_sample_w_feedback.csv'
+    if current_iter > 1:
+        with open(dirty_sample_fp, 'r+') as f:
+            f.seek(0)
+            f.truncate()
+        with open(rep_sample_fp, 'r+') as f:
+            f.seek(0)
+            f.truncate()
 
-    rep_sample_fp = './store/' + project_id + 'temp_sample_w_feedback.csv'
-    rep_sample.to_csv(rep_sample_fp, index=False)
+    d_dict = list(dirty_sample.T.to_dict().values())
+    d_header = d_dict[0].keys()
+    with open(dirty_sample_fp, 'w', newline='') as f:
+        writer = csv.DictWriter(f, d_header)
+        writer.writeheader()
+        writer.writerows(d_dict)
+
+    # dirty_sample.to_csv(dirty_sample_fp, index=False)
+
+    rep_dict = list(rep_sample.T.to_dict().values())
+    rep_header = rep_dict[0].keys()
+    with open(rep_sample_fp, 'w', newline='') as f:
+        writer = csv.DictWriter(f, rep_header)
+        writer.writeheader()
+        writer.writerows(rep_dict)
+
+    # rep_sample.to_csv(rep_sample_fp, index=False)
     
-    process = sp.Popen(['./xplode/CTane', dirty_sample_fp, rep_sample_fp, str(0.7*len(dirty_sample.index)), '0.7'], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})
+    process = sp.Popen(['./xplode/CTane', dirty_sample_fp, rep_sample_fp, '0.7', str(0.7*len(dirty_sample.index))], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})
     res = process.communicate()
     print('res:', res[0])
 
@@ -168,7 +190,7 @@ def reinforceTuplesBasedOnInteraction(data, project_id, current_iter, is_new_fee
             if len(cell_metadata[idx][col]['feedback_history']) > 0 and cell_metadata[idx][col]['feedback_history'][-1].marked:
                 cell_entropy_list = list()
                 for val in data[col].unique():
-                    p = len([v for v in data[col] if v == val].to_list()) / len(data.index)
+                    p = len([v for v in data[col] if v == val]) / len(data.index)
                     cell_entropy = (p * math.log(p))
                     cell_entropy_list.append(cell_entropy)
                 average_cell_entropy = statistics.mean(cell_entropy_list)

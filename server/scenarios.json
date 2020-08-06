@@ -5,7 +5,7 @@
         ],
         "dirty_dataset": "./data/airport-S1-dirty_20.csv",
         "clean_dataset": "./data/airport-S1-clean.csv",
-        "sampling_method": "RANDOM-PURE"
+        "sampling_method": "DUO"
     },
     "2": {
         "cfds": [

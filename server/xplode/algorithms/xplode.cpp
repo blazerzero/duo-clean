@@ -656,11 +656,13 @@ std::map<Itemset, int> XPlode::convertCFD(const Itemset &lhs, int rhs, const Par
     std::map<Itemset, std::map<int,int> > rules;
     int count = 0;
     for (int pi = 0; pi <= tids.fTids.size(); pi++) {
-        if (pi == tids.fTids.size() || tids.fTids[pi] == PartitionTidList::SEP ) {
-            const Transaction& trans = fDb.getRow(tids.fTids[pi-1]);
-            Itemset lhsConstants = projection(trans, lhsAttrs);
-            rules[lhsConstants][trans[rAttr]] = count;
-            count = 0;
+        if (pi == tids.fTids.size() || tids.fTids[pi] == PartitionTidList::SEP) {
+            if (tids.fTids[pi - 1] > 0) {
+                const Transaction& trans = fDb.getRow(tids.fTids[pi - 1]);
+                Itemset lhsConstants = projection(trans, lhsAttrs);
+                rules[lhsConstants][trans[rAttr]] = count;
+                count = 0;
+            }
         }
         else {
             count++;
