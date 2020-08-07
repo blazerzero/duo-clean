@@ -12,18 +12,6 @@ import math
 import statistics
 from collections import Counter
 
-# sys.path.insert(0, './charm/keywordSearch/')
-# import charm
-
-# CELL VALUE HISTORY OBJECT
-# class ValueHistory(object):
-#     def __init__(self, value, iter_num, changed):
-#         self.value = value      # the value
-#         self.agent = agent      # who set this cell to this value at this point, user or system
-#         self.cfd_applied = cfd_applied      # the CFD that resulted in this value
-#         self.iter_num = iter_num                # the iteration number for this value
-#         self.changed = changed              # whether this value is a change from the previous state
-
 class CellFeedback(object):
     def __init__(self, marked, iter_num):
         self.marked = marked            # whether or not the user marked the cell as noisy in this iteration
@@ -38,23 +26,6 @@ class CFDScore(object):
     def __init__(self, iter_num, score):
         self.iter_num = iter_num
         self.score = score
-
-# MAP USER-SUBMITTED REPAIRS FROM SAMPLE TO FULL DATASET
-# def applyUserModFeedback(d_prev, s_in, project_id, current_iter):
-#     d_curr = d_prev
-#     cell_metadata = pickle.load( open('./store/' + project_id + '/cell_metadata.p', 'rb') )
-
-#     for idx in s_in.index:
-#         for col in s_in.columns:
-#             if d_curr[idx][col] != s_in.at[idx, col]:
-#                 d_curr[idx][col] = s_in.at[idx, col]
-#                 cell_metadata[idx][col]['history'].append(ValueHistory(value=s_in.at[idx, col], iter_num=current_iter, changed=True))
-#             else:
-#                 cell_metadata[idx][col]['history'].append(ValueHistory(value=d_curr[idx][col], iter_num=current_iter, changed=False))
-
-#     pickle.dump( cell_metadata, open('./store/' + project_id + '/cell_metadata.p', 'wb') )
-#     return d_curr
-
 
 # SAVE NOISE FEEDBACK FROM USER
 def saveNoiseFeedback(data, feedback, project_id, current_iter):
@@ -140,8 +111,6 @@ def explainFeedback(dirty_sample, project_id, current_iter):
         writer.writeheader()
         writer.writerows(d_dict)
 
-    # dirty_sample.to_csv(dirty_sample_fp, index=False)
-
     rep_dict = list(rep_sample.T.to_dict().values())
     rep_header = rep_dict[0].keys()
     with open(rep_sample_fp, 'w', newline='') as f:
@@ -149,23 +118,22 @@ def explainFeedback(dirty_sample, project_id, current_iter):
         writer.writeheader()
         writer.writerows(rep_dict)
 
-    # rep_sample.to_csv(rep_sample_fp, index=False)
-    
     process = sp.Popen(['./xplode/CTane', dirty_sample_fp, rep_sample_fp, '0.7', str(0.7*len(dirty_sample.index))], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})
     res = process.communicate()
-    print('res:', res[0])
 
     if process.returncode == 0:
         cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
         output = res[0].decode('latin_1').replace(',]', ']')
         cfds = json.loads(output)['cfds']
-        for c in cfds:
+        print('cfds from xplode:', cfds)
+        accepted_cfds = [c for c in cfds if c['cfd'].split(' => ')[0] != '()']
+        for c in accepted_cfds:
             if c['cfd'] not in cfd_metadata.keys():
                 cfd_metadata[c['cfd']] = dict()
                 cfd_metadata[c['cfd']]['history'] = list()
             cfd_metadata[c['cfd']]['history'].append(CFDScore(iter_num=current_iter, score=c['score']))
 
-        pickle.dump( cfd_metadata, open('./store' + project_id + 'cfd_metadata.p', 'wb') )
+        pickle.dump( cfd_metadata, open('./store/' + project_id + '/cfd_metadata.p', 'wb') )
     
     else:
         print('[ERROR] There was an error running XPlode')    
@@ -222,7 +190,7 @@ def reinforceTuplesBasedOnDependencies(data, project_id, current_iter, is_new_fe
     tuple_metadata = pickle.load( open('./store/' + project_id + '/tuple_metadata.p', 'rb') )
     cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
 
-    for cfd in cfd_metadata.keys():
+    for cfd, cfd_m in cfd_metadata.items():
         # Bias towards simpler rules
         lhs = cfd.split(' => ')[0][1:-1].split(', ')
         num_attributes = len(lhs) + 1
@@ -230,26 +198,27 @@ def reinforceTuplesBasedOnDependencies(data, project_id, current_iter, is_new_fe
 
         # System's weighted prior on rule confidence
         weighted_conf = 0
-        for h in cfd['history']:
+        for h in cfd_m['history']:
             weighted_conf += (h.score / (current_iter - h.iter_num + 1))
 
-        cfd['weight'] = complexity_bias + weighted_conf
-    
-    cfd_metadata = normalizeWeights(cfd_metadata)
+        cfd_m['weight'] = complexity_bias + weighted_conf
 
-    for cfd in cfd_metadata.keys():
+    cfd_metadata = normalizeWeights(cfd_metadata)
+    print('cfd weights post-duo:', [cfd_m['weight'] for _, cfd_m in cfd_metadata.items()])
+
+    for cfd, cfd_m in cfd_metadata.items():
         # Update tuple weights based on whether tuple violates CFD and confidence of the CFD
-        lhs = cfd.split(' => ')[0][1:-1].split(', ')
+        lhs = cfd.split(' => ')[0][1:-1]
         rhs = cfd.split(' => ')[1]
 
         patterns = fd2cfd(data, lhs, rhs)
         cover, violations = buildCover(data, lhs, rhs, patterns)
         for idx in cover:
             reinforcement_decision = random.random()
-            if reinforcement_decision <= cfd['weight']:     # ensures that CFDs with higher weight influence the sample more
-                tuple_metadata[idx]['weight'] += 0.5
+            if reinforcement_decision <= cfd_m['weight']:     # ensures that CFDs with higher weight influence the sample more
+                tuple_metadata[idx]['weight'] += 1
             if idx in violations:
-                tuple_metadata[idx]['weight'] += 0.5
+                tuple_metadata[idx]['weight'] += 1
 
     tuple_metadata = normalizeWeights(tuple_metadata)
 
@@ -296,7 +265,7 @@ def fd2cfd(data, lhs, rhs):
         if len(patterns[key]) == 1:
             patterns[key] = patterns[key].pop()
         else:
-            random_idx = random.randint(0, len(patterns[key]))
+            random_idx = random.randint(0, len(patterns[key])-1)
             patterns[key] = patterns[key][random_idx]
 
     return patterns
@@ -306,7 +275,7 @@ def fd2cfd(data, lhs, rhs):
 def buildCover(data, lhs, rhs, patterns):
     cover = list()
     violations = list()
-    for idx in data.index():
+    for idx in data.index:
         applies = True
         for lh in lhs.split(', '):
 
@@ -331,7 +300,7 @@ def buildCover(data, lhs, rhs, patterns):
                     violations.append(idx)
             elif lhs.count('=') < len(lhs.split(', ')):
                 applicable_lhs = ''
-                for lh in lhs:
+                for lh in lhs.split(', '):
                     if '=' in lh:
                         applicable_lhs += lh + ', '
                     else:
@@ -360,6 +329,9 @@ def buildSample(data, sample_size, project_id, sampling_method):
 def samplingRandomPure(data, sample_size, project_id):
     print('Sampling method: RANDOM-PURE')
     s_out = returnTuples(data, sample_size, project_id)
+    print('IDs of tuples in next sample:')
+    for idx in s_out.index:
+        print(idx)
     return s_out
 
 
@@ -374,7 +346,6 @@ def samplingRandomUB(data, sample_size, project_id):
 # OF FDs/CFDs BY SYSTEM
 def samplingDuo(data, sample_size, project_id):
     print('Sampling method: DUO')
-    #TODO: DUO-specific weight modifications
     s_out = returnTuples(data, sample_size, project_id)
     return s_out
 
@@ -385,6 +356,7 @@ def returnTuples(data, sample_size, project_id):
     tuple_weights = {k: v['weight'] for k, v in tuple_metadata.items()}
     chosen_tuples = list()
     
+    print('IDs of tuples in next sample:')
     while len(chosen_tuples) < sample_size:
         returned_tuple = pickSingleTuple(tuple_weights)
         if returned_tuple not in chosen_tuples:

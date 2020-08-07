@@ -205,8 +205,6 @@ class Clean(Resource):
 
         # Build sample
         s_out = helpers.buildSample(data, sample_size, project_id, sampling_method)
-        # Update tuple weights post-sampling
-        # helpers.reinforceTuplesPostSample(s_out, project_id, current_iter)
 
         # Build changes map for front-end
         feedback = list()
