@@ -52,7 +52,7 @@ class Import(Resource):
             return response, 500, {'Access-Control-Allow-Origin': '*'}
 
         # Read the scenario number and initialize the scenario accordingly
-        scenario_id = request.form.get('scenario_id')     # USE THIS WHEN FRONTEND IS READY
+        scenario_id = request.form.get('scenario_id')
         participant_name = request.form.get('participant_name')
         with open('scenarios.json', 'r') as f:
             scenarios_list = json.load(f)
@@ -158,7 +158,7 @@ class Clean(Resource):
     def post(self):
         project_id = request.form.get('project_id')
         feedback = json.loads(request.form.get('feedback'))
-        is_new_feedback = bool(request.form.get('is_new_feedback'))
+        is_new_feedback = int(request.form.get('is_new_feedback'))
         feedback = pd.DataFrame.from_dict(feedback, orient='index')
         sample_size = 10
 
@@ -172,8 +172,10 @@ class Clean(Resource):
         data = pd.read_csv(project_info['scenario']['dirty_dataset'], keep_default_na=False)
 
         # Save noise feedback
-        if is_new_feedback is True:
+        if is_new_feedback == 1:
             helpers.saveNoiseFeedback(data, feedback, project_id, current_iter)
+            s_in = data.iloc[feedback.index]
+            helpers.explainFeedback(s_in, project_id, current_iter)
 
         # Run CFD discovery algorithm to determine confidence of relevant CFD(s)
         # cfds = helpers.runCFDDiscovery(len(d_curr), project_id, current_iter)
@@ -190,10 +192,6 @@ class Clean(Resource):
         #                 return response, 200, {'Access-Control-Allow-Origin': '*'}
         #             break
         
-        # EXPLAIN FEEDBACK
-        s_in = data.iloc[feedback.index]
-        helpers.explainFeedback(s_in, project_id, current_iter)
-
         # Confidence threshold for relevant CFD(s) IS NOT met, so build new sample based on tuple weights
         
         # Update tuple weights pre-sampling
@@ -205,8 +203,6 @@ class Clean(Resource):
 
         # Build sample
         s_out = helpers.buildSample(data, sample_size, project_id, sampling_method)
-        # Update tuple weights post-sampling
-        # helpers.reinforceTuplesPostSample(s_out, project_id, current_iter)
 
         # Build changes map for front-end
         feedback = list()
@@ -221,12 +217,16 @@ class Clean(Resource):
 
         leaderboard = helpers.buildLeaderboard(project_info['scenario_id'])
 
+        if current_iter == 25:
+            msg = '[DONE]'
+        else:
+            msg = '[SUCCESS]: Saved feedback and built new sample.'
         # Return information to the user
         returned_data = {
             'sample': s_out.to_json(orient='index'),
             'feedback': json.dumps(feedback),
             'leaderboard': json.dumps(leaderboard),
-            'msg': '[SUCCESS]: Saved feedback and built new sample.'
+            'msg': msg
         }
         pprint(returned_data)
         response = json.dumps(returned_data)

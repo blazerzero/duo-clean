@@ -26,17 +26,17 @@ int main(int argc, char *argv[]) {
         //std::cout << "Best Explanation: " << std::endl;
         //Output::printCFD(expl, cleanDb);
         sort(explList.begin(), explList.end(), Output::sortByConfidence);
-        std::cout << "{\n\t\"cfds\": [" << std::endl;
+        std::cout << "{\"cfds\": [";
         if (explList.size() > 0) {
             Output::printCFDList(explList, cleanDb);
-            std::cout << "\t],\n";
-            std::cout << "\t\"msg\": \"[SUCCESS]\"\n";
+            std::cout << "],";
+            std::cout << "\"msg\": \"[SUCCESS]\"";
             std::cout << "}";
         }
         
         else {
-            std::cout << "\t],\n";
-            std::cout << "\t\"msg\": \"[NO CFDS FOUND]\"\n}";
+            std::cout << "],";
+            std::cout << "\"msg\": \"[NO CFDS FOUND]\"}";
         }
     }
     return 0;
