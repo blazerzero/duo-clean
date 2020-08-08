@@ -164,7 +164,7 @@ def reinforceTuplesBasedOnInteraction(data, project_id, current_iter, is_new_fee
         for col in data.columns:
             if len(cell_metadata[idx][col]['feedback_history']) > 0 and cell_metadata[idx][col]['feedback_history'][-1].marked:
                 cell_entropy_list = list()
-                for val in data[col].unique():
+                for val in [d for d in data[col].unique() if d != 'N/A']:
                     p = len([v for v in data[col] if v == val]) / len(data.index)
                     cell_entropy = (p * math.log(p))
                     cell_entropy_list.append(cell_entropy)
