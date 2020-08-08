@@ -5,7 +5,7 @@
         ],
         "dirty_dataset": "./data/airport-S1-dirty_20.csv",
         "clean_dataset": "./data/airport-S1-clean.csv",
-        "sampling_method": "DUO"
+        "sampling_method": "RANDOM-PURE"
     },
     "2": {
         "cfds": [
@@ -15,7 +15,7 @@
         "clean_dataset": "./data/airport-S2-clean.csv",
         "sampling_method": "RANDOM-PURE"
     },
-    "4": {
+    "3": {
         "cfds": [
             "(Title, Director) => Rating",
             "(Title, Director) => Year"
@@ -24,7 +24,7 @@
         "clean_dataset": "./data/omdb-S4-clean.csv",
         "sampling_method": "RANDOM-PURE"
     },
-    "5": {
+    "4": {
         "cfds": [
             "(ListingNumber) => Director"
         ],
@@ -32,12 +32,70 @@
         "clean_dataset": "./data/omdb-S5-clean.csv",
         "sampling_method": "RANDOM-PURE"
     },
+    "5": {
+        "cfds": [
+            "(Region, Manager) => Owner"
+        ],
+        "dirty_dataset": "./data/airport-S1-dirty_20.csv",
+        "clean_dataset": "./data/airport-S1-clean.csv",
+        "sampling_method": "RANDOM-UB"
+    },
     "6": {
         "cfds": [
-            "(Title, Director) => PrimaryActor"
+            "(Owner) => Use"
         ],
-        "dirty_dataset": "./data/omdb-S6-dirty.csv",
-        "clean_dataset": "./data/omdb-S6-clean.csv",
-        "sampling_method": "RANDOM-PURE"
+        "dirty_dataset": "./data/airport-S2-dirty_20.csv",
+        "clean_dataset": "./data/airport-S2-clean.csv",
+        "sampling_method": "RANDOM-UB"
+    },
+    "7": {
+        "cfds": [
+            "(Title, Director) => Rating",
+            "(Title, Director) => Year"
+        ],
+        "dirty_dataset": "./data/omdb-S4-dirty_20.csv",
+        "clean_dataset": "./data/omdb-S4-clean.csv",
+        "sampling_method": "RANDOM-UB"
+    },
+    "8": {
+        "cfds": [
+            "(ListingNumber) => Director"
+        ],
+        "dirty_dataset": "./data/omdb-S5-dirty.csv",
+        "clean_dataset": "./data/omdb-S5-clean.csv",
+        "sampling_method": "RANDOM-UB"
+    },
+    "9": {
+        "cfds": [
+            "(Region, Manager) => Owner"
+        ],
+        "dirty_dataset": "./data/airport-S1-dirty_20.csv",
+        "clean_dataset": "./data/airport-S1-clean.csv",
+        "sampling_method": "DUO"
+    },
+    "10": {
+        "cfds": [
+            "(Owner) => Use"
+        ],
+        "dirty_dataset": "./data/airport-S2-dirty_20.csv",
+        "clean_dataset": "./data/airport-S2-clean.csv",
+        "sampling_method": "DUO"
+    },
+    "11": {
+        "cfds": [
+            "(Title, Director) => Rating",
+            "(Title, Director) => Year"
+        ],
+        "dirty_dataset": "./data/omdb-S4-dirty_20.csv",
+        "clean_dataset": "./data/omdb-S4-clean.csv",
+        "sampling_method": "DUO"
+    },
+    "12": {
+        "cfds": [
+            "(ListingNumber) => Director"
+        ],
+        "dirty_dataset": "./data/omdb-S5-dirty.csv",
+        "clean_dataset": "./data/omdb-S5-clean.csv",
+        "sampling_method": "DUO"
     }
 }

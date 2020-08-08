@@ -96,10 +96,11 @@ def explainFeedback(dirty_sample, project_id, current_iter):
 
     dirty_sample_fp = './store/' + project_id + '/temp_sample_w_o_feedback.csv'
     rep_sample_fp = './store/' + project_id + '/temp_sample_w_feedback.csv'
-    if current_iter > 1:
+    if os.path.exists('./store/' + project_id + '/temp_sample_w_o_feedback.csv'):
         with open(dirty_sample_fp, 'r+') as f:
             f.seek(0)
             f.truncate()
+    if os.path.exists('./store/' + project_id + '/temp_sample_w_feedback.csv'):
         with open(rep_sample_fp, 'r+') as f:
             f.seek(0)
             f.truncate()
@@ -118,7 +119,7 @@ def explainFeedback(dirty_sample, project_id, current_iter):
         writer.writeheader()
         writer.writerows(rep_dict)
 
-    process = sp.Popen(['./xplode/CTane', dirty_sample_fp, rep_sample_fp, '0.7', str(0.7*len(dirty_sample.index))], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})
+    process = sp.Popen(['./xplode/CTane', dirty_sample_fp, rep_sample_fp, '0.5', str(0.7*len(dirty_sample.index))], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})
     res = process.communicate()
 
     if process.returncode == 0:
@@ -141,7 +142,7 @@ def explainFeedback(dirty_sample, project_id, current_iter):
 
 # UPDATE TUPLE WEIGHTS BASED ON INTERACTION STATISTICS
 def reinforceTuplesBasedOnInteraction(data, project_id, current_iter, is_new_feedback):
-    if is_new_feedback is False:
+    if is_new_feedback == 0:
         return
     
     tuple_metadata = pickle.load( open('./store/' + project_id + '/tuple_metadata.p', 'rb') )
@@ -184,7 +185,7 @@ def reinforceTuplesBasedOnInteraction(data, project_id, current_iter, is_new_fee
 
 # REINFORCE TUPLES BASED ON DEPENDENCIES
 def reinforceTuplesBasedOnDependencies(data, project_id, current_iter, is_new_feedback):
-    if is_new_feedback is False:
+    if is_new_feedback == 0:
         return
 
     tuple_metadata = pickle.load( open('./store/' + project_id + '/tuple_metadata.p', 'rb') )
@@ -239,12 +240,12 @@ def fd2cfd(data, lhs, rhs):
             if '=' in clause:
                 lhspattern += clause + ', '
             else:
-                lhspattern += clause + '=' + data.at[idx, clause] + ', '
+                lhspattern += clause + '=' + str(data.at[idx, clause]) + ', '
         lhspattern = lhspattern[:-2]
         if '=' in rhs:
             rhspattern = rhs
         else:
-            rhspattern = rhs + '=' + data.at[idx, rhs]
+            rhspattern = rhs + '=' + str(data.at[idx, rhs])
         if lhspattern in patterns.keys():
             patterns[lhspattern].append(rhspattern)
             if (lhspattern, rhspattern) in mappings.keys():
