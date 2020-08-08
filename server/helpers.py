@@ -34,6 +34,11 @@ class CFDConfidenceHistory(object):
         self.iter_num = iter_num
         self.conf = conf
 
+class CFDWeightHistory(object):
+    def __init__(self, iter_num,weight):
+        self.iter_num = iter_num
+        self.weight = weight
+
 class CFDScore(object):
     def __init__(self, iter_num, score):
         self.iter_num = iter_num
@@ -163,6 +168,7 @@ def explainFeedback(dirty_sample, project_id, current_iter):
             if c['cfd'] not in cfd_metadata.keys():
                 cfd_metadata[c['cfd']] = dict()
                 cfd_metadata[c['cfd']]['history'] = list()
+                cfd_metadata[c['cfd']]['weight_history'] = list()
             cfd_metadata[c['cfd']]['history'].append(CFDScore(iter_num=current_iter, score=c['score']))
 
         pickle.dump( cfd_metadata, open('./store' + project_id + 'cfd_metadata.p', 'wb') )
@@ -222,7 +228,7 @@ def reinforceTuplesBasedOnDependencies(data, project_id, current_iter, is_new_fe
     tuple_metadata = pickle.load( open('./store/' + project_id + '/tuple_metadata.p', 'rb') )
     cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
 
-    for cfd in cfd_metadata.keys():
+    for cfd, cfd_m in cfd_metadata.items():
         # Bias towards simpler rules
         lhs = cfd.split(' => ')[0][1:-1].split(', ')
         num_attributes = len(lhs) + 1
@@ -230,10 +236,11 @@ def reinforceTuplesBasedOnDependencies(data, project_id, current_iter, is_new_fe
 
         # System's weighted prior on rule confidence
         weighted_conf = 0
-        for h in cfd['history']:
+        for h in cfd_m['history']:
             weighted_conf += (h.score / (current_iter - h.iter_num + 1))
 
-        cfd['weight'] = complexity_bias + weighted_conf
+        cfd_m['weight'] = complexity_bias + weighted_conf
+        cfd_m['weight_history'].append(CFDWeightHistory(iter_num=h.iter_num, weight=(complexity_bias + weighted_conf)))
     
     cfd_metadata = normalizeWeights(cfd_metadata)
 
