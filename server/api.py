@@ -51,6 +51,8 @@ class Import(Resource):
             response = json.dumps(returned_data)
             return response, 500, {'Access-Control-Allow-Origin': '*'}
 
+        print("*** Project initialized ***")
+
         # Read the scenario number and initialize the scenario accordingly
         scenario_id = request.form.get('scenario_id')
         participant_name = request.form.get('participant_name')
@@ -65,6 +67,8 @@ class Import(Resource):
         }
         with open(new_project_dir + '/project_info.json', 'w') as f:
             json.dump(project_info, f)
+
+        print('*** Project info saved ***')
 
         # Extract the header
         with open(scenario['dirty_dataset']) as f:
@@ -96,12 +100,16 @@ class Import(Resource):
 
         # TODO: Initialize other metrics/metadata needed in study
 
+        print('*** Metadata objects initialized ***')
+
         # Save metadata
         pickle.dump( tuple_metadata, open(new_project_dir + '/tuple_metadata.p', 'wb') )
         pickle.dump( cell_metadata, open(new_project_dir + '/cell_metadata.p', 'wb') )
         pickle.dump( cfd_metadata, open(new_project_dir + '/cfd_metadata.p', 'wb') )
         pickle.dump( current_iter, open(new_project_dir + '/current_iter.p', 'wb') )
         
+        print('*** Metadata objects saved ***')
+
         # Return information to the user
         returned_data = {
             'header': header,
@@ -121,12 +129,16 @@ class Sample(Resource):
         sample_size = 10
         with open('./store/' + project_id + '/project_info.json') as f:
             project_info = json.load(f)
+
+        print('*** Project info loaded ***')
             
         data = pd.read_csv(project_info['scenario']['dirty_dataset'], keep_default_na=False)
         sampling_method = project_info['scenario']['sampling_method']
         
         # Build sample and update tuple weights post-sampling
         s_out = helpers.buildSample(data, sample_size, project_id, sampling_method)
+
+        print('*** Sample built with ' + sampling_method + ' ***')
 
         # No changes have been made yet, so changes = False for every cell
         feedback = list()
@@ -138,8 +150,12 @@ class Sample(Resource):
                     'marked': False
                 })
 
+        print('*** Feedback object created ***')
+
         leaderboard = helpers.buildLeaderboard(project_info['scenario_id'])
         
+        print('*** Leaderboard created ***')
+
         # Return information to the user
         returned_data = {
             'sample': s_out.to_json(orient='index'),
@@ -162,20 +178,32 @@ class Clean(Resource):
         feedback = pd.DataFrame.from_dict(feedback, orient='index')
         sample_size = 10
 
+        print('*** Necessary objects loaded ***')
+
         current_iter = pickle.load( open('./store/' + project_id + '/current_iter.p', 'rb') )
         current_iter += 1
         pickle.dump( current_iter, open('./store/' + project_id + '/current_iter.p', 'wb') )
 
+        print('*** Iteration counter updated ***')
+
         with open('./store/' + project_id + '/project_info.json', 'r') as f:
             project_info = json.load(f)
+
+        print('*** Project info loaded ***')
         
         data = pd.read_csv(project_info['scenario']['dirty_dataset'], keep_default_na=False)
 
+        print('*** Loaded dirty dataset ***')
+
         # Save noise feedback
         if is_new_feedback == 1:
+            print('*** NEW FEEDBACK! ***')
             helpers.saveNoiseFeedback(data, feedback, project_id, current_iter)
+            print('*** Noise feedback saved ***')
             s_in = data.iloc[feedback.index]
+            print('*** Extracted sample from dataset ***')
             helpers.explainFeedback(s_in, project_id, current_iter)
+            print('*** XPlode completed and FD/CFD weights updated ***')
 
         # Run CFD discovery algorithm to determine confidence of relevant CFD(s)
         # cfds = helpers.runCFDDiscovery(len(d_curr), project_id, current_iter)
@@ -196,13 +224,17 @@ class Clean(Resource):
         
         # Update tuple weights pre-sampling
         sampling_method = project_info['scenario']['sampling_method']
+        print('*** Sampling method retrieved ***')
         if sampling_method != 'RANDOM-PURE':
             helpers.reinforceTuplesBasedOnInteraction(data, project_id, current_iter, is_new_feedback)
+            print('*** Tuples reinforced based on interaction metrics ***')
         if sampling_method == 'DUO':
             helpers.reinforceTuplesBasedOnDependencies(data, project_id, current_iter, is_new_feedback)
+            print('*** Tuples reinforced based on FD/CFD weights ***')
 
         # Build sample
         s_out = helpers.buildSample(data, sample_size, project_id, sampling_method)
+        print('*** New sample created ***')
 
         # Build changes map for front-end
         feedback = list()
@@ -215,7 +247,11 @@ class Clean(Resource):
                     'marked': bool(cell_metadata[int(idx)][col]['feedback_history'][-1].marked) if len(cell_metadata[int(idx)][col]['feedback_history']) > 0 else False
                 })
 
+        print('*** Feedback object created ***')
+
         leaderboard = helpers.buildLeaderboard(project_info['scenario_id'])
+
+        print('*** Leaderboard created ***')
 
         if current_iter == 25:
             msg = '[DONE]'
