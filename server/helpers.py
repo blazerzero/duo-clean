@@ -104,6 +104,9 @@ def explainFeedback(dirty_sample, project_id, current_iter):
                 rep_sample.at[idx, col] = 'N/A'
     print('*** Feedback reflected in \'repaired\' dataset ***')
 
+    if dirty_sample.equals(rep_sample):
+        return
+
     dirty_sample_fp = './store/' + project_id + '/temp_sample_w_o_feedback.csv'
     rep_sample_fp = './store/' + project_id + '/temp_sample_w_feedback.csv'
     if os.path.exists('./store/' + project_id + '/temp_sample_w_o_feedback.csv'):
