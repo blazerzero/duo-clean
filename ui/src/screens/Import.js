@@ -34,7 +34,7 @@ class Import extends Component {
           'content-type': 'multipart/form-data'
         }
       };
-      axios.post('http://localhost:5000/duo/api/import', formData, config)
+      axios.post('http://167.71.155.153:5000/duo/api/import', formData, config)
         .then(response => {
           this.setState({ isProcessing: false });
           var { header, project_id, msg } = JSON.parse(response.data);
@@ -77,8 +77,7 @@ class Import extends Component {
           </Modal>
           <Row className='content-centered'>
             <div className='home-header box-blur'>
-              <span className='home-title'>DuoClean</span>
-              {/* <p className='home-subtitle'>Intelligently clean your data.</p> */}
+              <span className='home-title'>Duo</span>
             </div>
           </Row>
           <div className='body-section'>

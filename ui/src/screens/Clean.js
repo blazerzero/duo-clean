@@ -19,14 +19,14 @@ class Clean extends Component {
     const formData = new FormData();
     formData.append('project_id', this.state.project_id);
     formData.append('feedback', JSON.stringify(this.state.feedbackMap));
-    formData.append('is_new_feedback', !this.state.noNewFeedback);
-    axios.post('http://localhost:5000/duo/api/clean', formData)
+    formData.append('is_new_feedback', (this.state.noNewFeedback === false ? 1 : 0));
+    axios.post('http://167.71.155.153:5000/duo/api/clean', formData)
         .then(async(response) => {
           console.log(response.data);
           var res = JSON.parse(response.data);
           var { msg } = pick(res, ['msg'])
           if (msg === '[DONE]') {
-            alert('Thank you for participating! Please revisit your instructions to see next steps.');
+            this.setState({ interactionDone: true});
           }
           else {
             var { sample, feedback, leaderboard } = pick(res, ['sample', 'feedback', 'leaderboard'])
@@ -48,6 +48,7 @@ class Clean extends Component {
               data,
               feedbackMap,
               isProcessing: false,
+              noNewFeedback: false,
               leaderboard
             }, () => {
               console.log(this.state.leaderboard);
@@ -81,7 +82,7 @@ class Clean extends Component {
     const formData = new FormData();
     formData.append('project_id', project_id);
     console.log(formData.get('project_id'));
-    axios.post('http://localhost:5000/duo/api/sample', formData)
+    axios.post('http://167.71.155.153:5000/duo/api/sample', formData)
         .then(async(response) => {
           var res = JSON.parse(response.data);
           var { sample, feedback, msg, leaderboard } = pick(res, ['sample', 'feedback', 'msg', 'leaderboard'])
@@ -152,6 +153,7 @@ class Clean extends Component {
       isProcessing: false,
       noNewFeedback: false,
       leaderboard: {},
+      interactionDone: false
     };
   }
 
@@ -161,20 +163,24 @@ class Clean extends Component {
         <div className='site-page'>
           <Modal show={this.state.isProcessing} animation={false} backdrop='static'>
             <Modal.Body>
-              <p><strong>Processing...</strong></p>
-              <Spinner animation='border' />
+              <p><strong>{
+                this.state.interactionDone
+                ? 'Thank you for participating! Please revisit your instructions to see next steps.'
+                : 'Processing...'
+              }</strong></p>
+            {!this.state.interactionDone && (<Spinner animation='border' />)}
             </Modal.Body>
           </Modal>
           <Row className='content-centered'>
             <div className='results-header box-blur'>
-              <span className='results-title'>DuoClean</span>
+              <span className='results-title'>Duo</span>
               <p><strong>Scenario #: </strong>{this.state.scenario_id}</p>
               <p><strong>Project ID: </strong>{this.state.project_id}</p>
             </div>
           </Row>
           <Row className='content-centered'>
             <Col md={7}>
-              <Alert variant='warning' style={{border: '1px black solid'}}>Yellow cells indicate cells you've currently marked as noisy.</Alert>
+              <Alert variant='warning' style={{border: '1px black solid'}}>Yellow cells indicate cells you marked as noisy.</Alert>
             </Col>
           </Row>
           {Object.keys(this.state.data).length > 0 && (
@@ -214,7 +220,7 @@ class Clean extends Component {
                       <label>
                         <input
                           type='checkbox'
-                          defaultChecked={this.state.noNewFeedback}
+                          checked={this.state.noNewFeedback}
                           onChange={this._handleNoNewFeedbackClick}
                           />
                           No new feedback
