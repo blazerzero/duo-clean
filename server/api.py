@@ -253,7 +253,7 @@ class Clean(Resource):
 
         print('*** Leaderboard created ***')
 
-        if current_iter == 25:
+        if current_iter == 30:
             msg = '[DONE]'
         else:
             msg = '[SUCCESS]: Saved feedback and built new sample.'
