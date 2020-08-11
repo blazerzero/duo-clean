@@ -91,6 +91,8 @@ def runCFDDiscovery(num_rows, project_id, current_iter):
 def explainFeedback(dirty_sample, project_id, current_iter):
     cell_metadata = pickle.load( open('./store/' + project_id + '/cell_metadata.p', 'rb') )
     print('*** Cell metadata object loaded ***')
+
+    dirty_sample = dirty_sample.applymap(str)
     
     rep_sample = dirty_sample.copy(deep=True)
     
@@ -193,13 +195,13 @@ def reinforceTuplesBasedOnInteraction(data, project_id, current_iter, is_new_fee
             for i in range(1, len(cell_metadata[idx][col]['feedback_history'])):
                 if cell_metadata[idx][col]['feedback_history'][i].marked != cell_metadata[idx][col]['feedback_history'][i-1].marked:
                     feedback_consistency += 1/(current_iter-i)
-        print('*** Exploration score and feedback consistency score calculated ***')
+        # print('*** Exploration score and feedback consistency score calculated ***')
 
         reinforcement_value = expl_score + entropy + feedback_consistency
-        print('*** Reinforcement value calculated ***')
+        # print('*** Reinforcement value calculated ***')
                 
         tuple_metadata[idx]['weight'] += reinforcement_value
-        print('*** Tuple weight updated ***')
+        # print('*** Tuple weight updated ***')
 
     tuple_metadata = normalizeWeights(tuple_metadata)
     print('*** Tuple weights normalized ***')
@@ -257,7 +259,7 @@ def reinforceTuplesBasedOnDependencies(data, project_id, current_iter, is_new_fe
                 tuple_metadata[idx]['weight'] += 1
             if idx in violations:
                 tuple_metadata[idx]['weight'] += 1
-            print('*** Tuple weight updated ***')
+            # print('*** Tuple weight updated ***')
 
     tuple_metadata = normalizeWeights(tuple_metadata)
     print('*** Tuple weights normalized ***')
@@ -302,7 +304,7 @@ def fd2cfd(data, lhs, rhs):
         counts = Counter(patterns[key])
         get_mode = dict(counts)
         patterns[key] = [k for k, v in get_mode.items() if v == max(list(counts.values()))]
-        pprint('All RHS patterns for', key, ':', patterns[key])
+        pprint('All RHS patterns for' + key + ':' + repr(patterns[key]))
 
         # If there is only one top RHS pattern for this LHS, pick it
         if len(patterns[key]) == 1:
@@ -348,14 +350,14 @@ def buildCover(data, lhs, rhs, patterns):
                     if '=' in lh:
                         applicable_lhs += lh + ', '
                     else:
-                        applicable_lhs += lh + '=' + data.at[idx, lh] + ', '
+                        applicable_lhs += lh + '=' + str(data.at[idx, lh]) + ', '
                 applicable_lhs = applicable_lhs[:-2]
                 applicable_rhs = patterns[applicable_lhs]
                 rh = applicable_rhs.split('=')
                 if data.at[idx, rh[0]] != rh[1]:
                     violations.append(idx)
-    pprint('Cover for (' + lhs + ') => ' + rhs + ':', cover)
-    pprint('Violations for (' + lhs + ') => ' + rhs + ':', violations)
+    pprint('Cover for (' + lhs + ') => ' + rhs + ':' + repr(cover))
+    pprint('Violations for (' + lhs + ') => ' + rhs + ':' + repr(violations))
     print('*** Cover and violations built ***')
     return cover, violations
 
