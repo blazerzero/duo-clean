@@ -244,22 +244,26 @@ def reinforceTuplesBasedOnDependencies(data, project_id, current_iter, is_new_fe
     print('*** CFD weights normalized and saved in history ***')
     print('cfd weights post-duo:', [cfd_m['weight'] for _, cfd_m in cfd_metadata.items()])
 
-    for cfd, cfd_m in cfd_metadata.items():
-        # Update tuple weights based on whether tuple violates CFD and confidence of the CFD
-        lhs = cfd.split(' => ')[0][1:-1]
-        rhs = cfd.split(' => ')[1]
+    cfd_weights = {k: v['weight'] for k, v in cfd_metadata.items()}
+    cfd = pickSingleTuple(cfd_weights)
 
-        patterns = fd2cfd(data, lhs, rhs)
-        print('*** Transformed FD into CFD pattern set ***')
-        cover, violations = buildCover(data, lhs, rhs, patterns)
-        print('*** Calculate cover and violating tuples for CFD ***')
-        for idx in cover:
-            reinforcement_decision = random.random()
-            if reinforcement_decision <= cfd_m['weight']:     # ensures that CFDs with higher weight influence the sample more
-                tuple_metadata[idx]['weight'] += 1
+    # for cfd, cfd_m in cfd_metadata.items():
+    # Update tuple weights based on whether tuple violates CFD and confidence of the CFD
+    cfd_m = cfd_metadata[cfd]
+    lhs = cfd.split(' => ')[0][1:-1]
+    rhs = cfd.split(' => ')[1]
+
+    patterns = fd2cfd(data, lhs, rhs)
+    print('*** Transformed FD into CFD pattern set ***')
+    cover, violations = buildCover(data, lhs, rhs, patterns)
+    print('*** Calculate cover and violating tuples for CFD ***')
+    for idx in cover:
+        reinforcement_decision = random.random()
+        if reinforcement_decision <= cfd_m['weight']:     # ensures that CFDs with higher weight influence the sample more
+            tuple_metadata[idx]['weight'] += 1
             if idx in violations:
                 tuple_metadata[idx]['weight'] += 1
-            # print('*** Tuple weight updated ***')
+        # print('*** Tuple weight updated ***')
 
     tuple_metadata = normalizeWeights(tuple_metadata)
     print('*** Tuple weights normalized ***')
