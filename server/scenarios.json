@@ -3,16 +3,16 @@
         "cfds": [
             "(Region, Manager) => Owner"
         ],
-        "dirty_dataset": "./data/airport-S1-dirty_20.csv",
-        "clean_dataset": "./data/airport-S1-clean.csv",
+        "dirty_dataset": "./data/dirty_airport_1.csv",
+        "clean_dataset": "./data/airport_1.csv",
         "sampling_method": "RANDOM-PURE"
     },
     "2": {
         "cfds": [
             "(Owner) => Use"
         ],
-        "dirty_dataset": "./data/airport-S2-dirty_20.csv",
-        "clean_dataset": "./data/airport-S2-clean.csv",
+        "dirty_dataset": "./data/dirty_airport_2.csv",
+        "clean_dataset": "./data/airport_2.csv",
         "sampling_method": "RANDOM-PURE"
     },
     "3": {
@@ -20,32 +20,32 @@
             "(Title, Director) => Rating",
             "(Title, Director) => Year"
         ],
-        "dirty_dataset": "./data/omdb-S4-dirty_20.csv",
-        "clean_dataset": "./data/omdb-S4-clean.csv",
+        "dirty_dataset": "./data/dirty_omdb_3.csv",
+        "clean_dataset": "./data/omdb_3.csv",
         "sampling_method": "RANDOM-PURE"
     },
     "4": {
         "cfds": [
             "(ListingNumber) => Director"
         ],
-        "dirty_dataset": "./data/omdb-S5-dirty.csv",
-        "clean_dataset": "./data/omdb-S5-clean.csv",
+        "dirty_dataset": "./data/dirty_omdb_4.csv",
+        "clean_dataset": "./data/omdb_4.csv",
         "sampling_method": "RANDOM-PURE"
     },
     "5": {
         "cfds": [
             "(Region, Manager) => Owner"
         ],
-        "dirty_dataset": "./data/airport-S1-dirty_20.csv",
-        "clean_dataset": "./data/airport-S1-clean.csv",
+        "dirty_dataset": "./data/dirty_airport_1.csv",
+        "clean_dataset": "./data/airport_1.csv",
         "sampling_method": "RANDOM-UB"
     },
     "6": {
         "cfds": [
             "(Owner) => Use"
         ],
-        "dirty_dataset": "./data/airport-S2-dirty_20.csv",
-        "clean_dataset": "./data/airport-S2-clean.csv",
+        "dirty_dataset": "./data/dirty_airport_2.csv",
+        "clean_dataset": "./data/airport_2.csv",
         "sampling_method": "RANDOM-UB"
     },
     "7": {
@@ -53,32 +53,32 @@
             "(Title, Director) => Rating",
             "(Title, Director) => Year"
         ],
-        "dirty_dataset": "./data/omdb-S4-dirty_20.csv",
-        "clean_dataset": "./data/omdb-S4-clean.csv",
+        "dirty_dataset": "./data/dirty_omdb_3.csv",
+        "clean_dataset": "./data/omdb_3.csv",
         "sampling_method": "RANDOM-UB"
     },
     "8": {
         "cfds": [
             "(ListingNumber) => Director"
         ],
-        "dirty_dataset": "./data/omdb-S5-dirty.csv",
-        "clean_dataset": "./data/omdb-S5-clean.csv",
+        "dirty_dataset": "./data/dirty_omdb_4.csv",
+        "clean_dataset": "./data/omdb_4.csv",
         "sampling_method": "RANDOM-UB"
     },
     "9": {
         "cfds": [
             "(Region, Manager) => Owner"
         ],
-        "dirty_dataset": "./data/airport-S1-dirty_20.csv",
-        "clean_dataset": "./data/airport-S1-clean.csv",
+        "dirty_dataset": "./data/dirty_airport_1.csv",
+        "clean_dataset": "./data/airport_1.csv",
         "sampling_method": "DUO"
     },
     "10": {
         "cfds": [
             "(Owner) => Use"
         ],
-        "dirty_dataset": "./data/airport-S2-dirty_20.csv",
-        "clean_dataset": "./data/airport-S2-clean.csv",
+        "dirty_dataset": "./data/dirty_airport_2.csv",
+        "clean_dataset": "./data/airport_2.csv",
         "sampling_method": "DUO"
     },
     "11": {
@@ -86,16 +86,16 @@
             "(Title, Director) => Rating",
             "(Title, Director) => Year"
         ],
-        "dirty_dataset": "./data/omdb-S4-dirty_20.csv",
-        "clean_dataset": "./data/omdb-S4-clean.csv",
+        "dirty_dataset": "./data/dirty_omdb_3.csv",
+        "clean_dataset": "./data/omdb_3.csv",
         "sampling_method": "DUO"
     },
     "12": {
         "cfds": [
             "(ListingNumber) => Director"
         ],
-        "dirty_dataset": "./data/omdb-S5-dirty.csv",
-        "clean_dataset": "./data/omdb-S5-clean.csv",
+        "dirty_dataset": "./data/dirty_omdb_4.csv",
+        "clean_dataset": "./data/omdb_4.csv",
         "sampling_method": "DUO"
     }
 }

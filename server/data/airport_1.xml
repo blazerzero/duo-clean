@@ -24,8 +24,8 @@
 <![CDATA[
 DCs:
 // FD: Region, Manager -> Owner
-e1: airport_1(Type: $t1, Region: $r1, FacilityName: $fn1, Owner: $o1, OwnerType: $ot1, Manager: $m1), 
-airport_1(Type: $t2, Region: $r2, FacilityName: $fn2, Owner: $o2, OwnerType: $ot2, Manager: $m2), 
+e1: airport_1(Type: $t1, Region: $r1, FacilityName: $fn1, Owner: $o1, Ownership: $os1, Manager: $m1), 
+airport_1(Type: $t2, Region: $r2, FacilityName: $fn2, Owner: $o2, Ownership: $os2, Manager: $m2), 
     $r1 == $r2, $m1 == $m2, $o1 != $o2 -> #fail.
 ]]>
     </dependencies>
@@ -49,12 +49,12 @@ airport_1(Type: $t2, Region: $r2, FacilityName: $fn2, Owner: $o2, OwnerType: $ot
 
         <!-- To export the dirty db -->
         <exportDirtyDB>true</exportDirtyDB>
-        <exportDirtyDBPath>/Temp/bart/example/</exportDirtyDBPath>
+        <exportDirtyDBPath>.</exportDirtyDBPath>
         <exportDirtyDBType>CSV</exportDirtyDBType>
 
         <!-- To export the changes -->
         <exportCellChanges>true</exportCellChanges>
-        <exportCellChangesPath>/Temp/bart/example/changes_a1.csv</exportCellChangesPath>
+        <exportCellChangesPath>changes/airport_1.csv</exportCellChangesPath>
 
         <!-- To compute an estimate of the reparability (default = false) -->
         <estimateRepairability>true</estimateRepairability>
@@ -97,7 +97,7 @@ airport_1(Type: $t2, Region: $r2, FacilityName: $fn2, Owner: $o2, OwnerType: $ot
         <!-- To control the way in which changing the value -->
         <dirtyStrategies>
             <defaultStrategy>
-                <strategy chars="*" charsToAdd="3">TypoAddString</strategy>
+                <strategy charsToSwitch="3">TypoSwitchValue</strategy>
             </defaultStrategy> 
             <attributeStrategy>
                 <attribute table="airport_1" name="Region">
@@ -140,14 +140,14 @@ airport_1(Type: $t2, Region: $r2, FacilityName: $fn2, Owner: $o2, OwnerType: $ot
         -->
         <vioGenQueriesConfiguration>
             <!-- STANDARD QUERIES -->
-            <probabilityFactorForStandardQueries>0.25</probabilityFactorForStandardQueries>
-            <offsetFactorForStandardQueries>0.05</offsetFactorForStandardQueries>
+            <probabilityFactorForStandardQueries>0.50</probabilityFactorForStandardQueries>
+            <offsetFactorForStandardQueries>0.10</offsetFactorForStandardQueries>
             <!-- SYMMETRIC QUERIES -->
-            <probabilityFactorForSymmetricQueries>0.25</probabilityFactorForSymmetricQueries>
-            <offsetFactorForSymmetricQueries>0.05</offsetFactorForSymmetricQueries>
+            <probabilityFactorForSymmetricQueries>0.50</probabilityFactorForSymmetricQueries>
+            <offsetFactorForSymmetricQueries>0.10</offsetFactorForSymmetricQueries>
             <!-- INEQUALITY QUERIES -->
-            <probabilityFactorForInequalityQueries>0.05</probabilityFactorForInequalityQueries>
-            <offsetFactorForInequalityQueries>0.05</offsetFactorForInequalityQueries>
+            <probabilityFactorForInequalityQueries>0.50</probabilityFactorForInequalityQueries>
+            <offsetFactorForInequalityQueries>0.10</offsetFactorForInequalityQueries>
             <windowSizeFactorForInequalityQueries>1.5</windowSizeFactorForInequalityQueries>
         </vioGenQueriesConfiguration>
 
