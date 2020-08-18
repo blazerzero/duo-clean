@@ -3,18 +3,17 @@
     <!-- ****************************************************
                       DATABASES
     **************************************************** -->
-
     <target> 
         <type>DBMS</type>
         <access-configuration>
             <driver>org.postgresql.Driver</driver>
-            <uri>jdbc:postgresql:omeed-pg</uri>
-            <schema>duoclean</schema>
+            <uri>jdbc:postgresql:duo_a2</uri>
+            <schema>target</schema>
             <login>postgres</login>
             <password>BlazersPass</password>
         </access-configuration>
         <import>
-            <input type="csv" separator="," table="airport-s1-test">airport-S1-clean.csv</input>
+            <input type="csv" separator="," table="airport_2">airport_2.csv</input>
         </import>
     </target>
 
@@ -24,10 +23,10 @@
     <dependencies>
 <![CDATA[
 DCs:
-// FD: (ListingNumber) -> Director
-e1: omdb-s5(ListingNumber: $ln1, Title: $t1, Year: $y1, Director: $d1), 
-omdb-s5(ListingNumber: $ln2, Title: $t2, Year: $y2, Director: $d2), 
-    $ln1 == $ln2, $d1 != $d2 -> #fail.
+// FD: (Owner) -> Use
+e1: airport_2(Type: $t1, FacilityName: $fn1, Use: $u1, Owner: $o1), 
+airport_2(Type: $t2, FacilityName: $fn2, Use: $u2, Owner: $o2), 
+    $o1 == $o2, $u1 != $u2 -> #fail.
 ]]>
     </dependencies>
 
@@ -55,7 +54,7 @@ omdb-s5(ListingNumber: $ln2, Title: $t2, Year: $y2, Director: $d2),
 
         <!-- To export the changes -->
         <exportCellChanges>true</exportCellChanges>
-        <exportCellChangesPath>/Temp/bart/example/changes.csv</exportCellChangesPath>
+        <exportCellChangesPath>/Temp/bart/example/changes_a2.csv</exportCellChangesPath>
 
         <!-- To compute an estimate of the reparability (default = false) -->
         <estimateRepairability>true</estimateRepairability>
@@ -81,11 +80,11 @@ omdb-s5(ListingNumber: $ln2, Title: $t2, Year: $y2, Director: $d2),
             <defaultPercentage>0.0</defaultPercentage>
             <vioGenQueries>
                 <vioGenQuery id="e1">
-                    <comparison>(ln1 == ln2)</comparison>
+                    <comparison>(o1 == o2)</comparison>
                     <percentage>1.0</percentage> 
                 </vioGenQuery>
                 <vioGenQuery id="e1">
-                    <comparison>(d1 != d2)</comparison>
+                    <comparison>(u1 != u2)</comparison>
                     <percentage>1.0</percentage> 
                 </vioGenQuery>
             </vioGenQueries>
@@ -94,13 +93,18 @@ omdb-s5(ListingNumber: $ln2, Title: $t2, Year: $y2, Director: $d2),
         <!-- To control the way in which changing the value -->
         <dirtyStrategies>
             <defaultStrategy>
-                <strategy>TypoActiveDomain</strategy>
+                <strategy chars="*" charsToAdd="3">TypoAddString</strategy>
             </defaultStrategy> 
-            <!-- <attributeStrategy>
-                <attribute table="person" name="city">
+            <attributeStrategy>
+                <attribute table="airport_2" name="Owner">
                     <strategy>TypoActiveDomain</strategy>
                 </attribute>
-            </attributeStrategy> -->
+            </attributeStrategy>
+            <attributeStrategy>
+                <attribute table="airport_2" name="Use">
+                    <strategy>TypoActiveDomain</strategy>
+                </attribute>
+            </attributeStrategy>
             <!-- possible strategies
                 <strategy chars="*" charsToAdd="3">TypoAddString</strategy>
                 <strategy chars="*" charsToAdd="3">TypoAppendString</strategy>
@@ -127,10 +131,10 @@ omdb-s5(ListingNumber: $ln2, Title: $t2, Year: $y2, Director: $d2),
         -->
         <vioGenQueriesConfiguration>
             <!-- STANDARD QUERIES -->
-            <probabilityFactorForStandardQueries>0.20</probabilityFactorForStandardQueries>
+            <probabilityFactorForStandardQueries>0.25</probabilityFactorForStandardQueries>
             <offsetFactorForStandardQueries>0.05</offsetFactorForStandardQueries>
             <!-- SYMMETRIC QUERIES -->
-            <probabilityFactorForSymmetricQueries>0.20</probabilityFactorForSymmetricQueries>
+            <probabilityFactorForSymmetricQueries>0.25</probabilityFactorForSymmetricQueries>
             <offsetFactorForSymmetricQueries>0.05</offsetFactorForSymmetricQueries>
             <!-- INEQUALITY QUERIES -->
             <probabilityFactorForInequalityQueries>0.05</probabilityFactorForInequalityQueries>

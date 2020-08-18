@@ -3,18 +3,17 @@
     <!-- ****************************************************
                       DATABASES
     **************************************************** -->
-
     <target> 
         <type>DBMS</type>
         <access-configuration>
             <driver>org.postgresql.Driver</driver>
-            <uri>jdbc:postgresql:duo</uri>
-            <schema>public</schema>
+            <uri>jdbc:postgresql:duo_o3</uri>
+            <schema>target</schema>
             <login>postgres</login>
             <password>BlazersPass</password>
         </access-configuration>
         <import>
-            <input type="csv" separator="," table="airport-s1-test">airport-S1-clean.csv</input>
+            <input type="csv" separator="," table="omdb_3">omdb_3.csv</input>
         </import>
     </target>
 
@@ -24,10 +23,14 @@
     <dependencies>
 <![CDATA[
 DCs:
-// FD: (Region, Manager) -> Owner
-e1: airport-s1(Type: $t1, Region: $r1, FacilityName: $fn1, Owner: $o1, OwnerType: $ot1, Manager: $m1), 
-airport-s1(Type: $t2, Region: $r2, FacilityName: $fn2, Owner: $o2, OwnerType: $ot2, Manager: $m2), 
-    $r1 == $r2, $m1 == $m2, $o1 != $o2 -> #fail.
+// FD1: (Title, Director) -> Rating
+e1: omdb_3(Title: $t1, Year: $y1, Rating: $r1, Owner: $o1, Director: $d1), 
+omdb_3(Title: $t1, Year: $y1, Rating: $r1, Owner: $o1, Director: $d1), 
+    $t1 == $t2, $d1 == $d2, $r1 != $r2 -> #fail.
+// FD2: (Title, Director) -> Year
+e2: omdb_3(Title: $t1, Year: $y1, Rating: $r1, Owner: $o1, Director: $d1), 
+omdb_3(Title: $t1, Year: $y1, Rating: $r1, Owner: $o1, Director: $d1), 
+    $t1 == $t2, $d1 == $d2, $y1 != $y2 -> #fail.
 ]]>
     </dependencies>
 
@@ -50,12 +53,12 @@ airport-s1(Type: $t2, Region: $r2, FacilityName: $fn2, Owner: $o2, OwnerType: $o
 
         <!-- To export the dirty db -->
         <exportDirtyDB>true</exportDirtyDB>
-        <exportDirtyDBPath>example/</exportDirtyDBPath>
+        <exportDirtyDBPath>/Temp/bart/example/</exportDirtyDBPath>
         <exportDirtyDBType>CSV</exportDirtyDBType>
 
         <!-- To export the changes -->
         <exportCellChanges>true</exportCellChanges>
-        <exportCellChangesPath>changes.csv</exportCellChangesPath>
+        <exportCellChangesPath>/Temp/bart/example/changes_o3.csv</exportCellChangesPath>
 
         <!-- To compute an estimate of the reparability (default = false) -->
         <estimateRepairability>true</estimateRepairability>
@@ -81,15 +84,27 @@ airport-s1(Type: $t2, Region: $r2, FacilityName: $fn2, Owner: $o2, OwnerType: $o
             <defaultPercentage>0.0</defaultPercentage>
             <vioGenQueries>
                 <vioGenQuery id="e1">
-                    <comparison>(r1 == r2)</comparison>
+                    <comparison>(t1 == t2)</comparison>
                     <percentage>1.0</percentage> 
                 </vioGenQuery>
                 <vioGenQuery id="e1">
-                    <comparison>(m1 == m2)</comparison>
+                    <comparison>(d1 == d2)</comparison>
                     <percentage>1.0</percentage> 
                 </vioGenQuery>
                 <vioGenQuery id="e1">
-                    <comparison>(o1 != o2)</comparison>
+                    <comparison>(r1 != r2)</comparison>
+                    <percentage>1.0</percentage> 
+                </vioGenQuery>
+                <vioGenQuery id="e2">
+                    <comparison>(t1 == t2)</comparison>
+                    <percentage>1.0</percentage> 
+                </vioGenQuery>
+                <vioGenQuery id="e2">
+                    <comparison>(d1 == d2)</comparison>
+                    <percentage>1.0</percentage> 
+                </vioGenQuery>
+                <vioGenQuery id="e2">
+                    <comparison>(y1 != y2)</comparison>
                     <percentage>1.0</percentage> 
                 </vioGenQuery>
             </vioGenQueries>
@@ -98,20 +113,25 @@ airport-s1(Type: $t2, Region: $r2, FacilityName: $fn2, Owner: $o2, OwnerType: $o
         <!-- To control the way in which changing the value -->
         <dirtyStrategies>
             <defaultStrategy>
-                <strategy>TypoRandom</strategy>
-            </defaultStrategy>
+                <strategy chars="*" charsToAdd="3">TypoAddString</strategy>
+            </defaultStrategy> 
             <attributeStrategy>
-                <attribute table="airport-s1-test" name="Manager">
+                <attribute table="omdb_3" name="Title">
                     <strategy>TypoActiveDomain</strategy>
                 </attribute>
             </attributeStrategy>
             <attributeStrategy>
-                <attribute table="airport-s1-test" name="Owner">
+                <attribute table="omdb_3" name="Director">
                     <strategy>TypoActiveDomain</strategy>
                 </attribute>
             </attributeStrategy>
             <attributeStrategy>
-                <attribute table="airport-s1-test" name="Region">
+                <attribute table="omdb_3" name="Rating">
+                    <strategy>TypoActiveDomain</strategy>
+                </attribute>
+            </attributeStrategy>
+            <attributeStrategy>
+                <attribute table="omdb_3" name="Year">
                     <strategy>TypoActiveDomain</strategy>
                 </attribute>
             </attributeStrategy>
@@ -141,10 +161,10 @@ airport-s1(Type: $t2, Region: $r2, FacilityName: $fn2, Owner: $o2, OwnerType: $o
         -->
         <vioGenQueriesConfiguration>
             <!-- STANDARD QUERIES -->
-            <probabilityFactorForStandardQueries>0.20</probabilityFactorForStandardQueries>
+            <probabilityFactorForStandardQueries>0.25</probabilityFactorForStandardQueries>
             <offsetFactorForStandardQueries>0.05</offsetFactorForStandardQueries>
             <!-- SYMMETRIC QUERIES -->
-            <probabilityFactorForSymmetricQueries>0.20</probabilityFactorForSymmetricQueries>
+            <probabilityFactorForSymmetricQueries>0.25</probabilityFactorForSymmetricQueries>
             <offsetFactorForSymmetricQueries>0.05</offsetFactorForSymmetricQueries>
             <!-- INEQUALITY QUERIES -->
             <probabilityFactorForInequalityQueries>0.05</probabilityFactorForInequalityQueries>

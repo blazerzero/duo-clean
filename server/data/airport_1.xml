@@ -3,18 +3,17 @@
     <!-- ****************************************************
                       DATABASES
     **************************************************** -->
-    
     <target> 
         <type>DBMS</type>
         <access-configuration>
             <driver>org.postgresql.Driver</driver>
-            <uri>jdbc:postgresql:duo</uri>
+            <uri>jdbc:postgresql:duo_a1</uri>
             <schema>target</schema>
             <login>postgres</login>
             <password>BlazersPass</password>
         </access-configuration>
         <import>
-            <input type="csv" separator="," table="airport-s1">airport-s1-clean.csv</input>
+            <input type="csv" separator="," table="airport_1">airport_1.csv</input>
         </import>
     </target>
 
@@ -24,9 +23,9 @@
     <dependencies>
 <![CDATA[
 DCs:
-// FD: (Region, Manager) -> Owner
-e1: airport-s1(Type: $t1, Region: $r1, FacilityName: $fn1, Owner: $o1, OwnerType: $ot1, Manager: $m1), 
-airport-s1(Type: $t2, Region: $r2, FacilityName: $fn2, Owner: $o2, OwnerType: $ot2, Manager: $m2), 
+// FD: Region, Manager -> Owner
+e1: airport_1(Type: $t1, Region: $r1, FacilityName: $fn1, Owner: $o1, OwnerType: $ot1, Manager: $m1), 
+airport_1(Type: $t2, Region: $r2, FacilityName: $fn2, Owner: $o2, OwnerType: $ot2, Manager: $m2), 
     $r1 == $r2, $m1 == $m2, $o1 != $o2 -> #fail.
 ]]>
     </dependencies>
@@ -55,7 +54,7 @@ airport-s1(Type: $t2, Region: $r2, FacilityName: $fn2, Owner: $o2, OwnerType: $o
 
         <!-- To export the changes -->
         <exportCellChanges>true</exportCellChanges>
-        <exportCellChangesPath>/Temp/bart/example/changes.csv</exportCellChangesPath>
+        <exportCellChangesPath>/Temp/bart/example/changes_a1.csv</exportCellChangesPath>
 
         <!-- To compute an estimate of the reparability (default = false) -->
         <estimateRepairability>true</estimateRepairability>
@@ -101,7 +100,17 @@ airport-s1(Type: $t2, Region: $r2, FacilityName: $fn2, Owner: $o2, OwnerType: $o
                 <strategy chars="*" charsToAdd="3">TypoAddString</strategy>
             </defaultStrategy> 
             <attributeStrategy>
-                <attribute table="person" name="city">
+                <attribute table="airport_1" name="Region">
+                    <strategy>TypoActiveDomain</strategy>
+                </attribute>
+            </attributeStrategy>
+            <attributeStrategy>
+                <attribute table="airport_1" name="Manager">
+                    <strategy>TypoActiveDomain</strategy>
+                </attribute>
+            </attributeStrategy>
+            <attributeStrategy>
+                <attribute table="airport_1" name="Owner">
                     <strategy>TypoActiveDomain</strategy>
                 </attribute>
             </attributeStrategy>
