@@ -24,8 +24,8 @@
 <![CDATA[
 DCs:
 // FD: (ListingNumber) -> Director
-e1: omdb-s5(ListingNumber: $ln1, Title: $t1, Year: $y1, Director: $d1), 
-omdb-s5(ListingNumber: $ln2, Title: $t2, Year: $y2, Director: $d2), 
+e1: omdb_4(ListingNumber: $ln1, Title: $t1, Year: $y1, Director: $d1), 
+omdb_4(ListingNumber: $ln2, Title: $t2, Year: $y2, Director: $d2), 
     $ln1 == $ln2, $d1 != $d2 -> #fail.
 ]]>
     </dependencies>
@@ -49,12 +49,12 @@ omdb-s5(ListingNumber: $ln2, Title: $t2, Year: $y2, Director: $d2),
 
         <!-- To export the dirty db -->
         <exportDirtyDB>true</exportDirtyDB>
-        <exportDirtyDBPath>/Temp/bart/example/</exportDirtyDBPath>
+        <exportDirtyDBPath>.</exportDirtyDBPath>
         <exportDirtyDBType>CSV</exportDirtyDBType>
 
         <!-- To export the changes -->
         <exportCellChanges>true</exportCellChanges>
-        <exportCellChangesPath>/Temp/bart/example/changes_o4.csv</exportCellChangesPath>
+        <exportCellChangesPath>changes/omdb_4.csv</exportCellChangesPath>
 
         <!-- To compute an estimate of the reparability (default = false) -->
         <estimateRepairability>true</estimateRepairability>
@@ -84,7 +84,7 @@ omdb-s5(ListingNumber: $ln2, Title: $t2, Year: $y2, Director: $d2),
                     <percentage>1.0</percentage> 
                 </vioGenQuery>
                 <vioGenQuery id="e1">
-                    <comparison>(d1 == d2)</comparison>
+                    <comparison>(d1 != d2)</comparison>
                     <percentage>1.0</percentage> 
                 </vioGenQuery>
             </vioGenQueries>
@@ -93,7 +93,7 @@ omdb-s5(ListingNumber: $ln2, Title: $t2, Year: $y2, Director: $d2),
         <!-- To control the way in which changing the value -->
         <dirtyStrategies>
             <defaultStrategy>
-                <strategy chars="*" charsToAdd="3">TypoAddString</strategy>
+                <strategy charsToSwitch="3">TypoSwitchValue</strategy>
             </defaultStrategy> 
             <attributeStrategy>
                 <attribute table="omdb_4" name="ListingNumber">

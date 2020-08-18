@@ -24,12 +24,12 @@
 <![CDATA[
 DCs:
 // FD1: (Title, Director) -> Rating
-e1: omdb_3(Title: $t1, Year: $y1, Rating: $r1, Owner: $o1, Director: $d1), 
-omdb_3(Title: $t1, Year: $y1, Rating: $r1, Owner: $o1, Director: $d1), 
+e1: omdb_3(Title: $t1, Year: $y1, Rating: $r1, Director: $d1), 
+omdb_3(Title: $t2, Year: $y2, Rating: $r2, Director: $d2), 
     $t1 == $t2, $d1 == $d2, $r1 != $r2 -> #fail.
 // FD2: (Title, Director) -> Year
-e2: omdb_3(Title: $t1, Year: $y1, Rating: $r1, Owner: $o1, Director: $d1), 
-omdb_3(Title: $t1, Year: $y1, Rating: $r1, Owner: $o1, Director: $d1), 
+e2: omdb_3(Title: $t1, Year: $y1, Rating: $r1, Director: $d1), 
+omdb_3(Title: $t2, Year: $y2, Rating: $r2, Director: $d2), 
     $t1 == $t2, $d1 == $d2, $y1 != $y2 -> #fail.
 ]]>
     </dependencies>
@@ -53,12 +53,12 @@ omdb_3(Title: $t1, Year: $y1, Rating: $r1, Owner: $o1, Director: $d1),
 
         <!-- To export the dirty db -->
         <exportDirtyDB>true</exportDirtyDB>
-        <exportDirtyDBPath>/Temp/bart/example/</exportDirtyDBPath>
+        <exportDirtyDBPath>.</exportDirtyDBPath>
         <exportDirtyDBType>CSV</exportDirtyDBType>
 
         <!-- To export the changes -->
         <exportCellChanges>true</exportCellChanges>
-        <exportCellChangesPath>/Temp/bart/example/changes_o3.csv</exportCellChangesPath>
+        <exportCellChangesPath>changes/omdb_3.csv</exportCellChangesPath>
 
         <!-- To compute an estimate of the reparability (default = false) -->
         <estimateRepairability>true</estimateRepairability>
@@ -113,7 +113,7 @@ omdb_3(Title: $t1, Year: $y1, Rating: $r1, Owner: $o1, Director: $d1),
         <!-- To control the way in which changing the value -->
         <dirtyStrategies>
             <defaultStrategy>
-                <strategy chars="*" charsToAdd="3">TypoAddString</strategy>
+                <strategy charsToSwitch="3">TypoSwitchValue</strategy>
             </defaultStrategy> 
             <attributeStrategy>
                 <attribute table="omdb_3" name="Title">
