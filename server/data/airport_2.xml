@@ -49,12 +49,12 @@ airport_2(Type: $t2, FacilityName: $fn2, Use: $u2, Owner: $o2),
 
         <!-- To export the dirty db -->
         <exportDirtyDB>true</exportDirtyDB>
-        <exportDirtyDBPath>/Temp/bart/example/</exportDirtyDBPath>
+        <exportDirtyDBPath>.</exportDirtyDBPath>
         <exportDirtyDBType>CSV</exportDirtyDBType>
 
         <!-- To export the changes -->
         <exportCellChanges>true</exportCellChanges>
-        <exportCellChangesPath>/Temp/bart/example/changes_a2.csv</exportCellChangesPath>
+        <exportCellChangesPath>changes/airport_2.csv</exportCellChangesPath>
 
         <!-- To compute an estimate of the reparability (default = false) -->
         <estimateRepairability>true</estimateRepairability>
@@ -93,7 +93,7 @@ airport_2(Type: $t2, FacilityName: $fn2, Use: $u2, Owner: $o2),
         <!-- To control the way in which changing the value -->
         <dirtyStrategies>
             <defaultStrategy>
-                <strategy chars="*" charsToAdd="3">TypoAddString</strategy>
+                <strategy charsToSwitch="3">TypoSwitchValue</strategy>
             </defaultStrategy> 
             <attributeStrategy>
                 <attribute table="airport_2" name="Owner">
@@ -137,7 +137,7 @@ airport_2(Type: $t2, FacilityName: $fn2, Use: $u2, Owner: $o2),
             <probabilityFactorForSymmetricQueries>0.25</probabilityFactorForSymmetricQueries>
             <offsetFactorForSymmetricQueries>0.05</offsetFactorForSymmetricQueries>
             <!-- INEQUALITY QUERIES -->
-            <probabilityFactorForInequalityQueries>0.05</probabilityFactorForInequalityQueries>
+            <probabilityFactorForInequalityQueries>0.25</probabilityFactorForInequalityQueries>
             <offsetFactorForInequalityQueries>0.05</offsetFactorForInequalityQueries>
             <windowSizeFactorForInequalityQueries>1.5</windowSizeFactorForInequalityQueries>
         </vioGenQueriesConfiguration>
