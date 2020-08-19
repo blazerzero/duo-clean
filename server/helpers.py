@@ -45,10 +45,13 @@ def saveNoiseFeedback(data, feedback, project_id, current_iter):
         project_info = json.load(f)
         clean_dataset = pd.read_csv(project_info['scenario']['clean_dataset'], keep_default_na=False)    
     score = 0
+    errors = 0
     for idx in data.index:
         for col in data.columns:
-            if data.at[idx, col] != clean_dataset.at[idx, col] and len(cell_metadata[int(idx)][col]['feedback_history']) > 0 and cell_metadata[int(idx)][col]['feedback_history'][-1].marked is True:
-                score += 1
+            if data.at[idx, col] != clean_dataset.at[idx, col]:
+                errors += 1
+                if len(cell_metadata[int(idx)][col]['feedback_history']) > 0 and cell_metadata[int(idx)][col]['feedback_history'][-1].marked is True:
+                    score += 1
     print('*** Score updated ***')
 
     project_info['score'] = score
@@ -58,6 +61,9 @@ def saveNoiseFeedback(data, feedback, project_id, current_iter):
 
     pickle.dump( cell_metadata, open('./store/' + project_id + '/cell_metadata.p', 'wb') )
     print('*** Cell metadata updates saved ***')
+
+    percentage_errors_found = score / errors
+    return percentage_errors_found
 
 
 # DISCOVER CFDS THAT COULD APPLY OVER DATASET AND THEIR CONFIDENCES

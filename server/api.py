@@ -196,9 +196,10 @@ class Clean(Resource):
         print('*** Loaded dirty dataset ***')
 
         # Save noise feedback
+        percentage_errors_found = None
         if is_new_feedback == 1:
             print('*** NEW FEEDBACK! ***')
-            helpers.saveNoiseFeedback(data, feedback, project_id, current_iter)
+            percentage_errors_found = helpers.saveNoiseFeedback(data, feedback, project_id, current_iter)
             print('*** Noise feedback saved ***')
             s_in = data.iloc[feedback.index]
             print('*** Extracted sample from dataset ***')
@@ -253,7 +254,7 @@ class Clean(Resource):
 
         print('*** Leaderboard created ***')
 
-        if current_iter == 30:
+        if current_iter == 30 or percentage_errors_found >= 0.9:
             msg = '[DONE]'
         else:
             msg = '[SUCCESS]: Saved feedback and built new sample.'
