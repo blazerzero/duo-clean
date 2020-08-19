@@ -5,7 +5,8 @@
         ],
         "dirty_dataset": "./data/airport-S1-dirty_20.csv",
         "clean_dataset": "./data/airport-S1-clean.csv",
-        "sampling_method": "RANDOM-PURE"
+        "sampling_method": "RANDOM-PURE",
+        "difficulty": 4
     },
     "2": {
         "cfds": [
@@ -13,7 +14,8 @@
         ],
         "dirty_dataset": "./data/airport-S2-dirty_20.csv",
         "clean_dataset": "./data/airport-S2-clean.csv",
-        "sampling_method": "RANDOM-PURE"
+        "sampling_method": "RANDOM-PURE",
+        "difficulty": 3
     },
     "3": {
         "cfds": [
@@ -22,7 +24,8 @@
         ],
         "dirty_dataset": "./data/omdb-S4-dirty_20.csv",
         "clean_dataset": "./data/omdb-S4-clean.csv",
-        "sampling_method": "RANDOM-PURE"
+        "sampling_method": "RANDOM-PURE",
+        "difficulty": 2
     },
     "4": {
         "cfds": [
@@ -30,7 +33,8 @@
         ],
         "dirty_dataset": "./data/omdb-S5-dirty.csv",
         "clean_dataset": "./data/omdb-S5-clean.csv",
-        "sampling_method": "RANDOM-PURE"
+        "sampling_method": "RANDOM-PURE",
+        "difficulty": 1
     },
     "5": {
         "cfds": [
@@ -38,7 +42,8 @@
         ],
         "dirty_dataset": "./data/airport-S1-dirty_20.csv",
         "clean_dataset": "./data/airport-S1-clean.csv",
-        "sampling_method": "RANDOM-UB"
+        "sampling_method": "RANDOM-UB",
+        "difficulty": 4
     },
     "6": {
         "cfds": [
@@ -46,7 +51,8 @@
         ],
         "dirty_dataset": "./data/airport-S2-dirty_20.csv",
         "clean_dataset": "./data/airport-S2-clean.csv",
-        "sampling_method": "RANDOM-UB"
+        "sampling_method": "RANDOM-UB",
+        "difficulty": 3
     },
     "7": {
         "cfds": [
@@ -55,7 +61,8 @@
         ],
         "dirty_dataset": "./data/omdb-S4-dirty_20.csv",
         "clean_dataset": "./data/omdb-S4-clean.csv",
-        "sampling_method": "RANDOM-UB"
+        "sampling_method": "RANDOM-UB",
+        "difficulty": 2
     },
     "8": {
         "cfds": [
@@ -63,7 +70,8 @@
         ],
         "dirty_dataset": "./data/omdb-S5-dirty.csv",
         "clean_dataset": "./data/omdb-S5-clean.csv",
-        "sampling_method": "RANDOM-UB"
+        "sampling_method": "RANDOM-UB",
+        "difficulty": 1
     },
     "9": {
         "cfds": [
@@ -71,7 +79,8 @@
         ],
         "dirty_dataset": "./data/airport-S1-dirty_20.csv",
         "clean_dataset": "./data/airport-S1-clean.csv",
-        "sampling_method": "DUO"
+        "sampling_method": "DUO",
+        "difficulty": 4
     },
     "10": {
         "cfds": [
@@ -79,7 +88,8 @@
         ],
         "dirty_dataset": "./data/airport-S2-dirty_20.csv",
         "clean_dataset": "./data/airport-S2-clean.csv",
-        "sampling_method": "DUO"
+        "sampling_method": "DUO",
+        "difficulty": 3
     },
     "11": {
         "cfds": [
@@ -88,7 +98,8 @@
         ],
         "dirty_dataset": "./data/omdb-S4-dirty_20.csv",
         "clean_dataset": "./data/omdb-S4-clean.csv",
-        "sampling_method": "DUO"
+        "sampling_method": "DUO",
+        "difficulty": 2
     },
     "12": {
         "cfds": [
@@ -96,6 +107,7 @@
         ],
         "dirty_dataset": "./data/omdb-S5-dirty.csv",
         "clean_dataset": "./data/omdb-S5-clean.csv",
-        "sampling_method": "DUO"
+        "sampling_method": "DUO",
+        "difficulty": 1
     }
 }
