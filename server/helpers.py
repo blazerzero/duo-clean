@@ -294,7 +294,7 @@ def reinforceTuplesBasedOnDependencies(data, project_id, current_iter, is_new_fe
 
     pickle.dump( cfd_metadata, open('./store/' + project_id + '/cfd_metadata.p', 'wb') )
 
-    if len(cfd_metadata_keys()) == 0:
+    if len(cfd_metadata.keys()) == 0:
         return
 
     cfd_weights = {k: v['weight'] for k, v in cfd_metadata.items()}
