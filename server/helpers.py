@@ -13,14 +13,14 @@ import statistics
 from collections import Counter
 
 class CellFeedback(object):
-    def __init__(self, marked, iter_num):
-        self.marked = marked            # whether or not the user marked the cell as noisy in this iteration
+    def __init__(self, iter_num, marked):
         self.iter_num = iter_num    # iteration number
+        self.marked = marked            # whether or not the user marked the cell as noisy in this iteration
 
-class CFDConfidenceHistory(object):
+'''class CFDConfidenceHistory(object):
     def __init__(self, iter_num, conf):
         self.iter_num = iter_num
-        self.conf = conf
+        self.conf = conf'''
 
 class CFDWeightHistory(object):
     def __init__(self, iter_num,weight):
@@ -32,29 +32,49 @@ class CFDScore(object):
         self.iter_num = iter_num
         self.score = score
 
+class StudyMetric(object):
+    def __init__(self, iter_num, value):
+        self.iter_num = iter_num
+        self.value = value
+
 # SAVE NOISE FEEDBACK FROM USER
 def saveNoiseFeedback(data, feedback, project_id, current_iter):
     cell_metadata = pickle.load( open('./store/' + project_id + '/cell_metadata.p', 'rb') )
+    study_metrics = pickle.load( open('./store/' + project_id + '/study_metrics.p', 'rb') )
     for idx in feedback.index:
         for col in feedback.columns:
-            cell_metadata[int(idx)][col]['feedback_history'].append(CellFeedback(marked=bool(feedback.at[idx, col]), iter_num=current_iter))
+            cell_metadata[int(idx)][col]['feedback_history'].append(CellFeedback(iter_num=current_iter, marked=bool(feedback.at[idx, col])))
     print('*** Latest feedback saved ***')
             
     # scoring function: score based on number of true errors correctly identified
     with open('./store/' + project_id + '/project_info.json', 'r') as f:
         project_info = json.load(f)
         clean_dataset = pd.read_csv(project_info['scenario']['clean_dataset'], keep_default_na=False)    
-    score = 0
-    errors = 0
+    all_errors_found = 0
+    all_errors_total = 0
+    all_errors_marked = 0
+    iter_errors_found = 0
+    iter_errors_total = 0
+    iter_errors_marked = 0
+
     for idx in data.index:
         for col in data.columns:
             if data.at[idx, col] != clean_dataset.at[idx, col]:
-                errors += 1
+                all_errors_total += 1
+                if idx in feedback.index:
+                    iter_errors_total += 1
+                    if bool(feedback.at[idx, col]) is True:
+                        iter_errors_found += 1
                 if len(cell_metadata[int(idx)][col]['feedback_history']) > 0 and cell_metadata[int(idx)][col]['feedback_history'][-1].marked is True:
-                    score += 1
+                    all_errors_found += 1
+            if len(cell_metadata[int(idx)][col]['feedback_history']) > 0 and cell_metadata[int(idx)][col]['feedback_history'][-1].marked is True:
+                all_errors_marked += 1
+                if idx in feedback.index:
+                    iter_errors_marked += 1
+
     print('*** Score updated ***')
 
-    project_info['score'] = score
+    project_info['score'] = all_errors_found
     with open('./store/' + project_id + '/project_info.json', 'w') as f:
         json.dump(project_info, f)
     print('*** Score saved ***')
@@ -62,12 +82,34 @@ def saveNoiseFeedback(data, feedback, project_id, current_iter):
     pickle.dump( cell_metadata, open('./store/' + project_id + '/cell_metadata.p', 'wb') )
     print('*** Cell metadata updates saved ***')
 
-    percentage_errors_found = score / errors
-    return percentage_errors_found
+    true_error_pct_full = all_errors_found / all_errors_total
+    if iter_errors_total > 0:
+        true_error_pct_iter = iter_errors_found / iter_errors_total
+    else:
+        true_error_pct_iter = 0
+
+    if all_errors_marked > 0:
+        error_accuracy_full = all_errors_found / all_errors_marked
+    else:
+        error_accuracy_full = 0
+
+    if iter_errors_marked > 0:
+        error_accuracy_iter = iter_errors_found / iter_errors_marked
+    else:
+        error_accuracy_iter = 0
+
+    study_metrics['true_error_pct_full'].append(StudyMetric(iter_num=current_iter, value=true_error_pct_full))
+    study_metrics['true_error_pct_iter'].append(StudyMetric(iter_num=current_iter, value=true_error_pct_iter))
+    study_metrics['error_accuracy_full'].append(StudyMetric(iter_num=current_iter, value=error_accuracy_full))
+    study_metrics['error_accuracy_iter'].append(StudyMetric(iter_num=current_iter, value=error_accuracy_iter))
+
+    pickle.dump( study_metrics, open('./store/' + project_id + '/study_metrics.p', 'wb') )
+
+    return true_error_pct_full
 
 
 # DISCOVER CFDS THAT COULD APPLY OVER DATASET AND THEIR CONFIDENCES
-def runCFDDiscovery(num_rows, project_id, current_iter):
+'''def runCFDDiscovery(num_rows, project_id, current_iter):
     fp = './store/' + project_id + '/in_progress.csv'
 
     process = sp.Popen(['./data/cfddiscovery/CFDD', fp, str(0.7*num_rows), '0.7', '4'], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})
@@ -90,7 +132,7 @@ def runCFDDiscovery(num_rows, project_id, current_iter):
         return cfds
     
     else:
-        return None
+        return None'''
 
 
 # DISCOVER CFDs THAT BEST EXPLAIN THE FEEDBACK GIVEN BY THE USER
@@ -219,7 +261,7 @@ def reinforceTuplesBasedOnInteraction(data, project_id, current_iter, is_new_fee
 
 
 # REINFORCE TUPLES BASED ON DEPENDENCIES
-def reinforceTuplesBasedOnDependencies(data, project_id, current_iter, is_new_feedback):
+def reinforceTuplesBasedOnDependencies(data, project_id, current_iter, is_new_feedback, project_info):
     if is_new_feedback == 0:
         return
 
@@ -277,6 +319,13 @@ def reinforceTuplesBasedOnDependencies(data, project_id, current_iter, is_new_fe
     pickle.dump( tuple_metadata, open('./store/' + project_id + '/tuple_metadata.p', 'wb') )
     pickle.dump( cfd_metadata, open('./store/' + project_id + '/cfd_metadata.p', 'wb') )
     print('*** Metadata updates saved ***')
+
+    study_metrics = pickle.load( open('./store/' + project_id + '/study_metrics.p', 'rb') )
+    for cfd in project_info['scenario']['cfds']:
+        if cfd in cfd_metadata.keys():
+            study_metrics['cfd_confidence'][cfd].append(StudyMetric(iter_num=current_iter, value=cfd_metadata[cfd]['weight']))
+
+    pickle.dump( study_metrics, open('./store/' + project_id + '/study_metrics.p', 'wb') )
 
 
 # CONVERT FD OR PARTIAL CFD TO FULL CFD

@@ -99,16 +99,25 @@ class Import(Resource):
         cfd_metadata = dict()
 
         # TODO: Initialize other metrics/metadata needed in study
+        study_metrics = dict()
+        study_metrics['true_error_pct_full'] = list()
+        study_metrics['true_error_pct_iter'] = list()
+        study_metrics['cfd_confidence'] = dict()
+        for cfd in scenario['cfds']:
+            study_metrics['cfd_confidence'][cfd] = list()
+        study_metrics['error_accuracy_full'] = list()
+        study_metrics['error_accuracy_iter'] = list()
 
-        print('*** Metadata objects initialized ***')
+        print('*** Metadata and study metric objects initialized ***')
 
         # Save metadata
         pickle.dump( tuple_metadata, open(new_project_dir + '/tuple_metadata.p', 'wb') )
         pickle.dump( cell_metadata, open(new_project_dir + '/cell_metadata.p', 'wb') )
         pickle.dump( cfd_metadata, open(new_project_dir + '/cfd_metadata.p', 'wb') )
         pickle.dump( current_iter, open(new_project_dir + '/current_iter.p', 'wb') )
+        pickle.dump( study_metrics, open(new_project_dir + '/study_metrics.p', 'wb') )
         
-        print('*** Metadata objects saved ***')
+        print('*** Metadata and study metric objects saved ***')
 
         # Return information to the user
         returned_data = {
@@ -230,7 +239,7 @@ class Clean(Resource):
             helpers.reinforceTuplesBasedOnInteraction(data, project_id, current_iter, is_new_feedback)
             print('*** Tuples reinforced based on interaction metrics ***')
         if sampling_method == 'DUO':
-            helpers.reinforceTuplesBasedOnDependencies(data, project_id, current_iter, is_new_feedback)
+            helpers.reinforceTuplesBasedOnDependencies(data, project_id, current_iter, is_new_feedback, project_info)
             print('*** Tuples reinforced based on FD/CFD weights ***')
 
         # Build sample
