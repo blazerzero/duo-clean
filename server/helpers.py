@@ -183,7 +183,7 @@ def explainFeedback(dirty_sample, project_id, current_iter):
         writer.writerows(rep_dict)
     print('*** Dirty and repaired datasets saved as CSV for XPlode ***')
 
-    process = sp.Popen(['./xplode/CTane', dirty_sample_fp, rep_sample_fp, '0.5', str(0.7*len(dirty_sample.index))], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})
+    process = sp.Popen(['./xplode/CTane', dirty_sample_fp, rep_sample_fp, '0.5', str(0.5*len(dirty_sample.index))], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})
     res = process.communicate()
     print('*** XPlode finished ***')
 
@@ -292,6 +292,11 @@ def reinforceTuplesBasedOnDependencies(data, project_id, current_iter, is_new_fe
     print('*** CFD weights normalized and saved in history ***')
     print('cfd weights post-duo:', [cfd_m['weight'] for _, cfd_m in cfd_metadata.items()])
 
+    pickle.dump( cfd_metadata, open('./store/' + project_id + '/cfd_metadata.p', 'wb') )
+
+    if len(cfd_metadata_keys()) == 0:
+        return
+
     cfd_weights = {k: v['weight'] for k, v in cfd_metadata.items()}
     cfd = pickSingleTuple(cfd_weights)
 
@@ -306,18 +311,17 @@ def reinforceTuplesBasedOnDependencies(data, project_id, current_iter, is_new_fe
     cover, violations = buildCover(data, lhs, rhs, patterns)
     print('*** Calculate cover and violating tuples for CFD ***')
     for idx in cover:
-        reinforcement_decision = random.random()
-        if reinforcement_decision <= cfd_m['weight']:     # ensures that CFDs with higher weight influence the sample more
+        # reinforcement_decision = random.random()
+        # if reinforcement_decision <= cfd_m['weight']:     # ensures that CFDs with higher weight influence the sample more
+        tuple_metadata[idx]['weight'] += 1
+        if idx in violations:
             tuple_metadata[idx]['weight'] += 1
-            if idx in violations:
-                tuple_metadata[idx]['weight'] += 1
         # print('*** Tuple weight updated ***')
 
     tuple_metadata = normalizeWeights(tuple_metadata)
     print('*** Tuple weights normalized ***')
 
     pickle.dump( tuple_metadata, open('./store/' + project_id + '/tuple_metadata.p', 'wb') )
-    pickle.dump( cfd_metadata, open('./store/' + project_id + '/cfd_metadata.p', 'wb') )
     print('*** Metadata updates saved ***')
 
     study_metrics = pickle.load( open('./store/' + project_id + '/study_metrics.p', 'rb') )
