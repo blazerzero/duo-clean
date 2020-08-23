@@ -14,9 +14,9 @@ from collections import Counter
 def plot():
     with open('scenarios.json') as f:
         scenarios = json.load(f)
-    random_pure_scenarios = [s for s in scenarios.keys() if s['sampling_method'] == 'RANDOM_PURE']
-    random_ub_scenarios = [s for s in scenarios.keys() if s['sampling_method'] == 'RANDOM-UB']
-    duo_scenarios = [s for s in scenarios.keys() if s['sampling_method'] == 'DUO']
+    random_pure_scenarios = [k for k, s in scenarios.items() if s['sampling_method'] == 'RANDOM-PURE']
+    random_ub_scenarios = [k for k, s in scenarios.items() if s['sampling_method'] == 'RANDOM-UB']
+    duo_scenarios = [k for k, s in scenarios.items() if s['sampling_method'] == 'DUO']
 
     project_ids = [d for d in os.listdir('./store') if os.path.isdir(os.path.join('./store/', d))]
     random_pure_cfd_confs_lists = list()
@@ -79,27 +79,33 @@ def plot():
     # FD/CFD confidence
     fig = plt.figure()
     for conf_list in random_pure_cfd_confs_lists:
-        plt.plot([c.iter_num for c in conf_list], [c.value for c in conf_list])
+        plt.plot([c.iter_num for c in conf_list], [c.value for c in conf_list], 'b-')
     plt.xlabel('Iteration #')
     plt.ylabel('Confidence of FD/CFD')
+    plt.xticks(np.arange(0, 30, 6))
+    plt.yticks(np.arange(0.0, 1.0, 0.2))
     plt.title('FD/CFD Confidence: RANDOM-PURE')
     fig.savefig('cfd_confidence_random_pure.jpg')
     plt.clf()
 
     fig = plt.figure()
     for conf_list in random_ub_cfd_confs_lists:
-        plt.plot([c.iter_num for c in conf_list], [c.value for c in conf_list])
+        plt.plot([c.iter_num for c in conf_list], [c.value for c in conf_list], 'r-')
     plt.xlabel('Iteration #')
     plt.ylabel('Confidence of FD/CFD')
+    plt.xticks(np.arange(0, 30, 6))
+    plt.yticks(np.arange(0.0, 1.0, 0.2))
     plt.title('FD/CFD Confidence: RANDOM-UB')
     fig.savefig('cfd_confidence_random_ub.jpg')
     plt.clf()
 
     fig = plt.figure()
     for conf_list in duo_cfd_confs_lists:
-        plt.plot([c.iter_num for c in conf_list], [c.value for c in conf_list])
+        plt.plot([c.iter_num for c in conf_list], [c.value for c in conf_list], 'g-')
     plt.xlabel('Iteration #')
     plt.ylabel('Confidence of FD/CFD')
+    plt.xticks(np.arange(0, 30, 6))
+    plt.yticks(np.arange(0.0, 1.0, 0.2))
     plt.title('FD/CFD Confidence: DUO')
     fig.savefig('cfd_confidence_duo.jpg')
     plt.clf()
@@ -107,27 +113,33 @@ def plot():
     # True error percentage (total)
     fig = plt.figure()
     for conf_list in random_pure_tep_full_lists:
-        plt.plot([c.iter_num for c in conf_list], [c.value for c in conf_list])
+        plt.plot([c.iter_num for c in conf_list], [c.value for c in conf_list], 'b-')
     plt.xlabel('Iteration #')
     plt.ylabel('%% of Total Errors Identified')
+    plt.xticks(np.arange(0, 30, 6))
+    plt.yticks(np.arange(0.0, 1.0, 0.2))
     plt.title('%% of Total Errors Identified: RANDOM-PURE')
     fig.savefig('tep_full_random_pure.jpg')
     plt.clf()
 
     fig = plt.figure()
     for conf_list in random_ub_tep_full_lists:
-        plt.plot([c.iter_num for c in conf_list], [c.value for c in conf_list])
+        plt.plot([c.iter_num for c in conf_list], [c.value for c in conf_list], 'r-')
     plt.xlabel('Iteration #')
     plt.ylabel('%% of Total Errors Identified')
+    plt.xticks(np.arange(0, 30, 6))
+    plt.yticks(np.arange(0.0, 1.0, 0.2))
     plt.title('%% of Total Errors Identified: RANDOM-UB')
     fig.savefig('tep_full_random_ub.jpg')
     plt.clf()
 
     fig = plt.figure()
     for conf_list in duo_tep_full_lists:
-        plt.plot([c.iter_num for c in conf_list], [c.value for c in conf_list])
+        plt.plot([c.iter_num for c in conf_list], [c.value for c in conf_list], 'g-')
     plt.xlabel('Iteration #')
     plt.ylabel('%% of Total Errors Identified')
+    plt.xticks(np.arange(0, 30, 6))
+    plt.yticks(np.arange(0.0, 1.0, 0.2))
     plt.title('%% of Total Errors Identified: DUO')
     fig.savefig('tep_full_duo.jpg')
     plt.clf()
@@ -135,27 +147,33 @@ def plot():
     # True error percentage (per iteration)
     fig = plt.figure()
     for conf_list in random_pure_tep_iter_lists:
-        plt.plot([c.iter_num for c in conf_list], [c.value for c in conf_list])
+        plt.plot([c.iter_num for c in conf_list], [c.value for c in conf_list], 'b-')
     plt.xlabel('Iteration #')
     plt.ylabel('%% of Errors in Sample Identified')
+    plt.xticks(np.arange(0, 30, 6))
+    plt.yticks(np.arange(0.0, 1.0, 0.2))
     plt.title('%% of Errors Identified Per Iteration: RANDOM-PURE')
     fig.savefig('tep_iter_random_pure.jpg')
     plt.clf()
 
     fig = plt.figure()
     for conf_list in random_ub_tep_iter_lists:
-        plt.plot([c.iter_num for c in conf_list], [c.value for c in conf_list])
+        plt.plot([c.iter_num for c in conf_list], [c.value for c in conf_list], 'r-')
     plt.xlabel('Iteration #')
     plt.ylabel('%% of Total Errors Identified')
+    plt.xticks(np.arange(0, 30, 6))
+    plt.yticks(np.arange(0.0, 1.0, 0.2))
     plt.title('%% of Errors Identified Per Iteration: RANDOM-UB')
     fig.savefig('tep_iter_random_ub.jpg')
     plt.clf()
 
     fig = plt.figure()
     for conf_list in duo_tep_iter_lists:
-        plt.plot([c.iter_num for c in conf_list], [c.value for c in conf_list])
+        plt.plot([c.iter_num for c in conf_list], [c.value for c in conf_list], 'g-')
     plt.xlabel('Iteration #')
     plt.ylabel('%% of Total Errors Identified')
+    plt.xticks(np.arange(0, 30, 6))
+    plt.yticks(np.arange(0.0, 1.0, 0.2))
     plt.title('%% of Errors Identified Per Iteration: DUO')
     fig.savefig('tep_iter_duo.jpg')
     plt.clf()
@@ -163,27 +181,33 @@ def plot():
     # Error accuracy (total)
     fig = plt.figure()
     for conf_list in random_pure_eacc_full_lists:
-        plt.plot([c.iter_num for c in conf_list], [c.value for c in conf_list])
+        plt.plot([c.iter_num for c in conf_list], [c.value for c in conf_list], 'b-')
     plt.xlabel('Iteration #')
     plt.ylabel('Error Accuracy (%%)')
+    plt.xticks(np.arange(0, 30, 6))
+    plt.yticks(np.arange(0.0, 1.0, 0.2))
     plt.title('Total Error Accuracy: RANDOM-PURE')
     fig.savefig('eacc_full_random_pure.jpg')
     plt.clf()
 
     fig = plt.figure()
     for conf_list in random_ub_eacc_full_lists:
-        plt.plot([c.iter_num for c in conf_list], [c.value for c in conf_list])
+        plt.plot([c.iter_num for c in conf_list], [c.value for c in conf_list], 'r-')
     plt.xlabel('Iteration #')
     plt.ylabel('Error Accuracy (%%)')
+    plt.xticks(np.arange(0, 30, 6))
+    plt.yticks(np.arange(0.0, 1.0, 0.2))
     plt.title('Total Error Accuracy: RANDOM-UB')
     fig.savefig('eacc_full_random_ub.jpg')
     plt.clf()
 
     fig = plt.figure()
     for conf_list in duo_eacc_full_lists:
-        plt.plot([c.iter_num for c in conf_list], [c.value for c in conf_list])
+        plt.plot([c.iter_num for c in conf_list], [c.value for c in conf_list], 'g-')
     plt.xlabel('Iteration #')
     plt.ylabel('Error Accuracy (%%)')
+    plt.xticks(np.arange(0, 30, 6))
+    plt.yticks(np.arange(0.0, 1.0, 0.2))
     plt.title('Total Error Accuracy: DUO')
     fig.savefig('eacc_full_duo.jpg')
     plt.clf()
@@ -191,27 +215,33 @@ def plot():
     # Error accuracy (per iteration)
     fig = plt.figure()
     for conf_list in random_pure_eacc_iter_lists:
-        plt.plot([c.iter_num for c in conf_list], [c.value for c in conf_list])
+        plt.plot([c.iter_num for c in conf_list], [c.value for c in conf_list], 'b-')
     plt.xlabel('Iteration #')
     plt.ylabel('Error Accuracy (%%)')
+    plt.xticks(np.arange(0, 30, 6))
+    plt.yticks(np.arange(0.0, 1.0, 0.2))
     plt.title('Error Accuracy Per Iteration: RANDOM-PURE')
     fig.savefig('eacc_iter_random_pure.jpg')
     plt.clf()
 
     fig = plt.figure()
     for conf_list in random_ub_eacc_iter_lists:
-        plt.plot([c.iter_num for c in conf_list], [c.value for c in conf_list])
+        plt.plot([c.iter_num for c in conf_list], [c.value for c in conf_list], 'r-')
     plt.xlabel('Iteration #')
     plt.ylabel('Error Accuracy (%%)')
+    plt.xticks(np.arange(0, 30, 6))
+    plt.yticks(np.arange(0.0, 1.0, 0.2))
     plt.title('Error Accuracy Per Iteration: RANDOM-UB')
     fig.savefig('eacc_iter_random_ub.jpg')
     plt.clf()
 
     fig = plt.figure()
     for conf_list in duo_eacc_iter_lists:
-        plt.plot([c.iter_num for c in conf_list], [c.value for c in conf_list])
+        plt.plot([c.iter_num for c in conf_list], [c.value for c in conf_list], 'g-')
     plt.xlabel('Iteration #')
     plt.ylabel('Error Accuracy (%%)')
+    plt.xticks(np.arange(0, 30, 6))
+    plt.yticks(np.arange(0.0, 1.0, 0.2))
     plt.title('Error Accuracy Per Iteration: DUO')
     fig.savefig('eacc_iter_duo.jpg')
     plt.clf()
