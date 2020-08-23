@@ -85,7 +85,7 @@ def plot():
     plt.xticks(np.arange(0, 30, 6))
     plt.yticks(np.arange(0.0, 1.0, 0.2))
     plt.title('FD/CFD Confidence: RANDOM-PURE')
-    fig.savefig('cfd_confidence_random_pure.jpg')
+    fig.savefig('./plots/cfd_confidence_random_pure.jpg')
     plt.clf()
 
     fig = plt.figure()
@@ -96,7 +96,7 @@ def plot():
     plt.xticks(np.arange(0, 30, 6))
     plt.yticks(np.arange(0.0, 1.0, 0.2))
     plt.title('FD/CFD Confidence: RANDOM-UB')
-    fig.savefig('cfd_confidence_random_ub.jpg')
+    fig.savefig('./plots/cfd_confidence_random_ub.jpg')
     plt.clf()
 
     fig = plt.figure()
@@ -107,7 +107,7 @@ def plot():
     plt.xticks(np.arange(0, 30, 6))
     plt.yticks(np.arange(0.0, 1.0, 0.2))
     plt.title('FD/CFD Confidence: DUO')
-    fig.savefig('cfd_confidence_duo.jpg')
+    fig.savefig('./plots/cfd_confidence_duo.jpg')
     plt.clf()
 
     # True error percentage (total)
@@ -119,7 +119,7 @@ def plot():
     plt.xticks(np.arange(0, 30, 6))
     plt.yticks(np.arange(0.0, 1.0, 0.2))
     plt.title('%% of Total Errors Identified: RANDOM-PURE')
-    fig.savefig('tep_full_random_pure.jpg')
+    fig.savefig('./plots/tep_full_random_pure.jpg')
     plt.clf()
 
     fig = plt.figure()
@@ -130,7 +130,7 @@ def plot():
     plt.xticks(np.arange(0, 30, 6))
     plt.yticks(np.arange(0.0, 1.0, 0.2))
     plt.title('%% of Total Errors Identified: RANDOM-UB')
-    fig.savefig('tep_full_random_ub.jpg')
+    fig.savefig('./plots/tep_full_random_ub.jpg')
     plt.clf()
 
     fig = plt.figure()
@@ -141,7 +141,7 @@ def plot():
     plt.xticks(np.arange(0, 30, 6))
     plt.yticks(np.arange(0.0, 1.0, 0.2))
     plt.title('%% of Total Errors Identified: DUO')
-    fig.savefig('tep_full_duo.jpg')
+    fig.savefig('./plots/tep_full_duo.jpg')
     plt.clf()
 
     # True error percentage (per iteration)
@@ -153,7 +153,7 @@ def plot():
     plt.xticks(np.arange(0, 30, 6))
     plt.yticks(np.arange(0.0, 1.0, 0.2))
     plt.title('%% of Errors Identified Per Iteration: RANDOM-PURE')
-    fig.savefig('tep_iter_random_pure.jpg')
+    fig.savefig('./plots/tep_iter_random_pure.jpg')
     plt.clf()
 
     fig = plt.figure()
@@ -164,7 +164,7 @@ def plot():
     plt.xticks(np.arange(0, 30, 6))
     plt.yticks(np.arange(0.0, 1.0, 0.2))
     plt.title('%% of Errors Identified Per Iteration: RANDOM-UB')
-    fig.savefig('tep_iter_random_ub.jpg')
+    fig.savefig('./plots/tep_iter_random_ub.jpg')
     plt.clf()
 
     fig = plt.figure()
@@ -175,7 +175,7 @@ def plot():
     plt.xticks(np.arange(0, 30, 6))
     plt.yticks(np.arange(0.0, 1.0, 0.2))
     plt.title('%% of Errors Identified Per Iteration: DUO')
-    fig.savefig('tep_iter_duo.jpg')
+    fig.savefig('./plots/tep_iter_duo.jpg')
     plt.clf()
 
     # Error accuracy (total)
@@ -187,7 +187,7 @@ def plot():
     plt.xticks(np.arange(0, 30, 6))
     plt.yticks(np.arange(0.0, 1.0, 0.2))
     plt.title('Total Error Accuracy: RANDOM-PURE')
-    fig.savefig('eacc_full_random_pure.jpg')
+    fig.savefig('./plots/eacc_full_random_pure.jpg')
     plt.clf()
 
     fig = plt.figure()
@@ -198,7 +198,7 @@ def plot():
     plt.xticks(np.arange(0, 30, 6))
     plt.yticks(np.arange(0.0, 1.0, 0.2))
     plt.title('Total Error Accuracy: RANDOM-UB')
-    fig.savefig('eacc_full_random_ub.jpg')
+    fig.savefig('./plots/eacc_full_random_ub.jpg')
     plt.clf()
 
     fig = plt.figure()
@@ -209,7 +209,7 @@ def plot():
     plt.xticks(np.arange(0, 30, 6))
     plt.yticks(np.arange(0.0, 1.0, 0.2))
     plt.title('Total Error Accuracy: DUO')
-    fig.savefig('eacc_full_duo.jpg')
+    fig.savefig('./plots/eacc_full_duo.jpg')
     plt.clf()
 
     # Error accuracy (per iteration)
@@ -221,7 +221,7 @@ def plot():
     plt.xticks(np.arange(0, 30, 6))
     plt.yticks(np.arange(0.0, 1.0, 0.2))
     plt.title('Error Accuracy Per Iteration: RANDOM-PURE')
-    fig.savefig('eacc_iter_random_pure.jpg')
+    fig.savefig('./plots/eacc_iter_random_pure.jpg')
     plt.clf()
 
     fig = plt.figure()
@@ -232,7 +232,7 @@ def plot():
     plt.xticks(np.arange(0, 30, 6))
     plt.yticks(np.arange(0.0, 1.0, 0.2))
     plt.title('Error Accuracy Per Iteration: RANDOM-UB')
-    fig.savefig('eacc_iter_random_ub.jpg')
+    fig.savefig('./plots/eacc_iter_random_ub.jpg')
     plt.clf()
 
     fig = plt.figure()
@@ -243,7 +243,7 @@ def plot():
     plt.xticks(np.arange(0, 30, 6))
     plt.yticks(np.arange(0.0, 1.0, 0.2))
     plt.title('Error Accuracy Per Iteration: DUO')
-    fig.savefig('eacc_iter_duo.jpg')
+    fig.savefig('./plots/eacc_iter_duo.jpg')
     plt.clf()
 
     return '[SUCCESS]'
