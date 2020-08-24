@@ -127,14 +127,20 @@ class Clean extends Component {
     this.setState({ feedbackMap });
   }
 
-  _handleNoNewFeedbackClick = async() => {
-    var noNewFeedback = !this.state.noNewFeedback;
-    this.setState({ noNewFeedback });
+  _handleRefreshClick = async() => {
+    var noNewFeedback = true;
+    this.setState({ noNewFeedback }, async () => {
+      await this._handleSubmit();
+    });
+  }
+
+  _handleDone = async() => {
+    this.setState({ isProcessing: true, interactionDone: true });
   }
 
   componentDidMount() {
-    const { header, project_id, scenario_id } = this.props.location;
-    this.setState({ header, project_id, scenario_id }, async() => {
+    const { header, project_id, scenario_id, scenario_desc } = this.props.location;
+    this.setState({ header, project_id, scenario_id, scenario_desc }, async() => {
       await this._getSampleData(this.state.project_id);
       console.log('got sample');
       console.log(this.state);
@@ -153,7 +159,8 @@ class Clean extends Component {
       isProcessing: false,
       noNewFeedback: false,
       leaderboard: {},
-      interactionDone: false
+      interactionDone: false,
+      scenario_desc: null,
     };
   }
 
@@ -162,19 +169,48 @@ class Clean extends Component {
       <Route render={({ history }) => (
         <div className='site-page'>
           <Modal show={this.state.isProcessing} animation={false} backdrop='static'>
-            <Modal.Body>
-              <p><strong>{
-                this.state.interactionDone
-                ? 'Thank you for participating! Please revisit your instructions to see next steps.'
-                : 'Processing...'
-              }</strong></p>
-            {!this.state.interactionDone && (<Spinner animation='border' />)}
+            <Modal.Body>{
+              this.state.interactionDone && (
+                <Col md={4}>
+                  <div className='results-header box-blur'>
+                    <p><strong>Leaderboard</strong></p>
+                    <hr />
+                    <Table responsive>
+                      <thead>
+                        <tr>
+                          <th><p><strong>Rank</strong></p></th>
+                          <th><p><strong>Name</strong></p></th>
+                          <th><p><strong>Score</strong></p></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        { this.state.leaderboard.map((ranking, idx) => {
+                          var key = 'leader'.concat(idx);
+                          return (
+                            <tr key={key}>
+                              <td key={key.concat('_rank')}>{ranking.rank}</td>
+                              <td key={key.concat('_name')}>{ranking.name}</td>
+                              <td key={key.concat('_score')}>{ranking.score}</td>
+                            </tr>
+                          )
+                        }) }
+                      </tbody>
+                    </Table>
+                  </div>
+                </Col>
+              )}
+              { this.state.interactionDone === false && (
+                <div>
+                  <p><strong>'Processing...'</strong></p>
+                  <Spinner animation='border' />  
+                </div>
+              )}
             </Modal.Body>
           </Modal>
           <Row className='content-centered'>
             <div className='results-header box-blur'>
               <span className='results-title'>Duo</span>
-              <p><strong>Scenario #: </strong>{this.state.scenario_id}</p>
+              <p><strong>Scenario Description: </strong>{this.state.scenario_desc}</p>
               <p><strong>Project ID: </strong>{this.state.project_id}</p>
             </div>
           </Row>
@@ -186,7 +222,7 @@ class Clean extends Component {
           {Object.keys(this.state.data).length > 0 && (
             <div>
               <Row className='content-centered'>
-                <Col md={8}>
+                <Col>
                   <Row>
                     <Table bordered responsive>
                       <thead>
@@ -217,52 +253,33 @@ class Clean extends Component {
                   </Row>
                   <Row>
                     <Col md={4}>
-                      <label>
-                        <input
-                          type='checkbox'
-                          checked={this.state.noNewFeedback}
-                          onChange={this._handleNoNewFeedbackClick}
-                          />
-                          No new feedback
-                      </label>
-                    </Col>
-                    <Col md={{ span: 4, offset: 4 }}>
                       <Button
                           variant='primary'
                           className='btn-round right box-blur'
                           size='lg'
-                          onClick={this._handleSubmit}>
-                        SUBMIT
+                          onClick={this._handleRefreshClick}>
+                        REFRESH SAMPLE
                       </Button>
                     </Col>
+                    <Col md={{ span: 4, offset: 4 }}>
+                      <Row>
+                        <Button
+                            variant='success'
+                            className='btn-round right box-blur'
+                            size='lg'
+                            onClick={this._handleSubmit}>
+                          SUBMIT FEEDBACK
+                        </Button>
+                        <Button
+                            variant='secondary'
+                            className='btn-round right box-blur'
+                            size='lg'
+                            onClick={this._handleDone}>
+                          I'M ALL DONE
+                        </Button>
+                      </Row>
+                    </Col>
                   </Row>
-                </Col>
-                <Col md={4}>
-                  <div className='results-header box-blur'>
-                    <p><strong>Leaderboard</strong></p>
-                    <hr />
-                    <Table responsive>
-                      <thead>
-                        <tr>
-                          <th><p><strong>Rank</strong></p></th>
-                          <th><p><strong>Name</strong></p></th>
-                          <th><p><strong>Score</strong></p></th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        { this.state.leaderboard.map((ranking, idx) => {
-                          var key = 'leader'.concat(idx);
-                          return (
-                            <tr key={key}>
-                              <td key={key.concat('_rank')}>{ranking.rank}</td>
-                              <td key={key.concat('_name')}>{ranking.name}</td>
-                              <td key={key.concat('_score')}>{ranking.score}</td>
-                            </tr>
-                          )
-                        }) }
-                      </tbody>
-                    </Table>
-                  </div>
                 </Col>
               </Row>
             </div>

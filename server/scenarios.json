@@ -3,6 +3,7 @@
         "cfds": [
             "(Region, Manager) => Owner"
         ],
+        "description": "Identify errors in data about airfields in Alaska.",
         "dirty_dataset": "./data/dirty_airport_1.csv",
         "clean_dataset": "./data/airport_1.csv",
         "sampling_method": "RANDOM-PURE",
@@ -12,6 +13,7 @@
         "cfds": [
             "(Owner) => Use"
         ],
+        "description": "Identify errors in data about airfields in Alaska.",
         "dirty_dataset": "./data/dirty_airport_2.csv",
         "clean_dataset": "./data/airport_2.csv",
         "sampling_method": "RANDOM-PURE",
@@ -22,6 +24,7 @@
             "(Title, Director) => Rating",
             "(Title, Director) => Year"
         ],
+        "description": "Identify errors in data about English-language movies and TV shows.",
         "dirty_dataset": "./data/dirty_omdb_3.csv",
         "clean_dataset": "./data/omdb_3.csv",
         "sampling_method": "RANDOM-PURE",
@@ -31,6 +34,7 @@
         "cfds": [
             "(ListingNumber) => Director"
         ],
+        "description": "Identify errors in data about English-language movies and TV shows.",
         "dirty_dataset": "./data/dirty_omdb_4.csv",
         "clean_dataset": "./data/omdb_4.csv",
         "sampling_method": "RANDOM-PURE",
@@ -40,6 +44,7 @@
         "cfds": [
             "(Region, Manager) => Owner"
         ],
+        "description": "Identify errors in data about airfields in Alaska.",
         "dirty_dataset": "./data/dirty_airport_1.csv",
         "clean_dataset": "./data/airport_1.csv",
         "sampling_method": "RANDOM-UB",
@@ -49,6 +54,7 @@
         "cfds": [
             "(Owner) => Use"
         ],
+        "description": "Identify errors in data about airfields in Alaska.",
         "dirty_dataset": "./data/dirty_airport_2.csv",
         "clean_dataset": "./data/airport_2.csv",
         "sampling_method": "RANDOM-UB",
@@ -59,6 +65,7 @@
             "(Title, Director) => Rating",
             "(Title, Director) => Year"
         ],
+        "description": "Identify errors in data about English-language movies and TV shows.",
         "dirty_dataset": "./data/dirty_omdb_3.csv",
         "clean_dataset": "./data/omdb_3.csv",
         "sampling_method": "RANDOM-UB",
@@ -68,6 +75,7 @@
         "cfds": [
             "(ListingNumber) => Director"
         ],
+        "description": "Identify errors in data about English-language movies and TV shows.",
         "dirty_dataset": "./data/dirty_omdb_4.csv",
         "clean_dataset": "./data/omdb_4.csv",
         "sampling_method": "RANDOM-UB",
@@ -77,6 +85,7 @@
         "cfds": [
             "(Region, Manager) => Owner"
         ],
+        "description": "Identify errors in data about airfields in Alaska.",
         "dirty_dataset": "./data/dirty_airport_1.csv",
         "clean_dataset": "./data/airport_1.csv",
         "sampling_method": "DUO",
@@ -86,6 +95,7 @@
         "cfds": [
             "(Owner) => Use"
         ],
+        "description": "Identify errors in data about airfields in Alaska.",
         "dirty_dataset": "./data/dirty_airport_2.csv",
         "clean_dataset": "./data/airport_2.csv",
         "sampling_method": "DUO",
@@ -96,6 +106,7 @@
             "(Title, Director) => Rating",
             "(Title, Director) => Year"
         ],
+        "description": "Identify errors in data about English-language movies and TV shows.",
         "dirty_dataset": "./data/dirty_omdb_3.csv",
         "clean_dataset": "./data/omdb_3.csv",
         "sampling_method": "DUO",
@@ -105,6 +116,7 @@
         "cfds": [
             "(ListingNumber) => Director"
         ],
+        "description": "Identify errors in data about English-language movies and TV shows.",
         "dirty_dataset": "./data/dirty_omdb_4.csv",
         "clean_dataset": "./data/omdb_4.csv",
         "sampling_method": "DUO",

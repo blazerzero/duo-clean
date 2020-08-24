@@ -123,6 +123,7 @@ class Import(Resource):
         returned_data = {
             'header': header,
             'project_id': new_project_id,
+            'scenario_desc': scenario['description'],
             'msg': '[SUCCESS] Successfully created new project with project ID = ' + new_project_id + '.'
         }
         response = json.dumps(returned_data)

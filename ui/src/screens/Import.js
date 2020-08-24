@@ -37,14 +37,15 @@ class Import extends Component {
       axios.post('http://167.71.155.153:5000/duo/api/import', formData, config)
         .then(response => {
           this.setState({ isProcessing: false });
-          var { header, project_id, msg } = JSON.parse(response.data);
+          var { header, project_id, msg, scenario_desc } = JSON.parse(response.data);
           console.log(msg);
           alert('Your Project ID is '.concat(project_id, '. This will be visible to you while you\'re working, but please make sure to write it down as well.'));
           history.push({
             pathname: '/duo/clean/',
-            header: header,
-            project_id: project_id,
-            scenario_id: this.state.scenarioID
+            header,
+            project_id,
+            scenario_id: this.state.scenarioID,
+            scenario_desc
           });
         })
         .catch(error => console.log(error));
