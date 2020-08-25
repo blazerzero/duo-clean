@@ -17,24 +17,19 @@ class Import extends Component {
 
     this.state = {
       scenarioID: null,
+      projectID: null,
       participantName: null,
       isProcessing: false,
     }
   }
 
   _handleSubmit = async(history) => {
-    if (!isNaN(this.state.scenarioID) || this.state.participantName.length === 0) {
+    if (!isNaN(this.state.scenarioID) && this.state.participantName.length > 0 && isNaN(this.state.projectID)) {
       this.setState({ isProcessing: true });
       const formData = new FormData();
       formData.append('scenario_id', this.state.scenarioID);
       formData.append('participant_name', this.state.participantName);
-      console.log(formData.get('file'));
-      const config = {
-        headers: {
-          'content-type': 'multipart/form-data'
-        }
-      };
-      axios.post('http://167.71.155.153:5000/duo/api/import', formData, config)
+      axios.post('http://167.71.155.153:5000/duo/api/import', formData)
         .then(response => {
           this.setState({ isProcessing: false });
           var { header, project_id, msg, scenario_desc } = JSON.parse(response.data);
@@ -45,12 +40,39 @@ class Import extends Component {
             header,
             project_id,
             scenario_id: this.state.scenarioID,
-            scenario_desc
+            scenario_desc,
+            is_resuming: false,
+            sample: null,
+            leaderboard: null,
+            feedback: null
+          });
+        })
+        .catch(error => console.log(error));
+    } else if (!isNaN(this.state.projectID) && isNaN(this.state.scenarioID) && this.state.participantName === 0) {
+      this.setState({ isProcessing: true });
+      const formData = new FormData();
+      formData.append('project_id', this.state.projectID);
+      axios.post('http://167.71.155.153:5000/duo/api/resume', formData)
+        .then(response => {
+          this.setSTate({ isProcessing: false });
+          var { header, msg, scenario_id, scenario_desc, sample, leaderboard, feedback } = JSON.parse(response.data);
+          console.log(msg);
+          alert('Welcome back! Let\'s get back to it!');
+          history.push({
+            pathname: '/duo/clean/',
+            header,
+            project_id: this.state.projectID,
+            scenario_id,
+            scenario_desc,
+            is_resuming: true,
+            sample,
+            leaderboard,
+            feedback
           });
         })
         .catch(error => console.log(error));
     } else {
-      alert('Please make sure you\'ve entered your name and an integer scenario ID.');
+      alert('Please make sure you\'ve filled out the form correctly.');
     }
   };
 
@@ -58,6 +80,12 @@ class Import extends Component {
     console.log(event.target.value);
     var scenarioID = event.target.value;
     this.setState({ scenarioID });
+  }
+
+  _handleProjectIDChange = (event) => {
+    console.log(event.target.value);
+    var projectID = event.target.value;
+    this.setState({ projectID });
   }
 
   _handleNameChange = (event) => {
@@ -85,6 +113,7 @@ class Import extends Component {
             <div id='importDiv'>
               <div style={{height: '30vh'}}></div>
               <Form noValidate encType='multipart/form-data'>
+                <h2 style={{color: 'white'}}>IF YOU'RE STARTING A NEW INTERACTION</h2>
                 <Row className='content-centered small'>
                   <InputGroup>
                     <InputGroup.Prepend>
@@ -110,6 +139,21 @@ class Import extends Component {
                       required
                       feedback='You must enter a scenario ID.'
                       onChange={this._handleScenarioIDChange}
+                      />
+                  </InputGroup>
+                </Row>
+                <h2 style={{color: 'white'}}>OR, IF YOU'RE RETURNING TO AN INTERACTION</h2>
+                <Row className='content-centered small'>
+                  <InputGroup>
+                    <InputGroup.Prepend>
+                      <InputGroup.Text>Existing Project ID: </InputGroup.Text>
+                    </InputGroup.Prepend>
+                    <Form.Control
+                      type='text'
+                      aria-label='Enter scenario ID here.'
+                      required
+                      feedback='Should be an 8-digit number with some leading zeroes.'
+                      onChange={this._handleProjectIDChange}
                       />
                   </InputGroup>
                 </Row>

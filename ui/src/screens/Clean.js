@@ -112,6 +112,28 @@ class Clean extends Component {
         });
   }
 
+  _handleResume = async(sample, leaderboard, feedback) => {
+    var data = JSON.parse(sample);
+    leaderboard = JSON.parse(leaderboard);
+    feedback = JSON.parse(feedback);
+
+    for (var i in data) {
+      for (var j in data[i]) {
+        if (data[i][j] == null) data[i][j] = '';
+        else if (typeof data[i][j] != 'string') data[i][j] = data[i][j].toString();
+        if (!isNaN(data[i][j]) && Math.ceil(parseFloat(data[i][j])) - parseFloat(data[i][j]) === 0) {
+          data[i][j] = Math.ceil(data[i][j]).toString();
+        }
+      }
+    }
+    console.log(data);
+
+    var feedbackMap = await this._buildFeedbackMap(data, feedback);
+    this.setState({ data, feedbackMap, leaderboard }, () => {
+      console.log(this.state.leaderboard);
+    });
+  }
+
   _renderHeader = async() => {
     console.log('building header');
     return this.state.header.map((item, idx) => <th key={'header_'.concat(idx)}>{item}</th>);
@@ -139,10 +161,15 @@ class Clean extends Component {
   }
 
   componentDidMount() {
-    const { header, project_id, scenario_id, scenario_desc } = this.props.location;
+    const { header, project_id, scenario_id, scenario_desc, is_resuming, sample, leaderboard, feedback } = this.props.location;
     this.setState({ header, project_id, scenario_id, scenario_desc }, async() => {
-      await this._getSampleData(this.state.project_id);
-      console.log('got sample');
+      if (is_resuming === false) {
+        await this._getSampleData(this.state.project_id);
+        console.log('got sample');
+      } else {
+        await this._handleResume(sample, leaderboard, feedback);
+        console.log('resumed');
+      }
       console.log(this.state);
     });
   }
@@ -171,7 +198,8 @@ class Clean extends Component {
           <Modal show={this.state.isProcessing} animation={false} backdrop='static'>
             <Modal.Body>{
               this.state.interactionDone && (
-                <Col md={4}>
+                <Col md={4} className='content-centered'>
+                  <h4>Thank you for participating! Please see your handout for next steps!</h4>
                   <div className='results-header box-blur'>
                     <p><strong>Leaderboard</strong></p>
                     <hr />
@@ -208,11 +236,16 @@ class Clean extends Component {
             </Modal.Body>
           </Modal>
           <Row className='content-centered'>
-            <div className='results-header box-blur'>
-              <span className='results-title'>Duo</span>
-              <p><strong>Scenario Description: </strong>{this.state.scenario_desc}</p>
-              <p><strong>Project ID: </strong>{this.state.project_id}</p>
-            </div>
+            <Col md={4}>
+              <p style={{float: 'left'}}><a href="https://github.com/blazerzero/duo-help">Need help or a guide? Click here!</a></p>
+            </Col>
+            <Col>
+              <div className='results-header box-blur'>
+                <span className='results-title'>Duo</span>
+                <p><strong>Scenario Description: </strong>{this.state.scenario_desc}</p>
+                <p><strong>Project ID: </strong>{this.state.project_id}</p>
+              </div>
+            </Col>
           </Row>
           <Row className='content-centered'>
             <Col md={7}>

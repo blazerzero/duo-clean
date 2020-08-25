@@ -147,10 +147,16 @@ class Sample(Resource):
         
         # Build sample and update tuple weights post-sampling
         s_out = helpers.buildSample(data, sample_size, project_id, sampling_method)
+        s_out_dict = list(s_out.T.to_dict().values())
+        s_out_header = s_out_dict[0].keys()
+        with open('./store/' + project_id + '/current_sample.csv', 'w', newline='') as f:
+            writer = csv.DictWriter(f, s_out_header)
+            writer.writeheader()
+            writer.writerows(s_out_dict)
 
-        print('*** Sample built with ' + sampling_method + ' ***')
+        print('*** Sample built and saved with ' + sampling_method + ' ***')
 
-        # No changes have been made yet, so changes = False for every cell
+        # Build initial feedback map for frontend
         feedback = list()
         for idx in s_out.index:
             for col in s_out.columns:
@@ -158,6 +164,45 @@ class Sample(Resource):
                     'row': idx,
                     'col': col,
                     'marked': False
+                })
+
+        print('*** Feedback object created ***')
+
+        leaderboard = helpers.buildLeaderboard(project_info['scenario_id'])
+        
+        print('*** Leaderboard created ***')
+
+        # Return information to the user
+        returned_data = {
+            'sample': s_out.to_json(orient='index'),
+            'feedback': json.dumps(feedback),
+            'leaderboard': json.dumps(leaderboard),
+            'msg': '[SUCCESS] Successfully built sample.'
+        }
+        pprint(returned_data)
+        response = json.dumps(returned_data)
+        return response, 200, {'Access-Control-Allow-Origin': '*'}
+
+class Resume(Resource):
+    def get(self):
+        return {'msg': '[SUCCESS] This endpoint is live!'}
+
+    def post(self):
+        project_id = request.form.get('project_id')
+        s_out = pd.read_csv('/store/' + project_id + '/current_sample.csv', keep_default_na=False)
+
+        with open('./store/' + project_id + '/project_info.json') as f:
+            project_info = json.load(f)
+
+        # Build changes map for front-end
+        feedback = list()
+        cell_metadata = pickle.load( open('./store/' + project_id + '/cell_metadata.p', 'rb') )
+        for idx in s_out.index:
+            for col in s_out.columns:
+                feedback.append({
+                    'row': idx,
+                    'col': col,
+                    'marked': bool(cell_metadata[int(idx)][col]['feedback_history'][-1].marked) if len(cell_metadata[int(idx)][col]['feedback_history']) > 0 else False
                 })
 
         print('*** Feedback object created ***')
@@ -245,9 +290,16 @@ class Clean(Resource):
 
         # Build sample
         s_out = helpers.buildSample(data, sample_size, project_id, sampling_method)
-        print('*** New sample created ***')
+        s_out_dict = list(s_out.T.to_dict().values())
+        s_out_header = s_out_dict[0].keys()
+        with open('./store/' + project_id + '/current_sample.csv', 'w', newline='') as f:
+            writer = csv.DictWriter(f, s_out_header)
+            writer.writeheader()
+            writer.writerows(s_out_dict)
 
-        # Build changes map for front-end
+        print('*** New sample created and saved ***')
+
+        # Build feedback map for front-end
         feedback = list()
         cell_metadata = pickle.load( open('./store/' + project_id + '/cell_metadata.p', 'rb') )
         for idx in s_out.index:
@@ -282,6 +334,7 @@ class Clean(Resource):
 api.add_resource(Test, '/duo/api/')
 api.add_resource(Import, '/duo/api/import')
 api.add_resource(Sample, '/duo/api/sample')
+api.add_resource(Resume, '/duo/api/resume')
 api.add_resource(Clean, '/duo/api/clean')
 
 if __name__ == '__main__':
