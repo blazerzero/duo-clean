@@ -98,7 +98,7 @@ class Import(Resource):
         # FD metadata
         cfd_metadata = dict()
 
-        # TODO: Initialize other metrics/metadata needed in study
+        # Initialize other metrics/metadata needed in study
         study_metrics = dict()
         study_metrics['true_error_pct_full'] = list()
         study_metrics['true_error_pct_iter'] = list()
@@ -206,7 +206,7 @@ class Clean(Resource):
         print('*** Loaded dirty dataset ***')
 
         # Save noise feedback
-        percentage_errors_found = None
+        percentage_errors_found = 0
         if is_new_feedback == 1:
             print('*** NEW FEEDBACK! ***')
             percentage_errors_found = helpers.saveNoiseFeedback(data, feedback, project_id, current_iter)

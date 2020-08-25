@@ -82,7 +82,11 @@ def saveNoiseFeedback(data, feedback, project_id, current_iter):
     pickle.dump( cell_metadata, open('./store/' + project_id + '/cell_metadata.p', 'wb') )
     print('*** Cell metadata updates saved ***')
 
-    true_error_pct_full = all_errors_found / all_errors_total
+    if all_errors_total > 0:
+        true_error_pct_full = all_errors_found / all_errors_total
+    else:
+        true_error_pct_full = 0
+
     if iter_errors_total > 0:
         true_error_pct_iter = iter_errors_found / iter_errors_total
     else:
