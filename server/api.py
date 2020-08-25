@@ -189,7 +189,7 @@ class Resume(Resource):
 
     def post(self):
         project_id = request.form.get('project_id')
-        s_out = pd.read_csv('/store/' + project_id + '/current_sample.csv', keep_default_na=False)
+        s_out = pd.read_csv('./store/' + project_id + '/current_sample.csv', keep_default_na=False)
 
         with open('./store/' + project_id + '/project_info.json') as f:
             project_info = json.load(f)
@@ -214,17 +214,20 @@ class Resume(Resource):
         current_iter = pickle.load( open('./store/' + project_id + '/current_iter.p', 'rb') )
         study_metrics = pickle.load( open('./store/' + project_id + '/study_metrics.p', 'rb') )
 
-        if current_iter == 30 or study_metrics['true_error_pct_full'] >= 0.9:
+        if current_iter == 30 or (len(study_metrics['true_error_pct_full']) > 0 and study_metrics['true_error_pct_full'][-1].value >= 0.9):
             msg = '[DONE]'
         else:
             msg = '[SUCCESS] Successfully built sample.'
 
         # Return information to the user
         returned_data = {
+            'header': s_out.columns.tolist(),
             'sample': s_out.to_json(orient='index'),
             'feedback': json.dumps(feedback),
             'leaderboard': json.dumps(leaderboard),
-            'msg': msg
+            'msg': msg,
+            'scenario_id': project_info['scenario_id'],
+            'scenario_desc': project_info['scenario']['description']
         }
         pprint(returned_data)
         response = json.dumps(returned_data)
