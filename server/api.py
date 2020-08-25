@@ -211,12 +211,20 @@ class Resume(Resource):
         
         print('*** Leaderboard created ***')
 
+        current_iter = pickle.load( open('./store/' + project_id + '/current_iter.p', 'rb') )
+        study_metrics = pickle.load( open('./store/' + project_id + '/study_metrics.p', 'rb') )
+
+        if current_iter == 30 or study_metrics['true_error_pct_full'] >= 0.9:
+            msg = '[DONE]'
+        else:
+            msg = '[SUCCESS] Successfully built sample.'
+
         # Return information to the user
         returned_data = {
             'sample': s_out.to_json(orient='index'),
             'feedback': json.dumps(feedback),
             'leaderboard': json.dumps(leaderboard),
-            'msg': '[SUCCESS] Successfully built sample.'
+            'msg': msg
         }
         pprint(returned_data)
         response = json.dumps(returned_data)

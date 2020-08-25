@@ -57,18 +57,22 @@ class Import extends Component {
           this.setSTate({ isProcessing: false });
           var { header, msg, scenario_id, scenario_desc, sample, leaderboard, feedback } = JSON.parse(response.data);
           console.log(msg);
-          alert('Welcome back! Let\'s get back to it!');
-          history.push({
-            pathname: '/duo/clean/',
-            header,
-            project_id: this.state.projectID,
-            scenario_id,
-            scenario_desc,
-            is_resuming: true,
-            sample,
-            leaderboard,
-            feedback
-          });
+          if (msg == '[DONE]') {
+            alert('You have already completed this interaction!');
+          } else {
+            alert('Welcome back! Let\'s get back to it!');
+            history.push({
+              pathname: '/duo/clean/',
+              header,
+              project_id: this.state.projectID,
+              scenario_id,
+              scenario_desc,
+              is_resuming: true,
+              sample,
+              leaderboard,
+              feedback
+            });
+          }
         })
         .catch(error => console.log(error));
     } else {
