@@ -16,15 +16,15 @@ class Import extends Component {
     super(props);
 
     this.state = {
-      scenarioID: null,
-      projectID: null,
-      participantName: null,
+      scenarioID: '',
+      projectID: '',
+      participantName: '',
       isProcessing: false,
     }
   }
 
   _handleSubmit = async(history) => {
-    if (!isNaN(this.state.scenarioID) && this.state.participantName.length > 0 && isNaN(this.state.projectID)) {
+    if (this.state.scenarioID.length > 0 && this.state.participantName.length > 0 && this.state.projectID.length === 0) {
       this.setState({ isProcessing: true });
       const formData = new FormData();
       formData.append('scenario_id', this.state.scenarioID);
@@ -48,16 +48,16 @@ class Import extends Component {
           });
         })
         .catch(error => console.log(error));
-    } else if (!isNaN(this.state.projectID) && isNaN(this.state.scenarioID) && this.state.participantName === 0) {
+    } else if (this.state.projectID.length > 0 && this.state.scenarioID.length === 0 && this.state.participantName.length === 0) {
       this.setState({ isProcessing: true });
       const formData = new FormData();
       formData.append('project_id', this.state.projectID);
       axios.post('http://167.71.155.153:5000/duo/api/resume', formData)
         .then(response => {
-          this.setSTate({ isProcessing: false });
+          this.setState({ isProcessing: false });
           var { header, msg, scenario_id, scenario_desc, sample, leaderboard, feedback } = JSON.parse(response.data);
           console.log(msg);
-          if (msg == '[DONE]') {
+          if (msg === '[DONE]') {
             alert('You have already completed this interaction!');
           } else {
             alert('Welcome back! Let\'s get back to it!');
@@ -113,11 +113,15 @@ class Import extends Component {
               <span className='home-title'>Duo</span>
             </div>
           </Row>
-          <div className='body-section'>
+          <div className='body-section content-centered'>
             <div id='importDiv'>
               <div style={{height: '30vh'}}></div>
               <Form noValidate encType='multipart/form-data'>
-                <h2 style={{color: 'white'}}>IF YOU'RE STARTING A NEW INTERACTION</h2>
+                <Row className='content-centered'>
+                  <div className='home-header box-blur'>
+                    <span>IF YOU'RE STARTING A NEW INTERACTION</span>
+                  </div>
+                </Row>
                 <Row className='content-centered small'>
                   <InputGroup>
                     <InputGroup.Prepend>
@@ -146,7 +150,12 @@ class Import extends Component {
                       />
                   </InputGroup>
                 </Row>
-                <h2 style={{color: 'white'}}>OR, IF YOU'RE RETURNING TO AN INTERACTION</h2>
+                <br />
+                <Row className='content-centered'>
+                  <div className='home-header box-blur'>
+                    <span>OR, IF YOU'RE RETURNING TO AN INTERACTION</span>
+                  </div>
+                </Row>
                 <Row className='content-centered small'>
                   <InputGroup>
                     <InputGroup.Prepend>

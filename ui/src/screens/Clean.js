@@ -61,9 +61,12 @@ class Clean extends Component {
   }
 
   _buildFeedbackMap = async(data, feedback) => {
+    console.log(feedback);
     var feedbackMap = {};
     var rows = Object.keys(data);
     var cols = this.state.header;
+    console.log(rows);
+    console.log(cols);
     for (let i = 0; i < rows.length; i++) {
       var tup = {};
       for (let j = 0; j < cols.length; j++) {
@@ -237,7 +240,7 @@ class Clean extends Component {
           </Modal>
           <Row className='content-centered'>
             <Col md={4}>
-              <p style={{float: 'left'}}><a href="https://github.com/blazerzero/duo-help">Need help or a guide? Click here!</a></p>
+              <p style={{float: 'left'}}><a style={{display: 'table-cell'}} href="https://github.com/blazerzero/duo-help/blob/master/README.md" target='_blank' rel='noopener noreferrer'>Need help or a guide? Click here!</a></p>
             </Col>
             <Col>
               <div className='results-header box-blur'>
