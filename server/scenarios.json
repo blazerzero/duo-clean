@@ -1,7 +1,7 @@
 {
     "1": {
         "cfds": [
-            "(Region, Manager) => Owner"
+            "(OwnerType) => Use"
         ],
         "description": "Identify errors in data about airfields in Alaska.",
         "dirty_dataset": "./data/dirty_airport_1.csv",
@@ -42,7 +42,7 @@
     },
     "5": {
         "cfds": [
-            "(Region, Manager) => Owner"
+            "(OwnerType) => Use"
         ],
         "description": "Identify errors in data about airfields in Alaska.",
         "dirty_dataset": "./data/dirty_airport_1.csv",
@@ -83,7 +83,7 @@
     },
     "9": {
         "cfds": [
-            "(Region, Manager) => Owner"
+            "(OwnerType) => Use"
         ],
         "description": "Identify errors in data about airfields in Alaska.",
         "dirty_dataset": "./data/dirty_airport_1.csv",
