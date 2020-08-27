@@ -23,10 +23,10 @@
     <dependencies>
 <![CDATA[
 DCs:
-// FD: owner -> ownertype
+// FD: manager -> owner
 e1: airport_1(type: $t1, region: $r1, facilityname: $fn1, owner: $o1, ownertype: $ot1, manager: $m1), 
 airport_1(type: $t2, region: $r2, facilityname: $fn2, owner: $o2, ownertype: $ot2, manager: $m2), 
-    $o1 == $o2, $ot1 != $ot2 -> #fail.
+    $m1 == $m2, $o1 != $o2 -> #fail.
 ]]>
     </dependencies>
 
@@ -80,11 +80,11 @@ airport_1(type: $t2, region: $r2, facilityname: $fn2, owner: $o2, ownertype: $ot
             <defaultPercentage>0.0</defaultPercentage>
             <vioGenQueries>
                 <vioGenQuery id="e1">
-                    <comparison>(o1 == o2)</comparison>
+                    <comparison>(m1 == m2)</comparison>
                     <percentage>0.0</percentage> 
                 </vioGenQuery>
                 <vioGenQuery id="e1">
-                    <comparison>(ot1 != ot2)</comparison>
+                    <comparison>(o1 != o2)</comparison>
                     <percentage>20.0</percentage> 
                 </vioGenQuery>
             </vioGenQueries>
@@ -96,7 +96,7 @@ airport_1(type: $t2, region: $r2, facilityname: $fn2, owner: $o2, ownertype: $ot
                 <strategy charsToSwitch="3">TypoSwitchValue</strategy>
             </defaultStrategy> 
             <attributeStrategy>
-                <attribute table="airport_1" name="ownertype">
+                <attribute table="airport_1" name="owner">
                     <strategy>TypoActiveDomain</strategy>
                 </attribute>
             </attributeStrategy>
