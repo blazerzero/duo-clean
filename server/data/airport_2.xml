@@ -23,9 +23,9 @@
     <dependencies>
 <![CDATA[
 DCs:
-// FD: (Owner) -> Use
-e1: airport_2(Type: $t1, FacilityName: $fn1, Use: $u1, Owner: $o1), 
-airport_2(Type: $t2, FacilityName: $fn2, Use: $u2, Owner: $o2), 
+// FD: (owner) -> use
+e1: airport_2(type: $t1, facilityname: $fn1, use: $u1, owner: $o1), 
+airport_2(type: $t2, facilityname: $fn2, use: $u2, owner: $o2), 
     $o1 == $o2, $u1 != $u2 -> #fail.
 ]]>
     </dependencies>
@@ -81,11 +81,11 @@ airport_2(Type: $t2, FacilityName: $fn2, Use: $u2, Owner: $o2),
             <vioGenQueries>
                 <vioGenQuery id="e1">
                     <comparison>(o1 == o2)</comparison>
-                    <percentage>1.0</percentage> 
+                    <percentage>0.0</percentage> 
                 </vioGenQuery>
                 <vioGenQuery id="e1">
                     <comparison>(u1 != u2)</comparison>
-                    <percentage>1.0</percentage> 
+                    <percentage>20.0</percentage> 
                 </vioGenQuery>
             </vioGenQueries>
         </errorPercentages>
@@ -96,12 +96,10 @@ airport_2(Type: $t2, FacilityName: $fn2, Use: $u2, Owner: $o2),
                 <strategy charsToSwitch="3">TypoSwitchValue</strategy>
             </defaultStrategy> 
             <attributeStrategy>
-                <attribute table="airport_2" name="Owner">
+                <attribute table="airport_2" name="owner">
                     <strategy>TypoActiveDomain</strategy>
                 </attribute>
-            </attributeStrategy>
-            <attributeStrategy>
-                <attribute table="airport_2" name="Use">
+                <attribute table="airport_2" name="use">
                     <strategy>TypoActiveDomain</strategy>
                 </attribute>
             </attributeStrategy>

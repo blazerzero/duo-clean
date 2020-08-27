@@ -23,9 +23,9 @@
     <dependencies>
 <![CDATA[
 DCs:
-// FD: (ListingNumber) -> Director
-e1: omdb_4(ListingNumber: $ln1, Title: $t1, Year: $y1, Director: $d1), 
-omdb_4(ListingNumber: $ln2, Title: $t2, Year: $y2, Director: $d2), 
+// FD: (listingnumber) -> director
+e1: omdb_4(listingnumber: $ln1, title: $t1, year: $y1, director: $d1), 
+omdb_4(listingnumber: $ln2, title: $t2, year: $y2, director: $d2), 
     $ln1 == $ln2, $d1 != $d2 -> #fail.
 ]]>
     </dependencies>
@@ -81,11 +81,11 @@ omdb_4(ListingNumber: $ln2, Title: $t2, Year: $y2, Director: $d2),
             <vioGenQueries>
                 <vioGenQuery id="e1">
                     <comparison>(ln1 == ln2)</comparison>
-                    <percentage>1.0</percentage> 
+                    <percentage>0.0</percentage> 
                 </vioGenQuery>
                 <vioGenQuery id="e1">
                     <comparison>(d1 != d2)</comparison>
-                    <percentage>1.0</percentage> 
+                    <percentage>20.0</percentage> 
                 </vioGenQuery>
             </vioGenQueries>
         </errorPercentages>
@@ -96,12 +96,10 @@ omdb_4(ListingNumber: $ln2, Title: $t2, Year: $y2, Director: $d2),
                 <strategy charsToSwitch="3">TypoSwitchValue</strategy>
             </defaultStrategy> 
             <attributeStrategy>
-                <attribute table="omdb_4" name="ListingNumber">
+                <attribute table="omdb_4" name="listingnumber">
                     <strategy>TypoActiveDomain</strategy>
                 </attribute>
-            </attributeStrategy>
-            <attributeStrategy>
-                <attribute table="omdb_4" name="Director">
+                <attribute table="omdb_4" name="director">
                     <strategy>TypoActiveDomain</strategy>
                 </attribute>
             </attributeStrategy>
