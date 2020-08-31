@@ -74,7 +74,10 @@ def saveNoiseFeedback(data, feedback, project_id, current_iter):
 
     print('*** Score updated ***')
 
-    project_info['score'] = all_errors_found
+    project_info['true_pos'] = all_errors_found
+    false_positives_full = all_errors_marked - all_errors_found
+    project_info['false_pos'] = false_positives_full
+    false_positives_iter = iter_errors_marked - iter_errors_found
     with open('./store/' + project_id + '/project_info.json', 'w') as f:
         json.dump(project_info, f)
     print('*** Score saved ***')
@@ -104,6 +107,8 @@ def saveNoiseFeedback(data, feedback, project_id, current_iter):
 
     study_metrics['true_error_pct_full'].append(StudyMetric(iter_num=current_iter, value=true_error_pct_full))
     study_metrics['true_error_pct_iter'].append(StudyMetric(iter_num=current_iter, value=true_error_pct_iter))
+    study_metrics['false_positives_full'].append(StudyMetric(iter_num=current_iter, value=false_positives_full))
+    study_metrics['false_positives_iter'].append(StudyMetric(iter_num=current_iter, value=false_positives_iter))
     study_metrics['error_accuracy_full'].append(StudyMetric(iter_num=current_iter, value=error_accuracy_full))
     study_metrics['error_accuracy_iter'].append(StudyMetric(iter_num=current_iter, value=error_accuracy_iter))
 
@@ -530,4 +535,9 @@ def buildLeaderboard(scenario_id):
         'score': l['score']
     } for idx, l in enumerate(sortedLeaderboard)]
     return sortedLeaderboardWithRank
+
+def getUserScores(project_id):
+    with open('./store/' + project_id + '/project_info.json') as f:
+        project_info = json.load(f)
+    return project_info['true_pos'], project_info['false_pos']
 

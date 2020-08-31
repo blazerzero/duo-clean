@@ -29,9 +29,10 @@ class Clean extends Component {
             this.setState({ interactionDone: true});
           }
           else {
-            var { sample, feedback, leaderboard } = pick(res, ['sample', 'feedback', 'leaderboard'])
+            var { sample, feedback, true_pos, false_pos } = pick(res, ['sample', 'feedback', 'true_pos', 'false_pos'])
             var data = JSON.parse(sample);
-            leaderboard = JSON.parse(leaderboard);
+            true_pos =JSON.parse(true_pos);
+            false_pos = JSON.parse(false_pos);
             feedback = JSON.parse(feedback);
             console.log(msg);
 
@@ -49,9 +50,10 @@ class Clean extends Component {
               feedbackMap,
               isProcessing: false,
               noNewFeedback: false,
-              leaderboard
+              true_pos,
+              false_pos
             }, () => {
-              console.log(this.state.leaderboard);
+              console.log(this.state.true_pos, this.state.false_pos);
             });
           }
         })
@@ -88,9 +90,10 @@ class Clean extends Component {
     axios.post('http://167.71.155.153:5000/duo/api/sample', formData)
         .then(async(response) => {
           var res = JSON.parse(response.data);
-          var { sample, feedback, msg, leaderboard } = pick(res, ['sample', 'feedback', 'msg', 'leaderboard'])
+          var { sample, feedback, msg, true_pos, false_pos } = pick(res, ['sample', 'feedback', 'msg', 'true_pos', 'false_pos'])
           var data = JSON.parse(sample);
-          leaderboard = JSON.parse(leaderboard);
+          true_pos = JSON.parse(true_pos);
+          false_pos = JSON.parse(false_pos);
           feedback = JSON.parse(feedback);
           console.log(msg);
 
@@ -106,8 +109,8 @@ class Clean extends Component {
           console.log(data);
 
           var feedbackMap = await this._buildFeedbackMap(data, feedback);
-          this.setState({ data, feedbackMap, leaderboard }, () => {
-            console.log(this.state.leaderboard);
+          this.setState({ data, feedbackMap, true_pos, false_pos }, () => {
+            console.log(this.state.true_pos, this.state.false_pos);
           });
         })
         .catch(error => {
@@ -115,9 +118,10 @@ class Clean extends Component {
         });
   }
 
-  _handleResume = async(sample, leaderboard, feedback) => {
+  _handleResume = async(sample, true_pos, false_pos, feedback) => {
     var data = JSON.parse(sample);
-    leaderboard = JSON.parse(leaderboard);
+    true_pos = JSON.parse(true_pos);
+    false_pos = JSON.parse(false_pos);
     feedback = JSON.parse(feedback);
 
     for (var i in data) {
@@ -132,8 +136,8 @@ class Clean extends Component {
     console.log(data);
 
     var feedbackMap = await this._buildFeedbackMap(data, feedback);
-    this.setState({ data, feedbackMap, leaderboard }, () => {
-      console.log(this.state.leaderboard);
+    this.setState({ data, feedbackMap, true_pos, false_pos }, () => {
+      console.log(this.state.true_pos, this.state.false_pos);
     });
   }
 
@@ -164,13 +168,13 @@ class Clean extends Component {
   }
 
   componentDidMount() {
-    const { header, project_id, scenario_id, scenario_desc, is_resuming, sample, leaderboard, feedback } = this.props.location;
+    const { header, project_id, scenario_id, scenario_desc, is_resuming, sample, true_pos, false_pos, feedback } = this.props.location;
     this.setState({ header, project_id, scenario_id, scenario_desc }, async() => {
       if (is_resuming === false) {
         await this._getSampleData(this.state.project_id);
         console.log('got sample');
       } else {
-        await this._handleResume(sample, leaderboard, feedback);
+        await this._handleResume(sample, true_pos, false_pos, feedback);
         console.log('resumed');
       }
       console.log(this.state);
@@ -188,7 +192,8 @@ class Clean extends Component {
       scenario_id: 0,
       isProcessing: false,
       noNewFeedback: false,
-      leaderboard: {},
+      true_pos: 0,
+      false_pos: 0,
       interactionDone: false,
       scenario_desc: null,
     };
@@ -204,27 +209,20 @@ class Clean extends Component {
                 <Col md={4} className='content-centered'>
                   <h4>Thank you for participating! Please see your handout for next steps!</h4>
                   <div className='results-header box-blur'>
-                    <p><strong>Leaderboard</strong></p>
+                    <p><strong>Your Score</strong></p>
                     <hr />
                     <Table responsive>
                       <thead>
                         <tr>
-                          <th><p><strong>Rank</strong></p></th>
-                          <th><p><strong>Name</strong></p></th>
-                          <th><p><strong>Score</strong></p></th>
+                          <th><p><strong>True Positives</strong></p></th>
+                          <th><p><strong>False Positives</strong></p></th>
                         </tr>
                       </thead>
                       <tbody>
-                        { this.state.leaderboard.map((ranking, idx) => {
-                          var key = 'leader'.concat(idx);
-                          return (
-                            <tr key={key}>
-                              <td key={key.concat('_rank')}>{ranking.rank}</td>
-                              <td key={key.concat('_name')}>{ranking.name}</td>
-                              <td key={key.concat('_score')}>{ranking.score}</td>
-                            </tr>
-                          )
-                        }) }
+                        <tr>
+                          <td>{this.state.true_pos}</td>
+                          <td>{this.state.false_pos}</td>
+                        </tr>
                       </tbody>
                     </Table>
                   </div>

@@ -102,6 +102,8 @@ class Import(Resource):
         study_metrics = dict()
         study_metrics['true_error_pct_full'] = list()
         study_metrics['true_error_pct_iter'] = list()
+        study_metrics['false_positives_full'] = list()
+        study_metrics['false_positives_iter'] = list()
         study_metrics['cfd_confidence'] = dict()
         for cfd in scenario['cfds']:
             study_metrics['cfd_confidence'][cfd] = list()
@@ -136,7 +138,7 @@ class Sample(Resource):
 
     def post(self):
         project_id = request.form.get('project_id')
-        sample_size = 10
+        sample_size = 5
         with open('./store/' + project_id + '/project_info.json') as f:
             project_info = json.load(f)
 
@@ -168,15 +170,12 @@ class Sample(Resource):
 
         print('*** Feedback object created ***')
 
-        leaderboard = helpers.buildLeaderboard(project_info['scenario_id'])
-        
-        print('*** Leaderboard created ***')
-
         # Return information to the user
         returned_data = {
             'sample': s_out.to_json(orient='index'),
             'feedback': json.dumps(feedback),
-            'leaderboard': json.dumps(leaderboard),
+            'true_pos': 0,
+            'false_pos': 0,
             'msg': '[SUCCESS] Successfully built sample.'
         }
         pprint(returned_data)
@@ -207,7 +206,7 @@ class Resume(Resource):
 
         print('*** Feedback object created ***')
 
-        leaderboard = helpers.buildLeaderboard(project_info['scenario_id'])
+        true_pos, false_pos = helpers.getUserScores(project_id)
         
         print('*** Leaderboard created ***')
 
@@ -224,7 +223,8 @@ class Resume(Resource):
             'header': s_out.columns.tolist(),
             'sample': s_out.to_json(orient='index'),
             'feedback': json.dumps(feedback),
-            'leaderboard': json.dumps(leaderboard),
+            'true_pos': true_pos,
+            'false_pos': false_pos,
             'msg': msg,
             'scenario_id': project_info['scenario_id'],
             'scenario_desc': project_info['scenario']['description']
@@ -242,7 +242,7 @@ class Clean(Resource):
         feedback = json.loads(request.form.get('feedback'))
         is_new_feedback = int(request.form.get('is_new_feedback'))
         feedback = pd.DataFrame.from_dict(feedback, orient='index')
-        sample_size = 10
+        sample_size = 5
 
         print('*** Necessary objects loaded ***')
 
@@ -323,7 +323,7 @@ class Clean(Resource):
 
         print('*** Feedback object created ***')
 
-        leaderboard = helpers.buildLeaderboard(project_info['scenario_id'])
+        true_pos, false_pos = helpers.getUserScores(project_id)
 
         print('*** Leaderboard created ***')
 
@@ -335,7 +335,8 @@ class Clean(Resource):
         returned_data = {
             'sample': s_out.to_json(orient='index'),
             'feedback': json.dumps(feedback),
-            'leaderboard': json.dumps(leaderboard),
+            'true_pos': true_pos,
+            'false_pos': false_pos,
             'msg': msg
         }
         pprint(returned_data)

@@ -43,7 +43,8 @@ class Import extends Component {
             scenario_desc,
             is_resuming: false,
             sample: null,
-            leaderboard: null,
+            true_pos: 0,
+            false_pos: 0,
             feedback: null
           });
         })
@@ -69,7 +70,8 @@ class Import extends Component {
               scenario_desc,
               is_resuming: true,
               sample,
-              leaderboard,
+              true_pos,
+              false_pos,
               feedback
             });
           }
