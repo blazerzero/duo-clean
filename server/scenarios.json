@@ -11,7 +11,9 @@
     },
     "2": {
         "cfds": [
-            "(owner) => use"
+            "(facilityname, type) => region",
+            "(facilityname, type) => owner",
+            "(facilityname, type) => manager"
         ],
         "description": "Identify errors in data about airfields in Alaska.",
         "dirty_dataset": "./data/dirty_airport_2.csv",
@@ -21,8 +23,7 @@
     },
     "3": {
         "cfds": [
-            "(title, director) => rating",
-            "(title, director) => year"
+            "(title, year, director) => rating"
         ],
         "description": "Identify errors in data about English-language movies and TV shows.",
         "dirty_dataset": "./data/dirty_omdb_3.csv",
@@ -32,7 +33,8 @@
     },
     "4": {
         "cfds": [
-            "(listingnumber) => director"
+            "(listingnumber) => title",
+            "(listingnumber) => year"
         ],
         "description": "Identify errors in data about English-language movies and TV shows.",
         "dirty_dataset": "./data/dirty_omdb_4.csv",
@@ -42,6 +44,17 @@
     },
     "5": {
         "cfds": [
+            "(title, director) => leadwriter",
+            "(title, director) => genre"
+        ],
+        "description": "Identify errors in data about English-language movies and TV shows.",
+        "dirty_dataset": "./data/dirty_omdb_5.csv",
+        "clean_dataset": "./data/omdb_5.csv",
+        "sampling_method": "RANDOM-PURE",
+        "difficulty": 1
+    },
+    "6": {
+        "cfds": [
             "(manager) => owner"
         ],
         "description": "Identify errors in data about airfields in Alaska.",
@@ -50,9 +63,11 @@
         "sampling_method": "RANDOM-UB",
         "difficulty": 4
     },
-    "6": {
+    "7": {
         "cfds": [
-            "(owner) => use"
+            "(facilityname, type) => region",
+            "(facilityname, type) => owner",
+            "(facilityname, type) => manager"
         ],
         "description": "Identify errors in data about airfields in Alaska.",
         "dirty_dataset": "./data/dirty_airport_2.csv",
@@ -60,10 +75,9 @@
         "sampling_method": "RANDOM-UB",
         "difficulty": 3
     },
-    "7": {
+    "8": {
         "cfds": [
-            "(title, director) => rating",
-            "(title, director) => year"
+            "(title, year, director) => rating"
         ],
         "description": "Identify errors in data about English-language movies and TV shows.",
         "dirty_dataset": "./data/dirty_omdb_3.csv",
@@ -71,9 +85,10 @@
         "sampling_method": "RANDOM-UB",
         "difficulty": 2
     },
-    "8": {
+    "9": {
         "cfds": [
-            "(listingnumber) => director"
+            "(listingnumber) => title",
+            "(listingnumber) => year"
         ],
         "description": "Identify errors in data about English-language movies and TV shows.",
         "dirty_dataset": "./data/dirty_omdb_4.csv",
@@ -81,7 +96,18 @@
         "sampling_method": "RANDOM-UB",
         "difficulty": 1
     },
-    "9": {
+    "10": {
+        "cfds": [
+            "(title, director) => leadwriter",
+            "(title, director) => genre"
+        ],
+        "description": "Identify errors in data about English-language movies and TV shows.",
+        "dirty_dataset": "./data/dirty_omdb_5.csv",
+        "clean_dataset": "./data/omdb_5.csv",
+        "sampling_method": "RANDOM-UB",
+        "difficulty": 1
+    },
+    "11": {
         "cfds": [
             "(manager) => owner"
         ],
@@ -91,9 +117,11 @@
         "sampling_method": "DUO",
         "difficulty": 4
     },
-    "10": {
+    "12": {
         "cfds": [
-            "(owner) => use"
+            "(facilityname, type) => region",
+            "(facilityname, type) => owner",
+            "(facilityname, type) => manager"
         ],
         "description": "Identify errors in data about airfields in Alaska.",
         "dirty_dataset": "./data/dirty_airport_2.csv",
@@ -101,10 +129,9 @@
         "sampling_method": "DUO",
         "difficulty": 3
     },
-    "11": {
+    "13": {
         "cfds": [
-            "(title, director) => rating",
-            "(title, director) => year"
+            "(title, year, director) => rating"
         ],
         "description": "Identify errors in data about English-language movies and TV shows.",
         "dirty_dataset": "./data/dirty_omdb_3.csv",
@@ -112,13 +139,25 @@
         "sampling_method": "DUO",
         "difficulty": 2
     },
-    "12": {
+    "14": {
         "cfds": [
-            "(listingnumber) => director"
+            "(listingnumber) => title",
+            "(listingnumber) => year"
         ],
         "description": "Identify errors in data about English-language movies and TV shows.",
         "dirty_dataset": "./data/dirty_omdb_4.csv",
         "clean_dataset": "./data/omdb_4.csv",
+        "sampling_method": "DUO",
+        "difficulty": 1
+    },
+    "15": {
+        "cfds": [
+            "(title, director) => leadwriter",
+            "(title, director) => genre"
+        ],
+        "description": "Identify errors in data about English-language movies and TV shows.",
+        "dirty_dataset": "./data/dirty_omdb_5.csv",
+        "clean_dataset": "./data/omdb_5.csv",
         "sampling_method": "DUO",
         "difficulty": 1
     }
