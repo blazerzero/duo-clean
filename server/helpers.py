@@ -13,9 +13,10 @@ import statistics
 from collections import Counter
 
 class CellFeedback(object):
-    def __init__(self, iter_num, marked):
+    def __init__(self, iter_num, marked, elapsed_time):
         self.iter_num = iter_num    # iteration number
         self.marked = marked            # whether or not the user marked the cell as noisy in this iteration
+        self.elapsed_time = elapsed_time
 
 '''class CFDConfidenceHistory(object):
     def __init__(self, iter_num, conf):
@@ -23,27 +24,35 @@ class CellFeedback(object):
         self.conf = conf'''
 
 class CFDWeightHistory(object):
-    def __init__(self, iter_num,weight):
+    def __init__(self, iter_num, weight, elapsed_time):
         self.iter_num = iter_num
         self.weight = weight
+        self.elapsed_time = elapsed_time
 
 class CFDScore(object):
-    def __init__(self, iter_num, score):
+    def __init__(self, iter_num, score, elapsed_time):
         self.iter_num = iter_num
         self.score = score
+        self.elapsed_time = elapsed_time
 
 class StudyMetric(object):
-    def __init__(self, iter_num, value):
+    def __init__(self, iter_num, value, elapsed_time):
         self.iter_num = iter_num
         self.value = value
+        self.elapsed_time = elapsed_time
 
 # SAVE NOISE FEEDBACK FROM USER
 def saveNoiseFeedback(data, feedback, project_id, current_iter):
     cell_metadata = pickle.load( open('./store/' + project_id + '/cell_metadata.p', 'rb') )
     study_metrics = pickle.load( open('./store/' + project_id + '/study_metrics.p', 'rb') )
+    start_time = pickle.load( open('./store/' + project_id + '/start_time.p', 'rb') )
+    current_time = pickle.load( open('./store/' + project_id + '/current_time.p', 'rb') )
+
+    elapsed_time = current_time - start_time
+
     for idx in feedback.index:
         for col in feedback.columns:
-            cell_metadata[int(idx)][col]['feedback_history'].append(CellFeedback(iter_num=current_iter, marked=bool(feedback.at[idx, col])))
+            cell_metadata[int(idx)][col]['feedback_history'].append(CellFeedback(iter_num=current_iter, marked=bool(feedback.at[idx, col]), elapsed_time=elapsed_time))
     print('*** Latest feedback saved ***')
             
     # scoring function: score based on number of true errors correctly identified
@@ -105,12 +114,12 @@ def saveNoiseFeedback(data, feedback, project_id, current_iter):
     else:
         error_accuracy_iter = 0
 
-    study_metrics['true_error_pct_full'].append(StudyMetric(iter_num=current_iter, value=true_error_pct_full))
-    study_metrics['true_error_pct_iter'].append(StudyMetric(iter_num=current_iter, value=true_error_pct_iter))
-    study_metrics['false_positives_full'].append(StudyMetric(iter_num=current_iter, value=false_positives_full))
-    study_metrics['false_positives_iter'].append(StudyMetric(iter_num=current_iter, value=false_positives_iter))
-    study_metrics['error_accuracy_full'].append(StudyMetric(iter_num=current_iter, value=error_accuracy_full))
-    study_metrics['error_accuracy_iter'].append(StudyMetric(iter_num=current_iter, value=error_accuracy_iter))
+    study_metrics['true_error_pct_full'].append(StudyMetric(iter_num=current_iter, value=true_error_pct_full, elapsed_time=elapsed_time))
+    study_metrics['true_error_pct_iter'].append(StudyMetric(iter_num=current_iter, value=true_error_pct_iter, elapsed_time=elapsed_time))
+    study_metrics['false_positives_full'].append(StudyMetric(iter_num=current_iter, value=false_positives_full, elapsed_time=elapsed_time))
+    study_metrics['false_positives_iter'].append(StudyMetric(iter_num=current_iter, value=false_positives_iter, elapsed_time=elapsed_time))
+    study_metrics['error_accuracy_full'].append(StudyMetric(iter_num=current_iter, value=error_accuracy_full, elapsed_time=elapsed_time))
+    study_metrics['error_accuracy_iter'].append(StudyMetric(iter_num=current_iter, value=error_accuracy_iter, elapsed_time=elapsed_time))
 
     pickle.dump( study_metrics, open('./store/' + project_id + '/study_metrics.p', 'wb') )
 
@@ -147,6 +156,11 @@ def saveNoiseFeedback(data, feedback, project_id, current_iter):
 # DISCOVER CFDs THAT BEST EXPLAIN THE FEEDBACK GIVEN BY THE USER
 def explainFeedback(dirty_sample, project_id, current_iter):
     cell_metadata = pickle.load( open('./store/' + project_id + '/cell_metadata.p', 'rb') )
+    start_time = pickle.load( open('./store/' + project_id + '/start_time.p', 'rb') )
+    current_time = pickle.load( open('./store/' + project_id + '/current_time.p', 'rb') )
+
+    elapsed_time = current_time - start_time
+
     print('*** Cell metadata object loaded ***')
 
     dirty_sample = dirty_sample.applymap(str)
@@ -209,7 +223,7 @@ def explainFeedback(dirty_sample, project_id, current_iter):
                 cfd_metadata[c['cfd']] = dict()
                 cfd_metadata[c['cfd']]['history'] = list()
                 cfd_metadata[c['cfd']]['weight_history'] = list()
-            cfd_metadata[c['cfd']]['history'].append(CFDScore(iter_num=current_iter, score=c['score']))
+            cfd_metadata[c['cfd']]['history'].append(CFDScore(iter_num=current_iter, score=c['score']), elapsed_time=elapsed_time)
         print('*** XPlode output processed ***')
 
         pickle.dump( cfd_metadata, open('./store/' + project_id + '/cfd_metadata.p', 'wb') )
@@ -276,6 +290,11 @@ def reinforceTuplesBasedOnDependencies(data, project_id, current_iter, is_new_fe
 
     tuple_metadata = pickle.load( open('./store/' + project_id + '/tuple_metadata.p', 'rb') )
     cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
+    start_time = pickle.load( open('./store/' + project_id + '/start_time.p', 'rb') )
+    current_time = pickle.load( open('./store/' + project_id + '/current_time.p', 'rb') )
+
+    elapsed_time = current_time - start_time
+
     print('*** Metadata objects loaded ***')
 
     for cfd, cfd_m in cfd_metadata.items():
@@ -297,7 +316,7 @@ def reinforceTuplesBasedOnDependencies(data, project_id, current_iter, is_new_fe
     
     cfd_metadata = normalizeWeights(cfd_metadata)
     for cfd, cfd_m in cfd_metadata.items():
-        cfd_m['weight_history'].append(CFDWeightHistory(iter_num=h.iter_num, weight=cfd_m['weight']))
+        cfd_m['weight_history'].append(CFDWeightHistory(iter_num=h.iter_num, weight=cfd_m['weight']), elapsed_time=elapsed_time)
     print('*** CFD weights normalized and saved in history ***')
     print('cfd weights post-duo:', [cfd_m['weight'] for _, cfd_m in cfd_metadata.items()])
 
@@ -336,7 +355,7 @@ def reinforceTuplesBasedOnDependencies(data, project_id, current_iter, is_new_fe
     study_metrics = pickle.load( open('./store/' + project_id + '/study_metrics.p', 'rb') )
     for cfd in project_info['scenario']['cfds']:
         if cfd in cfd_metadata.keys():
-            study_metrics['cfd_confidence'][cfd].append(StudyMetric(iter_num=current_iter, value=cfd_metadata[cfd]['weight']))
+            study_metrics['cfd_confidence'][cfd].append(StudyMetric(iter_num=current_iter, value=cfd_metadata[cfd]['weight'], elapsed_time=elapsed_time))
 
     pickle.dump( study_metrics, open('./store/' + project_id + '/study_metrics.p', 'wb') )
 

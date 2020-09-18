@@ -110,6 +110,8 @@ class Import(Resource):
         study_metrics['error_accuracy_full'] = list()
         study_metrics['error_accuracy_iter'] = list()
 
+        start_time = time.time()
+
         print('*** Metadata and study metric objects initialized ***')
 
         # Save metadata
@@ -118,6 +120,7 @@ class Import(Resource):
         pickle.dump( cfd_metadata, open(new_project_dir + '/cfd_metadata.p', 'wb') )
         pickle.dump( current_iter, open(new_project_dir + '/current_iter.p', 'wb') )
         pickle.dump( study_metrics, open(new_project_dir + '/study_metrics.p', 'wb') )
+        pickle.dump( start_time, open(new_project_dir + '/start_time.p', 'wb') )
         
         print('*** Metadata and study metric objects saved ***')
 
@@ -141,6 +144,9 @@ class Sample(Resource):
         sample_size = 5
         with open('./store/' + project_id + '/project_info.json') as f:
             project_info = json.load(f)
+
+        current_time = time.time()
+        pickle.dump( current_time, open('./store/' + project_id + '/current_time.p', 'wb') )
 
         print('*** Project info loaded ***')
             
