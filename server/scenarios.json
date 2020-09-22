@@ -34,7 +34,8 @@
     "4": {
         "cfds": [
             "(listingnumber) => title",
-            "(listingnumber) => year"
+            "(listingnumber) => year",
+            "(listingnumber) => director"
         ],
         "description": "Identify errors in data about English-language movies and TV shows.",
         "dirty_dataset": "./data/dirty_omdb_4.csv",
@@ -44,39 +45,28 @@
     },
     "5": {
         "cfds": [
-            "(title, director) => leadwriter",
-            "(title, director) => genre"
+            "(manager) => owner"
         ],
-        "description": "Identify errors in data about English-language movies and TV shows.",
-        "dirty_dataset": "./data/dirty_omdb_5.csv",
-        "clean_dataset": "./data/omdb_5.csv",
-        "sampling_method": "RANDOM-PURE",
-        "difficulty": 1
+        "description": "Identify errors in data about airfields in Alaska.",
+        "dirty_dataset": "./data/dirty_airport_1.csv",
+        "clean_dataset": "./data/airport_1.csv",
+        "sampling_method": "RANDOM-UB",
+        "difficulty": 4
     },
     "6": {
         "cfds": [
-            "(manager) => owner"
+            "(facilityname, type) => region",
+            "(facilityname, type) => owner",
+            "(facilityname, type) => manager"
         ],
         "description": "Identify errors in data about airfields in Alaska.",
-        "dirty_dataset": "./data/dirty_airport_1.csv",
-        "clean_dataset": "./data/airport_1.csv",
+        "dirty_dataset": "./data/dirty_airport_2.csv",
+        "clean_dataset": "./data/airport_2.csv",
         "sampling_method": "RANDOM-UB",
-        "difficulty": 4
+        "difficulty": 3
     },
     "7": {
         "cfds": [
-            "(facilityname, type) => region",
-            "(facilityname, type) => owner",
-            "(facilityname, type) => manager"
-        ],
-        "description": "Identify errors in data about airfields in Alaska.",
-        "dirty_dataset": "./data/dirty_airport_2.csv",
-        "clean_dataset": "./data/airport_2.csv",
-        "sampling_method": "RANDOM-UB",
-        "difficulty": 3
-    },
-    "8": {
-        "cfds": [
             "(title, year, director) => rating"
         ],
         "description": "Identify errors in data about English-language movies and TV shows.",
@@ -85,10 +75,11 @@
         "sampling_method": "RANDOM-UB",
         "difficulty": 2
     },
-    "9": {
+    "8": {
         "cfds": [
             "(listingnumber) => title",
-            "(listingnumber) => year"
+            "(listingnumber) => year",
+            "(listingnumber) => director"
         ],
         "description": "Identify errors in data about English-language movies and TV shows.",
         "dirty_dataset": "./data/dirty_omdb_4.csv",
@@ -96,18 +87,7 @@
         "sampling_method": "RANDOM-UB",
         "difficulty": 1
     },
-    "10": {
-        "cfds": [
-            "(title, director) => leadwriter",
-            "(title, director) => genre"
-        ],
-        "description": "Identify errors in data about English-language movies and TV shows.",
-        "dirty_dataset": "./data/dirty_omdb_5.csv",
-        "clean_dataset": "./data/omdb_5.csv",
-        "sampling_method": "RANDOM-UB",
-        "difficulty": 1
-    },
-    "11": {
+    "9": {
         "cfds": [
             "(manager) => owner"
         ],
@@ -117,7 +97,7 @@
         "sampling_method": "DUO",
         "difficulty": 4
     },
-    "12": {
+    "10": {
         "cfds": [
             "(facilityname, type) => region",
             "(facilityname, type) => owner",
@@ -129,7 +109,7 @@
         "sampling_method": "DUO",
         "difficulty": 3
     },
-    "13": {
+    "11": {
         "cfds": [
             "(title, year, director) => rating"
         ],
@@ -139,25 +119,15 @@
         "sampling_method": "DUO",
         "difficulty": 2
     },
-    "14": {
+    "12": {
         "cfds": [
             "(listingnumber) => title",
-            "(listingnumber) => year"
+            "(listingnumber) => year",
+            "(listingnumber) => director"
         ],
         "description": "Identify errors in data about English-language movies and TV shows.",
         "dirty_dataset": "./data/dirty_omdb_4.csv",
         "clean_dataset": "./data/omdb_4.csv",
-        "sampling_method": "DUO",
-        "difficulty": 1
-    },
-    "15": {
-        "cfds": [
-            "(title, director) => leadwriter",
-            "(title, director) => genre"
-        ],
-        "description": "Identify errors in data about English-language movies and TV shows.",
-        "dirty_dataset": "./data/dirty_omdb_5.csv",
-        "clean_dataset": "./data/omdb_5.csv",
         "sampling_method": "DUO",
         "difficulty": 1
     }

@@ -41,6 +41,14 @@ class StudyMetric(object):
         self.value = value
         self.elapsed_time = elapsed_time
 
+class BayesianRectangle(object):
+    def __init__(self, iter_num, l1, l2, s1, s2):
+        self.iter_num = iter_num
+        self.l1 = l1
+        self.l2 = l2
+        self.s1 = s1
+        self.s2 = s2
+
 # SAVE NOISE FEEDBACK FROM USER
 def saveNoiseFeedback(data, feedback, project_id, current_iter):
     cell_metadata = pickle.load( open('./store/' + project_id + '/cell_metadata.p', 'rb') )
@@ -158,6 +166,7 @@ def explainFeedback(dirty_sample, project_id, current_iter):
     cell_metadata = pickle.load( open('./store/' + project_id + '/cell_metadata.p', 'rb') )
     start_time = pickle.load( open('./store/' + project_id + '/start_time.p', 'rb') )
     current_time = pickle.load( open('./store/' + project_id + '/current_time.p', 'rb') )
+    true_fds = json.load('./store/' + project_id + '/true_fds.json')
 
     elapsed_time = current_time - start_time
 
@@ -206,7 +215,7 @@ def explainFeedback(dirty_sample, project_id, current_iter):
         writer.writerows(rep_dict)
     print('*** Dirty and repaired datasets saved as CSV for XPlode ***')
 
-    process = sp.Popen(['./xplode/CTane', dirty_sample_fp, rep_sample_fp, '0.5', str(0.5*len(dirty_sample.index))], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})
+    process = sp.Popen(['./xplode/CTane', dirty_sample_fp, rep_sample_fp, '0.5', str(math.ceil(0.5*len(dirty_sample.index)))], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})
     res = process.communicate()
     print('*** XPlode finished ***')
 
@@ -223,7 +232,16 @@ def explainFeedback(dirty_sample, project_id, current_iter):
                 cfd_metadata[c['cfd']] = dict()
                 cfd_metadata[c['cfd']]['history'] = list()
                 cfd_metadata[c['cfd']]['weight_history'] = list()
-            cfd_metadata[c['cfd']]['history'].append(CFDScore(iter_num=current_iter, score=c['score']), elapsed_time=elapsed_time)
+
+                if c['cfd'] in true_fds.keys() and (cfd_metadata[c['cfd']]['lhs_size'] is None or cfd_metadata[c['cfd']]['support'] is None):
+                    lhs = c['cfd'].split(' => ')[0][1:-1].split(', ')
+                    cfd_metadata[c['cfd']]['lhs_size'] = len(lhs)
+                    cfd_metadata[c['cfd']]['support'] = true_fds[c['cfd']]['support']
+                elif c['cfd'] not in true_fds.keys():
+                    cfd_metadata[c['cfd']]['lhs_size'] = None
+                    cfd_metadata[c['cfd']]['support'] = None
+
+            cfd_metadata[c['cfd']]['history'].append(CFDScore(iter_num=current_iter, score=c['score'], elapsed_time=elapsed_time))
         print('*** XPlode output processed ***')
 
         pickle.dump( cfd_metadata, open('./store/' + project_id + '/cfd_metadata.p', 'wb') )
@@ -316,7 +334,7 @@ def reinforceTuplesBasedOnDependencies(data, project_id, current_iter, is_new_fe
     
     cfd_metadata = normalizeWeights(cfd_metadata)
     for cfd, cfd_m in cfd_metadata.items():
-        cfd_m['weight_history'].append(CFDWeightHistory(iter_num=h.iter_num, weight=cfd_m['weight']), elapsed_time=elapsed_time)
+        cfd_m['weight_history'].append(CFDWeightHistory(iter_num=h.iter_num, weight=cfd_m['weight'], elapsed_time=elapsed_time))
     print('*** CFD weights normalized and saved in history ***')
     print('cfd weights post-duo:', [cfd_m['weight'] for _, cfd_m in cfd_metadata.items()])
 
@@ -560,3 +578,24 @@ def getUserScores(project_id):
         project_info = json.load(f)
     return project_info['true_pos'], project_info['false_pos']
 
+def bayes(project_id, current_iter):
+    cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
+    bayesian_rectangles = pickle.load( open('./store/' + project_id + '/bayesian_rectangles.p', 'rb') )
+    # Bayesian modeling code
+
+    observed_examples = [cfd_m for cfd, cfd_m in cfd_metadata.items() if cfd_m['lhs_size'] is not None and cfd_m['support'] is not None and cfd_m['weight'] >= 0.5]
+    antecedent_sizes = sorted([o['lhs_size'] for o in observed_examples])
+    supports = sorted([o['support'] for o in observed_examples])
+    r1 = maxDistanceBetweenExamples(antecedent_sizes)
+    r2 = maxDistanceBetweenExamples(supports)
+
+    #TODO: Complete Bayesian modeling by building perimeter of rectangle/space
+    
+    pickle.dump( bayesian_rectangles, open('./store/' + project_id + '/bayesian_rectangles.p', 'wb') )
+    
+def maxDistanceBetweenExamples(ex):
+    maxD = 0
+    for i in range(1, len(ex)):
+        if maxD < (ex[i] - ex[i-1]):
+            maxD = ex[i] - ex[i-1]
+    return maxD
