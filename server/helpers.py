@@ -167,7 +167,7 @@ def explainFeedback(dirty_sample, project_id, current_iter):
     cell_metadata = pickle.load( open('./store/' + project_id + '/cell_metadata.p', 'rb') )
     start_time = pickle.load( open('./store/' + project_id + '/start_time.p', 'rb') )
     current_time = pickle.load( open('./store/' + project_id + '/current_time.p', 'rb') )
-    true_fds = json.load('./store/' + project_id + '/true_fds.json')
+    # true_fds = json.load('./store/' + project_id + '/true_fds.json')
 
     elapsed_time = current_time - start_time
 
@@ -234,13 +234,10 @@ def explainFeedback(dirty_sample, project_id, current_iter):
                 cfd_metadata[c['cfd']]['history'] = list()
                 cfd_metadata[c['cfd']]['weight_history'] = list()
 
-                if c['cfd'] in true_fds.keys() and (cfd_metadata[c['cfd']]['lhs_size'] is None or cfd_metadata[c['cfd']]['support'] is None):
+                if 'lhs_size' not in cfd_metadata[c['cfd']].keys() or 'support' not in cfd_metadata[c['cfd']].keys():
                     lhs = c['cfd'].split(' => ')[0][1:-1].split(', ')
                     cfd_metadata[c['cfd']]['lhs_size'] = len(lhs)
-                    cfd_metadata[c['cfd']]['support'] = true_fds[c['cfd']]['support']
-                elif c['cfd'] not in true_fds.keys():
-                    cfd_metadata[c['cfd']]['lhs_size'] = None
-                    cfd_metadata[c['cfd']]['support'] = None
+                    cfd_metadata[c['cfd']]['support'] = c['support']
 
             cfd_metadata[c['cfd']]['history'].append(CFDScore(iter_num=current_iter, score=c['score'], elapsed_time=elapsed_time))
         print('*** XPlode output processed ***')
@@ -584,16 +581,19 @@ def bayes(project_id, current_iter):
     bayesian_rectangles = pickle.load( open('./store/' + project_id + '/bayesian_rectangles.p', 'rb') )
     # Bayesian modeling code
 
-    observed_examples = [cfd_m for cfd, cfd_m in cfd_metadata.items() if cfd_m['lhs_size'] is not None and cfd_m['support'] is not None and cfd_m['weight'] >= 0.5]
+    # observed_examples = [cfd_m for cfd, cfd_m in cfd_metadata.items() if cfd_m['lhs_size'] is not None and cfd_m['support'] is not None and cfd_m['weight'] >= 0.5]
+    observed_examples = [cfd_m for cfd, cfd_m in cfd_metadata.items() if cfd_m['lhs_size'] is not None and cfd_m['support'] is not None]
+    if len(observed_examples) == 0:
+        return
+
     antecedent_sizes = sorted([o['lhs_size'] for o in observed_examples])
     supports = sorted([o['support'] for o in observed_examples])
     r1 = maxDistanceBetweenExamples(antecedent_sizes)
     r2 = maxDistanceBetweenExamples(supports)
     n = len(observed_examples)
 
-    #TODO: Complete Bayesian modeling by building perimeter of rectangle/space
-    d1 = ((n-1) * lambertw((math.exp((r1 + math.log(2))/(n-1))*r1)/(n-1))) - r1
-    d2 = (25 * (n-1) * lambertw(0.04 * (math.exp(((0.04 * r2) + math.log(2))/(n-1))*r2) / (n-1))) - r2
+    d1 = (((n-1) * lambertw((math.exp((r1 + math.log(2))/(n-1))*r1)/(n-1))) - r1).real
+    d2 = ((25 * (n-1) * lambertw(0.04 * (math.exp(((0.04 * r2) + math.log(2))/(n-1))*r2) / (n-1))) - r2).real
 
     lower_left_x = min(antecedent_sizes)
     lower_left_y = min(supports)
@@ -604,6 +604,7 @@ def bayes(project_id, current_iter):
     s2 = max(supports) - min(supports) + (2 * d2)
 
     bayesian_rectangles.append(BayesianRectangle(current_iter, l1, l2, s1, s2))
+    print(l1, l2, s1, s2)
     
     pickle.dump( bayesian_rectangles, open('./store/' + project_id + '/bayesian_rectangles.p', 'wb') )
     

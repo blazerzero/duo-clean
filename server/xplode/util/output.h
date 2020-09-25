@@ -37,59 +37,17 @@ public:
             int item = items[ix];
             if (item < 0) {
                 std::string attr = db.getAttrName(-1-item);
-                /* attr.erase(std::remove(attr.begin(), attr.end(), '\r'), attr.end());
-                attr.erase(std::remove(attr.begin(), attr.end(), '\t'), attr.end());
-                attr.erase(std::remove(attr.begin(), attr.end(), '\n'), attr.end());
-                char attrEnd = attr.back();
-                if ((int)attrEnd < 65 || (int)attrEnd > 122) {
-                    attr.pop_back();
-                }
-                char attrFront = attr.front();
-                if ((int)attrFront < 65 || (int)attrFront > 122) {
-                    attr = attr.substr(3);
-                } */
                 trim(attr);
                 parts.push_back(attr);
             }
             else if (item == 0) {
                 std::string attr = db.getAttrName(ix);
-                /* attr.erase(std::remove(attr.begin(), attr.end(), '\r'), attr.end());
-                attr.erase(std::remove(attr.begin(), attr.end(), '\t'), attr.end());
-                attr.erase(std::remove(attr.begin(), attr.end(), '\n'), attr.end());
-                char attrEnd = attr.back();
-                if ((int)attrEnd < 65 || (int)attrEnd > 122) {
-                    attr.pop_back();
-                }
-                char attrFront = attr.front();
-                if ((int)attrFront < 65 || (int)attrFront > 122) {
-                    attr = attr.substr(3);
-                } */
                 trim(attr);
                 parts.push_back(attr + "=N/A");
             }
             else {
                 std::string attr = db.getAttrName(db.getAttrIndex(item));
-                /* attr.erase(remove(attr.begin(), attr.end(), '\r'), attr.end());
-                attr.erase(remove(attr.begin(), attr.end(), '\t'), attr.end());
-                attr.erase(remove(attr.begin(), attr.end(), '\n'), attr.end());
-                char attrEnd = attr.back();
-                if ((int)attrEnd < 65 || (int)attrEnd > 122) {
-                    attr.pop_back();
-                }
-                char attrFront = attr.front();
-                if ((int)attrFront < 65 || (int)attrFront > 122) {
-                    attr = attr.substr(3);
-                } */
                 std::string value = db.getValue(item);
-                /* value.erase(remove(value.begin(), value.end(), '\r'), value.end());
-                value.erase(remove(value.begin(), value.end(), '\t'), value.end());
-                value.erase(remove(value.begin(), value.end(), '\n'), value.end());
-                if ((int)value.back() < 65 || (int)value.back() > 122) {
-                    value.pop_back();
-                }
-                if ((int)value.front() < 65 || (int)value.front() > 122) {
-                    value = value.substr(3);
-                } */
                 trim(attr);
                 trim(value);
                 parts.push_back(attr + "=" + value);
@@ -110,7 +68,7 @@ public:
 
     static void printCFDList(const CFDPlusList& cs, const Database& db, std::ostream& out=std::cout, bool endl=true) {
         for (const auto& c : cs) {
-            printCFDWithConfidence(c.first.first, c.first.second, c.second, db, out, endl);
+            printCFDWithConfidence(c.first.first, c.first.second, c.second.first, c.second.second, db, out, endl);
         }
     }
 
@@ -119,7 +77,7 @@ public:
     }
 
     static void printCFD(const CFDPlus& c, const Database& db, std::ostream& out=std::cout, bool endl=true) {
-        printCFDWithConfidence(c.first.first, c.first.second, c.second, db, out, endl);
+        printCFDWithConfidence(c.first.first, c.first.second, c.second.first, c.second.second, db, out, endl);
     }
 
     static void printCFD(const Itemset& lhs, const int rhs, const Database& db, std::ostream& out=std::cout, bool endl=true) {
@@ -140,62 +98,31 @@ public:
         } */
     }
 
-    static void printCFDWithConfidence(const Itemset& lhs, const int rhs, const double conf, const Database& db, std::ostream& out=std::cout, bool endl=true) {
+    static void printCFDWithConfidence(const Itemset& lhs, const int rhs, const double conf, const double support, const Database& db, std::ostream& out=std::cout, bool endl=true) {
         out << "{\"cfd\": \"";
         printItemset(lhs, db, out, false);
         out << " => ";
         if (rhs < 0) {
             std::string rhsAttr = db.getAttrName(-1-rhs);
-            /* rhsAttr.erase(remove(rhsAttr.begin(), rhsAttr.end(), '\r'), rhsAttr.end());
-            rhsAttr.erase(remove(rhsAttr.begin(), rhsAttr.end(), '\t'), rhsAttr.end());
-            rhsAttr.erase(remove(rhsAttr.begin(), rhsAttr.end(), '\n'), rhsAttr.end());
-            char attrEnd = rhsAttr.back();
-            if ((int)attrEnd < 65 || (int)attrEnd > 122) {
-                rhsAttr.pop_back();
-            }
-            char attrFront = rhsAttr.front();
-            if ((int)attrFront < 65 || (int)attrFront > 122) {
-                rhsAttr = rhsAttr.substr(3);
-            } */
             trim(rhsAttr);
             out << rhsAttr;
         }
         else {
             std::string rhsAttr = db.getAttrName(db.getAttrIndex(rhs));
-            /* rhsAttr.erase(remove(rhsAttr.begin(), rhsAttr.end(), '\r'), rhsAttr.end());
-            rhsAttr.erase(remove(rhsAttr.begin(), rhsAttr.end(), '\t'), rhsAttr.end());
-            rhsAttr.erase(remove(rhsAttr.begin(), rhsAttr.end(), '\n'), rhsAttr.end());
-            char attrEnd = rhsAttr.back();
-            if ((int)attrEnd < 65 || (int)attrEnd > 122) {
-                rhsAttr.pop_back();
-            }
-            char attrFront = rhsAttr.front();
-            if ((int)attrFront < 65 || (int)attrFront > 122) {
-                rhsAttr = rhsAttr.substr(3);
-            } */
             std::string rhsValue = db.getValue(rhs);
-            /* rhsValue.erase(remove(rhsValue.begin(), rhsValue.end(), '\r'), rhsValue.end());
-            rhsValue.erase(remove(rhsValue.begin(), rhsValue.end(), '\t'), rhsValue.end());
-            rhsValue.erase(remove(rhsValue.begin(), rhsValue.end(), '\n'), rhsValue.end());
-            if ((int)rhsValue.back() < 65 || (int)rhsValue.back() > 122) {
-                rhsValue.pop_back();
-            }
-            if ((int)rhsValue.front() < 65 || (int)rhsValue.front() > 122) {
-                rhsValue = rhsValue.substr(3);
-            } */
             trim(rhsAttr);
             trim(rhsValue);
             out << (rhsAttr + '=' + rhsValue);
         }
         out << "\", ";
-        out << ("\"score\": " + std::to_string(conf) + "},");
+        out << ("\"score\": " + std::to_string(conf) + ", \"support\": " + std::to_string(support) + "},");
         /* if (endl) {
             out << std::endl;
         } */
     }
 
-    static bool sortByConfidence(const std::pair<CFD, double> &a, const std::pair<CFD, double> &b) {
-        return (a.second > b.second);
+    static bool sortByConfidence(const std::pair<CFD, Metrics> &a, const std::pair<CFD, Metrics> &b) {
+        return (a.second.first > b.second.first);
     }
 
     static std::string& ltrim(std::string& str, const std::string& chars = "\t\n\v\f\r\xef\xbb\xbf ") {

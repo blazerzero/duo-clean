@@ -123,7 +123,7 @@ class Import(Resource):
         pickle.dump( current_iter, open(new_project_dir + '/current_iter.p', 'wb') )
         pickle.dump( study_metrics, open(new_project_dir + '/study_metrics.p', 'wb') )
         pickle.dump( start_time, open(new_project_dir + '/start_time.p', 'wb') )
-        pickle.dump( bayesian_rectangles, open('./store/' + new_project_dir + '/bayesian_rectangles.p', 'wb') )
+        pickle.dump( bayesian_rectangles, open(new_project_dir + '/bayesian_rectangles.p', 'wb') )
 
         print('*** Metadata and study metric objects saved ***')
 
@@ -306,6 +306,7 @@ class Clean(Resource):
             print('*** Tuples reinforced based on interaction metrics ***')
         if sampling_method == 'DUO':
             helpers.reinforceTuplesBasedOnDependencies(data, project_id, current_iter, is_new_feedback, project_info)
+            helpers.bayes(project_id, current_iter)
             print('*** Tuples reinforced based on FD/CFD weights ***')
 
         # Build sample

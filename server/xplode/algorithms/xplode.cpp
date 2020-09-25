@@ -533,7 +533,8 @@ CFDPlusList XPlode::postExplain(int minsup, double minconf, bool variable) {
                                 if (dirtyConf < conf-(1.0/fDb.size())) {
                                     // globalExplanations.emplace_back(sub, out);
                                     CFD subAsCFD = std::make_pair(sub, out);
-                                    globalExplanationsPlus.emplace_back(subAsCFD, conf);
+                                    Metrics m = std::make_pair(conf, support(storedSub->second));
+                                    globalExplanationsPlus.emplace_back(subAsCFD, m);
                                     violations[cfd] = vios;
                                     fCPMap[cfd] = convertCFD(sub, out, inode.fTids);
                                 }
@@ -555,7 +556,8 @@ CFDPlusList XPlode::postExplain(int minsup, double minconf, bool variable) {
                                 if (dirtyConf < conf) {
                                     // globalExplanations.emplace_back(sub, out);
                                     CFD subAsCFD = std::make_pair(sub, out);
-                                    globalExplanationsPlus.emplace_back(subAsCFD, conf);
+                                    Metrics m = std::make_pair(conf, support(storedSub->second));
+                                    globalExplanationsPlus.emplace_back(subAsCFD, m);
                                     violations[cfd] = vios;
                                     auto sSub = sub;
                                     std::sort(sSub.begin(), sSub.end(),

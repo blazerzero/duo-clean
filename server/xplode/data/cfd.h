@@ -6,7 +6,8 @@
 #include "../util/stringutil.h"
 
 typedef std::pair<Itemset, int> CFD;
-typedef std::pair<CFD, double> CFDPlus;
+typedef std::pair<double, double> Metrics;
+typedef std::pair<CFD, Metrics> CFDPlus;
 typedef std::vector<CFD> CFDList;
 typedef std::vector<CFDPlus> CFDPlusList;
 
