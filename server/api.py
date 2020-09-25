@@ -112,6 +112,8 @@ class Import(Resource):
 
         start_time = time.time()
 
+        bayesian_rectangles = list()
+
         print('*** Metadata and study metric objects initialized ***')
 
         # Save metadata
@@ -121,7 +123,8 @@ class Import(Resource):
         pickle.dump( current_iter, open(new_project_dir + '/current_iter.p', 'wb') )
         pickle.dump( study_metrics, open(new_project_dir + '/study_metrics.p', 'wb') )
         pickle.dump( start_time, open(new_project_dir + '/start_time.p', 'wb') )
-        
+        pickle.dump( bayesian_rectangles, open('./store/' + new_project_dir + '/bayesian_rectangles.p', 'wb') )
+
         print('*** Metadata and study metric objects saved ***')
 
         # Return information to the user

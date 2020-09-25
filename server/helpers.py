@@ -10,6 +10,7 @@ import csv
 import pickle
 import math
 import statistics
+from scipy.special import lambertw
 from collections import Counter
 
 class CellFeedback(object):
@@ -588,8 +589,21 @@ def bayes(project_id, current_iter):
     supports = sorted([o['support'] for o in observed_examples])
     r1 = maxDistanceBetweenExamples(antecedent_sizes)
     r2 = maxDistanceBetweenExamples(supports)
+    n = len(observed_examples)
 
     #TODO: Complete Bayesian modeling by building perimeter of rectangle/space
+    d1 = ((n-1) * lambertw((math.exp((r1 + math.log(2))/(n-1))*r1)/(n-1))) - r1
+    d2 = (25 * (n-1) * lambertw(0.04 * (math.exp(((0.04 * r2) + math.log(2))/(n-1))*r2) / (n-1))) - r2
+
+    lower_left_x = min(antecedent_sizes)
+    lower_left_y = min(supports)
+    l1 = lower_left_x - d1
+    l2 = lower_left_y - d2
+
+    s1 = max(antecedent_sizes) - min(antecedent_sizes) + (2 * d1)
+    s2 = max(supports) - min(supports) + (2 * d2)
+
+    bayesian_rectangles.append(BayesianRectangle(current_iter, l1, l2, s1, s2))
     
     pickle.dump( bayesian_rectangles, open('./store/' + project_id + '/bayesian_rectangles.p', 'wb') )
     
