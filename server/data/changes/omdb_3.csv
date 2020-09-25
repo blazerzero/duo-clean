@@ -1,30 +1,20 @@
-70.rating,TV-MA,TV-14
-98.rating,PG,TV-14
-91.rating,Not Rated,TV-14
-99.year,2014,2013
-29.year,2014,2013
-30.year,2014,2013
-67.year,2013,2014
-99.rating,R,TV-14
-73.year,2014,2013
-67.rating,PG-13,TV-MA
+84.rating,Not Rated,TV-14
+79.rating,PG,R
+78.rating,TV-MA,PG
+70.rating,R,TV-14
+91.rating,PG,TV-14
+73.rating,TV-PG,TV-14
+66.rating,PG-13,TV-MA
+77.rating,TV-MA,R
+29.rating,Not Rated,TV-14
+99.rating,TV-PG,TV-14
+67.rating,TV-PG,TV-MA
+30.rating,PG-13,TV-14
+49.rating,R,TV-14
 50.rating,R,PG-13
-84.rating,TV-MA,TV-14
-89.rating,Not Rated,TV-14
-42.year,2014,2013
-79.year,2013,2014
-74.year,2014,2013
-95.rating,PG,TV-14
-66.year,2013,2014
-82.rating,PG,R
-95.year,2014,2013
-88.year,2014,2013
-74.rating,TV-14,PG-13
-88.rating,Not Rated,TV-14
-62.year,2014,2013
-78.year,2014,2013
-77.rating,PG,R
-73.rating,R,TV-14
-57.year,2013,2014
-49.rating,Not Rated,TV-14
-70.year,2013,2014
+42.rating,PG-13,R
+23.rating,R,TV-MA
+62.rating,PG-13,TV-14
+74.rating,TV-MA,PG-13
+88.rating,PG,TV-14
+82.rating,TV-14,R

@@ -23,14 +23,10 @@
     <dependencies>
 <![CDATA[
 DCs:
-// FD1: (title, director) -> rating
+// FD1: (title, year, director) -> rating
 e1: omdb_3(title: $t1, year: $y1, rating: $r1, director: $d1), 
 omdb_3(title: $t2, year: $y2, rating: $r2, director: $d2), 
-    $t1 == $t2, $d1 == $d2, $r1 != $r2 -> #fail.
-// FD2: (title, director) -> year
-e2: omdb_3(title: $t1, year: $y1, rating: $r1, director: $d1), 
-omdb_3(title: $t2, year: $y2, rating: $r2, director: $d2), 
-    $t1 == $t2, $d1 == $d2, $y1 != $y2 -> #fail.
+    $t1 == $t2, $y1 == $y2, $d1 == $d2, $r1 != $r2 -> #fail.
 ]]>
     </dependencies>
 
@@ -88,24 +84,16 @@ omdb_3(title: $t2, year: $y2, rating: $r2, director: $d2),
                     <percentage>0.0</percentage> 
                 </vioGenQuery>
                 <vioGenQuery id="e1">
+                    <comparison>(y1 == y2)</comparison>
+                    <percentage>0.0</percentage> 
+                </vioGenQuery>
+                <vioGenQuery id="e1">
                     <comparison>(d1 == d2)</comparison>
                     <percentage>0.0</percentage> 
                 </vioGenQuery>
                 <vioGenQuery id="e1">
                     <comparison>(r1 != r2)</comparison>
-                    <percentage>15.0</percentage> 
-                </vioGenQuery>
-                <vioGenQuery id="e2">
-                    <comparison>(t1 == t2)</comparison>
-                    <percentage>0.0</percentage> 
-                </vioGenQuery>
-                <vioGenQuery id="e2">
-                    <comparison>(d1 == d2)</comparison>
-                    <percentage>0.0</percentage> 
-                </vioGenQuery>
-                <vioGenQuery id="e2">
-                    <comparison>(y1 != y2)</comparison>
-                    <percentage>15.0</percentage> 
+                    <percentage>20.0</percentage> 
                 </vioGenQuery>
             </vioGenQueries>
         </errorPercentages>
@@ -117,9 +105,6 @@ omdb_3(title: $t2, year: $y2, rating: $r2, director: $d2),
             </defaultStrategy> 
             <attributeStrategy>
                 <attribute table="omdb_3" name="rating">
-                    <strategy>TypoActiveDomain</strategy>
-                </attribute>
-                <attribute table="omdb_3" name="year">
                     <strategy>TypoActiveDomain</strategy>
                 </attribute>
             </attributeStrategy>

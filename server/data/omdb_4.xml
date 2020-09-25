@@ -23,8 +23,16 @@
     <dependencies>
 <![CDATA[
 DCs:
-// FD: (listingnumber) -> director
+// FD1: (listingnumber) -> title
 e1: omdb_4(listingnumber: $ln1, title: $t1, year: $y1, director: $d1), 
+omdb_4(listingnumber: $ln2, title: $t2, year: $y2, director: $d2), 
+    $ln1 == $ln2, $t1 != $t2 -> #fail.
+// FD2: (listingnumber) -> year
+e2: omdb_4(listingnumber: $ln1, title: $t1, year: $y1, director: $d1), 
+omdb_4(listingnumber: $ln2, title: $t2, year: $y2, director: $d2), 
+    $ln1 == $ln2, $y1 != $y2 -> #fail.
+// FD3: (listingnumber) -> director
+e3: omdb_4(listingnumber: $ln1, title: $t1, year: $y1, director: $d1), 
 omdb_4(listingnumber: $ln2, title: $t2, year: $y2, director: $d2), 
     $ln1 == $ln2, $d1 != $d2 -> #fail.
 ]]>
@@ -84,8 +92,24 @@ omdb_4(listingnumber: $ln2, title: $t2, year: $y2, director: $d2),
                     <percentage>0.0</percentage> 
                 </vioGenQuery>
                 <vioGenQuery id="e1">
+                    <comparison>(t1 != t2)</comparison>
+                    <percentage>10.0</percentage> 
+                </vioGenQuery>
+                <vioGenQuery id="e2">
+                    <comparison>(ln1 == ln2)</comparison>
+                    <percentage>0.0</percentage> 
+                </vioGenQuery>
+                <vioGenQuery id="e2">
+                    <comparison>(y1 != y2)</comparison>
+                    <percentage>10.0</percentage> 
+                </vioGenQuery>
+                <vioGenQuery id="e3">
+                    <comparison>(ln1 == ln2)</comparison>
+                    <percentage>0.0</percentage> 
+                </vioGenQuery>
+                <vioGenQuery id="e3">
                     <comparison>(d1 != d2)</comparison>
-                    <percentage>20.0</percentage> 
+                    <percentage>10.0</percentage> 
                 </vioGenQuery>
             </vioGenQueries>
         </errorPercentages>
@@ -96,7 +120,10 @@ omdb_4(listingnumber: $ln2, title: $t2, year: $y2, director: $d2),
                 <strategy charsToSwitch="3">TypoSwitchValue</strategy>
             </defaultStrategy> 
             <attributeStrategy>
-                <attribute table="omdb_4" name="listingnumber">
+                <attribute table="omdb_4" name="title">
+                    <strategy>TypoActiveDomain</strategy>
+                </attribute>
+                <attribute table="omdb_4" name="year">
                     <strategy>TypoActiveDomain</strategy>
                 </attribute>
                 <attribute table="omdb_4" name="director">
