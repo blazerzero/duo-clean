@@ -112,6 +112,11 @@ class Import(Resource):
 
         start_time = time.time()
 
+        modeling_metadata = dict()
+        modeling_metadata['p_X_given_h'] = dict()
+        modeling_metadata['X'] = list()
+        modeling_metadata['y_supp_h'] = dict()
+
         print('*** Metadata and study metric objects initialized ***')
 
         # Save metadata
@@ -121,6 +126,7 @@ class Import(Resource):
         pickle.dump( current_iter, open(new_project_dir + '/current_iter.p', 'wb') )
         pickle.dump( study_metrics, open(new_project_dir + '/study_metrics.p', 'wb') )
         pickle.dump( start_time, open(new_project_dir + '/start_time.p', 'wb') )
+        pickle.dump( modeling_metadata, open(new_project_dir + '/modeling_metadata.p', 'wb') )
 
         print('*** Metadata and study metric objects saved ***')
 
@@ -154,7 +160,7 @@ class Sample(Resource):
         sampling_method = project_info['scenario']['sampling_method']
         
         # Build sample and update tuple weights post-sampling
-        s_out = helpers.buildSample(data, sample_size, project_id, sampling_method)
+        s_out = helpers.buildSample(data, sample_size, project_id, sampling_method, current_iter=0)
         s_out_dict = list(s_out.T.to_dict().values())
         s_out_header = s_out_dict[0].keys()
         with open('./store/' + project_id + '/current_sample.csv', 'w', newline='') as f:
@@ -276,6 +282,7 @@ class Clean(Resource):
             s_in = data.iloc[feedback.index]
             print('*** Extracted sample from dataset ***')
             helpers.explainFeedback(s_in, project_id, current_iter)
+            helpers.buildCovers(data, project_id, current_iter)
             print('*** XPlode completed and FD/CFD weights updated ***')
 
         # Run CFD discovery algorithm to determine confidence of relevant CFD(s)
@@ -298,15 +305,15 @@ class Clean(Resource):
         # Update tuple weights pre-sampling
         sampling_method = project_info['scenario']['sampling_method']
         print('*** Sampling method retrieved ***')
-        if sampling_method != 'RANDOM-PURE':
-            helpers.reinforceTuplesBasedOnInteraction(data, project_id, current_iter, is_new_feedback)
-            print('*** Tuples reinforced based on interaction metrics ***')
-        if sampling_method == 'DUO':
-            helpers.reinforceTuplesBasedOnDependencies(data, project_id, current_iter, is_new_feedback, project_info)
-            print('*** Tuples reinforced based on FD/CFD weights ***')
+        # if sampling_method != 'RANDOM-PURE':
+        #     helpers.reinforceTuplesBasedOnInteraction(data, project_id, current_iter, is_new_feedback)
+        #     print('*** Tuples reinforced based on interaction metrics ***')
+        # if sampling_method == 'DUO':
+        #     helpers.reinforceTuplesBasedOnDependencies(data, project_id, current_iter, is_new_feedback, project_info)
+        #     print('*** Tuples reinforced based on FD/CFD weights ***')
 
         # Build sample
-        s_out = helpers.buildSample(data, sample_size, project_id, sampling_method)
+        s_out = helpers.buildSample(data, sample_size, project_id, sampling_method, current_iter)
         s_out_dict = list(s_out.T.to_dict().values())
         s_out_header = s_out_dict[0].keys()
         with open('./store/' + project_id + '/current_sample.csv', 'w', newline='') as f:
