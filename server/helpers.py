@@ -42,14 +42,6 @@ class StudyMetric(object):
         self.value = value
         self.elapsed_time = elapsed_time
 
-class BayesianRectangle(object):
-    def __init__(self, iter_num, l1, l2, s1, s2):
-        self.iter_num = iter_num
-        self.l1 = l1
-        self.l2 = l2
-        self.s1 = s1
-        self.s2 = s2
-
 # SAVE NOISE FEEDBACK FROM USER
 def saveNoiseFeedback(data, feedback, project_id, current_iter):
     cell_metadata = pickle.load( open('./store/' + project_id + '/cell_metadata.p', 'rb') )
@@ -575,42 +567,3 @@ def getUserScores(project_id):
     with open('./store/' + project_id + '/project_info.json') as f:
         project_info = json.load(f)
     return project_info['true_pos'], project_info['false_pos']
-
-def bayes(project_id, current_iter):
-    cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
-    bayesian_rectangles = pickle.load( open('./store/' + project_id + '/bayesian_rectangles.p', 'rb') )
-    # Bayesian modeling code
-
-    # observed_examples = [cfd_m for cfd, cfd_m in cfd_metadata.items() if cfd_m['lhs_size'] is not None and cfd_m['support'] is not None and cfd_m['weight'] >= 0.5]
-    observed_examples = [cfd_m for cfd, cfd_m in cfd_metadata.items() if cfd_m['lhs_size'] is not None and cfd_m['support'] is not None]
-    if len(observed_examples) == 0:
-        return
-
-    antecedent_sizes = sorted([o['lhs_size'] for o in observed_examples])
-    supports = sorted([o['support'] for o in observed_examples])
-    r1 = maxDistanceBetweenExamples(antecedent_sizes)
-    r2 = maxDistanceBetweenExamples(supports)
-    n = len(observed_examples)
-
-    d1 = (((n-1) * lambertw((math.exp((r1 + math.log(2))/(n-1))*r1)/(n-1))) - r1).real
-    d2 = ((25 * (n-1) * lambertw(0.04 * (math.exp(((0.04 * r2) + math.log(2))/(n-1))*r2) / (n-1))) - r2).real
-
-    lower_left_x = min(antecedent_sizes)
-    lower_left_y = min(supports)
-    l1 = lower_left_x - d1
-    l2 = lower_left_y - d2
-
-    s1 = max(antecedent_sizes) - min(antecedent_sizes) + (2 * d1)
-    s2 = max(supports) - min(supports) + (2 * d2)
-
-    bayesian_rectangles.append(BayesianRectangle(current_iter, l1, l2, s1, s2))
-    print(l1, l2, s1, s2)
-    
-    pickle.dump( bayesian_rectangles, open('./store/' + project_id + '/bayesian_rectangles.p', 'wb') )
-    
-def maxDistanceBetweenExamples(ex):
-    maxD = 0
-    for i in range(1, len(ex)):
-        if maxD < (ex[i] - ex[i-1]):
-            maxD = ex[i] - ex[i-1]
-    return maxD
