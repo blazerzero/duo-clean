@@ -163,6 +163,8 @@ def explainFeedback(dirty_sample, project_id, current_iter):
 
     elapsed_time = current_time - start_time
 
+    modeling_metadata = pickle.load( open('./store/' + project_id + '/modeling_metadata.p', 'rb') )
+
     print('*** Cell metadata object loaded ***')
 
     dirty_sample = dirty_sample.applymap(str)
@@ -222,6 +224,8 @@ def explainFeedback(dirty_sample, project_id, current_iter):
         accepted_cfds = [c for c in cfds if c['cfd'].split(' => ')[0] != '()']
         for c in accepted_cfds:
             if c['cfd'] not in cfd_metadata.keys():
+                modeling_metadata['p_h']['hUniform'][c['cfd']] = None
+                #TODO: SAME THING FOR OTHER HEURISTICS FOR p(h)
                 cfd_metadata[c['cfd']] = dict()
                 cfd_metadata[c['cfd']]['history'] = list()
                 cfd_metadata[c['cfd']]['weight_history'] = list()
@@ -234,6 +238,7 @@ def explainFeedback(dirty_sample, project_id, current_iter):
             cfd_metadata[c['cfd']]['history'].append(CFDScore(iter_num=current_iter, score=c['score'], elapsed_time=elapsed_time))
         print('*** XPlode output processed ***')
 
+        pickle.dump( modeling_metadata, open('./store/' + project_id + '/modeling_metadata.p', 'wb') )
         pickle.dump( cfd_metadata, open('./store/' + project_id + '/cfd_metadata.p', 'wb') )
         print('*** CFD metadata updates saved ***')
     
@@ -510,6 +515,8 @@ def samplingRandomPure(data, sample_size, project_id, current_iter):
     else:
         new_X = modeling_metadata['X'][-1].value | set(s_out)
     modeling_metadata['X'].append(StudyMetric(iter_num=current_iter, value=new_X, elapsed_time=elapsed_time))
+    # modeling_metadata['Y'].append(StudyMetric(iter_num=current_iter, value=set(s_out), elapsed_time=elapsed_time))
+
     for cfd, cfd_m in cfd_metadata.items():
         # p(X | h)
         if cfd not in modeling_metadata['p_X_given_h'].keys():

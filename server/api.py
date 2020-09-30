@@ -117,7 +117,9 @@ class Import(Resource):
         modeling_metadata = dict()
         modeling_metadata['p_X_given_h'] = dict()
         modeling_metadata['X'] = list()
+        modeling_metadata['Y'] = list()
         modeling_metadata['y_supp_h'] = dict()
+        modeling_metadata['p_h'] = dict()
 
         print('*** Metadata and study metric objects initialized ***')
 
