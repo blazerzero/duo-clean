@@ -147,7 +147,7 @@ class Sample(Resource):
 
     def post(self):
         project_id = request.form.get('project_id')
-        sample_size = 5
+        sample_size = 10
         with open('./store/' + project_id + '/project_info.json') as f:
             project_info = json.load(f)
 
@@ -254,7 +254,7 @@ class Clean(Resource):
         feedback = json.loads(request.form.get('feedback'))
         is_new_feedback = int(request.form.get('is_new_feedback'))
         feedback = pd.DataFrame.from_dict(feedback, orient='index')
-        sample_size = 5
+        sample_size = 10
 
         print('*** Necessary objects loaded ***')
 
