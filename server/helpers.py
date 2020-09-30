@@ -426,8 +426,7 @@ def buildCovers(data, project_id, current_iter):
 
     elapsed_time = current_time - start_time
 
-    for cfd, cfd_m in cfd_metadata:
-        cfd_m = cfd_metadata[cfd]
+    for cfd, cfd_m in cfd_metadata.items():
         if 'cover' not in cfd_m.keys() or 'violations' not in cfd_m.keys():
             cfd_m['cover'] = list()
             cfd_m['violations'] = list()
@@ -506,9 +505,12 @@ def samplingRandomPure(data, sample_size, project_id, current_iter):
     print('Sampling method: RANDOM-PURE')
     s_out = returnTuples(data, sample_size, project_id)
     
-    new_X = modeling_metadata['X'][-1].value | s_out
+    if current_iter == 0:
+        new_X = set(s_out)
+    else:
+        new_X = modeling_metadata['X'][-1].value | set(s_out)
     modeling_metadata['X'].append(StudyMetric(iter_num=current_iter, value=new_X, elapsed_time=elapsed_time))
-    for cfd, cfd_m in cfd_metadata:
+    for cfd, cfd_m in cfd_metadata.items():
         # p(X | h)
         if cfd not in modeling_metadata['p_X_given_h'].keys():
             modeling_metadata['p_X_given_h'][cfd] = list()
@@ -519,7 +521,7 @@ def samplingRandomPure(data, sample_size, project_id, current_iter):
     
         # I(y is supported by h)
         if cfd not in modeling_metadata['y_supp_h'].keys():
-            modeling_metadata['y_supp_h'][cfd] = list()
+            modeling_metadata['y_supp_h'][cfd] = dict()
         for y in s_out:
             if y not in modeling_metadata['y_supp_h'][cfd].keys():
                 modeling_metadata['y_supp_h'][cfd][y] = list()

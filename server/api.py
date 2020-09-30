@@ -63,7 +63,9 @@ class Import(Resource):
             'participant_name': participant_name,
             'scenario_id': scenario_id,
             'scenario': scenario,
-            'score': 0
+            'score': 0,
+            'true_pos': 0,
+            'false_pos': 0
         }
         with open(new_project_dir + '/project_info.json', 'w') as f:
             json.dump(project_info, f)
