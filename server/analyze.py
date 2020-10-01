@@ -86,7 +86,10 @@ def bayes(sampling_method):
                             p_h_given_X = phgx.value
                             i_y_supp_h = bayes_modeling_metadata['y_supp_h'][h][y]  # I(y in supp(h))
                             p_y_in_C_given_X += (i_y_supp_h * p_h_given_X)
+                            print('p(y in C | X) =', p_y_in_C_given_X)
+                            
                         p_Y_in_C_given_X *= p_y_in_C_given_X
+                        print('p(Y in C | X) =', p_Y_in_C_given_X)
                     
                     bayes_modeling_metadata['p_Y_in_C_given_X'][heur].append(StudyMetric(iter_num=it, value=p_Y_in_C_given_X, elapsed_time=elapsed_time))
 
@@ -111,18 +114,19 @@ def max_likelihood(sampling_method):
         min_modeling_metadata = modeling_metadata
         min_modeling_metadata['p_Y_in_C_given_X'] = dict()
         iter_count = pickle.load( open('./store/' + project_id + '/current_iter.p', 'rb') )
-        
-        # p(h)
+
+        # P(h)        
         for cfd in cfd_metadata.keys():
             # UNIFORM ATTRIBUTE WEIGHTS
-            wUniform = wHeuristicUniform(cfd)
+            wUniform = wHeuristicUniform(cfd)   # p(h)
             phUniform = np.prod([v for _, v in wUniform.items()])
             min_modeling_metadata['p_h']['hUniform'][cfd] = phUniform
 
         for heur in min_modeling_metadata['p_h'].keys():
             min_modeling_metadata['p_Y_in_C_given_X'][heur] = list()
             for it in range(1, iter_count+1):
-                discovered_cfds = [cfd for cfd in min_modeling_metadata['p_X_given_h'].keys() if min_modeling_metadata['p_X_given_h'][cfd][0].iter_num == it]
+                elapsed_time = min_modeling_metadata['Y'][it].elapsed_time
+                discovered_cfds = [cfd for cfd in min_modeling_metadata['p_X_given_h'].keys() if it in [x.iter_num for x in min_modeling_metadata['p_X_given_h'][cfd]]]
                 if len(discovered_cfds) == 0:
                     # P(Y in C | X)
                     min_modeling_metadata['p_Y_in_C_given_X'][heur].append(StudyMetric(iter_num=it, value=0, elapsed_time=elapsed_time))
@@ -138,18 +142,24 @@ def max_likelihood(sampling_method):
                             h_ML = cfd
                 
                     # p(h_ML | X)
-                    elem = [x for x in min_modeling_metadata['p_X_given_h'][cfd] if x.iter_num == it].pop()
-                    elapsed_time = elem.elapsed_time
-                    p_X_given_h = elem.value
-                    p_h = min_modeling_metadata['p_h'][heur][h_ML]
-                    p_h_ML_given_X = p_X_given_h * p_h
+                    elem = [x for x in min_modeling_metadata['p_X_given_h'][h_ML] if x.iter_num == it].pop()
+                    p_X_given_h_ML = elem.value
+                    p_h_ML = min_modeling_metadata['p_h'][heur][h_ML]
+                    p_h_ML_given_X = p_X_given_h_ML * p_h_ML
 
                     # p(Y in C | X)
                     p_Y_in_C_given_X = 1
-                    for y in min_modeling_metadata['y_supp_h'][h_ML].keys():
-                        i_y_supp_h = [x.value for x in min_modeling_metadata['y_supp_h'][h_ML][y] if x.iter_num == it].pop()    # I(y in supp(h))
-                        p_y_in_C_given_X = i_y_supp_h * p_h_ML_given_X  # p(y in C | X)
+                    for y in min_modeling_metadata['Y'][it-1].value:
+                        # p_y_in_C_given_X = 0 # p(y in C | X)
+                        # for phgx in p_h_given_X_list:
+                            # h = phgx.h
+                            # p_h_given_X = phgx.value
+                        i_y_supp_h_ML = min_modeling_metadata['y_supp_h'][h_ML][y]  # I(y in supp(h_ML))
+                        p_y_in_C_given_X = (i_y_supp_h_ML * p_h_ML_given_X)
+                        print('p(y in C | X) =', p_y_in_C_given_X)
                         p_Y_in_C_given_X *= p_y_in_C_given_X
+                        print('p(Y in C | X) =', p_Y_in_C_given_X)
+                    
                     min_modeling_metadata['p_Y_in_C_given_X'][heur].append(StudyMetric(iter_num=it, value=p_Y_in_C_given_X, elapsed_time=elapsed_time))
 
         pickle.dump( min_modeling_metadata, open('./store/' + project_id + '/min_modeling_metadata.p', 'wb') )
