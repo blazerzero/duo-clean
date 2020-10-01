@@ -73,7 +73,7 @@ def bayes(sampling_method):
                     for y in bayes_modeling_metadata['y_supp_h'][cfd].keys():
                         p_y_in_C_given_X = 0 # p(y in C | X)
                         for h, p_h_g_X in p_h_given_X_list:
-                            i_y_supp_h = [x.value for x in bayes_modeling_metadata['y_supp_h'][cfd][y] if x.iter_num == it].pop()    # I(y supported by h)
+                            i_y_supp_h = [x.value for x in bayes_modeling_metadata['y_supp_h'][cfd][y] if x.iter_num == it].pop()    # I(y in supp(h))
                             p_y_in_C_given_X += (i_y_supp_h * p_h_g_X)
                         p_Y_in_C_given_X *= p_y_in_C_given_X
                     
@@ -133,7 +133,7 @@ def max_likelihood(sampling_method):
                     # p(Y in C | X)
                     p_Y_in_C_given_X = 1
                     for y in min_modeling_metadata['y_supp_h'][cfd].keys():
-                        i_y_supp_h = [x.value for x in min_modeling_metadata['y_supp_h'][cfd][y] if x.iter_num == it].pop()    # I(y supported by h)
+                        i_y_supp_h = [x.value for x in min_modeling_metadata['y_supp_h'][cfd][y] if x.iter_num == it].pop()    # I(y in supp(h))
                         p_y_in_C_given_X = i_y_supp_h * p_h_ML_given_X  # p(y in C | X)
                         p_Y_in_C_given_X *= p_y_in_C_given_X
                     min_modeling_metadata['p_Y_in_C_given_X'][heur].append(StudyMetric(iter_num=it, value=p_Y_in_C_given_X, elapsed_time=elapsed_time))
