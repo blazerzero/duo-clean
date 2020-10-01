@@ -515,14 +515,14 @@ def samplingRandomPure(data, sample_size, project_id, current_iter):
     else:
         new_X = modeling_metadata['X'][-1].value | set(s_out)
     modeling_metadata['X'].append(StudyMetric(iter_num=current_iter, value=new_X, elapsed_time=elapsed_time))
-    # modeling_metadata['Y'].append(StudyMetric(iter_num=current_iter, value=set(s_out), elapsed_time=elapsed_time))
+    modeling_metadata['Y'].append(StudyMetric(iter_num=current_iter, value=set(s_out), elapsed_time=elapsed_time))
 
     for cfd, cfd_m in cfd_metadata.items():
         # p(X | h)
         if cfd not in modeling_metadata['p_X_given_h'].keys():
             modeling_metadata['p_X_given_h'][cfd] = list()
         if set(new_X).issubset(cfd_m['cover'][-1].value):
-            modeling_metadata['p_X_given_h'][cfd].append(StudyMetric(iter_num=current_iter, value=math.pow((1/len(cfd_m['cover'][-1])), len(new_X)), elapsed_time=elapsed_time))
+            modeling_metadata['p_X_given_h'][cfd].append(StudyMetric(iter_num=current_iter, value=math.pow(Decimal(1/len(cfd_m['cover'][-1])), len(new_X)), elapsed_time=elapsed_time))
         else:
             modeling_metadata['p_X_given_h'][cfd].append(StudyMetric(iter_num=current_iter, value=0, elapsed_time=elapsed_time))
     
