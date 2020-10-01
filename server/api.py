@@ -286,8 +286,8 @@ class Clean(Resource):
             print('*** Noise feedback saved ***')
             s_in = data.iloc[feedback.index]
             print('*** Extracted sample from dataset ***')
-            helpers.explainFeedback(s_in, project_id, current_iter)
-            helpers.buildCovers(data, project_id, current_iter)
+            helpers.explainFeedback(data, s_in, project_id, current_iter)
+            # helpers.buildCovers(data, project_id, current_iter)
             print('*** XPlode completed and FD/CFD weights updated ***')
 
         # Run CFD discovery algorithm to determine confidence of relevant CFD(s)

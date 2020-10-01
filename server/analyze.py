@@ -53,7 +53,8 @@ def bayes(sampling_method):
         for heur in bayes_modeling_metadata['p_h'].keys():
             bayes_modeling_metadata['p_Y_in_C_given_X'][heur] = list()
             for it in range(1, iter_count+1):
-                discovered_cfds = [cfd for cfd in bayes_modeling_metadata['p_X_given_h'].keys() if bayes_modeling_metadata['p_X_given_h'][cfd][0].iter_num == it]
+                elapsed_time = bayes_modeling_metadata['Y'][it].elapsed_time
+                discovered_cfds = [cfd for cfd in bayes_modeling_metadata['p_X_given_h'].keys() if it in [x.iter_num for x in bayes_modeling_metadata['p_X_given_h'][cfd]]]
                 if len(discovered_cfds) == 0:
                     # P(Y in C | X)
                     bayes_modeling_metadata['p_Y_in_C_given_X'][heur].append(StudyMetric(iter_num=it, value=0, elapsed_time=elapsed_time))
@@ -64,17 +65,17 @@ def bayes(sampling_method):
                         # p(h | X)
                         elem = [x for x in bayes_modeling_metadata['p_X_given_h'][h] if x.iter_num == it].pop()
                         # print(elem.value)
-                        elapsed_time = elem.elapsed_time
+                        # elapsed_time = elem.elapsed_time
                         p_X_given_h = elem.value
                         p_h = bayes_modeling_metadata['p_h'][heur][h]
                         p_h_given_X = p_X_given_h * p_h
                         p_h_given_X_list.append(PHGivenX(h=h, value=p_h_given_X))
                     
                     # normalized p(h | X) such that sum of all p(h | X) = 1
-                    # print(p_h_given_X_list)
                     p_h_given_X_list_sum = sum([x.value for x in p_h_given_X_list])
                     # print(p_h_given_X_list_sum)
-                    p_h_given_X_list = [PHGivenX(h=x.h, value=(x.value/p_h_given_X_list_sum)) for x in p_h_given_X_list]
+                    p_h_given_X_list = [PHGivenX(h=x.h, value=((x.value/p_h_given_X_list_sum) if x.value > 0 else 0)) for x in p_h_given_X_list]
+                    print([x.value for x in p_h_given_X_list])
 
                     # p(Y in C | X)
                     p_Y_in_C_given_X = 1
@@ -83,7 +84,7 @@ def bayes(sampling_method):
                         for phgx in p_h_given_X_list:
                             h = phgx.h
                             p_h_given_X = phgx.value
-                            i_y_supp_h = [x.value for x in bayes_modeling_metadata['y_supp_h'][h][y] if x.iter_num == it].pop()    # I(y in supp(h))
+                            i_y_supp_h = bayes_modeling_metadata['y_supp_h'][h][y]  # I(y in supp(h))
                             p_y_in_C_given_X += (i_y_supp_h * p_h_given_X)
                         p_Y_in_C_given_X *= p_y_in_C_given_X
                     
