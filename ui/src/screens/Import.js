@@ -56,7 +56,7 @@ class Import extends Component {
       axios.post('http://167.71.155.153:5000/duo/api/resume', formData)
         .then(response => {
           this.setState({ isProcessing: false });
-          var { header, msg, scenario_id, scenario_desc, sample, leaderboard, feedback } = JSON.parse(response.data);
+          var { header, msg, scenario_id, scenario_desc, sample, true_pos, false_pos, feedback } = JSON.parse(response.data);
           console.log(msg);
           if (msg === '[DONE]') {
             alert('You have already completed this interaction!');
@@ -119,7 +119,7 @@ class Import extends Component {
           </Row>
           <div className='body-section content-centered'>
             <div id='importDiv'>
-              <div style={{height: '30vh'}}></div>
+              <div style={{height: '10vh'}}></div>
               <Form noValidate encType='multipart/form-data'>
                 <Row className='content-centered'>
                   <div className='home-header box-blur'>
