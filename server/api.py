@@ -205,6 +205,15 @@ class Resume(Resource):
 
     def post(self):
         project_id = request.form.get('project_id')
+        projects = [d for d in os.listdir('./store') if os.path.isdir(os.path.join('./store/', d))]
+        if project_id not in projects:
+            returned_data = {
+                'msg': '[INVALID PROJECT ID]'
+            }
+            pprint(returned_data)
+            response = json.dumps(returned_data)
+            return response, 400, {'Access-Control-Allow-Origin': '*'}
+            
         s_out = pd.read_csv('./store/' + project_id + '/current_sample.csv', keep_default_na=False)
 
         with open('./store/' + project_id + '/project_info.json') as f:
