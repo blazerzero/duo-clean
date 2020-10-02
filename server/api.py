@@ -212,7 +212,7 @@ class Resume(Resource):
             }
             pprint(returned_data)
             response = json.dumps(returned_data)
-            return response, 400, {'Access-Control-Allow-Origin': '*'}
+            return response, 200, {'Access-Control-Allow-Origin': '*'}
             
         s_out = pd.read_csv('./store/' + project_id + '/current_sample.csv', keep_default_na=False)
 
