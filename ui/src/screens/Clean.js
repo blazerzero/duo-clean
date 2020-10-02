@@ -167,6 +167,10 @@ class Clean extends Component {
     this.setState({ isProcessing: true, interactionDone: true });
   }
 
+  _handleReturnHome = async(history) => {
+    history.push('/duo/');
+  }
+
   componentDidMount() {
     const { header, project_id, scenario_id, scenario_desc, is_resuming, sample, true_pos, false_pos, feedback } = this.props.location;
     this.setState({ header, project_id, scenario_id, scenario_desc }, async() => {
@@ -206,11 +210,11 @@ class Clean extends Component {
           <Modal show={this.state.isProcessing} animation={false} backdrop='static'>
             <Modal.Body>{
               this.state.interactionDone && (
-                <Col md={4} className='content-centered'>
-                  <h4>Thank you for participating! Please see your handout for next steps!</h4>
+                <div className='content-centered'>
+                  <span>Thank you for participating! Please see your handout for next steps!</span>
+                  <br />
                   <div className='results-header box-blur'>
-                    <p><strong>Your Score</strong></p>
-                    <hr />
+                    <p><strong>Your Scores</strong></p>
                     <Table responsive>
                       <thead>
                         <tr>
@@ -226,7 +230,15 @@ class Clean extends Component {
                       </tbody>
                     </Table>
                   </div>
-                </Col>
+                  <br />
+                  <Button
+                    variant='success'
+                    className='btn-round box-blur'
+                    size='lg'
+                    onClick={() => this._handleReturnHome(history)}>
+                    RETURN HOME
+                  </Button>
+                </div>
               )}
               { this.state.interactionDone === false && (
                 <div>
