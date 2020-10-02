@@ -127,33 +127,6 @@ def saveNoiseFeedback(data, feedback, project_id, current_iter):
     return true_error_pct_full
 
 
-# DISCOVER CFDS THAT COULD APPLY OVER DATASET AND THEIR CONFIDENCES
-'''def runCFDDiscovery(num_rows, project_id, current_iter):
-    fp = './store/' + project_id + '/in_progress.csv'
-
-    process = sp.Popen(['./data/cfddiscovery/CFDD', fp, str(0.7*num_rows), '0.7', '4'], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})
-    res = process.communicate()
-    print('res:', res[0])
-
-    if process.returncode == 0 and '[ERROR]' not in res[0].decode('latin-1'):
-        cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
-        output = res[0].decode('latin-1')
-        polished_output = output.replace(',]', ']')
-        cfds = json.loads(polished_output)['cfds']
-        for c in cfds:
-            if c['cfd'] not in cfd_metadata.keys():
-                cfd_metadata[c['cfd']] = dict()
-                cfd_metadata[c['cfd']]['history'] = list()
-            cfd_metadata[c['cfd']]['history'].append(CFDConfidenceHistory(iter_num=current_iter, conf=c['conf']))
-        
-        pickle.dump( cfd_metadata, open('./store/' + project_id + '/cfd_metadata.p', 'wb') )
-    
-        return cfds
-    
-    else:
-        return None'''
-
-
 # DISCOVER CFDs THAT BEST EXPLAIN THE FEEDBACK GIVEN BY THE USER
 def explainFeedback(full_dataset, dirty_sample, project_id, current_iter):
     cell_metadata = pickle.load( open('./store/' + project_id + '/cell_metadata.p', 'rb') )
@@ -162,8 +135,6 @@ def explainFeedback(full_dataset, dirty_sample, project_id, current_iter):
     # true_fds = json.load('./store/' + project_id + '/true_fds.json')
 
     elapsed_time = current_time - start_time
-
-    modeling_metadata = pickle.load( open('./store/' + project_id + '/modeling_metadata.p', 'rb') )
 
     print('*** Cell metadata object loaded ***')
 
@@ -224,8 +195,6 @@ def explainFeedback(full_dataset, dirty_sample, project_id, current_iter):
         accepted_cfds = [c for c in cfds if c['cfd'].split(' => ')[0] != '()']
         for c in accepted_cfds:
             if c['cfd'] not in cfd_metadata.keys():
-                modeling_metadata['p_h']['hUniform'][c['cfd']] = None
-                #TODO: SAME THING FOR OTHER HEURISTICS FOR p(h)
                 cfd_metadata[c['cfd']] = dict()
                 cfd_metadata[c['cfd']]['history'] = list()
                 cfd_metadata[c['cfd']]['weight_history'] = list()
@@ -237,7 +206,6 @@ def explainFeedback(full_dataset, dirty_sample, project_id, current_iter):
             cfd_metadata[c['cfd']]['history'].append(CFDScore(iter_num=current_iter, score=c['score'], elapsed_time=elapsed_time))
         print('*** XPlode output processed ***')
 
-        pickle.dump( modeling_metadata, open('./store/' + project_id + '/modeling_metadata.p', 'wb') )
         pickle.dump( cfd_metadata, open('./store/' + project_id + '/cfd_metadata.p', 'wb') )
         print('*** CFD metadata updates saved ***')
     
@@ -344,7 +312,7 @@ def reinforceTuplesBasedOnDependencies(data, project_id, current_iter, is_new_fe
     # Update tuple weights based on whether tuple violates CFD and confidence of the CFD
     cfd_m = cfd_metadata[cfd]
     lhs = cfd.split(' => ')[0][1:-1]
-    rhs = cfd.split(' => ')[1]
+    # rhs = cfd.split(' => ')[1]
 
     # patterns = fd2cfd(data, lhs, rhs)
     print('*** Transformed FD into CFD pattern set ***')
@@ -424,16 +392,6 @@ def fd2cfd(data, lhs, rhs):
 
 # BUILD COVER AND VIOLATIONS
 def buildCover(data, cfd, project_id, current_iter):
-    # cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
-    # start_time = pickle.load( open('./store/' + project_id + '/start_time.p', 'rb') )
-    # current_time = pickle.load( open('./store/' + project_id + '/current_time.p', 'rb') )
-
-    # elapsed_time = current_time - start_time
-
-    # for cfd, cfd_m in cfd_metadata.items():
-        # if 'cover' not in cfd_m.keys() or 'violations' not in cfd_m.keys():
-            # cfd_m['cover'] = list()
-            # cfd_m['violations'] = list()
     lhs = cfd.split(' => ')[0][1:-1]
     rhs = cfd.split(' => ')[1]
     patterns = fd2cfd(data, lhs, rhs)
@@ -477,12 +435,9 @@ def buildCover(data, cfd, project_id, current_iter):
                 if data.at[idx, rh[0]] != rh[1]:
                     violations.append(idx)
         
-        # cfd_m['cover'].append(StudyMetric(iter_num=current_iter, value=set(cover), elapsed_time=elapsed_time))
-        # cfd_m['violations'].append(StudyMetric(iter_num=current_iter, value=set(violations), elapsed_time=elapsed_time))
         pprint('Cover for (' + lhs + ') => ' + rhs + ':' + repr(cover))
         pprint('Violations for (' + lhs + ') => ' + rhs + ':' + repr(violations))
     print('*** Cover and violations built ***')
-    # pickle.dump( cfd_metadata, open('./store/' + project_id + '/cfd_metadata.p', 'wb') )
     return set(cover), set(violations)
 
 # BUILD SAMPLE
@@ -508,39 +463,33 @@ def samplingRandomPure(data, sample_size, project_id, current_iter):
     
     print('Sampling method: RANDOM-PURE')
     # GET SAMPLE
-    s_out = returnTuples(data, sample_size, project_id)
+    s_out = returnTuples(data, sample_size, project_id)     # Y = set(s_out.index)
 
     # MODELING METRICS
     if current_iter == 0:
-        new_X = set(s_out.index)
+        new_X = set(s_out.index)    # X is just being created --> X = set(s_out.index)
     else:
-        new_X = modeling_metadata['X'][-1].value | set(s_out.index)
+        new_X = modeling_metadata['X'][-1].value | set(s_out.index)     # X = X | set(s_out.index)
     modeling_metadata['X'].append(StudyMetric(iter_num=current_iter, value=new_X, elapsed_time=elapsed_time))
     modeling_metadata['Y'].append(StudyMetric(iter_num=current_iter, value=set(s_out.index), elapsed_time=elapsed_time))
 
     for cfd, cfd_m in cfd_metadata.items():
         # p(X | h)
-        if cfd not in modeling_metadata['p_X_given_h'].keys():
+        if cfd not in modeling_metadata['p_X_given_h'].keys():  # cfd was just discovered in this iteration
             modeling_metadata['p_X_given_h'][cfd] = list()
         print(cfd_m['cover'])
         print(set(new_X))
         if set(new_X).issubset(cfd_m['cover']):
-            p_X_given_h = math.pow((1/len(cfd_m['cover'])), sample_size)
+            p_X_given_h = math.pow((1/len(new_X)), sample_size) # p(X | h) = PI_i (p(x_i | h)), where each x_i is in X
             modeling_metadata['p_X_given_h'][cfd].append(StudyMetric(iter_num=current_iter, value=p_X_given_h, elapsed_time=elapsed_time))
         else:
             modeling_metadata['p_X_given_h'][cfd].append(StudyMetric(iter_num=current_iter, value=0, elapsed_time=elapsed_time))
     
         # I(y in supp(h))
-        if cfd not in modeling_metadata['y_supp_h'].keys():
+        if cfd not in modeling_metadata['y_supp_h'].keys():     # cfd was just discovered in this iteration
             modeling_metadata['y_supp_h'][cfd] = dict()
             for y in data.index:
-                modeling_metadata['y_supp_h'][cfd][y] = 1 if y in cfd_m['cover'] else 0
-            # if y not in modeling_metadata['y_supp_h'][cfd].keys():
-            #     modeling_metadata['y_supp_h'][cfd][y] = list()
-            # if y in cfd_m['cover'][-1].value:
-            #     modeling_metadata['y_supp_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=1, elapsed_time=elapsed_time))
-            # else:
-            #     modeling_metadata['y_supp_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=0, elapsed_time=elapsed_time))
+                modeling_metadata['y_supp_h'][cfd][y] = 1 if y in cfd_m['cover'] else 0     # I(y in supp(h)) = 1 if y is supported by the cfd, otherwise 0
     
     print('IDs of tuples in next sample:')
     for idx in s_out.index:
