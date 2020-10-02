@@ -16,15 +16,15 @@ class HeuristicClassifier(object):
         self.values = values
         self.color = color
 
-def plot_bayes(sampling_method):
+def plot_modeling(modeling_method, sampling_method):
     with open('scenarios.json') as f:
         all_scenarios = json.load(f)
     scenario_ids = [k for k, s in all_scenarios.items() if s['sampling_method'] == sampling_method]
 
-    bayes_lists_s1 = list()
-    bayes_lists_s2 = list()
-    bayes_lists_s3 = list()
-    bayes_lists_s4 = list()
+    lists_s1 = list()
+    lists_s2 = list()
+    lists_s3 = list()
+    lists_s4 = list()
     project_ids = [d for d in os.listdir('./store') if os.path.isdir(os.path.join('./store/', d))]
     for project_id in project_ids:
         with open('./store/' + project_id + '/project_info.json') as f:
@@ -33,112 +33,60 @@ def plot_bayes(sampling_method):
         if scenario_id not in scenario_ids:
             break
 
-        bayes_modeling_metadata = pickle.load( open('./store/' + project_id + '/bayes_modeling_metadata.p', 'rb') )
-        for heur, p_Y_in_C_given_X in bayes_modeling_metadata['p_Y_in_C_given_X'].items():
+        modeling_metadata = pickle.load( open('./store/' + project_id + '/' + modeling_method + '_modeling_metadata.p', 'rb') )
+        for heur, p_Y_in_C_given_X in modeling_metadata['p_Y_in_C_given_X'].items():
             if heur == 'hUniform':
                 color = 'b'
             else:
                 color = 'grey'
 
             if scenario_id == '1':
-                bayes_lists_s1.append(HeuristicClassifier(values=p_Y_in_C_given_X, color=color))
+                lists_s1.append(HeuristicClassifier(values=p_Y_in_C_given_X, color=color))
             elif scenario_id == '2':
-                bayes_lists_s2.append(HeuristicClassifier(values=p_Y_in_C_given_X, color=color))
+                lists_s2.append(HeuristicClassifier(values=p_Y_in_C_given_X, color=color))
             elif scenario_id == '3':
-                bayes_lists_s3.append(HeuristicClassifier(values=p_Y_in_C_given_X, color=color))
+                lists_s3.append(HeuristicClassifier(values=p_Y_in_C_given_X, color=color))
             elif scenario_id == '4':
-                bayes_lists_s4.append(HeuristicClassifier(values=p_Y_in_C_given_X, color=color))
+                lists_s4.append(HeuristicClassifier(values=p_Y_in_C_given_X, color=color))
 
-    fig = plt.figure()
+    fig, ax = plt.subplots(2, 2)
 
-    sp = fig.add_subplot(111)
-    sp.set_ylabel(r'p(Y $\in C | X)')
-    sp1 = fig.add_subplot(241)
-    sp2 = fig.add_subplot(242)
-    sp3 = fig.add_subplot(243)
-    sp4 = fig.add_subplot(244)
-    sp1.set_title('Scenario 1')
-    sp2.set_xlabel('Iteration #')
-    sp2.set_title('Scenario 2')
-    sp2.set_xlabel('Iteration #')
-    sp3.set_title('Scenario 3')
-    sp3.set_xlabel('Iteration #')
-    sp4.set_title('Scenario 4')
-    sp4.set_xlabel('Iteration #')
+    ax[0,0].set_ylabel('p(Y in C | X)')
+    ax[0,1].set_ylabel('p(Y in C | X)')
+    ax[1,0].set_ylabel('p(Y in C | X)')
+    ax[1,1].set_ylabel('p(Y in C | X)')
+    ax[0,0].set_title('Scenario 1')
+    ax[0,0].set_xlabel('Iteration #')
+    ax[0,0].set_xticks(np.arange(0, 36, 6.0))
+    ax[0,0].set_yticks(np.arange(0.0, 1.25, 0.25))
+    ax[0,0].set_ylim((0, None))
+    ax[0,1].set_title('Scenario 2')
+    ax[0,1].set_xlabel('Iteration #')
+    ax[0,1].set_xticks(np.arange(0, 36, 6.0))
+    ax[0,1].set_yticks(np.arange(0.0, 1.25, 0.25))
+    ax[0,1].set_ylim((0, None))
+    ax[1,0].set_title('Scenario 3')
+    ax[1,0].set_xlabel('Iteration #')
+    ax[1,0].set_xticks(np.arange(0, 36, 6.0))
+    ax[1,0].set_yticks(np.arange(0.0, 1.25, 0.25))
+    ax[1,0].set_ylim((0, None))
+    ax[1,1].set_title('Scenario 4')
+    ax[1,1].set_xlabel('Iteration #')
+    ax[1,1].set_xticks(np.arange(0, 36, 6.0))
+    ax[1,1].set_yticks(np.arange(0.0, 1.25, 0.25))
+    ax[1,1].set_ylim((0, None))
 
-    for b in bayes_lists_s1:
-        sp1.plot([i for i in range(0, len(b.values) + 1)], b.values, color=b.color)
-    for b in bayes_lists_s2:
-        sp2.plot([i for i in range(0, len(b.values) + 1)], b.values, color=b.color)
-    for b in bayes_lists_s3:
-        sp3.plot([i for i in range(0, len(b.values) + 1)], b.values, color=b.color)
-    for b in bayes_lists_s4:
-        sp4.plot([i for i in range(0, len(b.values) + 1)], b.values, color=b.color)
+    for b in lists_s1:
+        ax[0,0].plot([i for i in range(1, len(b.values) + 1)], [x.value for x in b.values], color=b.color)
+    for b in lists_s2:
+        ax[0,1].plot([i for i in range(1, len(b.values) + 1)], [x.value for x in b.values], color=b.color)
+    for b in lists_s3:
+        ax[1,0].plot([i for i in range(1, len(b.values) + 1)], [x.value for x in b.values], color=b.color)
+    for b in lists_s4:
+        ax[1,1].plot([i for i in range(1, len(b.values) + 1)], [x.value for x in b.values], color=b.color)
 
-    fig.savefig('./plots/bayes-' + sampling_method + '.jpg')
-    plt.clf()
-    print('[SUCCESS]')
-
-def plot_min(sampling_method):
-    with open('scenarios.json') as f:
-        all_scenarios = json.load(f)
-    scenario_ids = [k for k, s in all_scenarios.items() if s['sampling_method'] == sampling_method]
-
-    min_lists_s1 = list()
-    min_lists_s2 = list()
-    min_lists_s3 = list()
-    min_lists_s4 = list()
-    project_ids = [d for d in os.listdir('./store') if os.path.isdir(os.path.join('./store/', d))]
-    for project_id in project_ids:
-        with open('./store/' + project_id + '/project_info.json') as f:
-            project_info = json.load(f)
-        scenario_id = project_info['scenario_id']
-        if scenario_id not in scenario_ids:
-            break
-
-        min_modeling_metadata = pickle.load( open('./store/' + project_id + '/min_modeling_metadata.p', 'rb') )
-        for heur, p_Y_in_C_given_X in min_modeling_metadata['p_Y_in_C_given_X'].items():
-            if heur == 'hUniform':
-                color = 'b'
-            else:
-                color = 'grey'
-
-            if scenario_id == '1':
-                min_lists_s1.append(HeuristicClassifier(values=p_Y_in_C_given_X, color=color))
-            elif scenario_id == '2':
-                min_lists_s2.append(HeuristicClassifier(values=p_Y_in_C_given_X, color=color))
-            elif scenario_id == '3':
-                min_lists_s3.append(HeuristicClassifier(values=p_Y_in_C_given_X, color=color))
-            elif scenario_id == '4':
-                min_lists_s4.append(HeuristicClassifier(values=p_Y_in_C_given_X, color=color))
-
-    fig = plt.figure()
-
-    sp = fig.add_subplot(111)
-    sp.set_ylabel(r'p(Y $\in C | X)')
-    sp1 = fig.add_subplot(241)
-    sp2 = fig.add_subplot(242)
-    sp3 = fig.add_subplot(243)
-    sp4 = fig.add_subplot(244)
-    sp1.set_title('Scenario 1')
-    sp2.set_xlabel('Iteration #')
-    sp2.set_title('Scenario 2')
-    sp2.set_xlabel('Iteration #')
-    sp3.set_title('Scenario 3')
-    sp3.set_xlabel('Iteration #')
-    sp4.set_title('Scenario 4')
-    sp4.set_xlabel('Iteration #')
-
-    for b in min_lists_s1:
-        sp1.plot([i for i in range(0, len(b.values) + 1)], b.values, color=b.color)
-    for b in min_lists_s2:
-        sp2.plot([i for i in range(0, len(b.values) + 1)], b.values, color=b.color)
-    for b in min_lists_s3:
-        sp3.plot([i for i in range(0, len(b.values) + 1)], b.values, color=b.color)
-    for b in min_lists_s4:
-        sp4.plot([i for i in range(0, len(b.values) + 1)], b.values, color=b.color)
-
-    fig.savefig('./plots/min-' + sampling_method + '.jpg')
+    fig.tight_layout()
+    fig.savefig('./plots/' + modeling_method + '-' + sampling_method + '.jpg')
     plt.clf()
     print('[SUCCESS]')
 

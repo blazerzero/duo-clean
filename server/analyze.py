@@ -75,7 +75,6 @@ def bayes(sampling_method):
                     p_h_given_X_list_sum = sum([x.value for x in p_h_given_X_list])
                     # print(p_h_given_X_list_sum)
                     p_h_given_X_list = [PHGivenX(h=x.h, value=((x.value/p_h_given_X_list_sum) if x.value > 0 else 0)) for x in p_h_given_X_list]
-                    print([x.value for x in p_h_given_X_list])
 
                     # p(Y in C | X)
                     p_Y_in_C_given_X = 1
@@ -86,7 +85,6 @@ def bayes(sampling_method):
                             p_h_given_X = phgx.value
                             i_y_supp_h = bayes_modeling_metadata['y_supp_h'][h][y]  # I(y in supp(h))
                             p_y_in_C_given_X += (i_y_supp_h * p_h_given_X)
-                            print('p(y in C | X) =', p_y_in_C_given_X)
                             
                         p_Y_in_C_given_X *= p_y_in_C_given_X
                         print('p(Y in C | X) =', p_Y_in_C_given_X)
@@ -136,8 +134,10 @@ def max_likelihood(sampling_method):
                     max_p_X_given_h = 0
                     h_ML = None
                     for cfd in discovered_cfds:
+                        # print(cfd)
                         curr_p_X_given_h = [x.value for x in min_modeling_metadata['p_X_given_h'][cfd] if x.iter_num == it].pop()
-                        if max_p_X_given_h < curr_p_X_given_h:
+                        # print(curr_p_X_given_h)
+                        if max_p_X_given_h <= curr_p_X_given_h:
                             max_p_X_given_h = curr_p_X_given_h
                             h_ML = cfd
                 
@@ -156,7 +156,6 @@ def max_likelihood(sampling_method):
                             # p_h_given_X = phgx.value
                         i_y_supp_h_ML = min_modeling_metadata['y_supp_h'][h_ML][y]  # I(y in supp(h_ML))
                         p_y_in_C_given_X = (i_y_supp_h_ML * p_h_ML_given_X)
-                        print('p(y in C | X) =', p_y_in_C_given_X)
                         p_Y_in_C_given_X *= p_y_in_C_given_X
                         print('p(Y in C | X) =', p_Y_in_C_given_X)
                     
