@@ -1,1 +1,1 @@
-# var-clean-app
+# duo-clean
