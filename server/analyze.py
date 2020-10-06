@@ -21,7 +21,15 @@ class PHGivenX(object):
 
 def wHeuristicUniform(cfd):
     lhs = cfd.split(' => ')[0][1:-1].split(', ')
-    weights = {lh: 1/len(lhs) for lh in lhs}
+    weights = {lh: 0.5 for lh in lhs}
+    return weights
+
+def wHeuristicUV(cfd, data):
+    lhs = cfd.split(' => ')[0][1:-1].split(', ')
+    weights = dict()
+    for lh in lhs:
+        numUV = set(data[lhs])
+        weights[lh] = numUV / len(data.index)
     return weights
 
 def bayes(sampling_method):
