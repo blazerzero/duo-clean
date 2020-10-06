@@ -32,6 +32,24 @@ def wHeuristicUV(cfd, data):
         weights[lh] = numUV / len(data.index)
     return weights
 
+def wHeuristicAC(cfd):
+    lhs = cfd.split(' => ')[0][1:-1].split(', ')
+    wAC = {
+        'type': 0.4,
+        'region': 0.6,
+        'facilityname': 0.9,
+        'owner': 0.9,
+        'ownertype': 0.5,
+        'manager': 0.75,
+        'listingnumber': 0.9,
+        'title': 0.8,
+        'year': 0.3,
+        'director': 0.6,
+        'viewerscore': 0.2
+    }
+    weights = {lh: wAC[lh] for lh in lhs}
+    return weights
+
 def bayes(sampling_method):
     with open('scenarios.json') as f:
         all_scenarios = json.load(f)
@@ -44,6 +62,7 @@ def bayes(sampling_method):
         scenario_id = project_info['scenario_id']
         if scenario_id not in scenario_ids:
             break
+        data = project_info['scenario']['clean_dataset']
         
         modeling_metadata = pickle.load( open('./store/' + project_id + '/modeling_metadata.p', 'rb') )
         cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
@@ -55,10 +74,16 @@ def bayes(sampling_method):
         for cfd in cfd_metadata.keys():
             # UNIFORM ATTRIBUTE WEIGHTS
             wUniform = wHeuristicUniform(cfd)   # attribute weights (hUniform)
+            wUV = wHeuristicUV(cfd, data)       # attribute weights (hUV)
+            wAC = wHeuristicAC(cfd) # attribute weights (hAC)
 
             # p(h | [heuristic]) = PI_i w(a_i), where a_i is an attribute in the LHS of h
             phUniform = np.prod([v for _, v in wUniform.items()])   # p(h | hUniform)
+            phUV = np.prod([v for _, v in wUV.items()])     # p(h | hUV)
+            phAC = np.prod([v for _, v in wAC.items()])     # p(h | hAC)
             bayes_modeling_metadata['p_h']['hUniform'][cfd] = phUniform
+            bayes_modeling_metadata['p_h']['hUV'][cfd] = phUV
+            bayes_modeling_metadata['p_h']['hAC'][cfd] = phAC
 
         for heur in bayes_modeling_metadata['p_h'].keys():
             bayes_modeling_metadata['p_Y_in_C_given_X'][heur] = list()
