@@ -11,6 +11,7 @@ import {
 import { Route } from 'react-router-dom';
 import axios from 'axios';
 import { pick } from 'lodash';
+import { List, SortUp, SortDown } from 'react-bootstrap-icons';
 
 class Clean extends Component {
 
@@ -44,6 +45,11 @@ class Clean extends Component {
             }
             console.log(data);
 
+            var sortMethod = {};
+            for (var h of this.state.header) {
+              sortMethod[h] = 'NONE';
+            }
+
             var feedbackMap = await this._buildFeedbackMap(data, feedback);
             this.setState({ 
               data,
@@ -51,7 +57,8 @@ class Clean extends Component {
               isProcessing: false,
               noNewFeedback: false,
               true_pos,
-              false_pos
+              false_pos,
+              sortMethod
             }, () => {
               console.log(this.state.true_pos, this.state.false_pos);
             });
@@ -171,9 +178,34 @@ class Clean extends Component {
     history.push('/duo/');
   }
 
+  _handleSort = async(key, event) => {
+    var pieces = key.split('_');
+    var attr = pieces[1];
+    var sortMethod = this.state.sortMethod;
+    var data = this.state.data;
+    switch (sortMethod[attr]) {
+      case 'NONE':
+        sortMethod[attr] = 'ASC';
+        // ascending sort
+      case 'DESC':
+        sortMethod[attr] = 'ASC';
+        // ascending sort
+      case 'ASC':
+        sortMethod[attr] = 'DESC';
+        // descending sort
+      default:
+        break;
+    }
+    this.setState({ sortMethod, data })
+  }
+
   componentDidMount() {
     const { header, project_id, scenario_id, scenario_desc, is_resuming, sample, true_pos, false_pos, feedback } = this.props.location;
-    this.setState({ header, project_id, scenario_id, scenario_desc }, async() => {
+    var sortMethod = {};
+    for (var h of header) {
+      sortMethod[h] = 'NONE';
+    }
+    this.setState({ header, project_id, scenario_id, scenario_desc, sortMethod }, async() => {
       if (is_resuming === false) {
         await this._getSampleData(this.state.project_id);
         console.log('got sample');
@@ -200,6 +232,7 @@ class Clean extends Component {
       false_pos: 0,
       interactionDone: false,
       scenario_desc: null,
+      sortMethod: {}
     };
   }
 
@@ -274,7 +307,21 @@ class Clean extends Component {
                       <thead>
                         <tr>
                           { this.state.header.map((item) => {
-                            return <th key={'header_'.concat(item)}>{item}</th>
+                            return (
+                              <th key={'header_'.concat(item)}>
+                                {item}
+                                {() => {
+                                  if (this.state.sortMethod[item] === 'ASC') {
+                                    return <SortUp />
+                                  }
+                                  else if (this.state.sortMethod[item] === 'DESC') {
+                                    return <SortDown />
+                                  }
+                                  else {
+                                    return <List/>
+                                  }
+                                }}
+                              </th>)
                           }) }
                         </tr>
                       </thead>
