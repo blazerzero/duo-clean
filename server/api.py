@@ -322,9 +322,9 @@ class Clean(Resource):
         # if sampling_method != 'RANDOM-PURE':
         #     helpers.reinforceTuplesBasedOnInteraction(data, project_id, current_iter, is_new_feedback)
         #     print('*** Tuples reinforced based on interaction metrics ***')
-        # if sampling_method == 'DUO':
-        #     helpers.reinforceTuplesBasedOnDependencies(data, project_id, current_iter, is_new_feedback, project_info)
-        #     print('*** Tuples reinforced based on FD/CFD weights ***')
+        if sampling_method == 'DUO':
+            helpers.reinforceTuplesBasedOnDependencies(data, project_id, current_iter, is_new_feedback, project_info)
+            print('*** Tuples reinforced based on FD/CFD weights ***')
 
         # Build sample
         s_out = helpers.buildSample(data, sample_size, project_id, sampling_method, current_iter)
