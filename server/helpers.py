@@ -373,7 +373,7 @@ def fd2cfd(data, lhs, rhs):
         counts = Counter(patterns[key])
         get_mode = dict(counts)
         patterns[key] = [k for k, v in get_mode.items() if v == max(list(counts.values()))]
-        pprint('All RHS patterns for' + key + ':' + repr(patterns[key]))
+        # pprint('All RHS patterns for' + key + ':' + repr(patterns[key]))
 
         # If there is only one top RHS pattern for this LHS, pick it
         if len(patterns[key]) == 1:
@@ -381,7 +381,7 @@ def fd2cfd(data, lhs, rhs):
         else:
             random_idx = random.randint(0, len(patterns[key])-1)
             patterns[key] = patterns[key][random_idx]
-        print('*** RHS pattern picked ***')
+        # print('*** RHS pattern picked ***')
 
     return patterns
 
@@ -431,25 +431,24 @@ def buildCover(data, cfd, project_id, current_iter):
                 if data.at[idx, rh[0]] != rh[1]:
                     violations.append(idx)
         
-        pprint('Cover for (' + lhs + ') => ' + rhs + ':' + repr(cover))
-        pprint('Violations for (' + lhs + ') => ' + rhs + ':' + repr(violations))
+    pprint('Cover for (' + lhs + ') => ' + rhs + ':' + repr(cover))
+    pprint('Violations for (' + lhs + ') => ' + rhs + ':' + repr(violations))
     print('*** Cover and violations built ***')
     return set(cover), set(violations)
 
 # BUILD SAMPLE
-def buildSample(data, sample_size, project_id, sampling_method, current_iter):
-    # if sampling_method == 'RANDOM-PURE':
-    #     return samplingRandomPure(data, sample_size, project_id)
+# def buildSample(data, sample_size, project_id, current_iter):
+#     if sampling_method == 'RANDOM-PURE':
+#         return samplingRandomPure(data, sample_size, project_id)
     # elif sampling_method == 'RANDOM-UB':
     #     return samplingRandomUB(data, sample_size, project_id)
-    # elif sampling_method == 'DUO':
-    #    return samplingDuo(data, sample_size, project_id)
-    # else:
-    #     return samplingRandomPure(data, sample_size, project_id)
-    return samplingRandomPure(data, sample_size, project_id, current_iter)
+#     elif sampling_method == 'DUO':
+#        return samplingDuo(data, sample_size, project_id)
+#     else:
+#         return samplingRandomPure(data, sample_size, project_id)
 
 # BUILD PURELY RANDOM SAMPLE
-def samplingRandomPure(data, sample_size, project_id, current_iter):
+def buildSample(data, sample_size, project_id, current_iter):
     cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )   
     modeling_metadata = pickle.load( open('./store/' + project_id + '/modeling_metadata.p', 'rb') )
     start_time = pickle.load( open('./store/' + project_id + '/start_time.p', 'rb') )
@@ -457,7 +456,7 @@ def samplingRandomPure(data, sample_size, project_id, current_iter):
 
     elapsed_time = current_time - start_time
     
-    print('Sampling method: RANDOM-PURE')
+    # print('Sampling method: RANDOM-PURE')
     # GET SAMPLE
     s_out = returnTuples(data, sample_size, project_id)     # Y = set(s_out.index)
 
@@ -473,8 +472,8 @@ def samplingRandomPure(data, sample_size, project_id, current_iter):
         # p(X | h)
         if cfd not in modeling_metadata['p_X_given_h'].keys():  # cfd was just discovered in this iteration
             modeling_metadata['p_X_given_h'][cfd] = list()
-        print(cfd_m['cover'])
-        print(set(new_X))
+        # print(cfd_m['cover'])
+        # print(set(new_X))
         if set(new_X).issubset(cfd_m['cover']):
             p_X_given_h = math.pow((1/len(new_X)), sample_size) # p(X | h) = PI_i (p(x_i | h)), where each x_i is in X
             modeling_metadata['p_X_given_h'][cfd].append(StudyMetric(iter_num=current_iter, value=p_X_given_h, elapsed_time=elapsed_time))

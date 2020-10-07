@@ -19,9 +19,16 @@ class Clean extends Component {
     this.setState({ isProcessing: true });
     const formData = new FormData();
     formData.append('project_id', this.state.project_id);
-    formData.append('feedback', JSON.stringify(this.state.feedbackMap));
+
+    var feedback = {}
+    for (var f in this.state.feedbackMap) {
+      feedback[this.state.data[f]['id']] = this.state.feedbackMap[f]
+    }
+    console.log(feedback);
+    await new Promise(r => setTimeout(r, 10000));
+    formData.append('feedback', JSON.stringify(feedback));
     formData.append('is_new_feedback', (this.state.noNewFeedback === false ? 1 : 0));
-    axios.post('http://167.71.155.153:5000/duo/api/clean', formData)
+    axios.post('http://localhost:5000/duo/api/clean', formData)
         .then(async(response) => {
           console.log(response.data);
           var res = JSON.parse(response.data);
@@ -31,7 +38,7 @@ class Clean extends Component {
           }
           else {
             var { sample, feedback, true_pos, false_pos } = pick(res, ['sample', 'feedback', 'true_pos', 'false_pos'])
-            var data = JSON.parse(sample);
+            var data = Object.values(JSON.parse(sample));
             true_pos =JSON.parse(true_pos);
             false_pos = JSON.parse(false_pos);
             feedback = JSON.parse(feedback);
@@ -39,8 +46,13 @@ class Clean extends Component {
 
             for (var i in data) {
               for (var j in data[i]) {
+                if (j === 'id') break;
+                
                 if (data[i][j] == null) data[i][j] = '';
                 else if (typeof data[i][j] != 'string') data[i][j] = data[i][j].toString();
+                if (!isNaN(data[i][j]) && Math.ceil(parseFloat(data[i][j])) - parseFloat(data[i][j]) === 0) {
+                  data[i][j] = Math.ceil(data[i][j]).toString();
+                }
               }
             }
             console.log(data);
@@ -53,6 +65,7 @@ class Clean extends Component {
             var feedbackMap = await this._buildFeedbackMap(data, feedback);
             this.setState({ 
               data,
+              feedback,
               feedbackMap,
               isProcessing: false,
               noNewFeedback: false,
@@ -71,6 +84,7 @@ class Clean extends Component {
 
   _buildFeedbackMap = async(data, feedback) => {
     console.log(feedback);
+    console.log(data);
     var feedbackMap = {};
     var rows = Object.keys(data);
     var cols = this.state.header;
@@ -81,12 +95,13 @@ class Clean extends Component {
       for (let j = 0; j < cols.length; j++) {
         var cell = feedback.find(e => {
           var trimmedCol = cols[j].replace(/[\n\r]+/g, '');
-          return e.row === parseInt(rows[i]) && e.col === trimmedCol;
+          return e.row === parseInt(data[rows[i]]['id']) && e.col === trimmedCol;
         });
         tup[cols[j]] = cell.marked;
       }
       feedbackMap[rows[i]] = tup;
     }
+    console.log(feedbackMap);
     return feedbackMap;
   }
 
@@ -94,11 +109,11 @@ class Clean extends Component {
     const formData = new FormData();
     formData.append('project_id', project_id);
     console.log(formData.get('project_id'));
-    axios.post('http://167.71.155.153:5000/duo/api/sample', formData)
+    axios.post('http://localhost:5000/duo/api/sample', formData)
         .then(async(response) => {
           var res = JSON.parse(response.data);
           var { sample, feedback, msg, true_pos, false_pos } = pick(res, ['sample', 'feedback', 'msg', 'true_pos', 'false_pos'])
-          var data = JSON.parse(sample);
+          var data = Object.values(JSON.parse(sample));
           true_pos = JSON.parse(true_pos);
           false_pos = JSON.parse(false_pos);
           feedback = JSON.parse(feedback);
@@ -106,6 +121,8 @@ class Clean extends Component {
 
           for (var i in data) {
             for (var j in data[i]) {
+              if (j === 'id') break;
+
               if (data[i][j] == null) data[i][j] = '';
               else if (typeof data[i][j] != 'string') data[i][j] = data[i][j].toString();
               if (!isNaN(data[i][j]) && Math.ceil(parseFloat(data[i][j])) - parseFloat(data[i][j]) === 0) {
@@ -116,7 +133,7 @@ class Clean extends Component {
           console.log(data);
 
           var feedbackMap = await this._buildFeedbackMap(data, feedback);
-          this.setState({ data, feedbackMap, true_pos, false_pos }, () => {
+          this.setState({ data, feedback, feedbackMap, true_pos, false_pos }, () => {
             console.log(this.state.true_pos, this.state.false_pos);
           });
         })
@@ -126,13 +143,15 @@ class Clean extends Component {
   }
 
   _handleResume = async(sample, true_pos, false_pos, feedback) => {
-    var data = JSON.parse(sample);
+    var data = Object.values(JSON.parse(sample));
     true_pos = JSON.parse(true_pos);
     false_pos = JSON.parse(false_pos);
     feedback = JSON.parse(feedback);
 
     for (var i in data) {
       for (var j in data[i]) {
+        if (j === 'id') break;
+
         if (data[i][j] == null) data[i][j] = '';
         else if (typeof data[i][j] != 'string') data[i][j] = data[i][j].toString();
         if (!isNaN(data[i][j]) && Math.ceil(parseFloat(data[i][j])) - parseFloat(data[i][j]) === 0) {
@@ -157,10 +176,21 @@ class Clean extends Component {
   _handleCellClick = async(key, event) => {
     var pieces = key.split('_');
     var idx = parseInt(pieces.shift());
+    var id = parseInt(this.state.data[idx]['id']);
+    console.log(id);
     var attr = pieces.join('_');
+    var feedback = this.state.feedback;
+    var cell = feedback.findIndex(e => {
+      var trimmedCol = attr.replace(/[\n\r]+/g, '');
+      return e.row === parseInt(this.state.data[idx]['id']) && e.col === trimmedCol;
+    });
+    feedback[cell].marked = !feedback[cell].marked;
     var feedbackMap = this.state.feedbackMap;
     feedbackMap[idx][attr] = !feedbackMap[idx][attr]
-    this.setState({ feedbackMap });
+    this.setState({ feedback, feedbackMap }, () => {
+      console.log(this.state.feedback);
+      console.log(this.state.feedbackMap);
+    });
   }
 
   _handleRefreshClick = async() => {
@@ -181,44 +211,50 @@ class Clean extends Component {
   _handleSort = async(attr, event) => {
     var sortMethod = this.state.sortMethod;
     var data = this.state.data;
+    var feedbackMap = {};
+    console.log(attr);
     switch (sortMethod[attr]) {
       case 'NONE':
         for (var h of this.state.header) {
           if (h === attr) {
-            sortMethod[attr] = 'ASC';
-          } else sortMethod[attr] = 'NONE';
+            sortMethod[h] = 'ASC';
+          } else sortMethod[h] = 'NONE';
         }
         // ascending sort
         data.sort((a, b) => {
           return a[attr] > b[attr] ? 1 : -1;
         });
+        feedbackMap = await this._buildFeedbackMap(data, this.state.feedback);
         break;
       case 'DESC':
         for (var h of this.state.header) {
           if (h === attr) {
-            sortMethod[attr] = 'ASC';
-          } else sortMethod[attr] = 'NONE';
+            sortMethod[h] = 'ASC';
+          } else sortMethod[h] = 'NONE';
         }
         // ascending sort
         data.sort((a, b) => {
           return a[attr] > b[attr] ? 1 : -1;
         });
+        feedbackMap = await this._buildFeedbackMap(data, this.state.feedback);
         break;
       case 'ASC':
         for (var h of this.state.header) {
           if (h === attr) {
-            sortMethod[attr] = 'DESC';
-          } else sortMethod[attr] = 'NONE';
+            sortMethod[h] = 'DESC';
+          } else sortMethod[h] = 'NONE';
         }
         // descending sort
         data.sort((a, b) => {
           return a[attr] < b[attr] ? 1 : -1;
         });
+        feedbackMap = await this._buildFeedbackMap(data, this.state.feedback);
         break;
       default:
         break;
     }
-    this.setState({ sortMethod, data })
+    console.log(sortMethod);
+    this.setState({ sortMethod, data, feedbackMap });
   }
 
   componentDidMount() {
@@ -244,6 +280,7 @@ class Clean extends Component {
 
     this.state = {
       data: [],
+      feedback: {},
       feedbackMap: {},
       header: [],
       project_id: 0,
@@ -333,8 +370,8 @@ class Clean extends Component {
                               <th key={'header_'.concat(item)}>
                                 {item}
                                 {this.state.sortMethod[item] === 'ASC'
-                                  ? <HiSortAscending onClick={this._handleSort.bind(this, item)} />
-                                  : (this.state.sortMethod[item] == 'DESC' ? <HiSortDescending onClick={this._handleSort.bind(this, item)} /> : <HiMenu onClick={this._handleSort.bind(this, item)} />)
+                                  ? <HiSortDescending onClick={this._handleSort.bind(this, item)} cursor='pointer' />
+                                  : (this.state.sortMethod[item] == 'DESC' ? <HiSortAscending onClick={this._handleSort.bind(this, item)} cursor='pointer' /> : <HiMenu onClick={this._handleSort.bind(this, item)} cursor='pointer' />)
                                 }
                               </th>)
                           }) }
@@ -345,6 +382,7 @@ class Clean extends Component {
                         return (
                           <tr key={i}>
                             { Object.keys(this.state.data[i]).map((j) => {
+                              if (j === 'id') return;
                               var key = i.toString().concat('_', j);
                               return <td
                                   key={key}
