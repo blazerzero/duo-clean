@@ -178,9 +178,7 @@ class Clean extends Component {
     history.push('/duo/');
   }
 
-  _handleSort = async(key, event) => {
-    var pieces = key.split('_');
-    var attr = pieces[1];
+  _handleSort = async(attr, event) => {
     var sortMethod = this.state.sortMethod;
     var data = this.state.data;
     switch (sortMethod[attr]) {
@@ -334,17 +332,10 @@ class Clean extends Component {
                             return (
                               <th key={'header_'.concat(item)}>
                                 {item}
-                                {() => {
-                                  if (this.state.sortMethod[item] === 'ASC') {
-                                    return <HiSortAscending />
-                                  }
-                                  else if (this.state.sortMethod[item] === 'DESC') {
-                                    return <HiSortDescending />
-                                  }
-                                  else {
-                                    return <HiMenu />
-                                  }
-                                }}
+                                {this.state.sortMethod[item] === 'ASC'
+                                  ? <HiSortAscending onClick={this._handleSort.bind(this, item)} />
+                                  : (this.state.sortMethod[item] == 'DESC' ? <HiSortDescending onClick={this._handleSort.bind(this, item)} /> : <HiMenu onClick={this._handleSort.bind(this, item)} />)
+                                }
                               </th>)
                           }) }
                         </tr>
