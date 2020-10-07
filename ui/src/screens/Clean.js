@@ -185,14 +185,35 @@ class Clean extends Component {
     var data = this.state.data;
     switch (sortMethod[attr]) {
       case 'NONE':
-        sortMethod[attr] = 'ASC';
+        for (var h of this.state.header) {
+          if (h === attr) {
+            sortMethod[attr] = 'ASC';
+          } else sortMethod[attr] = 'NONE';
+        }
         // ascending sort
+        data.sort((a, b) => {
+          return a[attr] > b[attr] ? 1 : -1;
+        });
       case 'DESC':
-        sortMethod[attr] = 'ASC';
+        for (var h of this.state.header) {
+          if (h === attr) {
+            sortMethod[attr] = 'ASC';
+          } else sortMethod[attr] = 'NONE';
+        }
         // ascending sort
+        data.sort((a, b) => {
+          return a[attr] > b[attr] ? 1 : -1;
+        });
       case 'ASC':
-        sortMethod[attr] = 'DESC';
+        for (var h of this.state.header) {
+          if (h === attr) {
+            sortMethod[attr] = 'DESC';
+          } else sortMethod[attr] = 'NONE';
+        }
         // descending sort
+        data.sort((a, b) => {
+          return a[attr] < b[attr] ? 1 : -1;
+        });
       default:
         break;
     }
