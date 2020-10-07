@@ -11,7 +11,7 @@ import {
 import { Route } from 'react-router-dom';
 import axios from 'axios';
 import { pick } from 'lodash';
-import { List, SortUp, SortDown } from 'react-bootstrap-icons';
+import { HiMenu, HiSortAscending, HiSortDescending } from 'react-icons/hi';
 
 class Clean extends Component {
 
@@ -194,6 +194,7 @@ class Clean extends Component {
         data.sort((a, b) => {
           return a[attr] > b[attr] ? 1 : -1;
         });
+        break;
       case 'DESC':
         for (var h of this.state.header) {
           if (h === attr) {
@@ -204,6 +205,7 @@ class Clean extends Component {
         data.sort((a, b) => {
           return a[attr] > b[attr] ? 1 : -1;
         });
+        break;
       case 'ASC':
         for (var h of this.state.header) {
           if (h === attr) {
@@ -214,6 +216,7 @@ class Clean extends Component {
         data.sort((a, b) => {
           return a[attr] < b[attr] ? 1 : -1;
         });
+        break;
       default:
         break;
     }
@@ -333,13 +336,13 @@ class Clean extends Component {
                                 {item}
                                 {() => {
                                   if (this.state.sortMethod[item] === 'ASC') {
-                                    return <SortUp />
+                                    return <HiSortAscending />
                                   }
                                   else if (this.state.sortMethod[item] === 'DESC') {
-                                    return <SortDown />
+                                    return <HiSortDescending />
                                   }
                                   else {
-                                    return <List/>
+                                    return <HiMenu />
                                   }
                                 }}
                               </th>)

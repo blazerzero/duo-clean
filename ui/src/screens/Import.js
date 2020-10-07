@@ -60,7 +60,7 @@ class Import extends Component {
           console.log(msg);
           if (msg === '[DONE]') {
             alert('You have already completed this interaction!');
-          } else if (msg == '[INVALID PROJECT ID]') {
+          } else if (msg === '[INVALID PROJECT ID]') {
             alert('The project ID you entered could not be found in the system. Make sure you\'ve entered your project ID correctly.');
           } else {
             alert('Welcome back! Let\'s get back to it!');

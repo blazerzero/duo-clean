@@ -8886,13 +8886,6 @@ react-axios@^2.0.3:
   resolved "https://registry.yarnpkg.com/react-axios/-/react-axios-2.0.3.tgz#9aeb75a2db07cebaf0ff710f666a2932ce024af5"
   integrity sha512-63kY2iupdRgbvPq9G8xmM0NWUnt2Q5YmpotMoLQsxKOzKXKZg2Lo6CzF/bcZvtmv3WnfjBU6Bg8nZQO28eIAZw==
 
-react-bootstrap-icons@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/react-bootstrap-icons/-/react-bootstrap-icons-1.0.0.tgz#f756a971b7868267e34226d170bc492a4e743de6"
-  integrity sha512-HPSodUCASHJJmSrUo8/E9ReWLQBCYayGCufV+aYR96yXQNHfrUCXOrPOvbcrouutKJfGMs01JOHrLto9zFS0Kw==
-  dependencies:
-    prop-types "^15.7.2"
-
 react-bootstrap@^1.0.0:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/react-bootstrap/-/react-bootstrap-1.0.1.tgz#044b51f34a9db8e17dbfb321a71267a8d6ad11b4"
@@ -8956,6 +8949,13 @@ react-error-overlay@^6.0.7:
   version "6.0.7"
   resolved "https://registry.yarnpkg.com/react-error-overlay/-/react-error-overlay-6.0.7.tgz#1dcfb459ab671d53f660a991513cb2f0a0553108"
   integrity sha512-TAv1KJFh3RhqxNvhzxj6LeT5NWklP6rDr2a0jaTfsZ5wSZWHOGeqQyejUp3xxLfPt2UpyJEcVQB/zyPcmonNFA==
+
+react-icons@^3.11.0:
+  version "3.11.0"
+  resolved "https://registry.yarnpkg.com/react-icons/-/react-icons-3.11.0.tgz#2ca2903dfab8268ca18ebd8cc2e879921ec3b254"
+  integrity sha512-JRgiI/vdF6uyBgyZhVyYJUZAop95Sy4XDe/jmT3R/bKliFWpO/uZBwvSjWEdxwzec7SYbEPNPck0Kff2tUGM2Q==
+  dependencies:
+    camelcase "^5.0.0"
 
 react-is@^16.3.2, react-is@^16.6.0, react-is@^16.7.0, react-is@^16.8.1, react-is@^16.8.4, react-is@^16.9.0:
   version "16.13.1"
