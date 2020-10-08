@@ -24,8 +24,8 @@
 <![CDATA[
 DCs:
 // FD1: (title, year, director) -> rating
-e1: omdb_3(title: $t1, year: $y1, rating: $r1, director: $d1), 
-omdb_3(title: $t2, year: $y2, rating: $r2, director: $d2), 
+e1: omdb_3(title: $t1, year: $y1, rating: $r1, director: $d1, userrating: $ur1), 
+omdb_3(title: $t2, year: $y2, rating: $r2, director: $d2, userrating: $ur2), 
     $t1 == $t2, $y1 == $y2, $d1 == $d2, $r1 != $r2 -> #fail.
 ]]>
     </dependencies>
