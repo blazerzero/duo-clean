@@ -331,9 +331,10 @@ def reinforceTuplesBasedOnDependencies(data, project_id, current_iter, is_new_fe
     print('*** Metadata updates saved ***')
 
     study_metrics = pickle.load( open('./store/' + project_id + '/study_metrics.p', 'rb') )
-    for cfd in project_info['scenario']['cfds']:
-        if cfd in cfd_metadata.keys():
-            study_metrics['cfd_confidence'][cfd].append(StudyMetric(iter_num=current_iter, value=cfd_metadata[cfd]['weight'], elapsed_time=elapsed_time))
+    for cfd in cfd_metadata.keys():
+        if cfd not in study_metrics['cfd_confidence'].keys():
+            study_metrics['cfd_confidence'][cfd] = list()
+        study_metrics['cfd_confidence'][cfd].append(StudyMetric(iter_num=current_iter, value=cfd_metadata[cfd]['weight'], elapsed_time=elapsed_time))
 
     pickle.dump( study_metrics, open('./store/' + project_id + '/study_metrics.p', 'wb') )
 

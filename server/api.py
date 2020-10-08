@@ -107,8 +107,8 @@ class Import(Resource):
         study_metrics['false_positives_full'] = list()
         study_metrics['false_positives_iter'] = list()
         study_metrics['cfd_confidence'] = dict()
-        for cfd in scenario['cfds']:
-            study_metrics['cfd_confidence'][cfd] = list()
+        # for cfd in scenario['cfds']:
+        #     study_metrics['cfd_confidence'][cfd] = list()
         study_metrics['error_accuracy_full'] = list()
         study_metrics['error_accuracy_iter'] = list()
 
