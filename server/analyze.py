@@ -45,7 +45,7 @@ def wHeuristicAC(cfd):
         'title': 0.8,
         'year': 0.3,
         'director': 0.6,
-        'viewerscore': 0.2
+        'userrating': 0.1
     }
     weights = {lh: wAC[lh] for lh in lhs}
     return weights

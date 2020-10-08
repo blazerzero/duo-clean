@@ -25,7 +25,6 @@ class Clean extends Component {
       feedback[this.state.data[f]['id']] = this.state.feedbackMap[f]
     }
     console.log(feedback);
-    await new Promise(r => setTimeout(r, 10000));
     formData.append('feedback', JSON.stringify(feedback));
     formData.append('is_new_feedback', (this.state.noNewFeedback === false ? 1 : 0));
     axios.post('http://localhost:5000/duo/api/clean', formData)
