@@ -326,9 +326,9 @@ class Clean(Resource):
         # if sampling_method != 'RANDOM-PURE':
         #     helpers.reinforceTuplesBasedOnInteraction(data, project_id, current_iter, is_new_feedback)
         #     print('*** Tuples reinforced based on interaction metrics ***')
-        if sampling_method == 'DUO':
-            helpers.reinforceTuplesBasedOnDependencies(data, project_id, current_iter, is_new_feedback, project_info)
-            print('*** Tuples reinforced based on FD/CFD weights ***')
+        # if sampling_method == 'DUO':
+        helpers.reinforceTuplesBasedOnDependencies(data, project_id, current_iter, is_new_feedback, project_info)
+        print('*** Tuples reinforced based on FD/CFD weights ***')
 
         # Build sample
         s_out = helpers.buildSample(data, sample_size, project_id, sampling_method, current_iter)
@@ -358,7 +358,17 @@ class Clean(Resource):
 
         print('*** Leaderboard created ***')
 
-        if current_iter == 30 or percentage_errors_found >= 0.9:
+        cfd_metadata = pickle.load( open('./store/' + project_id + '/cell_metadata.p', 'rb') )
+        best_cfd_m = None
+        best_cfd_conf_variation = 1
+        if len(cfd_metadata.keys()) > 0:
+            best_cfd = max(cfd_metadata, key=lambda x: cfd_metadata[x]['weight'])
+            best_cfd_m = cfd_metadata[best_cfd]
+            wh_len = len(best_cfd_m['weight_history'])
+            if wh_len >= 5:
+                best_cfd_conf_variation = best_cfd_m['weight_history'][wh_len-1] - best_cfd_m['weight_history'][wh_len-5]
+
+        if current_iter == 30 or percentage_errors_found >= 0.9 or (best_cfd_m is not None and abs(best_cfd_conf_variation) < 0.05):
             msg = '[DONE]'
         else:
             msg = '[SUCCESS]: Saved feedback and built new sample.'
