@@ -448,7 +448,7 @@ def buildCover(data, cfd, project_id, current_iter):
 #         return samplingRandomPure(data, sample_size, project_id)
 
 # BUILD PURELY RANDOM SAMPLE
-def buildSample(data, sample_size, project_id, current_iter):
+def buildSample(data, sample_size, project_id, sampling_method, current_iter):
     cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )   
     modeling_metadata = pickle.load( open('./store/' + project_id + '/modeling_metadata.p', 'rb') )
     start_time = pickle.load( open('./store/' + project_id + '/start_time.p', 'rb') )
@@ -458,7 +458,12 @@ def buildSample(data, sample_size, project_id, current_iter):
     
     # print('Sampling method: RANDOM-PURE')
     # GET SAMPLE
-    s_out = returnTuples(data, sample_size, project_id)     # Y = set(s_out.index)
+    if (sampling_method == 'DUO'):
+        print('DUO-INFORMED SAMPLING')
+        s_out = returnTuples(data, sample_size, project_id)     # Y = set(s_out.index)
+    else:
+        print('RANDOM SAMPLING')
+        s_out = data.sample(n=sample_size)      # Y = set(s_out.index)
 
     # MODELING METRICS
     if current_iter == 0:

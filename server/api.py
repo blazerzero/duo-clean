@@ -165,7 +165,7 @@ class Sample(Resource):
         sampling_method = project_info['scenario']['sampling_method']
         
         # Build sample and update tuple weights post-sampling
-        s_out = helpers.buildSample(data, sample_size, project_id, current_iter=0)
+        s_out = helpers.buildSample(data, sample_size, project_id, sampling_method, current_iter=0)
         s_out_dict = list(s_out.T.to_dict().values())
         s_out_header = s_out_dict[0].keys()
         with open('./store/' + project_id + '/current_sample.csv', 'w', newline='') as f:
@@ -186,7 +186,8 @@ class Sample(Resource):
                 })
 
         print('*** Feedback object created ***')
-        s_out['id'] = s_out.index
+        
+        s_out.insert(0, 'id', s_out.index, True)
 
         # Return information to the user
         returned_data = {
@@ -245,7 +246,7 @@ class Resume(Resource):
         else:
             msg = '[SUCCESS] Successfully built sample.'
 
-        s_out['id'] = s_out.index
+        s_out.insert(0, 'id', s_out.index, True)
 
         # Return information to the user
         returned_data = {
@@ -330,7 +331,7 @@ class Clean(Resource):
             print('*** Tuples reinforced based on FD/CFD weights ***')
 
         # Build sample
-        s_out = helpers.buildSample(data, sample_size, project_id, current_iter)
+        s_out = helpers.buildSample(data, sample_size, project_id, sampling_method, current_iter)
         s_out_dict = list(s_out.T.to_dict().values())
         s_out_header = s_out_dict[0].keys()
         with open('./store/' + project_id + '/current_sample.csv', 'w', newline='') as f:
