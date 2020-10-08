@@ -181,7 +181,7 @@ def explainFeedback(full_dataset, dirty_sample, project_id, current_iter):
         writer.writerows(rep_dict)
     print('*** Dirty and repaired datasets saved as CSV for XPlode ***')
 
-    process = sp.Popen(['./xplode/CTane', dirty_sample_fp, rep_sample_fp, '0.5', str(math.ceil(0.5*len(dirty_sample.index)))], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})
+    process = sp.Popen(['./xplode/CTane', dirty_sample_fp, rep_sample_fp, '0.8', str(math.ceil(0.5*len(dirty_sample.index)))], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})
     res = process.communicate()
     print('*** XPlode finished ***')
 
@@ -280,7 +280,7 @@ def reinforceTuplesBasedOnDependencies(data, project_id, current_iter, is_new_fe
     for cfd, cfd_m in cfd_metadata.items():
         # Bias towards simpler rules
         lhs = cfd.split(' => ')[0][1:-1].split(', ')
-        num_attributes = len(lhs) + 1
+        num_attributes = len(lhs)
         complexity_bias = 1 / num_attributes
         print('*** Complexity bias calculated ***')
 
@@ -319,10 +319,10 @@ def reinforceTuplesBasedOnDependencies(data, project_id, current_iter, is_new_fe
     violations = cfd_m['violations']
     print('*** Calculate cover and violating tuples for CFD ***')
     for idx in cover:
-        tuple_metadata[idx]['weight'] += 1
+        tuple_metadata[idx]['weight'] += 2.5
         if idx in violations:
-            tuple_metadata[idx]['weight'] += 1
-        print('*** Tuple weight updated ***')
+            tuple_metadata[idx]['weight'] += 5
+        # print('*** Tuple weight updated ***')
 
     tuple_metadata = normalizeWeights(tuple_metadata)
     print('*** Tuple weights normalized ***')

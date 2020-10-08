@@ -358,7 +358,7 @@ class Clean(Resource):
 
         print('*** Leaderboard created ***')
 
-        cfd_metadata = pickle.load( open('./store/' + project_id + '/cell_metadata.p', 'rb') )
+        cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
         best_cfd_m = None
         best_cfd_conf_variation = 1
         if len(cfd_metadata.keys()) > 0:
