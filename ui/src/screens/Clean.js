@@ -371,7 +371,7 @@ class Clean extends Component {
                                 {item}
                                 {this.state.sortMethod[item] === 'ASC'
                                   ? <HiSortDescending onClick={this._handleSort.bind(this, item)} cursor='pointer' />
-                                  : (this.state.sortMethod[item] == 'DESC' ? <HiSortAscending onClick={this._handleSort.bind(this, item)} cursor='pointer' /> : <HiMenu onClick={this._handleSort.bind(this, item)} cursor='pointer' />)
+                                  : (this.state.sortMethod[item] === 'DESC' ? <HiSortAscending onClick={this._handleSort.bind(this, item)} cursor='pointer' /> : <HiMenu onClick={this._handleSort.bind(this, item)} cursor='pointer' />)
                                 }
                               </th>)
                           }) }
