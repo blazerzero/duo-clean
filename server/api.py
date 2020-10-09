@@ -365,10 +365,10 @@ class Clean(Resource):
             best_cfd = max(cfd_metadata, key=lambda x: cfd_metadata[x]['weight'])
             best_cfd_m = cfd_metadata[best_cfd]
             wh_len = len(best_cfd_m['weight_history'])
-            if wh_len >= 5:
-                best_cfd_conf_variation = best_cfd_m['weight_history'][wh_len-1] - best_cfd_m['weight_history'][wh_len-5]
+            if wh_len >= 3:
+                best_cfd_conf_variation = best_cfd_m['weight_history'][wh_len-1] - best_cfd_m['weight_history'][wh_len-3]
 
-        if current_iter == 30 or percentage_errors_found >= 0.9 or (best_cfd_m is not None and abs(best_cfd_conf_variation) < 0.05):
+        if current_iter == 30 or (best_cfd_m is not None and abs(best_cfd_conf_variation) < 0.05):
             msg = '[DONE]'
         else:
             msg = '[SUCCESS]: Saved feedback and built new sample.'
