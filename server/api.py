@@ -119,8 +119,8 @@ class Import(Resource):
         modeling_metadata['X'] = list()
         modeling_metadata['Y'] = list()
         modeling_metadata['y_supp_h'] = dict()
-        modeling_metadata['p_h'] = dict()
-        modeling_metadata['p_h']['hUniform'] = dict()   # TODO: Do this for each p(h) heuristic
+        # modeling_metadata['p_h'] = dict()
+        # modeling_metadata['p_h']['hUniform'] = dict()   # TODO: Do this for each p(h) heuristic
 
         print('*** Metadata and study metric objects initialized ***')
 

@@ -19,12 +19,12 @@ class PHGivenX(object):
         self.h = h
         self.value = value
 
-def wHeuristicUniform(cfd):
+def aHeuristicUniform(cfd):
     lhs = cfd.split(' => ')[0][1:-1].split(', ')
     weights = {lh: 0.5 for lh in lhs}
     return weights
 
-def wHeuristicUV(cfd, data):
+def aHeuristicUV(cfd, data):
     lhs = cfd.split(' => ')[0][1:-1].split(', ')
     weights = dict()
     for lh in lhs:
@@ -32,7 +32,7 @@ def wHeuristicUV(cfd, data):
         weights[lh] = numUV / len(data.index)
     return weights
 
-def wHeuristicAC(cfd):
+def aHeuristicAC(cfd):
     lhs = cfd.split(' => ')[0][1:-1].split(', ')
     wAC = {
         'type': 0.4,
@@ -49,6 +49,24 @@ def wHeuristicAC(cfd):
     }
     weights = {lh: wAC[lh] for lh in lhs}
     return weights
+
+def aHeuristicCombo(cfd, data):
+    lhs = cfd.split(' => ')[0][1:-1].split(', ')
+    wUV = aHeuristicUV(cfd, data)
+    wAC = aHeuristicAC(cfd)
+    weights = {lh: wUV[lh] * wAC[lh] for lh in lhs}
+    return weights
+
+def sHeuristicUniform(cfd):
+    return 0.5      # since the user can believe multiple FDs, we give each FD a 50/50 chance of being believed under sUniform
+
+def sHeuristicSetRelation(cfd, all_cfds):
+    lhs = set(cfd.split(' => ')[0][1:-1].split(', '))
+    subset_cfds = [c for c in all_cfds if lhs.issuperset(set(c.split(' => ')[0][1:-1].split(', ')))]
+    superset_cfds = [c for c in all_cfds if set(c.split(' => ')[0][1:-1].split(', ')).issuperset(lhs)]
+    #TEMP
+    return 0.5
+    # TODO: Logic for sSetRelation
 
 def bayes(sampling_method):
     with open('scenarios.json') as f:
@@ -70,20 +88,55 @@ def bayes(sampling_method):
         bayes_modeling_metadata['p_Y_in_C_given_X'] = dict()
         iter_count = pickle.load( open('./store/' + project_id + '/current_iter.p', 'rb') )
 
+        p_h = dict()
+        p_h['aUNI'] = dict()
+        p_h['aUV'] = dict()
+        p_h['aAC'] = dict()
+        p_h['aCOMBO'] = dict()
+        p_h['sUNI'] = dict()
+        p_h['sSR'] = dict()
+        bayes_modeling_metadata['p_h'] = dict()
+        bayes_modeling_metadata['p_h']['aUNI-sUNI'] = dict()
+        bayes_modeling_metadata['p_h']['aUNI-sSR'] = dict()
+        bayes_modeling_metadata['p_h']['aUV-sUNI'] = dict()
+        bayes_modeling_metadata['p_h']['aUV-sSR'] = dict()
+        bayes_modeling_metadata['p_h']['aAC-sUNI'] = dict()
+        bayes_modeling_metadata['p_h']['aAC-sSR'] = dict()
+        bayes_modeling_metadata['p_h']['aCOMBO-sUNI'] = dict()
+        bayes_modeling_metadata['p_h']['aCOMBO-sSR'] = dict()
+
+        all_cfds = cfd_metadata.keys()
+
         # p(h)        
-        for cfd in cfd_metadata.keys():
+        for cfd in all_cfds:
             # UNIFORM ATTRIBUTE WEIGHTS
-            wUniform = wHeuristicUniform(cfd)   # attribute weights (hUniform)
-            wUV = wHeuristicUV(cfd, data)       # attribute weights (hUV)
-            wAC = wHeuristicAC(cfd) # attribute weights (hAC)
+            wUniform = aHeuristicUniform(cfd)   # attribute weights (aUniform)
+            wUV = aHeuristicUV(cfd, data)       # attribute weights (aUV)
+            wAC = aHeuristicAC(cfd) # attribute weights (aAC)
+            wCombo = aHeuristicCombo(cfd, data) # attribute weights (aCombo = aUV * aAC)
 
             # p(h | [heuristic]) = PI_i w(a_i), where a_i is an attribute in the LHS of h
-            phUniform = np.prod([v for _, v in wUniform.items()])   # p(h | hUniform)
-            phUV = np.prod([v for _, v in wUV.items()])     # p(h | hUV)
-            phAC = np.prod([v for _, v in wAC.items()])     # p(h | hAC)
-            bayes_modeling_metadata['p_h']['hUniform'][cfd] = phUniform
-            bayes_modeling_metadata['p_h']['hUV'][cfd] = phUV
-            bayes_modeling_metadata['p_h']['hAC'][cfd] = phAC
+            phaUniform = np.prod([v for _, v in wUniform.items()])   # p(h | aUniform)
+            phaUV = np.prod([v for _, v in wUV.items()])     # p(h | aUV)
+            phaAC = np.prod([v for _, v in wAC.items()])     # p(h | aAC)
+            phaCombo = np.prod([v for _, v in wCombo.items()])   # p(h | aCombo)
+            phsUniform = sHeuristicUniform(cfd)
+            phsSetRelation = sHeuristicSetRelation(cfd, all_cfds)
+            p_h['aUNI'][cfd] = phaUniform
+            p_h['aUV'][cfd] = phaUV
+            p_h['aAC'][cfd] = phaAC
+            p_h['aCOMBO'][cfd] = phaCombo
+            p_h['sUNI'][cfd] = phsUniform
+            p_h['sSR'][cfd] = phsSetRelation
+
+            bayes_modeling_metadata['p_h']['aUNI-sUNI'][cfd] = p_h['aUNI'][cfd] * p_h['sUNI'][cfd]
+            bayes_modeling_metadata['p_h']['aUNI-sSR'][cfd] = p_h['aUNI'][cfd] * p_h['sSR'][cfd]
+            bayes_modeling_metadata['p_h']['aUV-sUNI'][cfd] = p_h['aUV'][cfd] * p_h['sUNI'][cfd]
+            bayes_modeling_metadata['p_h']['aUV-sSR'][cfd] = p_h['aUV'][cfd] * p_h['sSR'][cfd]
+            bayes_modeling_metadata['p_h']['aAC-sUNI'][cfd] = p_h['aAC'][cfd] * p_h['sUNI'][cfd]
+            bayes_modeling_metadata['p_h']['aAC-sSR'][cfd] = p_h['aAC'][cfd] * p_h['sSR'][cfd]
+            bayes_modeling_metadata['p_h']['aCOMBO-sUNI'][cfd] = p_h['aCOMBO'][cfd] * p_h['sUNI'][cfd]
+            bayes_modeling_metadata['p_h']['aCOMBO-sSR'][cfd] = p_h['aCOMBO'][cfd] * p_h['sSR'][cfd]
 
         for heur in bayes_modeling_metadata['p_h'].keys():
             bayes_modeling_metadata['p_Y_in_C_given_X'][heur] = list()
@@ -148,14 +201,55 @@ def max_likelihood(sampling_method):
         min_modeling_metadata['p_Y_in_C_given_X'] = dict()
         iter_count = pickle.load( open('./store/' + project_id + '/current_iter.p', 'rb') )
 
-        # P(h)        
-        for cfd in cfd_metadata.keys():
+        p_h = dict()
+        p_h['aUNI'] = dict()
+        p_h['aUV'] = dict()
+        p_h['aAC'] = dict()
+        p_h['aCOMBO'] = dict()
+        p_h['sUNI'] = dict()
+        p_h['sSR'] = dict()
+        min_modeling_metadata['p_h'] = dict()
+        min_modeling_metadata['p_h']['aUNI-sUNI'] = dict()
+        min_modeling_metadata['p_h']['aUNI-sSR'] = dict()
+        min_modeling_metadata['p_h']['aUV-sUNI'] = dict()
+        min_modeling_metadata['p_h']['aUV-sSR'] = dict()
+        min_modeling_metadata['p_h']['aAC-sUNI'] = dict()
+        min_modeling_metadata['p_h']['aAC-sSR'] = dict()
+        min_modeling_metadata['p_h']['aCOMBO-sUNI'] = dict()
+        min_modeling_metadata['p_h']['aCOMBO-sSR'] = dict()
+
+        all_cfds = cfd_metadata.keys()
+
+        # p(h)        
+        for cfd in all_cfds:
             # UNIFORM ATTRIBUTE WEIGHTS
-            wUniform = wHeuristicUniform(cfd)   # attribute weights (hUniform)
+            wUniform = aHeuristicUniform(cfd)   # attribute weights (aUniform)
+            wUV = aHeuristicUV(cfd, data)       # attribute weights (aUV)
+            wAC = aHeuristicAC(cfd) # attribute weights (aAC)
+            wCombo = aHeuristicCombo(cfd, data) # attribute weights (aCombo = aUV * aAC)
 
             # p(h | [heuristic]) = PI_i w(a_i), where a_i is an attribute in the LHS of h
-            phUniform = np.prod([v for _, v in wUniform.items()])   # p(h | hUniform)
-            min_modeling_metadata['p_h']['hUniform'][cfd] = phUniform
+            phaUniform = np.prod([v for _, v in wUniform.items()])   # p(h | aUniform)
+            phaUV = np.prod([v for _, v in wUV.items()])     # p(h | aUV)
+            phaAC = np.prod([v for _, v in wAC.items()])     # p(h | aAC)
+            phaCombo = np.prod([v for _, v in wCombo.items()])   # p(h | aCombo)
+            phsUniform = sHeuristicUniform(cfd)
+            phsSetRelation = sHeuristicSetRelation(cfd, all_cfds)
+            p_h['aUNI'][cfd] = phaUniform
+            p_h['aUV'][cfd] = phaUV
+            p_h['aAC'][cfd] = phaAC
+            p_h['aCOMBO'][cfd] = phaCombo
+            p_h['sUNI'][cfd] = phsUniform
+            p_h['sSR'][cfd] = phsSetRelation
+
+            min_modeling_metadata['p_h']['aUNI-sUNI'][cfd] = p_h['aUNI'][cfd] * p_h['sUNI'][cfd]
+            min_modeling_metadata['p_h']['aUNI-sSR'][cfd] = p_h['aUNI'][cfd] * p_h['sSR'][cfd]
+            min_modeling_metadata['p_h']['aUV-sUNI'][cfd] = p_h['aUV'][cfd] * p_h['sUNI'][cfd]
+            min_modeling_metadata['p_h']['aUV-sSR'][cfd] = p_h['aUV'][cfd] * p_h['sSR'][cfd]
+            min_modeling_metadata['p_h']['aAC-sUNI'][cfd] = p_h['aAC'][cfd] * p_h['sUNI'][cfd]
+            min_modeling_metadata['p_h']['aAC-sSR'][cfd] = p_h['aAC'][cfd] * p_h['sSR'][cfd]
+            min_modeling_metadata['p_h']['aCOMBO-sUNI'][cfd] = p_h['aCOMBO'][cfd] * p_h['sUNI'][cfd]
+            min_modeling_metadata['p_h']['aCOMBO-sSR'][cfd] = p_h['aCOMBO'][cfd] * p_h['sSR'][cfd]
 
         for heur in min_modeling_metadata['p_h'].keys():
             min_modeling_metadata['p_Y_in_C_given_X'][heur] = list()
