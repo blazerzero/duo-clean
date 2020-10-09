@@ -61,12 +61,19 @@ def sHeuristicUniform(cfd):
     return 0.5      # since the user can believe multiple FDs, we give each FD a 50/50 chance of being believed under sUniform
 
 def sHeuristicSetRelation(cfd, all_cfds):
-    lhs = set(cfd.split(' => ')[0][1:-1].split(', '))
-    subset_cfds = [c for c in all_cfds if lhs.issuperset(set(c.split(' => ')[0][1:-1].split(', ')))]
-    superset_cfds = [c for c in all_cfds if set(c.split(' => ')[0][1:-1].split(', ')).issuperset(lhs)]
-    #TEMP
-    return 0.5
-    # TODO: Logic for sSetRelation
+    lhs = cfd.split(' => ')[0][1:-1].split(', ')
+    lhs_set = set(lhs)
+    subset_cfds = set([c.split(' => ')[0][1:-1] for c in all_cfds if lhs_set.issuperset(set(c.split(' => ')[0][1:-1].split(', ')))])
+    superset_cfds = set([c.split(' => ')[0][1:-1] for c in all_cfds if set(c.split(' => ')[0][1:-1].split(', ')).issuperset(lhs_set)])
+
+    all_related_cfd_set = subset_cfds | superset_cfds
+    all_related_cfds = [c.split(', ') for c in all_related_cfd_set]
+    all_related_cfds.append(lhs)
+    all_related_cfds.sort(key=len)
+    lhs_idx = all_related_cfds.index(lhs)
+    weight = (len(lhs_idx) - lhs_idx) / len(lhs_idx)
+    return weight
+
 
 def bayes(sampling_method):
     with open('scenarios.json') as f:
@@ -194,6 +201,7 @@ def max_likelihood(sampling_method):
         scenario_id = project_info['scenario_id']
         if scenario_id not in scenario_ids:
             break
+        data = project_info['scenario']['clean_dataset']
         
         modeling_metadata = pickle.load( open('./store/' + project_id + '/modeling_metadata.p', 'rb') )
         cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
