@@ -28,7 +28,7 @@ class Clean extends Component {
     formData.append('feedback', JSON.stringify(feedback));
     formData.append('refresh', (refresh === true ? 1 : 0));
     formData.append('is_new_feedback', (this.state.noNewFeedback === false ? 1 : 0));
-    axios.post('http://localhost:5000/duo/api/clean', formData)
+    axios.post('http://167.71.155.153:5000/duo/api/clean', formData)
         .then(async(response) => {
           console.log(response.data);
           var res = JSON.parse(response.data);
@@ -109,7 +109,7 @@ class Clean extends Component {
     const formData = new FormData();
     formData.append('project_id', project_id);
     console.log(formData.get('project_id'));
-    axios.post('http://localhost:5000/duo/api/sample', formData)
+    axios.post('http://167.71.155.153:5000/duo/api/sample', formData)
         .then(async(response) => {
           var res = JSON.parse(response.data);
           var { sample, feedback, msg, true_pos, false_pos } = pick(res, ['sample', 'feedback', 'msg', 'true_pos', 'false_pos'])
@@ -160,6 +160,7 @@ class Clean extends Component {
       }
     }
     console.log(data);
+    console.log(feedback);
 
     var feedbackMap = await this._buildFeedbackMap(data, feedback);
     this.setState({ data, feedbackMap, true_pos, false_pos }, () => {
