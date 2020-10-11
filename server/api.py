@@ -166,12 +166,14 @@ class Sample(Resource):
         
         # Build sample and update tuple weights post-sampling
         s_out = helpers.buildSample(data, sample_size, project_id, sampling_method, current_iter=0)
-        s_out_dict = list(s_out.T.to_dict().values())
-        s_out_header = s_out_dict[0].keys()
-        with open('./store/' + project_id + '/current_sample.csv', 'w', newline='') as f:
-            writer = csv.DictWriter(f, s_out_header)
-            writer.writeheader()
-            writer.writerows(s_out_dict)
+        # s_out_dict = list(s_out.T.to_dict().values())
+        # s_out_header = s_out_dict[0].keys()
+        # with open('./store/' + project_id + '/current_sample.csv', 'w', newline='') as f:
+        #     writer = csv.DictWriter(f, s_out_header)
+        #     writer.writeheader()
+        #     writer.writerows(s_out_dict)
+        s_index = s_out.index
+        pickle.dump( s_index, open('./store/' + project_id + '/current_sample.p', 'wb') )
 
         print('*** Sample built and saved with ' + sampling_method + ' ***')
 
@@ -216,10 +218,14 @@ class Resume(Resource):
             response = json.dumps(returned_data)
             return response, 200, {'Access-Control-Allow-Origin': '*'}
             
-        s_out = pd.read_csv('./store/' + project_id + '/current_sample.csv', keep_default_na=False)
+        # s_out = pd.read_csv('./store/' + project_id + '/current_sample.csv', keep_default_na=False)
+        s_index = pickle.load( open('./store/' + project_id + '/current_sample.p', 'rb') )
 
         with open('./store/' + project_id + '/project_info.json') as f:
             project_info = json.load(f)
+
+        data = pd.read_csv(project_info['scenario']['dirty_dataset'], keep_default_na=False)
+        s_out = data.loc[s_index, :]
 
         # Build changes map for front-end
         feedback = list()
@@ -246,11 +252,12 @@ class Resume(Resource):
         else:
             msg = '[SUCCESS] Successfully built sample.'
 
+        header = s_out.columns.list()
         s_out.insert(0, 'id', s_out.index, True)
 
         # Return information to the user
         returned_data = {
-            'header': s_out.columns.tolist(),
+            'header': header,
             'sample': s_out.to_json(orient='index'),
             'feedback': json.dumps(feedback),
             'true_pos': true_pos,
@@ -273,6 +280,7 @@ class Clean(Resource):
         is_new_feedback = int(request.form.get('is_new_feedback'))
         refresh = int(request.form.get('refresh'))
         feedback = pd.DataFrame.from_dict(feedback, orient='index')
+        print(feedback)
         sample_size = 10
 
         print('*** Necessary objects loaded ***')
@@ -334,12 +342,14 @@ class Clean(Resource):
 
         # Build sample
         s_out = helpers.buildSample(data, sample_size, project_id, sampling_method, current_iter)
-        s_out_dict = list(s_out.T.to_dict().values())
-        s_out_header = s_out_dict[0].keys()
-        with open('./store/' + project_id + '/current_sample.csv', 'w', newline='') as f:
-            writer = csv.DictWriter(f, s_out_header)
-            writer.writeheader()
-            writer.writerows(s_out_dict)
+        # s_out_dict = list(s_out.T.to_dict().values())
+        # s_out_header = s_out_dict[0].keys()
+        # with open('./store/' + project_id + '/current_sample.csv', 'w', newline='') as f:
+        #     writer = csv.DictWriter(f, s_out_header)
+        #     writer.writeheader()
+        #     writer.writerows(s_out_dict)
+        s_index = s_out.index
+        pickle.dump( s_index, open('./store/' + project_id + '/current_sample.p', 'wb') )
 
         print('*** New sample created and saved ***')
 
