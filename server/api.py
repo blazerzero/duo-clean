@@ -252,7 +252,7 @@ class Resume(Resource):
         else:
             msg = '[SUCCESS] Successfully built sample.'
 
-        header = s_out.columns.list()
+        header = s_out.columns.tolist()
         s_out.insert(0, 'id', s_out.index, True)
 
         # Return information to the user
@@ -302,7 +302,7 @@ class Clean(Resource):
 
         # Save noise feedback
         percentage_errors_found = 0
-        if is_new_feedback == 1 and refresh === 0:
+        if is_new_feedback == 1 and refresh == 0:
             print('*** NEW FEEDBACK! ***')
             percentage_errors_found = helpers.saveNoiseFeedback(data, feedback, project_id, current_iter)
             print('*** Noise feedback saved ***')
