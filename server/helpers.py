@@ -12,7 +12,7 @@ import math
 import statistics
 from collections import Counter
 
-from analyze import sHeuristicSetRelation
+import analyze
 
 class CellFeedback(object):
     def __init__(self, iter_num, marked, elapsed_time):
@@ -283,7 +283,7 @@ def reinforceTuplesBasedOnDependencies(data, project_id, current_iter, is_new_fe
     for cfd, cfd_m in cfd_metadata.items():
         # Bias towards simpler rules
         lhs = cfd.split(' => ')[0][1:-1].split(', ')
-        complexity_bias = sHeuristicSetRelation(cfd, all_cfds)
+        complexity_bias = analyze.sHeuristicSetRelation(cfd, all_cfds)
         print('*** Complexity bias calculated ***')
 
         # System's weighted prior on rule confidence
