@@ -181,7 +181,8 @@ def explainFeedback(full_dataset, dirty_sample, project_id, current_iter):
         writer.writerows(rep_dict)
     print('*** Dirty and repaired datasets saved as CSV for XPlode ***')
 
-    process = sp.Popen(['./xplode/CTane', dirty_sample_fp, rep_sample_fp, '0.8', str(math.ceil(0.5*len(dirty_sample.index)))], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})
+    process = sp.Popen(['./xplode/CTane', dirty_sample_fp, rep_sample_fp, '0.8', str(math.ceil(0.5*len(dirty_sample.index)))], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})   # XPlode
+    # process = sp.Popen(['./data/cfddiscovery/CFDD', rep_sample_fp, str(math.ceil(0.8*len(rep_sample.index))), 0.8, 3], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})     # CFDD
     res = process.communicate()
     print('*** XPlode finished ***')
 

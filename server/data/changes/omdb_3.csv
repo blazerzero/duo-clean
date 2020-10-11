@@ -1,20 +1,22 @@
-70.rating,TV-PG,TV-MA
-6.rating,TV-PG,TV-14
-98.rating,TV-14,PG-13
-28.rating,TV-MA,TV-14
-89.rating,TV-PG,R
-47.rating,PG-13,TV-PG
-14.rating,TV-MA,TV-14
-25.rating,PG,TV-14
-57.rating,TV-PG,TV-MA
-21.rating,R,TV-14
-56.rating,TV-PG,TV-MA
-22.rating,TV-PG,TV-14
-24.rating,PG,TV-14
-79.rating,Not Rated,R
-95.rating,TV-MA,PG
-97.rating,TV-MA,PG-13
-67.rating,TV-14,TV-MA
-35.rating,Not Rated,TV-14
-37.rating,TV-PG,TV-14
-61.rating,TV-14,R
+20.rating,TV-PG,TV-14
+30.rating,Not Rated,TV-14
+31.rating,TV-PG,TV-14
+49.rating,TV-PG,Not Rated
+19.rating,R,TV-14
+10.rating,PG-13,TV-14
+37.rating,PG-13,TV-14
+14.rating,TV-PG,TV-14
+106.rating,R,PG-13
+55.rating,PG-13,R
+59.rating,PG,TV-MA
+77.rating,TV-PG,TV-MA
+23.rating,TV-PG,TV-14
+41.rating,PG-13,TV-14
+99.rating,PG,R
+5.rating,TV-MA,TV-14
+108.rating,R,PG-13
+2.rating,PG,TV-14
+97.rating,TV-PG,R
+63.rating,PG-13,TV-MA
+73.rating,PG,TV-MA
+91.rating,TV-PG,R

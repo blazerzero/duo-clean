@@ -15,7 +15,7 @@ import { HiMenu, HiSortAscending, HiSortDescending } from 'react-icons/hi';
 
 class Clean extends Component {
 
-  _handleSubmit = async() => {
+  _handleSubmit = async(refresh) => {
     this.setState({ isProcessing: true });
     const formData = new FormData();
     formData.append('project_id', this.state.project_id);
@@ -26,6 +26,7 @@ class Clean extends Component {
     }
     console.log(feedback);
     formData.append('feedback', JSON.stringify(feedback));
+    formData.append('refresh', (refresh === true ? 1 : 0));
     formData.append('is_new_feedback', (this.state.noNewFeedback === false ? 1 : 0));
     axios.post('http://localhost:5000/duo/api/clean', formData)
         .then(async(response) => {
@@ -195,7 +196,7 @@ class Clean extends Component {
   _handleRefreshClick = async() => {
     var noNewFeedback = true;
     this.setState({ noNewFeedback }, async () => {
-      await this._handleSubmit();
+      await this._handleSubmit(true);
     });
   }
 
@@ -412,7 +413,7 @@ class Clean extends Component {
                             variant='success'
                             className='btn-round right box-blur'
                             size='lg'
-                            onClick={this._handleSubmit}>
+                            onClick={this._handleSubmit(false)}>
                           SUBMIT FEEDBACK
                         </Button>
                         <Button

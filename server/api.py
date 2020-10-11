@@ -271,6 +271,7 @@ class Clean(Resource):
         project_id = request.form.get('project_id')
         feedback = json.loads(request.form.get('feedback'))
         is_new_feedback = int(request.form.get('is_new_feedback'))
+        refresh = int(request.form.get('refresh'))
         feedback = pd.DataFrame.from_dict(feedback, orient='index')
         sample_size = 10
 
@@ -293,7 +294,7 @@ class Clean(Resource):
 
         # Save noise feedback
         percentage_errors_found = 0
-        if is_new_feedback == 1:
+        if is_new_feedback == 1 and refresh === 0:
             print('*** NEW FEEDBACK! ***')
             percentage_errors_found = helpers.saveNoiseFeedback(data, feedback, project_id, current_iter)
             print('*** Noise feedback saved ***')
@@ -327,7 +328,8 @@ class Clean(Resource):
         #     helpers.reinforceTuplesBasedOnInteraction(data, project_id, current_iter, is_new_feedback)
         #     print('*** Tuples reinforced based on interaction metrics ***')
         # if sampling_method == 'DUO':
-        helpers.reinforceTuplesBasedOnDependencies(data, project_id, current_iter, is_new_feedback, project_info)
+        if refresh == 0:
+            helpers.reinforceTuplesBasedOnDependencies(data, project_id, current_iter, is_new_feedback, project_info)
         print('*** Tuples reinforced based on FD/CFD weights ***')
 
         # Build sample
@@ -366,9 +368,15 @@ class Clean(Resource):
             best_cfd_m = cfd_metadata[best_cfd]
             wh_len = len(best_cfd_m['weight_history'])
             if wh_len >= 3:
-                best_cfd_conf_variation = best_cfd_m['weight_history'][wh_len-1] - best_cfd_m['weight_history'][wh_len-3]
+                curr_w_conf = 0
+                for i in range(0, len(best_cfd_m['history'])):
+                    curr_w_conf += (best_cfd_m['history'][i].score / (current_iter - best_cfd_m['history'][i].iter_num + 1))
+                prev_3_w_conf = 0
+                for i in range(0, len(best_cfd_m['history'])-2):
+                    prev_3_w_conf += (best_cfd_m['history'][i].score / (current_iter - best_cfd_m['history'][i].iter_num + 1))
+                best_cfd_conf_variation = curr_w_conf - prev_3_w_conf
 
-        if current_iter == 30 or (best_cfd_m is not None and abs(best_cfd_conf_variation) < 0.05):
+        if refresh == 0 and (current_iter == 30 or (best_cfd_m is not None and abs(best_cfd_conf_variation) < 0.05)):
             msg = '[DONE]'
         else:
             msg = '[SUCCESS]: Saved feedback and built new sample.'
