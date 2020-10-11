@@ -193,8 +193,8 @@ def explainFeedback(full_dataset, dirty_sample, project_id, current_iter):
         output = res[0].decode('latin_1').replace(',]', ']')
         cfds = json.loads(output)['cfds']
         print('*** CFDs from XPlode extracted ***')
-        print('cfds from xplode:', cfds)
         accepted_cfds = [c for c in cfds if c['cfd'].split(' => ')[0] != '()']
+        print('cfds from xplode:', accepted_cfds)
         for c in accepted_cfds:
             if c['cfd'] not in cfd_metadata.keys():
                 cfd_metadata[c['cfd']] = dict()
