@@ -12,12 +12,16 @@ import statistics
 from operator import attrgetter
 from collections import Counter
 
-from helpers import StudyMetric
-
 class PHGivenX(object):
     def __init__(self, h, value):
         self.h = h
         self.value = value
+
+class StudyMetric(object):
+    def __init__(self, iter_num, value, elapsed_time):
+        self.iter_num = iter_num
+        self.value = value
+        self.elapsed_time = elapsed_time
 
 def aHeuristicUniform(cfd):
     lhs = cfd.split(' => ')[0][1:-1].split(', ')
