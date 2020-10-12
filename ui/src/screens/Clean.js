@@ -15,7 +15,7 @@ import { HiMenu, HiSortAscending, HiSortDescending } from 'react-icons/hi';
 
 class Clean extends Component {
 
-  _handleSubmit = async(refresh) => {
+  _handleSubmit = async() => {
     this.setState({ isProcessing: true });
     const formData = new FormData();
     formData.append('project_id', this.state.project_id);
@@ -26,7 +26,7 @@ class Clean extends Component {
     }
     console.log(feedback);
     formData.append('feedback', JSON.stringify(feedback));
-    formData.append('refresh', (refresh === true ? 1 : 0));
+    formData.append('refresh', (this.state.refresh === true ? 1 : 0));
     formData.append('is_new_feedback', (this.state.noNewFeedback === false ? 1 : 0));
     axios.post('http://167.71.155.153:5000/duo/api/clean', formData)
         .then(async(response) => {
@@ -34,7 +34,7 @@ class Clean extends Component {
           var res = JSON.parse(response.data);
           var { msg } = pick(res, ['msg'])
           if (msg === '[DONE]') {
-            this.setState({ interactionDone: true});
+            this.setState({ interactionDone: true });
           }
           else {
             var { sample, feedback, true_pos, false_pos } = pick(res, ['sample', 'feedback', 'true_pos', 'false_pos'])
@@ -71,7 +71,8 @@ class Clean extends Component {
               noNewFeedback: false,
               true_pos,
               false_pos,
-              sortMethod
+              sortMethod,
+              refresh: false,
             }, () => {
               console.log(this.state.true_pos, this.state.false_pos);
             });
@@ -196,8 +197,8 @@ class Clean extends Component {
 
   _handleRefreshClick = async() => {
     var noNewFeedback = true;
-    this.setState({ noNewFeedback }, async () => {
-      await this._handleSubmit(true);
+    this.setState({ noNewFeedback, refresh: true }, async () => {
+      await this._handleSubmit();
     });
   }
 
@@ -292,7 +293,8 @@ class Clean extends Component {
       false_pos: 0,
       interactionDone: false,
       scenario_desc: null,
-      sortMethod: {}
+      sortMethod: {},
+      refresh: false,
     };
   }
 
@@ -414,7 +416,7 @@ class Clean extends Component {
                             variant='success'
                             className='btn-round right box-blur'
                             size='lg'
-                            onClick={this._handleSubmit(false)}>
+                            onClick={this._handleSubmit}>
                           SUBMIT FEEDBACK
                         </Button>
                         <Button
