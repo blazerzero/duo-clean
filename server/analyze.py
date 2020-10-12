@@ -12,12 +12,16 @@ import statistics
 from operator import attrgetter
 from collections import Counter
 
-from helpers import StudyMetric
-
 class PHGivenX(object):
     def __init__(self, h, value):
         self.h = h
         self.value = value
+
+class StudyMetric(object):
+    def __init__(self, iter_num, value, elapsed_time):
+        self.iter_num = iter_num
+        self.value = value
+        self.elapsed_time = elapsed_time
 
 def aHeuristicUniform(cfd):
     lhs = cfd.split(' => ')[0][1:-1].split(', ')
@@ -28,11 +32,11 @@ def aHeuristicUV(cfd, data):
     lhs = cfd.split(' => ')[0][1:-1].split(', ')
     weights = dict()
     for lh in lhs:
-        numUV = set(data[lhs])
+        numUV = len(set(data[lh])) if '=' not in lh else 1
         weights[lh] = numUV / len(data.index)
     return weights
 
-def aHeuristicAC(cfd):
+def aHeuristicAC(cfd, data):
     lhs = cfd.split(' => ')[0][1:-1].split(', ')
     wAC = {
         'type': 0.4,
@@ -44,16 +48,27 @@ def aHeuristicAC(cfd):
         'listingnumber': 0.9,
         'title': 0.8,
         'year': 0.3,
+        'rating': 0.75,
         'director': 0.6,
         'userrating': 0.1
     }
-    weights = {lh: wAC[lh] for lh in lhs}
+    weights = dict()
+    for lh in lhs:
+        if '=' in lh:
+            lh_key = lh.split('=')[0]
+            lh_val = lh.split('=')[1]
+            if lh_val.isnumeric():
+                lh_val = int(lh_val)
+            num_lh_val = len(data[data[lh_key] == lh_val])
+            weights[lh] = wAC[lh_key] / num_lh_val
+        else:
+            weights[lh] = wAC[lh]
     return weights
 
 def aHeuristicCombo(cfd, data):
     lhs = cfd.split(' => ')[0][1:-1].split(', ')
     wUV = aHeuristicUV(cfd, data)
-    wAC = aHeuristicAC(cfd)
+    wAC = aHeuristicAC(cfd, data)
     weights = {lh: wUV[lh] * wAC[lh] for lh in lhs}
     return weights
 
@@ -71,7 +86,7 @@ def sHeuristicSetRelation(cfd, all_cfds):
     all_related_cfds.append(lhs)
     all_related_cfds.sort(key=len)
     lhs_idx = all_related_cfds.index(lhs)
-    weight = (len(lhs_idx) - lhs_idx) / len(lhs_idx)
+    weight = (len(all_related_cfds) - lhs_idx) / len(all_related_cfds)
     return weight
 
 
@@ -87,7 +102,8 @@ def bayes(sampling_method):
         scenario_id = project_info['scenario_id']
         if scenario_id not in scenario_ids:
             break
-        data = project_info['scenario']['clean_dataset']
+       
+        data = pd.read_csv(project_info['scenario']['dirty_dataset'], keep_default_na=False)
         
         modeling_metadata = pickle.load( open('./store/' + project_id + '/modeling_metadata.p', 'rb') )
         cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
@@ -119,7 +135,7 @@ def bayes(sampling_method):
             # UNIFORM ATTRIBUTE WEIGHTS
             wUniform = aHeuristicUniform(cfd)   # attribute weights (aUniform)
             wUV = aHeuristicUV(cfd, data)       # attribute weights (aUV)
-            wAC = aHeuristicAC(cfd) # attribute weights (aAC)
+            wAC = aHeuristicAC(cfd, data) # attribute weights (aAC)
             wCombo = aHeuristicCombo(cfd, data) # attribute weights (aCombo = aUV * aAC)
 
             # p(h | [heuristic]) = PI_i w(a_i), where a_i is an attribute in the LHS of h
@@ -201,7 +217,8 @@ def max_likelihood(sampling_method):
         scenario_id = project_info['scenario_id']
         if scenario_id not in scenario_ids:
             break
-        data = project_info['scenario']['clean_dataset']
+        
+        data = pd.read_csv(project_info['scenario']['dirty_dataset'], keep_default_na=False)
         
         modeling_metadata = pickle.load( open('./store/' + project_id + '/modeling_metadata.p', 'rb') )
         cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
@@ -233,7 +250,7 @@ def max_likelihood(sampling_method):
             # UNIFORM ATTRIBUTE WEIGHTS
             wUniform = aHeuristicUniform(cfd)   # attribute weights (aUniform)
             wUV = aHeuristicUV(cfd, data)       # attribute weights (aUV)
-            wAC = aHeuristicAC(cfd) # attribute weights (aAC)
+            wAC = aHeuristicAC(cfd, data) # attribute weights (aAC)
             wCombo = aHeuristicCombo(cfd, data) # attribute weights (aCombo = aUV * aAC)
 
             # p(h | [heuristic]) = PI_i w(a_i), where a_i is an attribute in the LHS of h

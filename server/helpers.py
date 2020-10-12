@@ -10,8 +10,9 @@ import csv
 import pickle
 import math
 import statistics
-from scipy.special import lambertw
 from collections import Counter
+
+import analyze
 
 class CellFeedback(object):
     def __init__(self, iter_num, marked, elapsed_time):
@@ -192,8 +193,8 @@ def explainFeedback(full_dataset, dirty_sample, project_id, current_iter):
         output = res[0].decode('latin_1').replace(',]', ']')
         cfds = json.loads(output)['cfds']
         print('*** CFDs from XPlode extracted ***')
-        print('cfds from xplode:', cfds)
         accepted_cfds = [c for c in cfds if c['cfd'].split(' => ')[0] != '()']
+        print('cfds from xplode:', accepted_cfds)
         for c in accepted_cfds:
             if c['cfd'] not in cfd_metadata.keys():
                 cfd_metadata[c['cfd']] = dict()
@@ -278,11 +279,11 @@ def reinforceTuplesBasedOnDependencies(data, project_id, current_iter, is_new_fe
 
     print('*** Metadata objects loaded ***')
 
+    all_cfds = cfd_metadata.keys()
     for cfd, cfd_m in cfd_metadata.items():
         # Bias towards simpler rules
         lhs = cfd.split(' => ')[0][1:-1].split(', ')
-        num_attributes = len(lhs)
-        complexity_bias = 1 / num_attributes
+        complexity_bias = analyze.sHeuristicSetRelation(cfd, all_cfds)
         print('*** Complexity bias calculated ***')
 
         # System's weighted prior on rule confidence
