@@ -18,17 +18,15 @@ class Import extends Component {
     this.state = {
       scenarioID: '',
       projectID: '',
-      participantName: '',
       isProcessing: false,
     }
   }
 
   _handleSubmit = async(history) => {
-    if (this.state.scenarioID.length > 0 && this.state.participantName.length > 0 && this.state.projectID.length === 0) {
+    if (this.state.scenarioID.length > 0 && this.state.projectID.length === 0) {
       this.setState({ isProcessing: true });
       const formData = new FormData();
       formData.append('scenario_id', this.state.scenarioID);
-      formData.append('participant_name', this.state.participantName);
       axios.post('http://167.71.155.153:5000/duo/api/import', formData)
         .then(response => {
           this.setState({ isProcessing: false });
@@ -49,7 +47,7 @@ class Import extends Component {
           });
         })
         .catch(error => console.log(error));
-    } else if (this.state.projectID.length > 0 && this.state.scenarioID.length === 0 && this.state.participantName.length === 0) {
+    } else if (this.state.projectID.length > 0 && this.state.scenarioID.length === 0) {
       this.setState({ isProcessing: true });
       const formData = new FormData();
       formData.append('project_id', this.state.projectID);
@@ -96,12 +94,6 @@ class Import extends Component {
     this.setState({ projectID });
   }
 
-  _handleNameChange = (event) => {
-    console.log(event.target.value);
-    var participantName = event.target.value;
-    this.setState({ participantName });
-  }
-
   render() {
     return (
       <Route render={({ history }) => (
@@ -125,20 +117,6 @@ class Import extends Component {
                   <div className='home-header box-blur'>
                     <span>IF YOU'RE STARTING A NEW INTERACTION</span>
                   </div>
-                </Row>
-                <Row className='content-centered small'>
-                  <InputGroup>
-                    <InputGroup.Prepend>
-                      <InputGroup.Text>Name: </InputGroup.Text>
-                    </InputGroup.Prepend>
-                    <Form.Control
-                      type='text'
-                      aria-label='Enter your name.'
-                      required
-                      feedback='You must enter your name.'
-                      onChange={this._handleNameChange}
-                      />
-                  </InputGroup>
                 </Row>
                 <Row className='content-centered small'>
                   <InputGroup>

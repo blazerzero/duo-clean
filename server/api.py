@@ -55,12 +55,10 @@ class Import(Resource):
 
         # Read the scenario number and initialize the scenario accordingly
         scenario_id = request.form.get('scenario_id')
-        participant_name = request.form.get('participant_name')
         with open('scenarios.json', 'r') as f:
             scenarios_list = json.load(f)
         scenario = scenarios_list[scenario_id]
         project_info = {
-            'participant_name': participant_name,
             'scenario_id': scenario_id,
             'scenario': scenario,
             'score': 0,

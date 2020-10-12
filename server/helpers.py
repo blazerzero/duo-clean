@@ -562,28 +562,7 @@ def normalizeWeights(m_unnormalized):
 
     return m_normalized
 
-
-# BUILD LEADERBOARD
-def buildLeaderboard(scenario_id):
-    leaderboard = list()
-    project_ids = [d for d in os.listdir('./store') if os.path.isdir(os.path.join('./store/', d))]
-    for project_id in project_ids:
-        with open('./store/' + project_id + '/project_info.json') as f:
-            project_info = json.load(f)
-        if project_info['scenario_id'] == scenario_id:
-            leaderboard.append({
-                'project_id': project_id,
-                'name': project_info['participant_name'],
-                'score': project_info['score']
-            })
-    sortedLeaderboard = sorted(leaderboard, key=lambda x: x['score'], reverse=True)
-    sortedLeaderboardWithRank = [{
-        'rank': idx+1,
-        'name': l['name'],
-        'score': l['score']
-    } for idx, l in enumerate(sortedLeaderboard)]
-    return sortedLeaderboardWithRank
-
+# GET THE USER'S TRUE POSITIVE AND FALSE POSITIVE COUNTS
 def getUserScores(project_id):
     with open('./store/' + project_id + '/project_info.json') as f:
         project_info = json.load(f)
