@@ -198,7 +198,7 @@ def bayes(sampling_method):
                             p_h_given_X = phgx.value    # p(h | X)
                             i_y_supp_h = bayes_modeling_metadata['y_supp_h'][h][y]  # I(y in supp(h))
                             p_y_in_C_given_X += (i_y_supp_h * p_h_given_X)  # p(y in C | X) = I(y in supp(h)) * p(h | X)
-                            print('p(y in C | X) =', p_y_in_C_given_X)
+                            # print('p(y in C | X) =', p_y_in_C_given_X)
                             
                         p_Y_in_C_given_X *= p_y_in_C_given_X    # incorporating each y in Y into p(Y in C | X)
                     print('p(Y in C | X) =', p_Y_in_C_given_X)
@@ -325,7 +325,7 @@ def max_likelihood(sampling_method):
                     for y in min_modeling_metadata['Y'][it-1].value:
                         i_y_supp_h_ML = min_modeling_metadata['y_supp_h'][h_ML][y]  # I(y in supp(h_ML))
                         p_y_in_C_given_X = i_y_supp_h_ML * p_h_ML_given_X   # p(y in C | X) = I(y in supp(h_ML)) * p(h_ML | X)
-                        print(p_y_in_C_given_X)
+                        # print(p_y_in_C_given_X)
                         p_Y_in_C_given_X *= p_y_in_C_given_X    # incorporating each y in Y into p(Y in C | X)
                     print('p(Y in C | X) =', p_Y_in_C_given_X)
                     
