@@ -181,11 +181,13 @@ def bayes(sampling_method):
                         p_X_given_h = elem.value
                         p_h = bayes_modeling_metadata['p_h'][heur][h]   # p(h)
                         p_h_given_X = p_X_given_h * p_h     # p(h | X)
+                        #print(p_h_given_X)
                         p_h_given_X_list.append(PHGivenX(h=h, value=p_h_given_X))
                     
                     # normalized p(h | X) such that sum of all p(h | X) = 1
                     p_h_given_X_list_sum = sum([x.value for x in p_h_given_X_list])
                     p_h_given_X_list = [PHGivenX(h=x.h, value=((x.value/p_h_given_X_list_sum) if x.value > 0 else 0)) for x in p_h_given_X_list]
+                    # print([x.value for x in p_h_given_X_list])
 
                     # p(Y in C | X)
                     p_Y_in_C_given_X = 1
@@ -196,9 +198,10 @@ def bayes(sampling_method):
                             p_h_given_X = phgx.value    # p(h | X)
                             i_y_supp_h = bayes_modeling_metadata['y_supp_h'][h][y]  # I(y in supp(h))
                             p_y_in_C_given_X += (i_y_supp_h * p_h_given_X)  # p(y in C | X) = I(y in supp(h)) * p(h | X)
+                            print('p(y in C | X) =', p_y_in_C_given_X)
                             
                         p_Y_in_C_given_X *= p_y_in_C_given_X    # incorporating each y in Y into p(Y in C | X)
-                        print('p(Y in C | X) =', p_Y_in_C_given_X)
+                    print('p(Y in C | X) =', p_Y_in_C_given_X)
                     
                     bayes_modeling_metadata['p_Y_in_C_given_X'][heur].append(StudyMetric(iter_num=it, value=p_Y_in_C_given_X, elapsed_time=elapsed_time))
 
@@ -297,18 +300,34 @@ def max_likelihood(sampling_method):
                         if max_p_X_given_h <= curr_p_X_given_h:     # if an FD is found with a higher p(X | h)
                             max_p_X_given_h = curr_p_X_given_h      # update p(X | h_ML)
                             h_ML = cfd  # update h_ML
+
+                    p_h_given_X_list = list()
+                    for h in discovered_cfds:
+                        elem = [x for x in min_modeling_metadata['p_X_given_h'][h] if x.iter_num == it].pop()     # p(X | h) for this iteration
+                        p_X_given_h = elem.value
+                        p_h = min_modeling_metadata['p_h'][heur][h]   # p(h)
+                        p_h_given_X = p_X_given_h * p_h     # p(h | X)
+                        #print(p_h_given_X)
+                        p_h_given_X_list.append(PHGivenX(h=h, value=p_h_given_X))
+
+                    p_h_given_X_list_sum = sum([x.value for x in p_h_given_X_list])
+                    p_h_given_X_list = [PHGivenX(h=x.h, value=((x.value/p_h_given_X_list_sum) if x.value > 0 else 0)) for x in p_h_given_X_list]
                 
                     # p(h_ML | X)
-                    p_h_ML = min_modeling_metadata['p_h'][heur][h_ML]   # p(h_ML)
-                    p_h_ML_given_X = max_p_X_given_h * p_h_ML   # p(h_ML | X) = p(X | h_ML) * p(h_ML)
+                    # p_h_ML = min_modeling_metadata['p_h'][heur][h_ML]   # p(h_ML)
+                    p_h_ML_given_X = [x.value for x in p_h_given_X_list if x.h == h_ML].pop()
+                    # p_h_ML_given_X = max_p_X_given_h * p_h_ML   # p(h_ML | X) = p(X | h_ML) * p(h_ML)
+                    # print(p_h_ML_given_X)
+                    # print(p_h_ML_given_X)
 
                     # p(Y in C | X)
                     p_Y_in_C_given_X = 1
                     for y in min_modeling_metadata['Y'][it-1].value:
                         i_y_supp_h_ML = min_modeling_metadata['y_supp_h'][h_ML][y]  # I(y in supp(h_ML))
                         p_y_in_C_given_X = i_y_supp_h_ML * p_h_ML_given_X   # p(y in C | X) = I(y in supp(h_ML)) * p(h_ML | X)
+                        print(p_y_in_C_given_X)
                         p_Y_in_C_given_X *= p_y_in_C_given_X    # incorporating each y in Y into p(Y in C | X)
-                        print('p(Y in C | X) =', p_Y_in_C_given_X)
+                    print('p(Y in C | X) =', p_Y_in_C_given_X)
                     
                     min_modeling_metadata['p_Y_in_C_given_X'][heur].append(StudyMetric(iter_num=it, value=p_Y_in_C_given_X, elapsed_time=elapsed_time))
 
