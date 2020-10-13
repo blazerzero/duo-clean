@@ -141,49 +141,55 @@ def explainFeedback(full_dataset, dirty_sample, project_id, current_iter):
 
     dirty_sample = dirty_sample.applymap(str)
     
-    rep_sample = dirty_sample.copy(deep=True)
+    prepped_sample = dirty_sample.copy(deep=True)
+
+    marked_cols = list()
     
     for idx in dirty_sample.index:
         for col in dirty_sample.columns:
             cell = cell_metadata[int(idx)][col]
-            if current_iter > 1 and len(cell['feedback_history']) > 1 and cell['feedback_history'][-1].iter_num == current_iter and cell['feedback_history'][-2].marked is True:
-                dirty_sample.at[idx, col] = 'N/A'
+            # if current_iter > 1 and len(cell['feedback_history']) > 1 and cell['feedback_history'][-1].iter_num == current_iter and cell['feedback_history'][-2].marked is True:
+            #     dirty_sample.at[idx, col] = 'N/A'
 
             if len(cell['feedback_history']) >= 1 and cell['feedback_history'][-1].marked is True:
-                rep_sample.at[idx, col] = 'N/A'
+                marked_cols.append(idx)
+                break
+    
+    prepped_sample.drop(marked_cols)
+    print(prepped_sample)
     print('*** Feedback reflected in \'repaired\' dataset ***')
 
-    if dirty_sample.equals(rep_sample):
-        return
+    # if dirty_sample.equals(rep_sample):
+    #     return
 
-    dirty_sample_fp = './store/' + project_id + '/temp_sample_w_o_feedback.csv'
-    rep_sample_fp = './store/' + project_id + '/temp_sample_w_feedback.csv'
-    if os.path.exists('./store/' + project_id + '/temp_sample_w_o_feedback.csv'):
-        with open(dirty_sample_fp, 'r+') as f:
-            f.seek(0)
-            f.truncate()
+    # dirty_sample_fp = './store/' + project_id + '/temp_sample_w_o_feedback.csv'
+    prepped_sample_fp = './store/' + project_id + '/temp_sample_w_feedback.csv'
+    # if os.path.exists('./store/' + project_id + '/temp_sample_w_o_feedback.csv'):
+    #     with open(dirty_sample_fp, 'r+') as f:
+    #         f.seek(0)
+    #         f.truncate()
     if os.path.exists('./store/' + project_id + '/temp_sample_w_feedback.csv'):
-        with open(rep_sample_fp, 'r+') as f:
+        with open(prepped_sample_fp, 'r+') as f:
             f.seek(0)
             f.truncate()
 
-    d_dict = list(dirty_sample.T.to_dict().values())
-    d_header = d_dict[0].keys()
-    with open(dirty_sample_fp, 'w', newline='') as f:
-        writer = csv.DictWriter(f, d_header)
-        writer.writeheader()
-        writer.writerows(d_dict)
+    # d_dict = list(dirty_sample.T.to_dict().values())
+    # d_header = d_dict[0].keys()
+    # with open(dirty_sample_fp, 'w', newline='') as f:
+    #     writer = csv.DictWriter(f, d_header)
+    #     writer.writeheader()
+    #     writer.writerows(d_dict)
 
-    rep_dict = list(rep_sample.T.to_dict().values())
+    rep_dict = list(prepped_sample.T.to_dict().values())
     rep_header = rep_dict[0].keys()
-    with open(rep_sample_fp, 'w', newline='') as f:
+    with open(prepped_sample_fp, 'w', newline='') as f:
         writer = csv.DictWriter(f, rep_header)
         writer.writeheader()
         writer.writerows(rep_dict)
     print('*** Dirty and repaired datasets saved as CSV for XPlode ***')
 
-    process = sp.Popen(['./xplode/CTane', dirty_sample_fp, rep_sample_fp, '0.8', str(math.ceil(0.5*len(dirty_sample.index)))], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})   # XPlode
-    # process = sp.Popen(['./data/cfddiscovery/CFDD', rep_sample_fp, str(math.ceil(0.8*len(rep_sample.index))), 0.8, 3], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})     # CFDD
+    # process = sp.Popen(['./xplode/CTane', dirty_sample_fp, rep_sample_fp, '0.8', str(math.ceil(0.5*len(dirty_sample.index)))], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})   # XPlode
+    process = sp.Popen(['./data/cfddiscovery/CFDD', prepped_sample_fp, str(math.ceil(0.8*len(prepped_sample.index))), 0.8, 3], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})     # CFDD
     res = process.communicate()
     print('*** XPlode finished ***')
 
@@ -282,7 +288,7 @@ def reinforceTuplesBasedOnDependencies(data, project_id, current_iter, is_new_fe
     all_cfds = cfd_metadata.keys()
     for cfd, cfd_m in cfd_metadata.items():
         # Bias towards simpler rules
-        lhs = cfd.split(' => ')[0][1:-1].split(', ')
+        # lhs = cfd.split(' => ')[0][1:-1].split(', ')
         complexity_bias = analyze.sHeuristicSetRelation(cfd, all_cfds)
         print('*** Complexity bias calculated ***')
 
