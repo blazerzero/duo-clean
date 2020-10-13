@@ -155,7 +155,7 @@ def explainFeedback(full_dataset, dirty_sample, project_id, current_iter):
                 marked_cols.append(idx)
                 break
     
-    prepped_sample.drop(marked_cols)
+    prepped_sample = prepped_sample.drop(marked_cols)
     print(prepped_sample)
     print('*** Feedback reflected in \'repaired\' dataset ***')
 
@@ -189,7 +189,7 @@ def explainFeedback(full_dataset, dirty_sample, project_id, current_iter):
     print('*** Dirty and repaired datasets saved as CSV for XPlode ***')
 
     # process = sp.Popen(['./xplode/CTane', dirty_sample_fp, rep_sample_fp, '0.8', str(math.ceil(0.5*len(dirty_sample.index)))], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})   # XPlode
-    process = sp.Popen(['./data/cfddiscovery/CFDD', prepped_sample_fp, str(math.ceil(0.8*len(prepped_sample.index))), 0.8, 3], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})     # CFDD
+    process = sp.Popen(['./data/cfddiscovery/CFDD', prepped_sample_fp, str(math.ceil(0.5*len(prepped_sample.index))), '0.5', '3'], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})     # CFDD
     res = process.communicate()
     print('*** XPlode finished ***')
 
@@ -211,7 +211,8 @@ def explainFeedback(full_dataset, dirty_sample, project_id, current_iter):
                 cfd_metadata[c['cfd']]['cover'] = cover
                 cfd_metadata[c['cfd']]['violations'] = violations
 
-            cfd_metadata[c['cfd']]['history'].append(CFDScore(iter_num=current_iter, score=c['score'], elapsed_time=elapsed_time))
+            # cfd_metadata[c['cfd']]['history'].append(CFDScore(iter_num=current_iter, score=c['score'], elapsed_time=elapsed_time))
+            cfd_metadata[c['cfd']]['history'].append(CFDScore(iter_num=current_iter, score=c['conf'], elapsed_time=elapsed_time))
         print('*** XPlode output processed ***')
 
         pickle.dump( cfd_metadata, open('./store/' + project_id + '/cfd_metadata.p', 'wb') )
@@ -375,7 +376,7 @@ def fd2cfd(data, lhs, rhs):
         else:
             patterns[lhspattern] = [rhspattern]
             mappings[(lhspattern, rhspattern)] = [idx]
-    print('*** Patterns and mappings built ***')
+    print('*** Patterns and mappings built for (' + lhs + ') => ' + rhs + ' ***')
 
     # Pick RHS patterns for each LHS from these candidates
     for key in patterns.keys():
@@ -440,9 +441,9 @@ def buildCover(data, cfd, project_id, current_iter):
                 if data.at[idx, rh[0]] != rh[1]:
                     violations.append(idx)
         
-    pprint('Cover for (' + lhs + ') => ' + rhs + ':' + repr(cover))
-    pprint('Violations for (' + lhs + ') => ' + rhs + ':' + repr(violations))
-    print('*** Cover and violations built ***')
+    # pprint('Cover for (' + lhs + ') => ' + rhs + ':' + repr(cover))
+    # pprint('Violations for (' + lhs + ') => ' + rhs + ':' + repr(violations))
+    print('*** Cover and violations built for (' + lhs + ') => ' + rhs + ' ***')
     return set(cover), set(violations)
 
 # BUILD SAMPLE
