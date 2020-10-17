@@ -299,10 +299,10 @@ class Clean(Resource):
         print('*** Loaded dirty dataset ***')
 
         # Save noise feedback
-        percentage_errors_found = 0
+        # percentage_errors_found = 0
         if is_new_feedback == 1 and refresh == 0:
             print('*** NEW FEEDBACK! ***')
-            percentage_errors_found = helpers.saveNoiseFeedback(data, feedback, project_id, current_iter)
+            helpers.saveNoiseFeedback(data, feedback, project_id, current_iter)
             print('*** Noise feedback saved ***')
             s_in = data.iloc[feedback.index]
             print('*** Extracted sample from dataset ***')
