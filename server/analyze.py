@@ -56,7 +56,7 @@ def aHeuristicAC(cfd, data):
     for lh in lhs:
         if '=' in lh:
             lh_key = lh.split('=')[0]
-            lh_val = lh.split('=')[1]
+            lh_val = lh.split('=')[1].replace('\n', '').replace('\t', '').replace('\r', '')
             if lh_val.isnumeric():
                 lh_val = int(lh_val)
             num_lh_val = len(data[data[lh_key] == lh_val])
@@ -73,19 +73,22 @@ def aHeuristicCombo(cfd, data):
     return weights
 
 def sHeuristicUniform(cfd):
-    return 0.5      # since the user can believe multiple FDs, we give each FD a 50/50 chance of being believed under sUniform
+    return 1      # sUniform assumes the structure of the FD w.r.t. to similar FDs does not affect its chance of being believed by the user
 
 def sHeuristicSetRelation(cfd, all_cfds):
     lhs = cfd.split(' => ')[0][1:-1].split(', ')
+    print(lhs)
     lhs_set = set(lhs)
     subset_cfds = set([c.split(' => ')[0][1:-1] for c in all_cfds if lhs_set.issuperset(set(c.split(' => ')[0][1:-1].split(', ')))])
     superset_cfds = set([c.split(' => ')[0][1:-1] for c in all_cfds if set(c.split(' => ')[0][1:-1].split(', ')).issuperset(lhs_set)])
 
     all_related_cfd_set = subset_cfds | superset_cfds
     all_related_cfds = [c.split(', ') for c in all_related_cfd_set]
-    all_related_cfds.append(lhs)
+    # print('all:', all_related_cfds)
     all_related_cfds.sort(key=len)
     lhs_idx = all_related_cfds.index(lhs)
+    # print(len(all_related_cfds))
+    # print(lhs_idx, '\n')
     weight = (len(all_related_cfds) - lhs_idx) / len(all_related_cfds)
     return weight
 
@@ -103,8 +106,8 @@ def bayes(sampling_method):
         if scenario_id not in scenario_ids:
             break
        
-        data = pd.read_csv(project_info['scenario']['dirty_dataset'], keep_default_na=False)
-        
+        data = pd.read_csv(project_info['scenario']['clean_dataset'], keep_default_na=False)
+
         modeling_metadata = pickle.load( open('./store/' + project_id + '/modeling_metadata.p', 'rb') )
         cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
         bayes_modeling_metadata = modeling_metadata
@@ -162,12 +165,14 @@ def bayes(sampling_method):
             bayes_modeling_metadata['p_h']['aCOMBO-sSR'][cfd] = p_h['aCOMBO'][cfd] * p_h['sSR'][cfd]
 
         for heur in bayes_modeling_metadata['p_h'].keys():
+            print(heur)
+            # print(bayes_modeling_metadata['p_h'][heur].items())
             bayes_modeling_metadata['p_Y_in_C_given_X'][heur] = list()
             for it in range(1, iter_count+1):
-                elapsed_time = bayes_modeling_metadata['Y'][it].elapsed_time
+                elapsed_time = bayes_modeling_metadata['Y'][it-1].elapsed_time
 
                 # Get all FDs/CFDs that have were known by the system in this iteration
-                discovered_cfds = [cfd for cfd in bayes_modeling_metadata['p_X_given_h'].keys() if it in [x.iter_num for x in bayes_modeling_metadata['p_X_given_h'][cfd]]]
+                discovered_cfds = [cfd for cfd in bayes_modeling_metadata['p_X_given_h'].keys() if it in [x.iter_num for x in bayes_modeling_metadata['p_X_given_h'][cfd]] and bayes_modeling_metadata['p_h'][heur][cfd] >= 0.5]
                 
                 if len(discovered_cfds) == 0:   # no FDs discovered yet
                     # P(Y in C | X) = 0
@@ -177,17 +182,17 @@ def bayes(sampling_method):
                     p_h_given_X_list = list()
                     # p(h | X) for each h
                     for h in discovered_cfds:
-                        elem = [x for x in bayes_modeling_metadata['p_X_given_h'][h] if x.iter_num == it].pop()     # p(X | h) for this iteration
+                        elem = next(x for x in bayes_modeling_metadata['p_X_given_h'][h] if x.iter_num == it)     # p(X | h) for this iteration
                         p_X_given_h = elem.value
                         p_h = bayes_modeling_metadata['p_h'][heur][h]   # p(h)
+                        # print(p_h)
                         p_h_given_X = p_X_given_h * p_h     # p(h | X)
-                        #print(p_h_given_X)
                         p_h_given_X_list.append(PHGivenX(h=h, value=p_h_given_X))
                     
                     # normalized p(h | X) such that sum of all p(h | X) = 1
                     p_h_given_X_list_sum = sum([x.value for x in p_h_given_X_list])
                     p_h_given_X_list = [PHGivenX(h=x.h, value=((x.value/p_h_given_X_list_sum) if x.value > 0 else 0)) for x in p_h_given_X_list]
-                    # print([x.value for x in p_h_given_X_list])
+                    # print([h.value for h in p_h_given_X_list])
 
                     # p(Y in C | X)
                     p_Y_in_C_given_X = 1
@@ -198,7 +203,6 @@ def bayes(sampling_method):
                             p_h_given_X = phgx.value    # p(h | X)
                             i_y_supp_h = bayes_modeling_metadata['y_supp_h'][h][y]  # I(y in supp(h))
                             p_y_in_C_given_X += (i_y_supp_h * p_h_given_X)  # p(y in C | X) = I(y in supp(h)) * p(h | X)
-                            # print('p(y in C | X) =', p_y_in_C_given_X)
                             
                         p_Y_in_C_given_X *= p_y_in_C_given_X    # incorporating each y in Y into p(Y in C | X)
                     print('p(Y in C | X) =', p_Y_in_C_given_X)
@@ -221,7 +225,8 @@ def max_likelihood(sampling_method):
         if scenario_id not in scenario_ids:
             break
         
-        data = pd.read_csv(project_info['scenario']['dirty_dataset'], keep_default_na=False)
+        data = pd.read_csv(project_info['scenario']['clean_dataset'], keep_default_na=False)
+        data = data.replace(r'\\n\\t\\r','', regex=True) 
         
         modeling_metadata = pickle.load( open('./store/' + project_id + '/modeling_metadata.p', 'rb') )
         cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
@@ -282,53 +287,80 @@ def max_likelihood(sampling_method):
         for heur in min_modeling_metadata['p_h'].keys():
             min_modeling_metadata['p_Y_in_C_given_X'][heur] = list()
             for it in range(1, iter_count+1):
-                elapsed_time = min_modeling_metadata['Y'][it].elapsed_time
+                elapsed_time = min_modeling_metadata['Y'][it-1].elapsed_time
 
                 # Get all FDs/CFDs that have were known by the system in this iteration
-                discovered_cfds = [cfd for cfd in min_modeling_metadata['p_X_given_h'].keys() if it in [x.iter_num for x in min_modeling_metadata['p_X_given_h'][cfd]]]
+                discovered_cfds = [cfd for cfd in min_modeling_metadata['p_X_given_h'].keys() if it in [x.iter_num for x in min_modeling_metadata['p_X_given_h'][cfd]] and min_modeling_metadata['p_h'][heur][cfd] >= 0.5]
                 
                 if len(discovered_cfds) == 0:   # no FDs discovered yet
                     # P(Y in C | X)
                     min_modeling_metadata['p_Y_in_C_given_X'][heur].append(StudyMetric(iter_num=it, value=0, elapsed_time=elapsed_time))
                     
                 else:
-                    # find h_ML and p(X | h_ML)
-                    max_p_X_given_h = 0
-                    h_ML = None
-                    for cfd in discovered_cfds:
-                        curr_p_X_given_h = [x.value for x in min_modeling_metadata['p_X_given_h'][cfd] if x.iter_num == it].pop()   # p(X | h) for this cfd in this iteration
-                        if max_p_X_given_h <= curr_p_X_given_h:     # if an FD is found with a higher p(X | h)
-                            max_p_X_given_h = curr_p_X_given_h      # update p(X | h_ML)
-                            h_ML = cfd  # update h_ML
+                    # find smallest h's
+                    small_cfds = set()
+                    # find all h that support X
+                    supporting_cfds = [h for h in discovered_cfds if cfd_metadata[h]['cover'].issuperset(next(x for x in min_modeling_metadata['X'] if x.iter_num == it).value)]
+
+                    # find smallest h (think subset/superset) of these h's
+                    for cfd in supporting_cfds:
+                        lhs = cfd.split(' => ')[0][1:-1].split(', ')
+                        lhs_set = set(lhs)
+                        subset_cfds = [c for c in supporting_cfds if lhs_set.issuperset(set(c.split(' => ')[0][1:-1].split(', ')))]
+                        if len(subset_cfds) > 0:
+                            small_h = min(subset_cfds, key=len)
+                        else:
+                            small_h = cfd
+                        small_cfds.add(small_h)
+                        
+                    # find smallest h (think subset/superset) of these h's
+                    if len(small_cfds) > 1:
+                        smallest_cfd = max(small_cfds, key=lambda x: min_modeling_metadata['p_h'][heur][x])
+                    else:
+                        smallest_cfd = next(iter(small_cfds))
+
+                    lhs = smallest_cfd.split(' => ')[0][1:-1].split(', ')
+                    lhs_set = set(lhs)
+                    # get all hypotheses that are more complex than the "smallest" FD determined above
+                    generalized_cfds = [c for c in supporting_cfds if set(c.split(' => ')[0][1:-1].split(', ')).issuperset(lhs_set)]
 
                     p_h_given_X_list = list()
-                    for h in discovered_cfds:
-                        elem = [x for x in min_modeling_metadata['p_X_given_h'][h] if x.iter_num == it].pop()     # p(X | h) for this iteration
+                    # p(h | X) for each h
+                    for h in generalized_cfds:
+                        elem = next(x for x in min_modeling_metadata['p_X_given_h'][h] if x.iter_num == it)     # p(X | h) for this iteration
                         p_X_given_h = elem.value
                         p_h = min_modeling_metadata['p_h'][heur][h]   # p(h)
                         p_h_given_X = p_X_given_h * p_h     # p(h | X)
-                        #print(p_h_given_X)
                         p_h_given_X_list.append(PHGivenX(h=h, value=p_h_given_X))
-
+                    
+                    # normalized p(h | X) such that sum of all p(h | X) = 1
                     p_h_given_X_list_sum = sum([x.value for x in p_h_given_X_list])
                     p_h_given_X_list = [PHGivenX(h=x.h, value=((x.value/p_h_given_X_list_sum) if x.value > 0 else 0)) for x in p_h_given_X_list]
-                
-                    # p(h_ML | X)
-                    # p_h_ML = min_modeling_metadata['p_h'][heur][h_ML]   # p(h_ML)
-                    p_h_ML_given_X = [x.value for x in p_h_given_X_list if x.h == h_ML].pop()
-                    # p_h_ML_given_X = max_p_X_given_h * p_h_ML   # p(h_ML | X) = p(X | h_ML) * p(h_ML)
-                    # print(p_h_ML_given_X)
-                    # print(p_h_ML_given_X)
 
                     # p(Y in C | X)
                     p_Y_in_C_given_X = 1
                     for y in min_modeling_metadata['Y'][it-1].value:
-                        i_y_supp_h_ML = min_modeling_metadata['y_supp_h'][h_ML][y]  # I(y in supp(h_ML))
-                        p_y_in_C_given_X = i_y_supp_h_ML * p_h_ML_given_X   # p(y in C | X) = I(y in supp(h_ML)) * p(h_ML | X)
-                        # print(p_y_in_C_given_X)
+                        p_y_in_C_given_X = 0 # p(y in C | X)
+                        for phgx in p_h_given_X_list:
+                            h = phgx.h
+                            p_h_given_X = phgx.value    # p(h | X)
+                            i_y_supp_h = min_modeling_metadata['y_supp_h'][h][y]  # I(y in supp(h))
+                            p_y_in_C_given_X += (i_y_supp_h * p_h_given_X)  # p(y in C | X) = I(y in supp(h)) * p(h | X)
+                            
                         p_Y_in_C_given_X *= p_y_in_C_given_X    # incorporating each y in Y into p(Y in C | X)
                     print('p(Y in C | X) =', p_Y_in_C_given_X)
                     
                     min_modeling_metadata['p_Y_in_C_given_X'][heur].append(StudyMetric(iter_num=it, value=p_Y_in_C_given_X, elapsed_time=elapsed_time))
 
         pickle.dump( min_modeling_metadata, open('./store/' + project_id + '/min_modeling_metadata.p', 'wb') )
+
+if __name__ == '__main__':
+    if len(sys.argv) > 1:
+        if sys.argv[1] == 'bayes':
+            bayes('RANDOM-PURE')
+        elif sys.argv[1] == 'min':
+            max_likelihood('RANDOM-PURE')
+        else:
+            print('must specify bayes or min modeling method')
+    else:
+        print('must specify bayes or min modeling method')

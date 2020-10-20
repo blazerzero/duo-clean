@@ -16,6 +16,12 @@ class HeuristicClassifier(object):
         self.values = values
         self.color = color
 
+class StudyMetric(object):
+    def __init__(self, iter_num, value, elapsed_time):
+        self.iter_num = iter_num
+        self.value = value
+        self.elapsed_time = elapsed_time
+
 def plot_modeling(modeling_method, sampling_method):
     with open('scenarios.json') as f:
         all_scenarios = json.load(f)
@@ -35,6 +41,8 @@ def plot_modeling(modeling_method, sampling_method):
 
         modeling_metadata = pickle.load( open('./store/' + project_id + '/' + modeling_method + '_modeling_metadata.p', 'rb') )
         for heur, p_Y_in_C_given_X in modeling_metadata['p_Y_in_C_given_X'].items():
+            print(heur)
+            print([x.value for x in p_Y_in_C_given_X])
             if heur == 'aUNI-sUNI':
                 color = 'royalblue'
             elif heur == 'aUNI-sSR':
@@ -338,3 +346,15 @@ def plot_error_metrics():
     plt.clf()
 
     return '[SUCCESS]'
+
+if __name__ == '__main__':
+    if len(sys.argv) > 1:
+        if sys.argv[1] == 'bayes':
+            plot_modeling('bayes', 'RANDOM-PURE')
+        elif sys.argv[1] == 'min':
+            plot_modeling('min', 'RANDOM-PURE')
+        else:
+            print('must specify bayes or min modeling method')
+    else:
+        print('must specify bayes or min modeling method')
+

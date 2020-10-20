@@ -189,15 +189,15 @@ def explainFeedback(full_dataset, dirty_sample, project_id, current_iter):
     print('*** Dirty and repaired datasets saved as CSV for XPlode ***')
 
     # process = sp.Popen(['./xplode/CTane', dirty_sample_fp, rep_sample_fp, '0.8', str(math.ceil(0.5*len(dirty_sample.index)))], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})   # XPlode
-    process = sp.Popen(['./data/cfddiscovery/CFDD', prepped_sample_fp, str(math.ceil(0.5*len(prepped_sample.index))), '0.9', '3'], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})     # CFDD
+    process = sp.Popen(['./data/cfddiscovery/CFDD', prepped_sample_fp, str(math.ceil(0.5*len(prepped_sample.index))), '0.8', '3'], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})     # CFDD
     res = process.communicate()
     print('*** XPlode finished ***')
 
     if process.returncode == 0:
         cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
         print('*** CFD meteadata object loaded ***')
-        output = res[0].decode('latin_1').replace(',]', ']')
-        cfds = json.loads(output)['cfds']
+        output = res[0].decode('latin_1').replace(',]', ']').replace('\r', '').replace('\t', '').replace('\n', '')
+        cfds = json.loads(output, strict=False)['cfds']
         print('*** CFDs from XPlode extracted ***')
         accepted_cfds = [c for c in cfds if c['cfd'].split(' => ')[0] != '()']
         print('cfds from xplode:', accepted_cfds)
@@ -206,6 +206,7 @@ def explainFeedback(full_dataset, dirty_sample, project_id, current_iter):
                 cfd_metadata[c['cfd']] = dict()
                 cfd_metadata[c['cfd']]['history'] = list()
                 cfd_metadata[c['cfd']]['weight_history'] = list()
+                cfd_metadata[c['cfd']]['unnormalized_weight_history'] = list()
 
                 cover, violations = buildCover(full_dataset, c['cfd'], project_id, current_iter)
                 cfd_metadata[c['cfd']]['cover'] = cover
@@ -299,13 +300,15 @@ def reinforceTuplesBasedOnDependencies(data, project_id, current_iter, is_new_fe
             weighted_conf += (h.score / (current_iter - h.iter_num + 1))
         print('*** Weighted CFD confidence calculated ***')
 
-        cfd_m['weight'] = complexity_bias + weighted_conf
+        weight = complexity_bias + weighted_conf
+        cfd_m['weight'] = weight
+        cfd_m['unnormalized_weight_history'].append(CFDWeightHistory(iter_num=current_iter, weight=weight, elapsed_time=elapsed_time))
         # cfd_m['weight_history'].append(CFDWeightHistory(iter_num=h.iter_num, weight=(complexity_bias + weighted_conf)))
         print('*** CFD weight updated ***')
     
     cfd_metadata = normalizeWeights(cfd_metadata)
     for cfd, cfd_m in cfd_metadata.items():
-        cfd_m['weight_history'].append(CFDWeightHistory(iter_num=h.iter_num, weight=cfd_m['weight'], elapsed_time=elapsed_time))
+        cfd_m['weight_history'].append(CFDWeightHistory(iter_num=current_iter, weight=cfd_m['weight'], elapsed_time=elapsed_time))
     print('*** CFD weights normalized and saved in history ***')
     print('cfd weights post-duo:', [cfd_m['weight'] for _, cfd_m in cfd_metadata.items()])
 
@@ -556,7 +559,7 @@ def pickSingleTuple(tuple_weights):
         if cumulative > chance:
             tup = id
             del (id, weight)
-            print(tup)
+            # print(tup)
             return tup
 
 

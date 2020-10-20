@@ -285,7 +285,6 @@ class Clean(Resource):
 
         current_iter = pickle.load( open('./store/' + project_id + '/current_iter.p', 'rb') )
         current_iter += 1
-        pickle.dump( current_iter, open('./store/' + project_id + '/current_iter.p', 'wb') )
 
         print('*** Iteration counter updated ***')
 
@@ -384,12 +383,14 @@ class Clean(Resource):
                     prev_3_w_conf += (best_cfd_m['history'][i].score / (current_iter - best_cfd_m['history'][i].iter_num + 1))
                 best_cfd_conf_variation = curr_w_conf - prev_3_w_conf
 
-        if refresh == 0 and (current_iter == 30 or (best_cfd_m is not None and abs(best_cfd_conf_variation) < 0.05)):
+        if refresh == 0 and (current_iter >= 25 or (best_cfd_m is not None and abs(best_cfd_conf_variation) < 0.05)):
             msg = '[DONE]'
         else:
             msg = '[SUCCESS]: Saved feedback and built new sample.'
 
         s_out.insert(0, 'id', s_out.index, True)
+
+        pickle.dump( current_iter, open('./store/' + project_id + '/current_iter.p', 'wb') )
         
         # Return information to the user
         returned_data = {
