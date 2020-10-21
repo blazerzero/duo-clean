@@ -87,7 +87,6 @@ class Import(Resource):
             # Tuple metadata
             tuple_metadata[idx] = dict()
             tuple_metadata[idx]['weight'] = 1/len(data)
-            tuple_metadata[idx]['expl_freq'] = 0
 
             # Cell metadata
             cell_metadata[idx] = dict()
@@ -97,6 +96,23 @@ class Import(Resource):
                 
         # FD metadata
         cfd_metadata = dict()
+        data = pd.read_csv(scenario['dirty_dataset'], keep_default_na=False)
+        for c in scenario['hypothesis_space']:
+            cfd_metadata[c['cfd']] = dict()
+            # support, violations = helpers.getSupport(data, c['cfd'], new_project_id)
+            cfd_metadata[c['cfd']]['weight'] = c['conf']
+            cfd_metadata[c['cfd']]['conf_history'] = list()
+            cfd_metadata[c['cfd']]['conf_history'].append(helpers.CFDScore(iter_num=current_iter, score=c['conf'], elapsed_time=0))
+
+            hypothesis = next(x for x in scenario['hypothesis_space'] if x['cfd'] == c['cfd'])
+            cfd_metadata[c['cfd']]['support'] = hypothesis['support']
+            cfd_metadata[c['cfd']]['vios'] = hypothesis['vios']
+            cfd_metadata[c['cfd']]['vio_pairs'] = hypothesis['vio_pairs']
+        
+        cfd_metadata = helpers.normalizeWeights(cfd_metadata)
+        for _, cfd_m in cfd_metadata.items():
+            cfd_m['weight_history'] = list()
+            cfd_m['weight_history'].append(helpers.CFDWeightHistory(iter_num=current_iter, weight=cfd_m['weight'], elapsed_time=0))
 
         # Initialize other metrics/metadata needed in study
         study_metrics = dict()
@@ -116,7 +132,9 @@ class Import(Resource):
         modeling_metadata['p_X_given_h'] = dict()
         modeling_metadata['X'] = list()
         modeling_metadata['Y'] = list()
-        modeling_metadata['y_supp_h'] = dict()
+        modeling_metadata['y_in_h'] = dict()  # TODO: Update y_supp_h to y_in_h (y satisfies h or is a detectable violation of h)
+        for cfd in cfd_metadata.keys():
+            modeling_metadata['y_in_h'][cfd] = dict()
         # modeling_metadata['p_h'] = dict()
         # modeling_metadata['p_h']['hUniform'] = dict()   # TODO: Do this for each p(h) heuristic
 
@@ -163,13 +181,7 @@ class Sample(Resource):
         sampling_method = project_info['scenario']['sampling_method']
         
         # Build sample and update tuple weights post-sampling
-        s_out = helpers.buildSample(data, sample_size, project_id, sampling_method, current_iter=0)
-        # s_out_dict = list(s_out.T.to_dict().values())
-        # s_out_header = s_out_dict[0].keys()
-        # with open('./store/' + project_id + '/current_sample.csv', 'w', newline='') as f:
-        #     writer = csv.DictWriter(f, s_out_header)
-        #     writer.writeheader()
-        #     writer.writerows(s_out_dict)
+        s_out = helpers.buildSample(data, sample_size, project_id, sampling_method, current_iter=0) # TODO: Update sampling strategy
         s_index = s_out.index
         pickle.dump( s_index, open('./store/' + project_id + '/current_sample.p', 'wb') )
 
@@ -306,45 +318,17 @@ class Clean(Resource):
             s_in = data.iloc[feedback.index]
             print('*** Extracted sample from dataset ***')
             helpers.explainFeedback(data, s_in, project_id, current_iter)
-            # helpers.buildCovers(data, project_id, current_iter)
-            print('*** XPlode completed and FD/CFD weights updated ***')
-
-        # Run CFD discovery algorithm to determine confidence of relevant CFD(s)
-        # cfds = helpers.runCFDDiscovery(len(d_curr), project_id, current_iter)
-        # if cfds is not None:
-        #     for c in cfds:
-        #        if scenario['cfd'] == c['cfd']:
-        #             # If confidence threshold for relevant CFD(s) IS met, return completion message to user
-        #             if c['conf'] >= scenario['conf_threshold']:
-        #                 returned_data = {
-        #                     'msg': '[DONE]'
-        #                 }
-        #                 response = json.dumps(returned_data)
-        #                 pprint(response)
-        #                 return response, 200, {'Access-Control-Allow-Origin': '*'}
-        #             break
-        
-        # Confidence threshold for relevant CFD(s) IS NOT met, so build new sample based on tuple weights
+            print('*** Mining completed and FD/CFD weights updated ***')
         
         # Update tuple weights pre-sampling
         sampling_method = project_info['scenario']['sampling_method']
         print('*** Sampling method retrieved ***')
-        # if sampling_method != 'RANDOM-PURE':
-        #     helpers.reinforceTuplesBasedOnInteraction(data, project_id, current_iter, is_new_feedback)
-        #     print('*** Tuples reinforced based on interaction metrics ***')
-        # if sampling_method == 'DUO':
-        if refresh == 0:
-            helpers.reinforceTuplesBasedOnDependencies(data, project_id, current_iter, is_new_feedback, project_info)
-        print('*** Tuples reinforced based on FD/CFD weights ***')
+        # if refresh == 0:
+        #     helpers.reinforceTuplesBasedOnDependencies(data, project_id, current_iter, is_new_feedback, project_info)
+        # print('*** Tuples reinforced based on FD/CFD weights ***')
 
         # Build sample
         s_out = helpers.buildSample(data, sample_size, project_id, sampling_method, current_iter)
-        # s_out_dict = list(s_out.T.to_dict().values())
-        # s_out_header = s_out_dict[0].keys()
-        # with open('./store/' + project_id + '/current_sample.csv', 'w', newline='') as f:
-        #     writer = csv.DictWriter(f, s_out_header)
-        #     writer.writeheader()
-        #     writer.writerows(s_out_dict)
         s_index = s_out.index
         pickle.dump( s_index, open('./store/' + project_id + '/current_sample.p', 'wb') )
 
@@ -365,7 +349,7 @@ class Clean(Resource):
 
         true_pos, false_pos = helpers.getUserScores(project_id)
 
-        print('*** Leaderboard created ***')
+        print('*** User scores retrieved ***')
 
         cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
         best_cfd_m = None
@@ -389,6 +373,7 @@ class Clean(Resource):
             msg = '[SUCCESS]: Saved feedback and built new sample.'
 
         s_out.insert(0, 'id', s_out.index, True)
+        print(s_out)
 
         pickle.dump( current_iter, open('./store/' + project_id + '/current_iter.p', 'wb') )
         
