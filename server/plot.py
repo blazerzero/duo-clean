@@ -37,7 +37,7 @@ def plot_modeling(modeling_method, sampling_method):
             project_info = json.load(f)
         scenario_id = project_info['scenario_id']
         if scenario_id not in scenario_ids:
-            break
+            continue
 
         modeling_metadata = pickle.load( open('./store/' + project_id + '/' + modeling_method + '_modeling_metadata.p', 'rb') )
         for heur, p_Y_in_C_given_X in modeling_metadata['p_Y_in_C_given_X'].items():
@@ -60,13 +60,13 @@ def plot_modeling(modeling_method, sampling_method):
             elif heur == 'aCOMBO-sSR':
                 color = 'olive'
 
-            if scenario_id == '1':
+            if scenario_id == scenario_ids[0]:
                 lists_s1.append(HeuristicClassifier(values=p_Y_in_C_given_X, color=color))
-            elif scenario_id == '2':
+            elif scenario_id == scenario_ids[1]:
                 lists_s2.append(HeuristicClassifier(values=p_Y_in_C_given_X, color=color))
-            elif scenario_id == '3':
+            elif scenario_id == scenario_ids[2]:
                 lists_s3.append(HeuristicClassifier(values=p_Y_in_C_given_X, color=color))
-            elif scenario_id == '4':
+            elif scenario_id == scenario_ids[3]:
                 lists_s4.append(HeuristicClassifier(values=p_Y_in_C_given_X, color=color))
 
     fig, ax = plt.subplots(2, 2)
@@ -75,22 +75,22 @@ def plot_modeling(modeling_method, sampling_method):
     ax[0,1].set_ylabel('p(Y in C | X)')
     ax[1,0].set_ylabel('p(Y in C | X)')
     ax[1,1].set_ylabel('p(Y in C | X)')
-    ax[0,0].set_title('Scenario 1')
+    ax[0,0].set_title('Scenario ' + scenario_ids[0])
     ax[0,0].set_xlabel('Iteration #')
     ax[0,0].set_xticks(np.arange(0, 36, 6.0))
     ax[0,0].set_yticks(np.arange(0.0, 1.25, 0.25))
     ax[0,0].set_ylim((0, None))
-    ax[0,1].set_title('Scenario 2')
+    ax[0,1].set_title('Scenario ' + scenario_ids[1])
     ax[0,1].set_xlabel('Iteration #')
     ax[0,1].set_xticks(np.arange(0, 36, 6.0))
     ax[0,1].set_yticks(np.arange(0.0, 1.25, 0.25))
     ax[0,1].set_ylim((0, None))
-    ax[1,0].set_title('Scenario 3')
+    ax[1,0].set_title('Scenario ' + scenario_ids[2])
     ax[1,0].set_xlabel('Iteration #')
     ax[1,0].set_xticks(np.arange(0, 36, 6.0))
     ax[1,0].set_yticks(np.arange(0.0, 1.25, 0.25))
     ax[1,0].set_ylim((0, None))
-    ax[1,1].set_title('Scenario 4')
+    ax[1,1].set_title('Scenario ' + scenario_ids[3])
     ax[1,1].set_xlabel('Iteration #')
     ax[1,1].set_xticks(np.arange(0, 36, 6.0))
     ax[1,1].set_yticks(np.arange(0.0, 1.25, 0.25))
@@ -348,11 +348,13 @@ def plot_error_metrics():
     return '[SUCCESS]'
 
 if __name__ == '__main__':
-    if len(sys.argv) > 1:
-        if sys.argv[1] == 'bayes':
-            plot_modeling('bayes', 'RANDOM-PURE')
+    if len(sys.argv) > 2:
+        if sys.argv[2] != 'RANDOM-PURE' and sys.argv[2] != 'DUO':
+            print('must specify RANDOM-PURE or DUO sampling method')
+        elif sys.argv[1] == 'bayes':
+            plot_modeling(sys.argv[1], sys.argv[2])
         elif sys.argv[1] == 'min':
-            plot_modeling('min', 'RANDOM-PURE')
+            plot_modeling(sys.argv[1], sys.argv[2])
         else:
             print('must specify bayes or min modeling method')
     else:

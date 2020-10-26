@@ -77,7 +77,6 @@ def sHeuristicUniform(cfd):
 
 def sHeuristicSetRelation(cfd, all_cfds):
     lhs = cfd.split(' => ')[0][1:-1].split(', ')
-    print(lhs)
     lhs_set = set(lhs)
     subset_cfds = set([c.split(' => ')[0][1:-1] for c in all_cfds if lhs_set.issuperset(set(c.split(' => ')[0][1:-1].split(', ')))])
     superset_cfds = set([c.split(' => ')[0][1:-1] for c in all_cfds if set(c.split(' => ')[0][1:-1].split(', ')).issuperset(lhs_set)])
@@ -99,12 +98,14 @@ def bayes(sampling_method):
     scenario_ids = [k for k, s in all_scenarios.items() if s['sampling_method'] == sampling_method]
 
     project_ids = [d for d in os.listdir('./store') if os.path.isdir(os.path.join('./store/', d))]
+    print(project_ids)
     for project_id in project_ids:
         with open('./store/' + project_id + '/project_info.json') as f:
             project_info = json.load(f)
         scenario_id = project_info['scenario_id']
+        print(scenario_id)
         if scenario_id not in scenario_ids:
-            break
+            continue
        
         data = pd.read_csv(project_info['scenario']['clean_dataset'], keep_default_na=False)
 
@@ -171,7 +172,7 @@ def bayes(sampling_method):
                 elapsed_time = bayes_modeling_metadata['Y'][it-1].elapsed_time
 
                 # Get all FDs/CFDs that have were known by the system in this iteration
-                discovered_cfds = [cfd for cfd in bayes_modeling_metadata['p_X_given_h'].keys() if it in [x.iter_num for x in bayes_modeling_metadata['p_X_given_h'][cfd]] and bayes_modeling_metadata['p_h'][heur][cfd] >= 0.5]
+                discovered_cfds = [cfd for cfd in cfd_metadata.keys()]
                 
                 if len(discovered_cfds) == 0:   # no FDs discovered yet
                     # P(Y in C | X) = 0
@@ -220,7 +221,7 @@ def max_likelihood(sampling_method):
             project_info = json.load(f)
         scenario_id = project_info['scenario_id']
         if scenario_id not in scenario_ids:
-            break
+            continue
         
         data = pd.read_csv(project_info['scenario']['clean_dataset'], keep_default_na=False)
         data = data.replace(r'\\n\\t\\r','', regex=True) 
@@ -285,9 +286,10 @@ def max_likelihood(sampling_method):
             min_modeling_metadata['p_Y_in_C_given_X'][heur] = list()
             for it in range(1, iter_count+1):
                 elapsed_time = min_modeling_metadata['Y'][it-1].elapsed_time
+                curr_X = min_modeling_metadata['X'][it-1].value
 
                 # Get all FDs/CFDs that have were known by the system in this iteration
-                discovered_cfds = [cfd for cfd in min_modeling_metadata['p_X_given_h'].keys() if it in [x.iter_num for x in min_modeling_metadata['p_X_given_h'][cfd]] and min_modeling_metadata['p_h'][heur][cfd] >= 0.5]
+                discovered_cfds = [cfd for cfd in cfd_metadata.keys()]
                 
                 if len(discovered_cfds) == 0:   # no FDs discovered yet
                     # P(Y in C | X)
@@ -297,7 +299,14 @@ def max_likelihood(sampling_method):
                     # find smallest h's
                     small_cfds = set()
                     # find all h that support X
-                    supporting_cfds = [h for h in discovered_cfds if set(cfd_metadata[h]['support']).issuperset(next(x for x in min_modeling_metadata['X'] if x.iter_num == it).value)]
+                    x_in_h = dict()
+                    for h in discovered_cfds:
+                        x_in_h[h] = list()
+                        for x in curr_X:
+                            x_in_h_val = next(v for v in min_modeling_metadata['y_in_h'][h][x] if v.iter_num == it).value
+                            x_in_h[h].append(x_in_h_val)
+                    # x_in_h = {h:  for h in discovered_cfds}
+                    supporting_cfds = [h for h in discovered_cfds if 0 not in x_in_h[h]]
 
                     # find smallest h (think subset/superset) of these h's
                     for cfd in supporting_cfds:

@@ -160,7 +160,7 @@ def explainFeedback(full_dataset, dirty_sample, project_id, current_iter):
         writer = csv.DictWriter(f, rep_header)
         writer.writeheader()
         writer.writerows(rep_dict)
-    print('*** Dirty and repaired datasets saved as CSV for XPlode ***')
+    print('*** Mining dataset saved as CSV ***')
 
     # process = sp.Popen(['./xplode/CTane', dirty_sample_fp, rep_sample_fp, '0.8', str(math.ceil(0.5*len(dirty_sample.index)))], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})   # XPlode
     process = sp.Popen(['./data/cfddiscovery/CFDD', prepped_sample_fp, str(math.ceil(0.5*len(prepped_sample.index))), '0.5', '3'], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})     # CFDD
@@ -226,6 +226,7 @@ def buildSample(data, sample_size, project_id, sampling_method, current_iter):
     modeling_metadata['Y'].append(StudyMetric(iter_num=current_iter, value=set(s_out.index), elapsed_time=elapsed_time))
 
     for cfd, cfd_m in cfd_metadata.items():
+        # print(cfd)
         # p(X | h)
         if cfd not in modeling_metadata['p_X_given_h'].keys():  # cfd was just discovered in this iteration
             modeling_metadata['p_X_given_h'][cfd] = list()
@@ -242,10 +243,22 @@ def buildSample(data, sample_size, project_id, sampling_method, current_iter):
             if y in cfd_m['support']:   # FD is applicable to y
                 if y not in cfd_m['vios']:    # y is clean w.r.t. the FD
                     modeling_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=1, elapsed_time=elapsed_time))
-                elif len([i for i in cfd_m['vio_pairs'] if y in i]) > 0:  # y is dirty w.r.t. the FD but is detectable
-                    modeling_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=1, elapsed_time=elapsed_time))
-                else:   # y is dirty w.r.t. to the FD and is not detectable
-                    modeling_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=0, elapsed_time=elapsed_time))
+                
+                # UPDATED CHECK FOR DETECTABILITY
+                else:
+                    vio_pairs = [i for i in cfd_m['vio_pairs'] if y in i]
+                    if len(vio_pairs) == 0:     # y is dirty w.r.t the FD and does not pair with ANY other row in the dataset
+                        modeling_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=0, elapsed_time=elapsed_time))
+                    else:   # y is dirty w.r.t. the FD and DOES pair with some other row in the dataset
+                        match_found = False
+                        for x in new_X:
+                            if len([i for i in vio_pairs if x in i and x != y]) > 0:
+                                match_found = True
+                                break
+                        if match_found is False:    # y does not pair with any other tuple in X w.r.t. the FD and is not detectable YET
+                            modeling_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=0, elapsed_time=elapsed_time))
+                        else:   # y pairs with another tuple in X w.r.t. the FD and is detectable
+                            modeling_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=1, elapsed_time=elapsed_time))
             else:   # FD is not applicable to y
                 modeling_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=0, elapsed_time=elapsed_time))
     
@@ -272,30 +285,40 @@ def returnTuples(data, sample_size, project_id):
     tuple_weights = {k: v['weight'] for k, v in tuple_metadata.items()}
     cfd_weights = {k: v['weight'] for k, v in cfd_metadata.items()}
     chosen_tuples = list()
-    chosen_fds = list()
+    # chosen_fds = list()
     
     print('IDs of tuples in next sample:')
     while len(chosen_tuples) < sample_size:
         fd = pickSingleTuple(cfd_weights)
-        if fd not in chosen_fds:
-            cfd_m = cfd_metadata[fd]
-            if len(cfd_m['vios']) <= 1 or len(cfd_m['vio_pairs']) == 0:
-                returned_tuple1 = pickSingleTuple(tuple_weights)
-                returned_tuple2 = pickSingleTuple(tuple_weights)
-            else:
-                returned_tuple1, returned_tuple2 = random.choice(cfd_m['vio_pairs'])
+        # if fd not in chosen_fds:
+        cfd_m = cfd_metadata[fd]
+        if len(cfd_m['vios']) <= 1 or len(cfd_m['vio_pairs']) == 0:
+            returned_tuple1 = pickSingleTuple(tuple_weights)
+            returned_tuple2 = pickSingleTuple(tuple_weights)
+        else:
+            returned_tuple1, returned_tuple2 = random.choice(cfd_m['vio_pairs'])
 
-            if returned_tuple1 not in chosen_tuples and returned_tuple2 not in chosen_tuples:
-                chosen_tuples.append(returned_tuple1)
-                chosen_tuples.append(returned_tuple2)
-                print(returned_tuple1)
-                print(returned_tuple2)
+        if returned_tuple1 not in chosen_tuples and returned_tuple2 not in chosen_tuples:
+            chosen_tuples.append(returned_tuple1)
+            chosen_tuples.append(returned_tuple2)
+            print(returned_tuple1)
+            print(returned_tuple2)
             
-            chosen_fds.append(fd)
+        # returned_tuple1 = random.choice(cfd_m['support'])
+        # if returned_tuple1 not in chosen_tuples:
+        #     chosen_tuples.append(returned_tuple1)
+        #     returned_tuple2 = random.choice(cfd_m['support'])
+        #     if returned_tuple2 not in chosen_tuples:
+        #         chosen_tuples.append(returned_tuple2)
+        #         print(returned_tuple1)
+        #         print(returned_tuple2)
+        #         chosen_fds.append(fd)
 
         if len(chosen_tuples) >= len(tuple_weights.keys()):
             break
     
+    print(data)
+    print(chosen_tuples)
     s_out = data.iloc[chosen_tuples]
     return s_out
 
