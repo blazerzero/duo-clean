@@ -93,7 +93,7 @@ omdb_3(title: $t2, year: $y2, rating: $r2, director: $d2, userrating: $ur2),
                 </vioGenQuery>
                 <vioGenQuery id="e1">
                     <comparison>(y1 != y2)</comparison>
-                    <percentage>20.0</percentage> 
+                    <percentage>15.0</percentage> 
                 </vioGenQuery>
                 <vioGenQuery id="e2">
                     <comparison>(t1 == t2)</comparison>
@@ -105,7 +105,7 @@ omdb_3(title: $t2, year: $y2, rating: $r2, director: $d2, userrating: $ur2),
                 </vioGenQuery>
                 <vioGenQuery id="e2">
                     <comparison>(r1 != r2)</comparison>
-                    <percentage>20.0</percentage> 
+                    <percentage>15.0</percentage> 
                 </vioGenQuery>
             </vioGenQueries>
         </errorPercentages>

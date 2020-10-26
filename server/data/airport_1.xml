@@ -85,7 +85,7 @@ airport_1(type: $t2, region: $r2, facilityname: $fn2, owner: $o2, ownertype: $ot
                 </vioGenQuery>
                 <vioGenQuery id="e1">
                     <comparison>(o1 != o2)</comparison>
-                    <percentage>20.0</percentage> 
+                    <percentage>30.0</percentage> 
                 </vioGenQuery>
             </vioGenQueries>
         </errorPercentages>
