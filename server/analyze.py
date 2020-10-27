@@ -177,35 +177,35 @@ def bayes(sampling_method):
                 if len(discovered_cfds) == 0:   # no FDs discovered yet
                     # P(Y in C | X) = 0
                     bayes_modeling_metadata['p_Y_in_C_given_X'][heur].append(StudyMetric(iter_num=it, value=0, elapsed_time=elapsed_time))
+                    continue
                     
-                else:
-                    p_h_given_X_list = list()
-                    # p(h | X) for each h
-                    for h in discovered_cfds:
-                        elem = next(x for x in bayes_modeling_metadata['p_X_given_h'][h] if x.iter_num == it)     # p(X | h) for this iteration
-                        p_X_given_h = elem.value
-                        p_h = bayes_modeling_metadata['p_h'][heur][h]   # p(h)
-                        p_h_given_X = p_X_given_h * p_h     # p(h | X)
-                        p_h_given_X_list.append(PHGivenX(h=h, value=p_h_given_X))
-                    
-                    # normalized p(h | X) such that sum of all p(h | X) = 1
-                    p_h_given_X_list_sum = sum([x.value for x in p_h_given_X_list])
-                    p_h_given_X_list = [PHGivenX(h=x.h, value=((x.value/p_h_given_X_list_sum) if x.value > 0 else 0)) for x in p_h_given_X_list]
+                p_h_given_X_list = list()
+                # p(h | X) for each h
+                for h in discovered_cfds:
+                    elem = next(x for x in bayes_modeling_metadata['p_X_given_h'][h] if x.iter_num == it)     # p(X | h) for this iteration
+                    p_X_given_h = elem.value
+                    p_h = bayes_modeling_metadata['p_h'][heur][h]   # p(h)
+                    p_h_given_X = p_X_given_h * p_h     # p(h | X)
+                    p_h_given_X_list.append(PHGivenX(h=h, value=p_h_given_X))
+                
+                # normalized p(h | X) such that sum of all p(h | X) = 1
+                p_h_given_X_list_sum = sum([x.value for x in p_h_given_X_list])
+                p_h_given_X_list = [PHGivenX(h=x.h, value=((x.value/p_h_given_X_list_sum) if x.value > 0 else 0)) for x in p_h_given_X_list]
 
-                    # p(Y in C | X)
-                    p_Y_in_C_given_X = 1
-                    for y in bayes_modeling_metadata['Y'][it-1].value:
-                        p_y_in_C_given_X = 0 # p(y in C | X)
-                        for phgx in p_h_given_X_list:
-                            h = phgx.h
-                            p_h_given_X = phgx.value    # p(h | X)
-                            i_y_in_h = next(i for i in bayes_modeling_metadata['y_in_h'][h][y] if i.iter_num == it).value  # I(y in supp(h))
-                            p_y_in_C_given_X += (i_y_in_h * p_h_given_X)  # p(y in C | X) = I(y in supp(h)) * p(h | X)
-                            
-                        p_Y_in_C_given_X *= p_y_in_C_given_X    # incorporating each y in Y into p(Y in C | X)
-                    print('p(Y in C | X) =', p_Y_in_C_given_X)
-                    
-                    bayes_modeling_metadata['p_Y_in_C_given_X'][heur].append(StudyMetric(iter_num=it, value=p_Y_in_C_given_X, elapsed_time=elapsed_time))
+                # p(Y in C | X)
+                p_Y_in_C_given_X = 1
+                for y in bayes_modeling_metadata['Y'][it-1].value:
+                    p_y_in_C_given_X = 0 # p(y in C | X)
+                    for phgx in p_h_given_X_list:
+                        h = phgx.h
+                        p_h_given_X = phgx.value    # p(h | X)
+                        i_y_in_h = next(i for i in bayes_modeling_metadata['y_in_h'][h][y] if i.iter_num == it).value  # I(y in supp(h))
+                        p_y_in_C_given_X += (i_y_in_h * p_h_given_X)  # p(y in C | X) = I(y in supp(h)) * p(h | X)
+                        
+                    p_Y_in_C_given_X *= p_y_in_C_given_X    # incorporating each y in Y into p(Y in C | X)
+                print('p(Y in C | X) =', p_Y_in_C_given_X)
+                
+                bayes_modeling_metadata['p_Y_in_C_given_X'][heur].append(StudyMetric(iter_num=it, value=p_Y_in_C_given_X, elapsed_time=elapsed_time))
 
         pickle.dump( bayes_modeling_metadata, open('./store/' + project_id + '/bayes_modeling_metadata.p', 'wb') )
 
