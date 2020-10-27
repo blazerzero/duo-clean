@@ -164,7 +164,7 @@ class Clean extends Component {
     console.log(feedback);
 
     var feedbackMap = await this._buildFeedbackMap(data, feedback);
-    this.setState({ data, feedbackMap, true_pos, false_pos }, () => {
+    this.setState({ data, feedback, feedbackMap, true_pos, false_pos }, () => {
       console.log(this.state.true_pos, this.state.false_pos);
     });
   }

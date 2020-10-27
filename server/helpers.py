@@ -171,7 +171,7 @@ def explainFeedback(full_dataset, dirty_sample, project_id, current_iter):
         cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
         print('*** FD meteadata object loaded ***')
         output = res[0].decode('latin_1').replace(',]', ']').replace('\r', '').replace('\t', '').replace('\n', '')
-        cfds = json.loads(output, strict=False)['cfds']
+        cfds = [c for c in json.loads(output, strict=False)['cfds'] if '=' not in c['cfd']]
         print('*** FDs from CFDD extracted ***')
         accepted_cfds = [c for c in cfds if c['cfd'].split(' => ')[0] != '()' and c['cfd'] in cfd_metadata.keys()]
         print('FDs from CFDD:', accepted_cfds)

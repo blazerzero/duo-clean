@@ -6,49 +6,48 @@ import random
 import subprocess as sp
 
 # GET FD SUPPORT AND VIOLATIONS
-def getSupportAndVios(data, cfd):
-    lhs = cfd.split(' => ')[0][1:-1]
-    rhs = cfd.split(' => ')[1]
+def getSupportAndVios(data, fd):
+    lhs = fd.split(' => ')[0][1:-1]
+    rhs = fd.split(' => ')[1]
     patterns = fd2cfd(data, lhs, rhs)
         
     # CODE TO BUILD COVER AND VIOLATION LIST
     support = list()
     violations = list()
     for idx in data.index:
-        applies = True
-        for lh in lhs.split(', '):
-
+        # applies = True
+        # for lh in lhs.split(', '):
             # If this element of the CFD is constant
-            if '=' in lh:
-                lh = np.array(lh.split('='))
-                if data.at[idx, lh[0]] != lh[1]:     # CFD does not apply to this row
-                    applies = False
-                    break
+            # if '=' in lh:
+            #     lh = np.array(lh.split('='))
+            #     if data.at[idx, lh[0]] != lh[1]:     # CFD does not apply to this row
+            #         applies = False
+            #        break
 
         # If this CFD applies to this row
-        if applies:
-            support.append(idx)
-            if lhs.count('=') == len(lhs.split(', ')) and '=' in rhs:
-                rh = np.array(rhs.split('='))
-                if data.at[idx, rh[0]] != rh[1]:
-                    violations.append(idx)
-            elif lhs.count('=') == len(lhs.split(', ')) and '=' not in rhs:
-                rh_attribute = rhs.split('=')[0]
-                applicable_rhv = patterns[lhs].split('=')[1]
-                if data.at[idx, rh_attribute] != applicable_rhv:
-                     violations.append(idx)
-            elif lhs.count('=') < len(lhs.split(', ')):
-                applicable_lhs = ''
-                for lh in lhs.split(', '):
-                    if '=' in lh:
-                        applicable_lhs += lh + ', '
-                    else:
-                        applicable_lhs += lh + '=' + str(data.at[idx, lh]) + ', '
-                applicable_lhs = applicable_lhs[:-2]
-                applicable_rhs = patterns[applicable_lhs]
-                rh = applicable_rhs.split('=')
-                if data.at[idx, rh[0]] != rh[1]:
-                    violations.append(idx)
+        # if applies:
+        support.append(idx)
+            # if lhs.count('=') == len(lhs.split(', ')) and '=' in rhs:
+            #     rh = np.array(rhs.split('='))
+            #     if data.at[idx, rh[0]] != rh[1]:
+            #         violations.append(idx)
+            # elif lhs.count('=') == len(lhs.split(', ')) and '=' not in rhs:
+            #     rh_attribute = rhs.split('=')[0]
+            #     applicable_rhv = patterns[lhs].split('=')[1]
+            #     if data.at[idx, rh_attribute] != applicable_rhv:
+            #          violations.append(idx)
+            # elif lhs.count('=') < len(lhs.split(', ')):
+        applicable_lhs = ''
+        for lh in lhs.split(', '):
+            # if '=' in lh:
+            #     applicable_lhs += lh + ', '
+            # else:
+            applicable_lhs += lh + '=' + str(data.at[idx, lh]) + ', '
+        applicable_lhs = applicable_lhs[:-2]
+        applicable_rhs = patterns[applicable_lhs]
+        rh = applicable_rhs.split('=')
+        if str(data.at[idx, rh[0]]) != str(rh[1]):
+            violations.append(idx)
         
     print('*** Support and violations built for (' + lhs + ') => ' + rhs + ' ***')
     return support, violations
@@ -101,10 +100,10 @@ def fd2cfd(data, lhs, rhs):
 
     return patterns
 
-def makeVioPairs(data, support, vios, cfd):
+def makeVioPairs(data, support, vios, fd):
     vio_pairs = list()
-    lhs = cfd.split(' => ')[0][1:-1].split(', ')
-    rhs = cfd.split(' => ')[1]
+    lhs = fd.split(' => ')[0][1:-1].split(', ')
+    rhs = fd.split(' => ')[1]
     for v in vios:
         for idx in [i for i in support if i not in vios]:
             match = True
@@ -133,15 +132,15 @@ if __name__ == '__main__':
         res = process.communicate()
         if process.returncode == 0:
             output = res[0].decode('latin_1').replace(',]', ']').replace('\r', '').replace('\t', '').replace('\n', '')
-            cfds = json.loads(output, strict=False)['cfds']
-            scenario['hypothesis_space'] = cfds
+            fds = [c for c in json.loads(output, strict=False)['cfds'] if '=' not in c['cfd'].split(' => ')[0] and '=' not in c['cfd'].split(' => ')[1]]
+            scenario['hypothesis_space'] = fds
         else:
             scenario['hypothesis_space'] = list()
 
         for h in scenario['hypothesis_space']:
-            cfd = h['cfd']
-            support, vios = getSupportAndVios(data, cfd)
-            vio_pairs = makeVioPairs(data, support, vios, cfd)
+            fd = h['cfd']
+            support, vios = getSupportAndVios(data, fd)
+            vio_pairs = makeVioPairs(data, support, vios, fd)
             h['support'] = support
             h['vios'] = vios
             h['vio_pairs'] = vio_pairs
