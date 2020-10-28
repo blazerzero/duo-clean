@@ -359,13 +359,14 @@ class Clean(Resource):
             best_cfd_m = cfd_metadata[best_cfd]
             wh_len = len(best_cfd_m['weight_history'])
             if wh_len >= 3:
-                curr_w_conf = 0
+                best_cfd_conf_variation = best_cfd_m['weight_history'][wh_len-1].weight - best_cfd_m['weight_history'][wh_len-3].weight
+                '''curr_w_conf = 0
                 for i in range(0, len(best_cfd_m['history'])):
                     curr_w_conf += (best_cfd_m['history'][i].score / (current_iter - best_cfd_m['history'][i].iter_num + 1))
                 prev_3_w_conf = 0
                 for i in range(0, len(best_cfd_m['history'])-2):
                     prev_3_w_conf += (best_cfd_m['history'][i].score / (current_iter - best_cfd_m['history'][i].iter_num + 1))
-                best_cfd_conf_variation = curr_w_conf - prev_3_w_conf
+                best_cfd_conf_variation = curr_w_conf - prev_3_w_conf'''
 
         if refresh == 0 and (current_iter >= 25 or (best_cfd_m is not None and abs(best_cfd_conf_variation) < 0.05)):
             msg = '[DONE]'

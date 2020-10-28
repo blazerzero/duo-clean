@@ -189,8 +189,12 @@ def explainFeedback(full_dataset, dirty_sample, project_id, current_iter):
 
             weight = complexity_bias + weighted_conf
             cfd_metadata[c['cfd']]['weight'] = weight
+            cfd_metadata[c['cfd']]['weight_history'].append(CFDWeightHistory(iter_num=current_iter, weight=weight, elapsed_time=elapsed_time))
         
         cfd_metadata = normalizeWeights(cfd_metadata)
+        # for cfd_m in cfd_metadata.values():
+        #     cfd_m['weight_history'].append(CFDWeightHistory(iter_num=current_iter, weight=cfd_m['weight'], elapsed_time=elapsed_time))
+
         print('*** CFDD output processed and FD weights updated ***')
 
         pickle.dump( cfd_metadata, open('./store/' + project_id + '/cfd_metadata.p', 'wb') )
