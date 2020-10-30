@@ -351,7 +351,7 @@ class Clean(Resource):
 
         print('*** User scores retrieved ***')
 
-        cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
+        '''cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
         best_cfd_m = None
         best_cfd_conf_variation = 1
         if len(cfd_metadata.keys()) > 0:
@@ -360,7 +360,7 @@ class Clean(Resource):
             wh_len = len(best_cfd_m['weight_history'])
             if wh_len >= 3:
                 best_cfd_conf_variation = best_cfd_m['weight_history'][wh_len-1].weight - best_cfd_m['weight_history'][wh_len-3].weight
-                '''curr_w_conf = 0
+                curr_w_conf = 0
                 for i in range(0, len(best_cfd_m['history'])):
                     curr_w_conf += (best_cfd_m['history'][i].score / (current_iter - best_cfd_m['history'][i].iter_num + 1))
                 prev_3_w_conf = 0
@@ -368,7 +368,9 @@ class Clean(Resource):
                     prev_3_w_conf += (best_cfd_m['history'][i].score / (current_iter - best_cfd_m['history'][i].iter_num + 1))
                 best_cfd_conf_variation = curr_w_conf - prev_3_w_conf'''
 
-        if refresh == 0 and (current_iter >= 25 or (best_cfd_m is not None and abs(best_cfd_conf_variation) < 0.05)):
+        h_space_conf_delta = helpers.getHSpaceConfDelta(project_id, current_iter)
+
+        if refresh == 0 and (current_iter >= 25 or (h_space_conf_delta is not None and h_space_conf_delta < 0.02)):
             msg = '[DONE]'
         else:
             msg = '[SUCCESS]: Saved feedback and built new sample.'

@@ -162,6 +162,10 @@ def explainFeedback(full_dataset, dirty_sample, project_id, current_iter):
         writer.writerows(rep_dict)
     print('*** Mining dataset saved as CSV ***')
 
+    with open('./store/' + project_id + '/project_info.json', 'r') as f:
+        project_info = json.load(f)
+    h_space = project_info['scenario']['hypothesis_space']
+
     # process = sp.Popen(['./xplode/CTane', dirty_sample_fp, rep_sample_fp, '0.8', str(math.ceil(0.5*len(dirty_sample.index)))], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})   # XPlode
     process = sp.Popen(['./data/cfddiscovery/CFDD', prepped_sample_fp, str(math.ceil(0.5*len(prepped_sample.index))), '0.5', '3'], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})     # CFDD
     res = process.communicate()
@@ -171,14 +175,18 @@ def explainFeedback(full_dataset, dirty_sample, project_id, current_iter):
         cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
         print('*** FD meteadata object loaded ***')
         output = res[0].decode('latin_1').replace(',]', ']').replace('\r', '').replace('\t', '').replace('\n', '')
-        cfds = [c for c in json.loads(output, strict=False)['cfds'] if '=' not in c['cfd']]
+        cfds = [c for c in json.loads(output, strict=False)['cfds'] if '=' not in c['cfd'].split(' => ')[0] and '=' not in c['cfd'].split(' => ')[1] and c['cfd'].split(' => ')[0] != '()']
         print('*** FDs from CFDD extracted ***')
-        accepted_cfds = [c for c in cfds if c['cfd'].split(' => ')[0] != '()' and c['cfd'] in cfd_metadata.keys()]
+        accepted_cfds = [c for c in cfds if c['cfd'] in cfd_metadata.keys()]
         print('FDs from CFDD:', accepted_cfds)
-        for c in accepted_cfds:
-
-            cfd_metadata[c['cfd']]['conf_history'].append(CFDScore(iter_num=current_iter, score=c['conf'], elapsed_time=elapsed_time))
-            complexity_bias = analyze.sHeuristicSetRelation(c['cfd'], [c['cfd'] for c in accepted_cfds])
+        for c in h_space:
+            if c['cfd'] in [ac['cfd'] for ac in accepted_cfds]:
+                ac = next(a for a in accepted_cfds if a['cfd'] == c['cfd'])
+                cfd_metadata[c['cfd']]['conf_history'].append(CFDScore(iter_num=current_iter, score=ac['conf'], elapsed_time=elapsed_time))
+            else:
+                cfd_metadata[c['cfd']]['conf_history'].append(CFDScore(iter_num=current_iter, score=cfd_metadata[c['cfd']]['conf_history'][-1].score, elapsed_time=elapsed_time))
+            
+            complexity_bias = analyze.sHeuristicSetRelation(c['cfd'], [c['cfd'] for c in h_space])
             print('*** Complexity bias calculated ***')
 
             # System's weighted prior on rule confidence
@@ -362,3 +370,17 @@ def getUserScores(project_id):
     with open('./store/' + project_id + '/project_info.json') as f:
         project_info = json.load(f)
     return project_info['true_pos'], project_info['false_pos']
+
+def getHSpaceConfDelta(project_id, current_iter):
+    cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
+    if current_iter >= 3:
+        h_space_conf_delta = 0
+        for fd_m in cfd_metadata.values():
+            fd_conf_delta = abs(fd_m['conf_history'][-1].score - fd_m['conf_history'][-3].score)
+            print(fd_conf_delta)
+            h_space_conf_delta += fd_conf_delta
+        h_space_conf_delta /= len(cfd_metadata.keys())
+        print("delta h:", h_space_conf_delta)
+        return h_space_conf_delta
+    else:
+        return None
