@@ -93,18 +93,17 @@ def sHeuristicSetRelation(cfd, all_cfds):
 
 
 def bayes(sampling_method):
-    with open('scenarios.json') as f:
-        all_scenarios = json.load(f)
-    scenario_ids = [k for k, s in all_scenarios.items() if s['sampling_method'] == sampling_method]
+    # with open('scenarios.json') as f:
+    #     all_scenarios = json.load(f)
+    # scenario_ids = [k for k, s in all_scenarios.items() if s['sampling_method'] == sampling_method]
 
     project_ids = [d for d in os.listdir('./store') if os.path.isdir(os.path.join('./store/', d))]
     print(project_ids)
     for project_id in project_ids:
         with open('./store/' + project_id + '/project_info.json') as f:
             project_info = json.load(f)
-        scenario_id = project_info['scenario_id']
-        print(scenario_id)
-        if scenario_id not in scenario_ids:
+        scenario = project_info['scenario']
+        if scenario['sampling_method'] != sampling_method:
             continue
        
         data = pd.read_csv(project_info['scenario']['clean_dataset'], keep_default_na=False)
@@ -211,16 +210,16 @@ def bayes(sampling_method):
 
 
 def max_likelihood(sampling_method):
-    with open('scenarios.json') as f:
-        all_scenarios = json.load(f)
-    scenario_ids = [k for k, s in all_scenarios.items() if s['sampling_method'] == sampling_method]
+    # with open('scenarios.json') as f:
+    #     all_scenarios = json.load(f)
+    # scenario_ids = [k for k, s in all_scenarios.items() if s['sampling_method'] == sampling_method]
 
     project_ids = [d for d in os.listdir('./store') if os.path.isdir(os.path.join('./store/', d))]
     for project_id in project_ids:
         with open('./store/' + project_id + '/project_info.json') as f:
             project_info = json.load(f)
-        scenario_id = project_info['scenario_id']
-        if scenario_id not in scenario_ids:
+        scenario = project_info['scenario']
+        if scenario['sampling_method'] != sampling_method:
             continue
         
         data = pd.read_csv(project_info['scenario']['clean_dataset'], keep_default_na=False)

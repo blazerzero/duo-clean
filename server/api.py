@@ -79,7 +79,7 @@ class Import(Resource):
             'false_pos': 0
         }
         with open(new_project_dir + '/project_info.json', 'w') as f:
-            json.dump(project_info, f)
+            json.dump(project_info, f, indent=4)
 
         print('*** Project info saved ***')
 

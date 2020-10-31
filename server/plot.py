@@ -23,9 +23,10 @@ class StudyMetric(object):
         self.elapsed_time = elapsed_time
 
 def plot_modeling(modeling_method, sampling_method):
-    with open('scenarios.json') as f:
-        all_scenarios = json.load(f)
-    scenario_ids = [k for k, s in all_scenarios.items() if s['sampling_method'] == sampling_method]
+    # with open('scenarios.json') as f:
+    #     all_scenarios = json.load(f)
+    # scenario_ids = [k for k, s in all_scenarios.items() if s['sampling_method'] == sampling_method]
+    scenario_ids = ["1", "2", "3", "4"]
 
     lists_s1 = list()
     lists_s2 = list()
@@ -35,8 +36,9 @@ def plot_modeling(modeling_method, sampling_method):
     for project_id in project_ids:
         with open('./store/' + project_id + '/project_info.json') as f:
             project_info = json.load(f)
+        scenario = project_info['scenario']
         scenario_id = project_info['scenario_id']
-        if scenario_id not in scenario_ids:
+        if scenario['sampling_method'] != sampling_method:
             continue
 
         modeling_metadata = pickle.load( open('./store/' + project_id + '/' + modeling_method + '_modeling_metadata.p', 'rb') )
