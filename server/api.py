@@ -46,8 +46,8 @@ class Import(Resource):
                 with open('./store/' + project[2:] + '/project_info.json', 'r') as f:
                     project_id_info = json.load(f)
                 sampling_method_distribution.append(project_id_info['scenario']['sampling_method'])
-            duo_freq = len([s for s in sampling_method_distribution if s == 'DUO'])/len(sampling_method_distribution)
-            rp_freq = len([s for s in sampling_method_distribution if s == 'RANDOM-PURE'])/len(sampling_method_distribution)
+            duo_freq = 1 - len([s for s in sampling_method_distribution if s == 'DUO'])/len(sampling_method_distribution)
+            rp_freq = 1 - len([s for s in sampling_method_distribution if s == 'RANDOM-PURE'])/len(sampling_method_distribution)
             freqs = [duo_freq, rp_freq]
             print(freqs)
             sampling_method = np.random.choice(sampling_methods, p=freqs)
@@ -383,7 +383,7 @@ class Clean(Resource):
 
         h_space_conf_delta = helpers.getHSpaceConfDelta(project_id, current_iter)
 
-        if refresh == 0 and (current_iter >= 25 or (h_space_conf_delta is not None and h_space_conf_delta < 0.02)):
+        if refresh == 0 and (current_iter >= 25 or (h_space_conf_delta is not None and h_space_conf_delta < 0.01)):
             msg = '[DONE]'
         else:
             msg = '[SUCCESS]: Saved feedback and built new sample.'
