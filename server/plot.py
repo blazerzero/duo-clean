@@ -22,7 +22,7 @@ class StudyMetric(object):
         self.value = value
         self.elapsed_time = elapsed_time
 
-def plot_modeling(modeling_method, sampling_method):
+def plot_modeling(modeling_method, sampling_method, x_axis):
     # with open('scenarios.json') as f:
     #     all_scenarios = json.load(f)
     # scenario_ids = [k for k, s in all_scenarios.items() if s['sampling_method'] == sampling_method]
@@ -98,33 +98,44 @@ def plot_modeling(modeling_method, sampling_method):
     ax[1,1].set_ylabel('p(Y in C | X)')
     ax[0,0].set_title('Scenario ' + scenario_ids[0])
     ax[0,0].set_xlabel('Iteration #')
-    ax[0,0].set_xticks(np.arange(0, 36, 6.0))
     ax[0,0].set_yticks(np.arange(0.0, 1.25, 0.25))
     ax[0,0].set_ylim((0, None))
     ax[0,1].set_title('Scenario ' + scenario_ids[1])
     ax[0,1].set_xlabel('Iteration #')
-    ax[0,1].set_xticks(np.arange(0, 36, 6.0))
     ax[0,1].set_yticks(np.arange(0.0, 1.25, 0.25))
     ax[0,1].set_ylim((0, None))
     ax[1,0].set_title('Scenario ' + scenario_ids[2])
     ax[1,0].set_xlabel('Iteration #')
-    ax[1,0].set_xticks(np.arange(0, 36, 6.0))
     ax[1,0].set_yticks(np.arange(0.0, 1.25, 0.25))
     ax[1,0].set_ylim((0, None))
     ax[1,1].set_title('Scenario ' + scenario_ids[3])
     ax[1,1].set_xlabel('Iteration #')
-    ax[1,1].set_xticks(np.arange(0, 36, 6.0))
     ax[1,1].set_yticks(np.arange(0.0, 1.25, 0.25))
     ax[1,1].set_ylim((0, None))
 
-    for b in lists_s1:
-        ax[0,0].plot([i for i in range(1, len(b.values) + 1)], [x.value for x in b.values], color=b.color)
-    for b in lists_s2:
-        ax[0,1].plot([i for i in range(1, len(b.values) + 1)], [x.value for x in b.values], color=b.color)
-    for b in lists_s3:
-        ax[1,0].plot([i for i in range(1, len(b.values) + 1)], [x.value for x in b.values], color=b.color)
-    for b in lists_s4:
-        ax[1,1].plot([i for i in range(1, len(b.values) + 1)], [x.value for x in b.values], color=b.color)
+    if x_axis == 'iter':
+        for b in lists_s1:
+            ax[0,0].set_xticks(np.arange(0, 36, 6.0))
+            ax[0,0].plot([i for i in range(1, len(b.values) + 1)], [x.value for x in b.values], color=b.color)
+        for b in lists_s2:
+            ax[0,1].set_xticks(np.arange(0, 36, 6.0))
+            ax[0,1].plot([i for i in range(1, len(b.values) + 1)], [x.value for x in b.values], color=b.color)
+        for b in lists_s3:
+            ax[1,0].set_xticks(np.arange(0, 36, 6.0))
+            ax[1,0].plot([i for i in range(1, len(b.values) + 1)], [x.value for x in b.values], color=b.color)
+        for b in lists_s4:
+            ax[1,1].set_xticks(np.arange(0, 36, 6.0))
+            ax[1,1].plot([i for i in range(1, len(b.values) + 1)], [x.value for x in b.values], color=b.color)
+            
+    elif x_axis == 'time':
+        for b in lists_s1:
+            ax[0,0].plot([x.elapsed_time for x in b.values], [x.value for x in b.values], color=b.color)
+        for b in lists_s2:
+            ax[0,1].plot([x.elapsed_time for x in b.values], [x.value for x in b.values], color=b.color)
+        for b in lists_s3:
+            ax[1,0].plot([x.elapsed_time for x in b.values], [x.value for x in b.values], color=b.color)
+        for b in lists_s4:
+            ax[1,1].plot([x.elapsed_time for x in b.values], [x.value for x in b.values], color=b.color)
 
     fig.tight_layout()
     fig.savefig('./plots/' + modeling_method + '-' + sampling_method + '.jpg')
@@ -369,13 +380,16 @@ def plot_error_metrics():
     return '[SUCCESS]'
 
 if __name__ == '__main__':
-    if len(sys.argv) > 2:
-        if sys.argv[2] != 'RANDOM-PURE' and sys.argv[2] != 'DUO':
+    if len(sys.argv) > 3:
+        if sys.argv[3] != 'iter' and sys.argv[3] != 'time':
+            print('must specify iter or time x axis')
+        elif sys.argv[2] != 'RANDOM-PURE' and sys.argv[2] != 'DUO':
             print('must specify RANDOM-PURE or DUO sampling method')
+        
         elif sys.argv[1] == 'bayes':
-            plot_modeling(sys.argv[1], sys.argv[2])
+            plot_modeling(sys.argv[1], sys.argv[2], sys.argv[3])
         elif sys.argv[1] == 'min':
-            plot_modeling(sys.argv[1], sys.argv[2])
+            plot_modeling(sys.argv[1], sys.argv[2], sys.argv[3])
         else:
             print('must specify bayes or min modeling method')
     else:
