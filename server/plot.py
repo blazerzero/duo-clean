@@ -43,6 +43,8 @@ def plot_modeling(modeling_method, sampling_method):
         print("project id:", project_id)
 
         modeling_metadata = pickle.load( open('./store/' + project_id + '/' + modeling_method + '_modeling_metadata.p', 'rb') )
+        gt_metadata = pickle.load( open('./store/' + project_id + '/gt_' + modeling_method + '_metadata.p', 'rb') )
+        
         for heur, p_Y_in_C_given_X in modeling_metadata['p_Y_in_C_given_X'].items():
             # print(heur)
             if heur != 'aCOMBO-sSR':
@@ -63,16 +65,30 @@ def plot_modeling(modeling_method, sampling_method):
             elif heur == 'aCOMBO-sUNI':
                 color = 'navy'
             elif heur == 'aCOMBO-sSR':'''
-            color = 'green'
+            # color = 'green'
 
             if scenario_id == scenario_ids[0]:
-                lists_s1.append(HeuristicClassifier(values=p_Y_in_C_given_X, color=color))
+                lists_s1.append(HeuristicClassifier(values=p_Y_in_C_given_X, color='green'))
             elif scenario_id == scenario_ids[1]:
-                lists_s2.append(HeuristicClassifier(values=p_Y_in_C_given_X, color=color))
+                lists_s2.append(HeuristicClassifier(values=p_Y_in_C_given_X, color='green'))
             elif scenario_id == scenario_ids[2]:
-                lists_s3.append(HeuristicClassifier(values=p_Y_in_C_given_X, color=color))
+                lists_s3.append(HeuristicClassifier(values=p_Y_in_C_given_X, color='green'))
             elif scenario_id == scenario_ids[3]:
-                lists_s4.append(HeuristicClassifier(values=p_Y_in_C_given_X, color=color))
+                lists_s4.append(HeuristicClassifier(values=p_Y_in_C_given_X, color='green'))
+
+        for heur, p_Y_in_C_given_X in gt_metadata['p_Y_in_C_given_X'].items():
+            # print(heur)
+            if heur != 'aCOMBO-sSR':
+                continue
+
+            if scenario_id == scenario_ids[0]:
+                lists_s1.append(HeuristicClassifier(values=p_Y_in_C_given_X, color='blue'))
+            elif scenario_id == scenario_ids[1]:
+                lists_s2.append(HeuristicClassifier(values=p_Y_in_C_given_X, color='blue'))
+            elif scenario_id == scenario_ids[2]:
+                lists_s3.append(HeuristicClassifier(values=p_Y_in_C_given_X, color='blue'))
+            elif scenario_id == scenario_ids[3]:
+                lists_s4.append(HeuristicClassifier(values=p_Y_in_C_given_X, color='blue'))
 
     fig, ax = plt.subplots(2, 2)
 
