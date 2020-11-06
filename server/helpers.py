@@ -216,8 +216,11 @@ def explainFeedback(full_dataset, dirty_sample, project_id, current_iter):
 def buildSample(data, sample_size, project_id, sampling_method, current_iter):
     cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )   
     modeling_metadata = pickle.load( open('./store/' + project_id + '/modeling_metadata.p', 'rb') )
+    gt_metadata = pickle.load( open('./store/' + project_id + '/gt_metadata.p', 'rb') )
     start_time = pickle.load( open('./store/' + project_id + '/start_time.p', 'rb') )
     current_time = pickle.load( open('./store/' + project_id + '/current_time.p', 'rb') )
+    with open('./store/' + project_id + '/project_info.json') as f:
+        project_info = json.load(f)
 
     elapsed_time = current_time - start_time
     
@@ -235,7 +238,10 @@ def buildSample(data, sample_size, project_id, sampling_method, current_iter):
     else:
         new_X = modeling_metadata['X'][-1].value | set(s_out.index)     # X = X | set(s_out.index)
     modeling_metadata['X'].append(StudyMetric(iter_num=current_iter, value=new_X, elapsed_time=elapsed_time))
+    gt_metadata['X'].append(StudyMetric(iter_num=current_iter, value=new_X, elapsed_time=elapsed_time))
+
     modeling_metadata['Y'].append(StudyMetric(iter_num=current_iter, value=set(s_out.index), elapsed_time=elapsed_time))
+    gt_metadata['Y'].append(StudyMetric(iter_num=current_iter, value=set(s_out.index), elapsed_time=elapsed_time))
 
     for cfd, cfd_m in cfd_metadata.items():
         # print(cfd)
@@ -279,12 +285,32 @@ def buildSample(data, sample_size, project_id, sampling_method, current_iter):
                             modeling_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=1, elapsed_time=elapsed_time))
             else:   # FD is not applicable to y
                 modeling_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=0, elapsed_time=elapsed_time))'''
+
+    for h in project_info['scenario']['clean_hypothesis_space']:
+        cfd = h['cfd']
+        if cfd not in gt_metadata['p_X_given_h'].keys():  # cfd was just discovered in this iteration
+            gt_metadata['p_X_given_h'][cfd] = list()
+        if set(new_X).issubset(h['support']):
+            p_X_given_h = math.pow((1/len(new_X)), sample_size) # p(X | h) = PI_i (p(x_i | h)), where each x_i is in X
+            gt_metadata['p_X_given_h'][cfd].append(StudyMetric(iter_num=current_iter, value=p_X_given_h, elapsed_time=elapsed_time))
+        else:
+            gt_metadata['p_X_given_h'][cfd].append(StudyMetric(iter_num=current_iter, value=0, elapsed_time=elapsed_time))
     
+        # I(y in h)
+        for y in new_X:
+            if y not in gt_metadata['y_in_h'][cfd].keys():    # this is the first time the user will have been shown y
+                gt_metadata['y_in_h'][cfd][y] = list()
+            if y in h['support'] and y not in h['vios']:
+                gt_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=1, elapsed_time=elapsed_time))
+            else:
+                gt_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=0, elapsed_time=elapsed_time))
+
     print('IDs of tuples in next sample:')
     for idx in s_out.index:
         print(idx)
 
     pickle.dump( modeling_metadata, open('./store/' + project_id + '/modeling_metadata.p', 'wb') )
+    pickle.dump( gt_metadata, open('./store/' + project_id + '/gt_metadata.p', 'wb') )
     
     return s_out
 

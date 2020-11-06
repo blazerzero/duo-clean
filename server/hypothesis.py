@@ -122,6 +122,14 @@ def makeVioPairs(data, support, vios, fd):
 
     return vio_pairs
 
+def dataDiff(dirty_df, clean_df):
+    diff = pd.DataFrame(columns=clean_df.columns)
+    for row in clean_df.index:
+        for col in clean_df.columns:
+            diff.at[row, col] = dirty_df.at[row, col] == clean_df.at[row, col]
+    print(diff)
+    return diff
+
 if __name__ == '__main__':
     with open('scenarios-master.json', 'r') as f:
         scenarios_list = json.load(f)
@@ -139,11 +147,35 @@ if __name__ == '__main__':
 
         for h in scenario['hypothesis_space']:
             fd = h['cfd']
+            h['conf'] = 1/len(scenario['hypothesis_space'])
             support, vios = getSupportAndVios(data, fd)
             vio_pairs = makeVioPairs(data, support, vios, fd)
             h['support'] = support
             h['vios'] = vios
             h['vio_pairs'] = vio_pairs
+
+        clean_data = pd.read_csv(scenario['clean_dataset'], keep_default_na=False)
+        clean_process = sp.Popen(['./data/cfddiscovery/CFDD', scenario['clean_dataset'], str(len(clean_data.index)), '0.8', '3'], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})     # CFDD
+        clean_res = process.communicate()
+        if clean_process.returncode == 0:
+            clean_output = clean_res[0].decode('latin_1').replace(',]', ']').replace('\r', '').replace('\t', '').replace('\n', '')
+            clean_fds = [c for c in json.loads(clean_output, strict=False)['cfds'] if '=' not in c['cfd'].split(' => ')[0] and '=' not in c['cfd'].split(' => ')[1] and c['cfd'].split(' => ')[0] != '()']
+            scenario['clean_hypothesis_space'] = clean_fds
+        else:
+            scenario['clean_hypothesis_space'] = list()
+
+        for h in scenario['clean_hypothesis_space']:
+            fd = h['cfd']
+            h['conf'] = 1/len(scenario['clean_hypothesis_space'])
+            support, vios = getSupportAndVios(data, fd)
+            vio_pairs = makeVioPairs(data, support, vios, fd)
+            h['support'] = support
+            h['vios'] = vios
+            h['vio_pairs'] = vio_pairs
+
+        diff_df = dataDiff(data, clean_data)
+        diff = json.loads(diff_df.to_json(orient='index'))
+        scenario['diff'] = diff
 
     with open('scenarios.json', 'w') as f:
         json.dump(scenarios_list, f, indent=4)

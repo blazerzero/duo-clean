@@ -40,12 +40,15 @@ def plot_modeling(modeling_method, sampling_method):
         scenario_id = project_info['scenario_id']
         if scenario['sampling_method'] != sampling_method:
             continue
+        print("project id:", project_id)
 
         modeling_metadata = pickle.load( open('./store/' + project_id + '/' + modeling_method + '_modeling_metadata.p', 'rb') )
         for heur, p_Y_in_C_given_X in modeling_metadata['p_Y_in_C_given_X'].items():
-            print(heur)
+            # print(heur)
+            if heur != 'aCOMBO-sSR':
+                continue
             print([x.value for x in p_Y_in_C_given_X])
-            if heur == 'aUNI-sUNI':
+            '''if heur == 'aUNI-sUNI':
                 color = 'royalblue'
             elif heur == 'aUNI-sSR':
                 color = 'green'
@@ -59,8 +62,8 @@ def plot_modeling(modeling_method, sampling_method):
                 color = 'darkorange'
             elif heur == 'aCOMBO-sUNI':
                 color = 'navy'
-            elif heur == 'aCOMBO-sSR':
-                color = 'olive'
+            elif heur == 'aCOMBO-sSR':'''
+            color = 'green'
 
             if scenario_id == scenario_ids[0]:
                 lists_s1.append(HeuristicClassifier(values=p_Y_in_C_given_X, color=color))

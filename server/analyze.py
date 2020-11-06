@@ -36,7 +36,7 @@ def aHeuristicUV(cfd, data):
         weights[lh] = numUV / len(data.index)
     return weights
 
-def aHeuristicAC(cfd, data):
+def aHeuristicAC(cfd):
     lhs = cfd.split(' => ')[0][1:-1].split(', ')
     wAC = {
         'type': 0.4,
@@ -52,23 +52,23 @@ def aHeuristicAC(cfd, data):
         'director': 0.6,
         'userrating': 0.1
     }
-    weights = dict()
-    for lh in lhs:
-        if '=' in lh:
-            lh_key = lh.split('=')[0]
-            lh_val = lh.split('=')[1].replace('\n', '').replace('\t', '').replace('\r', '')
-            if lh_val.isnumeric():
-                lh_val = int(lh_val)
-            num_lh_val = len(data[data[lh_key] == lh_val])
-            weights[lh] = wAC[lh_key] / num_lh_val
-        else:
-            weights[lh] = wAC[lh]
+    weights = {lh: wAC[lh] for lh in lhs}
+    # for lh in lhs:
+    #     if '=' in lh:
+    #         lh_key = lh.split('=')[0]
+    #         lh_val = lh.split('=')[1].replace('\n', '').replace('\t', '').replace('\r', '')
+    #         if lh_val.isnumeric():
+    #             lh_val = int(lh_val)
+    #         num_lh_val = len(data[data[lh_key] == lh_val])
+    #         weights[lh] = wAC[lh_key] / num_lh_val
+    #     else:
+    #         weights[lh] = wAC[lh]
     return weights
 
 def aHeuristicCombo(cfd, data):
     lhs = cfd.split(' => ')[0][1:-1].split(', ')
     wUV = aHeuristicUV(cfd, data)
-    wAC = aHeuristicAC(cfd, data)
+    wAC = aHeuristicAC(cfd)
     weights = {lh: wUV[lh] * wAC[lh] for lh in lhs}
     return weights
 
@@ -81,15 +81,24 @@ def sHeuristicSetRelation(cfd, all_cfds):
     subset_cfds = set([c.split(' => ')[0][1:-1] for c in all_cfds if lhs_set.issuperset(set(c.split(' => ')[0][1:-1].split(', ')))])
     superset_cfds = set([c.split(' => ')[0][1:-1] for c in all_cfds if set(c.split(' => ')[0][1:-1].split(', ')).issuperset(lhs_set)])
 
-    all_related_cfd_set = subset_cfds | superset_cfds
-    all_related_cfds = [c.split(', ') for c in all_related_cfd_set]
-    # print('all:', all_related_cfds)
-    all_related_cfds.sort(key=len)
-    lhs_idx = all_related_cfds.index(lhs)
-    # print(len(all_related_cfds))
-    # print(lhs_idx, '\n')
-    weight = (len(all_related_cfds) - lhs_idx) / len(all_related_cfds)
+    similar_cfd_set = lhs_set | subset_cfds | superset_cfds
+    similar_cfds = [c.split(', ') for c in similar_cfd_set]
+    similar_cfds.sort(key=len)
+    lhs_idx = similar_cfds.index(lhs)
+    weight = (len(similar_cfds) - lhs_idx) / len(similar_cfds)
     return weight
+
+'''def groundPH(gt_bayes_metadata, clean_h_space, clean_data):
+    # p(h)
+    all_fds = [h['cfd'] for h in clean_h_space]
+    for h in clean_h_space:
+        wCombo = aHeuristicCombo(h['cfd'], clean_data)
+        phaCombo = np.prod([v for _, v in wCombo.items()])
+        phsSetRelation = sHeuristicSetRelation(h['cfd'], all_fds)
+        gt_bayes_metadata['p_h']['aCOMBO-sSR'][h['cfd']] = h['conf'] * phaCombo * phsSetRelation
+
+    return gt_bayes_metadata'''
+
 
 
 def bayes(sampling_method):
@@ -98,15 +107,16 @@ def bayes(sampling_method):
     # scenario_ids = [k for k, s in all_scenarios.items() if s['sampling_method'] == sampling_method]
 
     project_ids = [d for d in os.listdir('./store') if os.path.isdir(os.path.join('./store/', d))]
-    print(project_ids)
     for project_id in project_ids:
         with open('./store/' + project_id + '/project_info.json') as f:
             project_info = json.load(f)
         scenario = project_info['scenario']
         if scenario['sampling_method'] != sampling_method:
             continue
-       
+        print("project id:", project_id)
+        print("scenario id:", project_info['scenario_id'])
         data = pd.read_csv(project_info['scenario']['clean_dataset'], keep_default_na=False)
+        data = data.replace(r'\\n\\t\\r','', regex=True) 
 
         modeling_metadata = pickle.load( open('./store/' + project_id + '/modeling_metadata.p', 'rb') )
         cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
@@ -115,20 +125,20 @@ def bayes(sampling_method):
         iter_count = pickle.load( open('./store/' + project_id + '/current_iter.p', 'rb') )
 
         p_h = dict()
-        p_h['aUNI'] = dict()
-        p_h['aUV'] = dict()
-        p_h['aAC'] = dict()
+        # p_h['aUNI'] = dict()
+        # p_h['aUV'] = dict()
+        # p_h['aAC'] = dict()
         p_h['aCOMBO'] = dict()
-        p_h['sUNI'] = dict()
+        # p_h['sUNI'] = dict()
         p_h['sSR'] = dict()
         bayes_modeling_metadata['p_h'] = dict()
-        bayes_modeling_metadata['p_h']['aUNI-sUNI'] = dict()
-        bayes_modeling_metadata['p_h']['aUNI-sSR'] = dict()
-        bayes_modeling_metadata['p_h']['aUV-sUNI'] = dict()
-        bayes_modeling_metadata['p_h']['aUV-sSR'] = dict()
-        bayes_modeling_metadata['p_h']['aAC-sUNI'] = dict()
-        bayes_modeling_metadata['p_h']['aAC-sSR'] = dict()
-        bayes_modeling_metadata['p_h']['aCOMBO-sUNI'] = dict()
+        # bayes_modeling_metadata['p_h']['aUNI-sUNI'] = dict()
+        # bayes_modeling_metadata['p_h']['aUNI-sSR'] = dict()
+        # bayes_modeling_metadata['p_h']['aUV-sUNI'] = dict()
+        # bayes_modeling_metadata['p_h']['aUV-sSR'] = dict()
+        # bayes_modeling_metadata['p_h']['aAC-sUNI'] = dict()
+        # bayes_modeling_metadata['p_h']['aAC-sSR'] = dict()
+        # bayes_modeling_metadata['p_h']['aCOMBO-sUNI'] = dict()
         bayes_modeling_metadata['p_h']['aCOMBO-sSR'] = dict()
 
         all_cfds = cfd_metadata.keys()
@@ -136,75 +146,75 @@ def bayes(sampling_method):
         # p(h)        
         for cfd in all_cfds:
             # UNIFORM ATTRIBUTE WEIGHTS
-            wUniform = aHeuristicUniform(cfd)   # attribute weights (aUniform)
-            wUV = aHeuristicUV(cfd, data)       # attribute weights (aUV)
-            wAC = aHeuristicAC(cfd, data) # attribute weights (aAC)
+            # wUniform = aHeuristicUniform(cfd)   # attribute weights (aUniform)
+            # wUV = aHeuristicUV(cfd, data)       # attribute weights (aUV)
+            # wAC = aHeuristicAC(cfd, data) # attribute weights (aAC)
             wCombo = aHeuristicCombo(cfd, data) # attribute weights (aCombo = aUV * aAC)
 
             # p(h | [heuristic]) = PI_i w(a_i), where a_i is an attribute in the LHS of h
-            phaUniform = np.prod([v for _, v in wUniform.items()])   # p(h | aUniform)
-            phaUV = np.prod([v for _, v in wUV.items()])     # p(h | aUV)
-            phaAC = np.prod([v for _, v in wAC.items()])     # p(h | aAC)
+            # phaUniform = np.prod([v for _, v in wUniform.items()])   # p(h | aUniform)
+            # phaUV = np.prod([v for _, v in wUV.items()])     # p(h | aUV)
+            # phaAC = np.prod([v for _, v in wAC.items()])     # p(h | aAC)
             phaCombo = np.prod([v for _, v in wCombo.items()])   # p(h | aCombo)
-            phsUniform = sHeuristicUniform(cfd)
+            # phsUniform = sHeuristicUniform(cfd)
             phsSetRelation = sHeuristicSetRelation(cfd, all_cfds)
-            p_h['aUNI'][cfd] = phaUniform
-            p_h['aUV'][cfd] = phaUV
-            p_h['aAC'][cfd] = phaAC
+            # p_h['aUNI'][cfd] = phaUniform
+            # p_h['aUV'][cfd] = phaUV
+            # p_h['aAC'][cfd] = phaAC
             p_h['aCOMBO'][cfd] = phaCombo
-            p_h['sUNI'][cfd] = phsUniform
+            # p_h['sUNI'][cfd] = phsUniform
             p_h['sSR'][cfd] = phsSetRelation
 
-            bayes_modeling_metadata['p_h']['aUNI-sUNI'][cfd] = p_h['aUNI'][cfd] * p_h['sUNI'][cfd]
-            bayes_modeling_metadata['p_h']['aUNI-sSR'][cfd] = p_h['aUNI'][cfd] * p_h['sSR'][cfd]
-            bayes_modeling_metadata['p_h']['aUV-sUNI'][cfd] = p_h['aUV'][cfd] * p_h['sUNI'][cfd]
-            bayes_modeling_metadata['p_h']['aUV-sSR'][cfd] = p_h['aUV'][cfd] * p_h['sSR'][cfd]
-            bayes_modeling_metadata['p_h']['aAC-sUNI'][cfd] = p_h['aAC'][cfd] * p_h['sUNI'][cfd]
-            bayes_modeling_metadata['p_h']['aAC-sSR'][cfd] = p_h['aAC'][cfd] * p_h['sSR'][cfd]
-            bayes_modeling_metadata['p_h']['aCOMBO-sUNI'][cfd] = p_h['aCOMBO'][cfd] * p_h['sUNI'][cfd]
+            # bayes_modeling_metadata['p_h']['aUNI-sUNI'][cfd] = p_h['aUNI'][cfd] * p_h['sUNI'][cfd]
+            # bayes_modeling_metadata['p_h']['aUNI-sSR'][cfd] = p_h['aUNI'][cfd] * p_h['sSR'][cfd]
+            # bayes_modeling_metadata['p_h']['aUV-sUNI'][cfd] = p_h['aUV'][cfd] * p_h['sUNI'][cfd]
+            # bayes_modeling_metadata['p_h']['aUV-sSR'][cfd] = p_h['aUV'][cfd] * p_h['sSR'][cfd]
+            # bayes_modeling_metadata['p_h']['aAC-sUNI'][cfd] = p_h['aAC'][cfd] * p_h['sUNI'][cfd]
+            # bayes_modeling_metadata['p_h']['aAC-sSR'][cfd] = p_h['aAC'][cfd] * p_h['sSR'][cfd]
+            # bayes_modeling_metadata['p_h']['aCOMBO-sUNI'][cfd] = p_h['aCOMBO'][cfd] * p_h['sUNI'][cfd]
             bayes_modeling_metadata['p_h']['aCOMBO-sSR'][cfd] = p_h['aCOMBO'][cfd] * p_h['sSR'][cfd]
 
-        for heur in bayes_modeling_metadata['p_h'].keys():
-            print(heur)
-            bayes_modeling_metadata['p_Y_in_C_given_X'][heur] = list()
-            for it in range(1, iter_count+1):
-                elapsed_time = bayes_modeling_metadata['Y'][it-1].elapsed_time
+        # for heur in bayes_modeling_metadata['p_h'].keys():
+        # print(heur)
+        bayes_modeling_metadata['p_Y_in_C_given_X']['aCOMBO-sSR'] = list()
+        for it in range(1, iter_count+1):
+            elapsed_time = bayes_modeling_metadata['Y'][it-1].elapsed_time
 
-                # Get all FDs/CFDs that have were known by the system in this iteration
-                discovered_cfds = [cfd for cfd in cfd_metadata.keys()]
+            # Get all FDs/CFDs that have were known by the system in this iteration
+            discovered_cfds = [cfd for cfd in cfd_metadata.keys()]
+            
+            if len(discovered_cfds) == 0:   # no FDs discovered yet
+                # P(Y in C | X) = 0
+                bayes_modeling_metadata['p_Y_in_C_given_X']['aCOMBO-sSR'].append(StudyMetric(iter_num=it, value=0, elapsed_time=elapsed_time))
+                continue
                 
-                if len(discovered_cfds) == 0:   # no FDs discovered yet
-                    # P(Y in C | X) = 0
-                    bayes_modeling_metadata['p_Y_in_C_given_X'][heur].append(StudyMetric(iter_num=it, value=0, elapsed_time=elapsed_time))
-                    continue
+            p_h_given_X_list = list()
+            # p(h | X) for each h
+            for h in discovered_cfds:
+                elem = next(x for x in bayes_modeling_metadata['p_X_given_h'][h] if x.iter_num == it)     # p(X | h) for this iteration
+                p_X_given_h = elem.value
+                p_h = bayes_modeling_metadata['p_h']['aCOMBO-sSR'][h]   # p(h)
+                p_h_given_X = p_X_given_h * p_h     # p(h | X)
+                p_h_given_X_list.append(PHGivenX(h=h, value=p_h_given_X))
+            
+            # normalized p(h | X) such that sum of all p(h | X) = 1
+            p_h_given_X_list_sum = sum([x.value for x in p_h_given_X_list])
+            p_h_given_X_list = [PHGivenX(h=x.h, value=((x.value/p_h_given_X_list_sum) if x.value > 0 else 0)) for x in p_h_given_X_list]
+
+            # p(Y in C | X)
+            p_Y_in_C_given_X = 1
+            for y in bayes_modeling_metadata['Y'][it-1].value:
+                p_y_in_C_given_X = 0 # p(y in C | X)
+                for phgx in p_h_given_X_list:
+                    h = phgx.h
+                    p_h_given_X = phgx.value    # p(h | X)
+                    i_y_in_h = next(i for i in bayes_modeling_metadata['y_in_h'][h][y] if i.iter_num == it).value  # I(y in supp(h))
+                    p_y_in_C_given_X += (i_y_in_h * p_h_given_X)  # p(y in C | X) = I(y in supp(h)) * p(h | X)
                     
-                p_h_given_X_list = list()
-                # p(h | X) for each h
-                for h in discovered_cfds:
-                    elem = next(x for x in bayes_modeling_metadata['p_X_given_h'][h] if x.iter_num == it)     # p(X | h) for this iteration
-                    p_X_given_h = elem.value
-                    p_h = bayes_modeling_metadata['p_h'][heur][h]   # p(h)
-                    p_h_given_X = p_X_given_h * p_h     # p(h | X)
-                    p_h_given_X_list.append(PHGivenX(h=h, value=p_h_given_X))
-                
-                # normalized p(h | X) such that sum of all p(h | X) = 1
-                p_h_given_X_list_sum = sum([x.value for x in p_h_given_X_list])
-                p_h_given_X_list = [PHGivenX(h=x.h, value=((x.value/p_h_given_X_list_sum) if x.value > 0 else 0)) for x in p_h_given_X_list]
-
-                # p(Y in C | X)
-                p_Y_in_C_given_X = 1
-                for y in bayes_modeling_metadata['Y'][it-1].value:
-                    p_y_in_C_given_X = 0 # p(y in C | X)
-                    for phgx in p_h_given_X_list:
-                        h = phgx.h
-                        p_h_given_X = phgx.value    # p(h | X)
-                        i_y_in_h = next(i for i in bayes_modeling_metadata['y_in_h'][h][y] if i.iter_num == it).value  # I(y in supp(h))
-                        p_y_in_C_given_X += (i_y_in_h * p_h_given_X)  # p(y in C | X) = I(y in supp(h)) * p(h | X)
-                        
-                    p_Y_in_C_given_X *= p_y_in_C_given_X    # incorporating each y in Y into p(Y in C | X)
-                print('p(Y in C | X) =', p_Y_in_C_given_X)
-                
-                bayes_modeling_metadata['p_Y_in_C_given_X'][heur].append(StudyMetric(iter_num=it, value=p_Y_in_C_given_X, elapsed_time=elapsed_time))
+                p_Y_in_C_given_X *= p_y_in_C_given_X    # incorporating each y in Y into p(Y in C | X)
+            print('p(Y in C | X) =', p_Y_in_C_given_X)
+            
+            bayes_modeling_metadata['p_Y_in_C_given_X']['aCOMBO-sSR'].append(StudyMetric(iter_num=it, value=p_Y_in_C_given_X, elapsed_time=elapsed_time))
 
         pickle.dump( bayes_modeling_metadata, open('./store/' + project_id + '/bayes_modeling_metadata.p', 'wb') )
 
@@ -232,20 +242,20 @@ def max_likelihood(sampling_method):
         iter_count = pickle.load( open('./store/' + project_id + '/current_iter.p', 'rb') )
 
         p_h = dict()
-        p_h['aUNI'] = dict()
-        p_h['aUV'] = dict()
-        p_h['aAC'] = dict()
+        # p_h['aUNI'] = dict()
+        # p_h['aUV'] = dict()
+        # p_h['aAC'] = dict()
         p_h['aCOMBO'] = dict()
-        p_h['sUNI'] = dict()
+        # p_h['sUNI'] = dict()
         p_h['sSR'] = dict()
         min_modeling_metadata['p_h'] = dict()
-        min_modeling_metadata['p_h']['aUNI-sUNI'] = dict()
-        min_modeling_metadata['p_h']['aUNI-sSR'] = dict()
-        min_modeling_metadata['p_h']['aUV-sUNI'] = dict()
-        min_modeling_metadata['p_h']['aUV-sSR'] = dict()
-        min_modeling_metadata['p_h']['aAC-sUNI'] = dict()
-        min_modeling_metadata['p_h']['aAC-sSR'] = dict()
-        min_modeling_metadata['p_h']['aCOMBO-sUNI'] = dict()
+        # min_modeling_metadata['p_h']['aUNI-sUNI'] = dict()
+        # min_modeling_metadata['p_h']['aUNI-sSR'] = dict()
+        # min_modeling_metadata['p_h']['aUV-sUNI'] = dict()
+        # min_modeling_metadata['p_h']['aUV-sSR'] = dict()
+        # min_modeling_metadata['p_h']['aAC-sUNI'] = dict()
+        # min_modeling_metadata['p_h']['aAC-sSR'] = dict()
+        # min_modeling_metadata['p_h']['aCOMBO-sUNI'] = dict()
         min_modeling_metadata['p_h']['aCOMBO-sSR'] = dict()
 
         all_cfds = cfd_metadata.keys()
@@ -253,109 +263,109 @@ def max_likelihood(sampling_method):
         # p(h)        
         for cfd in all_cfds:
             # UNIFORM ATTRIBUTE WEIGHTS
-            wUniform = aHeuristicUniform(cfd)   # attribute weights (aUniform)
-            wUV = aHeuristicUV(cfd, data)       # attribute weights (aUV)
-            wAC = aHeuristicAC(cfd, data) # attribute weights (aAC)
+            # wUniform = aHeuristicUniform(cfd)   # attribute weights (aUniform)
+            # wUV = aHeuristicUV(cfd, data)       # attribute weights (aUV)
+            # wAC = aHeuristicAC(cfd, data) # attribute weights (aAC)
             wCombo = aHeuristicCombo(cfd, data) # attribute weights (aCombo = aUV * aAC)
 
             # p(h | [heuristic]) = PI_i w(a_i), where a_i is an attribute in the LHS of h
-            phaUniform = np.prod([v for _, v in wUniform.items()])   # p(h | aUniform)
-            phaUV = np.prod([v for _, v in wUV.items()])     # p(h | aUV)
-            phaAC = np.prod([v for _, v in wAC.items()])     # p(h | aAC)
+            # phaUniform = np.prod([v for _, v in wUniform.items()])   # p(h | aUniform)
+            # phaUV = np.prod([v for _, v in wUV.items()])     # p(h | aUV)
+            # phaAC = np.prod([v for _, v in wAC.items()])     # p(h | aAC)
             phaCombo = np.prod([v for _, v in wCombo.items()])   # p(h | aCombo)
-            phsUniform = sHeuristicUniform(cfd)
+            # phsUniform = sHeuristicUniform(cfd)
             phsSetRelation = sHeuristicSetRelation(cfd, all_cfds)
-            p_h['aUNI'][cfd] = phaUniform
-            p_h['aUV'][cfd] = phaUV
-            p_h['aAC'][cfd] = phaAC
+            # p_h['aUNI'][cfd] = phaUniform
+            # p_h['aUV'][cfd] = phaUV
+            # p_h['aAC'][cfd] = phaAC
             p_h['aCOMBO'][cfd] = phaCombo
-            p_h['sUNI'][cfd] = phsUniform
+            # p_h['sUNI'][cfd] = phsUniform
             p_h['sSR'][cfd] = phsSetRelation
 
-            min_modeling_metadata['p_h']['aUNI-sUNI'][cfd] = p_h['aUNI'][cfd] * p_h['sUNI'][cfd]
-            min_modeling_metadata['p_h']['aUNI-sSR'][cfd] = p_h['aUNI'][cfd] * p_h['sSR'][cfd]
-            min_modeling_metadata['p_h']['aUV-sUNI'][cfd] = p_h['aUV'][cfd] * p_h['sUNI'][cfd]
-            min_modeling_metadata['p_h']['aUV-sSR'][cfd] = p_h['aUV'][cfd] * p_h['sSR'][cfd]
-            min_modeling_metadata['p_h']['aAC-sUNI'][cfd] = p_h['aAC'][cfd] * p_h['sUNI'][cfd]
-            min_modeling_metadata['p_h']['aAC-sSR'][cfd] = p_h['aAC'][cfd] * p_h['sSR'][cfd]
-            min_modeling_metadata['p_h']['aCOMBO-sUNI'][cfd] = p_h['aCOMBO'][cfd] * p_h['sUNI'][cfd]
+            # min_modeling_metadata['p_h']['aUNI-sUNI'][cfd] = p_h['aUNI'][cfd] * p_h['sUNI'][cfd]
+            # min_modeling_metadata['p_h']['aUNI-sSR'][cfd] = p_h['aUNI'][cfd] * p_h['sSR'][cfd]
+            # min_modeling_metadata['p_h']['aUV-sUNI'][cfd] = p_h['aUV'][cfd] * p_h['sUNI'][cfd]
+            # min_modeling_metadata['p_h']['aUV-sSR'][cfd] = p_h['aUV'][cfd] * p_h['sSR'][cfd]
+            # min_modeling_metadata['p_h']['aAC-sUNI'][cfd] = p_h['aAC'][cfd] * p_h['sUNI'][cfd]
+            # min_modeling_metadata['p_h']['aAC-sSR'][cfd] = p_h['aAC'][cfd] * p_h['sSR'][cfd]
+            # min_modeling_metadata['p_h']['aCOMBO-sUNI'][cfd] = p_h['aCOMBO'][cfd] * p_h['sUNI'][cfd]
             min_modeling_metadata['p_h']['aCOMBO-sSR'][cfd] = p_h['aCOMBO'][cfd] * p_h['sSR'][cfd]
 
-        for heur in min_modeling_metadata['p_h'].keys():
-            min_modeling_metadata['p_Y_in_C_given_X'][heur] = list()
-            for it in range(1, iter_count+1):
-                elapsed_time = min_modeling_metadata['Y'][it-1].elapsed_time
-                curr_X = min_modeling_metadata['X'][it-1].value
+        # for heur in min_modeling_metadata['p_h'].keys():
+        min_modeling_metadata['p_Y_in_C_given_X']['aCOMBO-sSR'] = list()
+        for it in range(1, iter_count+1):
+            elapsed_time = min_modeling_metadata['Y'][it-1].elapsed_time
+            curr_X = min_modeling_metadata['X'][it-1].value
 
-                # Get all FDs/CFDs that have were known by the system in this iteration
-                discovered_cfds = [cfd for cfd in cfd_metadata.keys()]
+            # Get all FDs/CFDs that have were known by the system in this iteration
+            discovered_cfds = [cfd for cfd in cfd_metadata.keys()]
+            
+            if len(discovered_cfds) == 0:   # no FDs discovered yet
+                # P(Y in C | X)
+                min_modeling_metadata['p_Y_in_C_given_X']['aCOMBO-sSR'].append(StudyMetric(iter_num=it, value=0, elapsed_time=elapsed_time))
                 
-                if len(discovered_cfds) == 0:   # no FDs discovered yet
-                    # P(Y in C | X)
-                    min_modeling_metadata['p_Y_in_C_given_X'][heur].append(StudyMetric(iter_num=it, value=0, elapsed_time=elapsed_time))
-                    
-                else:
-                    # find smallest h's
-                    small_cfds = set()
-                    # find all h that support X
-                    x_in_h = dict()
-                    for h in discovered_cfds:
-                        x_in_h[h] = list()
-                        for x in curr_X:
-                            x_in_h_val = next(v for v in min_modeling_metadata['y_in_h'][h][x] if v.iter_num == it).value
-                            x_in_h[h].append(x_in_h_val)
-                    # x_in_h = {h:  for h in discovered_cfds}
-                    supporting_cfds = [h for h in discovered_cfds if 0 not in x_in_h[h]]
+            else:
+                # find smallest h's
+                small_cfds = set()
+                # find all h that support X
+                x_in_h = dict()
+                for h in discovered_cfds:
+                    x_in_h[h] = list()
+                    for x in curr_X:
+                        x_in_h_val = next(v for v in min_modeling_metadata['y_in_h'][h][x] if v.iter_num == it).value
+                        x_in_h[h].append(x_in_h_val)
+                # x_in_h = {h:  for h in discovered_cfds}
+                supporting_cfds = [h for h in discovered_cfds if 0 not in x_in_h[h]]
 
-                    # find smallest h (think subset/superset) of these h's
-                    for cfd in supporting_cfds:
-                        lhs = cfd.split(' => ')[0][1:-1].split(', ')
-                        lhs_set = set(lhs)
-                        subset_cfds = [c for c in supporting_cfds if lhs_set.issuperset(set(c.split(' => ')[0][1:-1].split(', ')))]
-                        if len(subset_cfds) > 0:
-                            small_h = min(subset_cfds, key=len)
-                        else:
-                            small_h = cfd
-                        small_cfds.add(small_h)
-                        
-                    # find smallest h (think subset/superset) of these h's
-                    if len(small_cfds) > 1:
-                        smallest_cfd = max(small_cfds, key=lambda x: min_modeling_metadata['p_h'][heur][x])
-                    else:
-                        smallest_cfd = next(iter(small_cfds))
-
-                    lhs = smallest_cfd.split(' => ')[0][1:-1].split(', ')
+                # find smallest h (think subset/superset) of these h's
+                for cfd in supporting_cfds:
+                    lhs = cfd.split(' => ')[0][1:-1].split(', ')
                     lhs_set = set(lhs)
-                    # get all hypotheses that are more complex than the "smallest" FD determined above
-                    generalized_cfds = [c for c in supporting_cfds if set(c.split(' => ')[0][1:-1].split(', ')).issuperset(lhs_set)]
-
-                    p_h_given_X_list = list()
-                    # p(h | X) for each h
-                    for h in generalized_cfds:
-                        elem = next(x for x in min_modeling_metadata['p_X_given_h'][h] if x.iter_num == it)     # p(X | h) for this iteration
-                        p_X_given_h = elem.value
-                        p_h = min_modeling_metadata['p_h'][heur][h]   # p(h)
-                        p_h_given_X = p_X_given_h * p_h     # p(h | X)
-                        p_h_given_X_list.append(PHGivenX(h=h, value=p_h_given_X))
+                    subset_cfds = [c for c in supporting_cfds if lhs_set.issuperset(set(c.split(' => ')[0][1:-1].split(', ')))]
+                    if len(subset_cfds) > 0:
+                        small_h = min(subset_cfds, key=len)
+                    else:
+                        small_h = cfd
+                    small_cfds.add(small_h)
                     
-                    # normalized p(h | X) such that sum of all p(h | X) = 1
-                    p_h_given_X_list_sum = sum([x.value for x in p_h_given_X_list])
-                    p_h_given_X_list = [PHGivenX(h=x.h, value=((x.value/p_h_given_X_list_sum) if x.value > 0 else 0)) for x in p_h_given_X_list]
+                # find smallest h (think subset/superset) of these h's
+                if len(small_cfds) > 1:
+                    smallest_cfd = max(small_cfds, key=lambda x: min_modeling_metadata['p_h']['aCOMBO-sSR'][x])
+                else:
+                    smallest_cfd = next(iter(small_cfds))
 
-                    # p(Y in C | X)
-                    p_Y_in_C_given_X = 1
-                    for y in min_modeling_metadata['Y'][it-1].value:
-                        p_y_in_C_given_X = 0 # p(y in C | X)
-                        for phgx in p_h_given_X_list:
-                            h = phgx.h
-                            p_h_given_X = phgx.value    # p(h | X)
-                            i_y_in_h = next(i for i in min_modeling_metadata['y_in_h'][h][y] if i.iter_num == it).value  # I(y in supp(h))
-                            p_y_in_C_given_X += (i_y_in_h * p_h_given_X)  # p(y in C | X) = I(y in supp(h)) * p(h | X)
-                            
-                        p_Y_in_C_given_X *= p_y_in_C_given_X    # incorporating each y in Y into p(Y in C | X)
-                    print('p(Y in C | X) =', p_Y_in_C_given_X)
-                    
-                    min_modeling_metadata['p_Y_in_C_given_X'][heur].append(StudyMetric(iter_num=it, value=p_Y_in_C_given_X, elapsed_time=elapsed_time))
+                lhs = smallest_cfd.split(' => ')[0][1:-1].split(', ')
+                lhs_set = set(lhs)
+                # get all hypotheses that are more complex than the "smallest" FD determined above
+                generalized_cfds = [c for c in supporting_cfds if set(c.split(' => ')[0][1:-1].split(', ')).issuperset(lhs_set)]
+
+                p_h_given_X_list = list()
+                # p(h | X) for each h
+                for h in generalized_cfds:
+                    elem = next(x for x in min_modeling_metadata['p_X_given_h'][h] if x.iter_num == it)     # p(X | h) for this iteration
+                    p_X_given_h = elem.value
+                    p_h = min_modeling_metadata['p_h']['aCOMBO-sSR'][h]   # p(h)
+                    p_h_given_X = p_X_given_h * p_h     # p(h | X)
+                    p_h_given_X_list.append(PHGivenX(h=h, value=p_h_given_X))
+                
+                # normalized p(h | X) such that sum of all p(h | X) = 1
+                p_h_given_X_list_sum = sum([x.value for x in p_h_given_X_list])
+                p_h_given_X_list = [PHGivenX(h=x.h, value=((x.value/p_h_given_X_list_sum) if x.value > 0 else 0)) for x in p_h_given_X_list]
+
+                # p(Y in C | X)
+                p_Y_in_C_given_X = 1
+                for y in min_modeling_metadata['Y'][it-1].value:
+                    p_y_in_C_given_X = 0 # p(y in C | X)
+                    for phgx in p_h_given_X_list:
+                        h = phgx.h
+                        p_h_given_X = phgx.value    # p(h | X)
+                        i_y_in_h = next(i for i in min_modeling_metadata['y_in_h'][h][y] if i.iter_num == it).value  # I(y in supp(h))
+                        p_y_in_C_given_X += (i_y_in_h * p_h_given_X)  # p(y in C | X) = I(y in supp(h)) * p(h | X)
+                        
+                    p_Y_in_C_given_X *= p_y_in_C_given_X    # incorporating each y in Y into p(Y in C | X)
+                print('p(Y in C | X) =', p_Y_in_C_given_X)
+                
+                min_modeling_metadata['p_Y_in_C_given_X']['aCOMBO-sSR'].append(StudyMetric(iter_num=it, value=p_Y_in_C_given_X, elapsed_time=elapsed_time))
 
         pickle.dump( min_modeling_metadata, open('./store/' + project_id + '/min_modeling_metadata.p', 'wb') )
 

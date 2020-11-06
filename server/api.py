@@ -16,6 +16,7 @@ import math
 import shutil
 import logging
 import csv
+import analyze
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
@@ -109,7 +110,7 @@ class Import(Resource):
                 
         # FD metadata
         cfd_metadata = dict()
-        data = pd.read_csv(scenario['dirty_dataset'], keep_default_na=False)
+        # data = pd.read_csv(scenario['dirty_dataset'], keep_default_na=False)
         for c in scenario['hypothesis_space']:
             cfd_metadata[c['cfd']] = dict()
             # support, violations = helpers.getSupport(data, c['cfd'], new_project_id)
@@ -148,6 +149,24 @@ class Import(Resource):
         modeling_metadata['y_in_h'] = dict()  # TODO: Update y_supp_h to y_in_h (y satisfies h or is a detectable violation of h)
         for cfd in cfd_metadata.keys():
             modeling_metadata['y_in_h'][cfd] = dict()
+
+        clean_data = pd.read_csv(scenario['clean_dataset'], keep_default_na=False)
+        gt_metadata = dict()
+        gt_metadata['p_X_given_h'] = dict()
+        gt_metadata['X'] = list()
+        gt_metadata['Y'] = list()
+        gt_metadata['y_in_h'] = dict()
+        gt_metadata['p_h'] = dict()
+        gt_metadata['p_h']['aCOMBO-sSR'] = dict()
+        all_fds = [h['cfd'] for h in scenario['clean_hypothesis_space']]
+        for h in scenario['clean_hypothesis_space']:
+            gt_metadata['y_in_h'][h] = dict()
+            wCombo = analyze.aHeuristicCombo(h['cfd'], clean_data)
+            phaCombo = np.prod([v for _, v in wCombo.items()])
+            phsSetRelation = analyze.sHeuristicSetRelation(h['cfd'], all_fds)
+            gt_metadata['p_h']['aCOMBO-sSR'][h['cfd']] = h['conf'] * phaCombo * phsSetRelation
+            
+
         # modeling_metadata['p_h'] = dict()
         # modeling_metadata['p_h']['hUniform'] = dict()   # TODO: Do this for each p(h) heuristic
 
@@ -161,6 +180,7 @@ class Import(Resource):
         pickle.dump( study_metrics, open(new_project_dir + '/study_metrics.p', 'wb') )
         pickle.dump( start_time, open(new_project_dir + '/start_time.p', 'wb') )
         pickle.dump( modeling_metadata, open(new_project_dir + '/modeling_metadata.p', 'wb') )
+        pickle.dump( gt_metadata, open(new_project_dir + '/gt_metadata.p', 'wb') )
 
         print('*** Metadata and study metric objects saved ***')
 
