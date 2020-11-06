@@ -88,19 +88,6 @@ def sHeuristicSetRelation(cfd, all_cfds):
     weight = (len(similar_cfds) - lhs_idx) / len(similar_cfds)
     return weight
 
-'''def groundPH(gt_bayes_metadata, clean_h_space, clean_data):
-    # p(h)
-    all_fds = [h['cfd'] for h in clean_h_space]
-    for h in clean_h_space:
-        wCombo = aHeuristicCombo(h['cfd'], clean_data)
-        phaCombo = np.prod([v for _, v in wCombo.items()])
-        phsSetRelation = sHeuristicSetRelation(h['cfd'], all_fds)
-        gt_bayes_metadata['p_h']['aCOMBO-sSR'][h['cfd']] = h['conf'] * phaCombo * phsSetRelation
-
-    return gt_bayes_metadata'''
-
-
-
 def bayes(sampling_method):
     # with open('scenarios.json') as f:
     #     all_scenarios = json.load(f)
@@ -119,9 +106,15 @@ def bayes(sampling_method):
         data = data.replace(r'\\n\\t\\r','', regex=True) 
 
         modeling_metadata = pickle.load( open('./store/' + project_id + '/modeling_metadata.p', 'rb') )
+        gt_metadata = pickle.load( open('./store/' + project_id + '/gt_metadata.p', 'rb') )
         cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
+        
         bayes_modeling_metadata = modeling_metadata
+        gt_bayes_metadata = gt_metadata
+
         bayes_modeling_metadata['p_Y_in_C_given_X'] = dict()
+        gt_bayes_metadata['p_Y_in_C_given_X'] = dict()
+
         iter_count = pickle.load( open('./store/' + project_id + '/current_iter.p', 'rb') )
 
         p_h = dict()
@@ -177,6 +170,7 @@ def bayes(sampling_method):
         # for heur in bayes_modeling_metadata['p_h'].keys():
         # print(heur)
         bayes_modeling_metadata['p_Y_in_C_given_X']['aCOMBO-sSR'] = list()
+        gt_bayes_metadata['p_Y_in_C_given_X']['aCOMBO-sSR'] = list()
         for it in range(1, iter_count+1):
             elapsed_time = bayes_modeling_metadata['Y'][it-1].elapsed_time
 
@@ -216,7 +210,36 @@ def bayes(sampling_method):
             
             bayes_modeling_metadata['p_Y_in_C_given_X']['aCOMBO-sSR'].append(StudyMetric(iter_num=it, value=p_Y_in_C_given_X, elapsed_time=elapsed_time))
 
+            # GROUND TRUTH
+            clean_p_h_given_X_list = list()
+            for h in scenario['clean_hypothesis_space']:
+                clean_elem = next(x for x in bayes_modeling_metadata['p_X_given_h'][h['cfd']] if x.iter_num == it)     # p(X | h) for this iteration
+                clean_p_X_given_h = clean_elem.value
+                clean_p_h = gt_bayes_metadata['p_h']['aCOMBO-sSR'][h['cfd']]   # p(h)
+                clean_p_h_given_X = clean_p_X_given_h * clean_p_h     # p(h | X)
+                clean_p_h_given_X_list.append(PHGivenX(h=h, value=clean_p_h_given_X))
+            
+            # normalized p(h | X) such that sum of all p(h | X) = 1
+            clean_p_h_given_X_list_sum = sum([x.value for x in clean_p_h_given_X_list])
+            clean_p_h_given_X_list = [PHGivenX(h=x.h, value=((x.value/clean_p_h_given_X_list_sum) if x.value > 0 else 0)) for x in clean_p_h_given_X_list]
+
+            # p(Y in C | X)
+            clean_p_Y_in_C_given_X = 1
+            for y in gt_bayes_metadata['Y'][it-1].value:
+                clean_p_y_in_C_given_X = 0 # p(y in C | X)
+                for phgx in clean_p_h_given_X_list:
+                    h = phgx.h
+                    clean_p_h_given_X = phgx.value    # p(h | X)
+                    clean_i_y_in_h = next(i for i in gt_bayes_metadata['y_in_h'][h][y] if i.iter_num == it).value  # I(y in supp(h))
+                    clean_p_y_in_C_given_X += (clean_i_y_in_h * clean_p_h_given_X)  # p(y in C | X) = I(y in supp(h)) * p(h | X)
+                    
+                clean_p_Y_in_C_given_X *= clean_p_y_in_C_given_X    # incorporating each y in Y into p(Y in C | X)
+            print('GROUND TRUTH p(Y in C | X) =', clean_p_Y_in_C_given_X)
+            
+            gt_bayes_metadata['p_Y_in_C_given_X']['aCOMBO-sSR'].append(StudyMetric(iter_num=it, value=clean_p_Y_in_C_given_X, elapsed_time=elapsed_time))
+
         pickle.dump( bayes_modeling_metadata, open('./store/' + project_id + '/bayes_modeling_metadata.p', 'wb') )
+        pickle.dump( bayes_modeling_metadata, open('./store/' + project_id + '/gt_bayes_metadata.p', 'wb') )
 
 
 def max_likelihood(sampling_method):
@@ -236,9 +259,15 @@ def max_likelihood(sampling_method):
         data = data.replace(r'\\n\\t\\r','', regex=True) 
         
         modeling_metadata = pickle.load( open('./store/' + project_id + '/modeling_metadata.p', 'rb') )
+        gt_metadata = pickle.load( open('./store/' + project_id + '/gt_metadata.p', 'rb') )
         cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
+        
         min_modeling_metadata = modeling_metadata
+        gt_min_metadata = gt_metadata
+
         min_modeling_metadata['p_Y_in_C_given_X'] = dict()
+        gt_min_metadata['p_Y_in_C_given_X'] = dict()
+
         iter_count = pickle.load( open('./store/' + project_id + '/current_iter.p', 'rb') )
 
         p_h = dict()
@@ -293,6 +322,8 @@ def max_likelihood(sampling_method):
 
         # for heur in min_modeling_metadata['p_h'].keys():
         min_modeling_metadata['p_Y_in_C_given_X']['aCOMBO-sSR'] = list()
+        gt_min_metadata['p_Y_in_C_given_X']['aCOMBO-sSR'] = list()
+
         for it in range(1, iter_count+1):
             elapsed_time = min_modeling_metadata['Y'][it-1].elapsed_time
             curr_X = min_modeling_metadata['X'][it-1].value
@@ -303,71 +334,134 @@ def max_likelihood(sampling_method):
             if len(discovered_cfds) == 0:   # no FDs discovered yet
                 # P(Y in C | X)
                 min_modeling_metadata['p_Y_in_C_given_X']['aCOMBO-sSR'].append(StudyMetric(iter_num=it, value=0, elapsed_time=elapsed_time))
+                continue
                 
-            else:
-                # find smallest h's
-                small_cfds = set()
-                # find all h that support X
-                x_in_h = dict()
-                for h in discovered_cfds:
-                    x_in_h[h] = list()
-                    for x in curr_X:
-                        x_in_h_val = next(v for v in min_modeling_metadata['y_in_h'][h][x] if v.iter_num == it).value
-                        x_in_h[h].append(x_in_h_val)
-                # x_in_h = {h:  for h in discovered_cfds}
-                supporting_cfds = [h for h in discovered_cfds if 0 not in x_in_h[h]]
+            # find smallest h's
+            small_cfds = set()
+            # find all h that support X
+            x_in_h = dict()
+            for h in discovered_cfds:
+                x_in_h[h] = list()
+                for x in curr_X:
+                    x_in_h_val = next(v for v in min_modeling_metadata['y_in_h'][h][x] if v.iter_num == it).value
+                    x_in_h[h].append(x_in_h_val)
+            # x_in_h = {h:  for h in discovered_cfds}
+            supporting_cfds = [h for h in discovered_cfds if 0 not in x_in_h[h]]
 
-                # find smallest h (think subset/superset) of these h's
-                for cfd in supporting_cfds:
-                    lhs = cfd.split(' => ')[0][1:-1].split(', ')
-                    lhs_set = set(lhs)
-                    subset_cfds = [c for c in supporting_cfds if lhs_set.issuperset(set(c.split(' => ')[0][1:-1].split(', ')))]
-                    if len(subset_cfds) > 0:
-                        small_h = min(subset_cfds, key=len)
-                    else:
-                        small_h = cfd
-                    small_cfds.add(small_h)
-                    
-                # find smallest h (think subset/superset) of these h's
-                if len(small_cfds) > 1:
-                    smallest_cfd = max(small_cfds, key=lambda x: min_modeling_metadata['p_h']['aCOMBO-sSR'][x])
-                else:
-                    smallest_cfd = next(iter(small_cfds))
-
-                lhs = smallest_cfd.split(' => ')[0][1:-1].split(', ')
+            # find smallest h (think subset/superset) of these h's
+            for cfd in supporting_cfds:
+                lhs = cfd.split(' => ')[0][1:-1].split(', ')
                 lhs_set = set(lhs)
-                # get all hypotheses that are more complex than the "smallest" FD determined above
-                generalized_cfds = [c for c in supporting_cfds if set(c.split(' => ')[0][1:-1].split(', ')).issuperset(lhs_set)]
-
-                p_h_given_X_list = list()
-                # p(h | X) for each h
-                for h in generalized_cfds:
-                    elem = next(x for x in min_modeling_metadata['p_X_given_h'][h] if x.iter_num == it)     # p(X | h) for this iteration
-                    p_X_given_h = elem.value
-                    p_h = min_modeling_metadata['p_h']['aCOMBO-sSR'][h]   # p(h)
-                    p_h_given_X = p_X_given_h * p_h     # p(h | X)
-                    p_h_given_X_list.append(PHGivenX(h=h, value=p_h_given_X))
+                subset_cfds = [c for c in supporting_cfds if lhs_set.issuperset(set(c.split(' => ')[0][1:-1].split(', ')))]
+                if len(subset_cfds) > 0:
+                    small_h = min(subset_cfds, key=len)
+                else:
+                    small_h = cfd
+                small_cfds.add(small_h)
                 
-                # normalized p(h | X) such that sum of all p(h | X) = 1
-                p_h_given_X_list_sum = sum([x.value for x in p_h_given_X_list])
-                p_h_given_X_list = [PHGivenX(h=x.h, value=((x.value/p_h_given_X_list_sum) if x.value > 0 else 0)) for x in p_h_given_X_list]
+            # find smallest h (think subset/superset) of these h's
+            if len(small_cfds) > 1:
+                smallest_cfd = max(small_cfds, key=lambda x: min_modeling_metadata['p_h']['aCOMBO-sSR'][x])
+            else:
+                smallest_cfd = next(iter(small_cfds))
 
-                # p(Y in C | X)
-                p_Y_in_C_given_X = 1
-                for y in min_modeling_metadata['Y'][it-1].value:
-                    p_y_in_C_given_X = 0 # p(y in C | X)
-                    for phgx in p_h_given_X_list:
-                        h = phgx.h
-                        p_h_given_X = phgx.value    # p(h | X)
-                        i_y_in_h = next(i for i in min_modeling_metadata['y_in_h'][h][y] if i.iter_num == it).value  # I(y in supp(h))
-                        p_y_in_C_given_X += (i_y_in_h * p_h_given_X)  # p(y in C | X) = I(y in supp(h)) * p(h | X)
-                        
-                    p_Y_in_C_given_X *= p_y_in_C_given_X    # incorporating each y in Y into p(Y in C | X)
-                print('p(Y in C | X) =', p_Y_in_C_given_X)
+            lhs = smallest_cfd.split(' => ')[0][1:-1].split(', ')
+            lhs_set = set(lhs)
+            # get all hypotheses that are more complex than the "smallest" FD determined above
+            generalized_cfds = [c for c in supporting_cfds if set(c.split(' => ')[0][1:-1].split(', ')).issuperset(lhs_set)]
+
+            p_h_given_X_list = list()
+            # p(h | X) for each h
+            for h in generalized_cfds:
+                elem = next(x for x in min_modeling_metadata['p_X_given_h'][h] if x.iter_num == it)     # p(X | h) for this iteration
+                p_X_given_h = elem.value
+                p_h = min_modeling_metadata['p_h']['aCOMBO-sSR'][h]   # p(h)
+                p_h_given_X = p_X_given_h * p_h     # p(h | X)
+                p_h_given_X_list.append(PHGivenX(h=h, value=p_h_given_X))
+            
+            # normalized p(h | X) such that sum of all p(h | X) = 1
+            p_h_given_X_list_sum = sum([x.value for x in p_h_given_X_list])
+            p_h_given_X_list = [PHGivenX(h=x.h, value=((x.value/p_h_given_X_list_sum) if x.value > 0 else 0)) for x in p_h_given_X_list]
+
+            # p(Y in C | X)
+            p_Y_in_C_given_X = 1
+            for y in min_modeling_metadata['Y'][it-1].value:
+                p_y_in_C_given_X = 0 # p(y in C | X)
+                for phgx in p_h_given_X_list:
+                    h = phgx.h
+                    p_h_given_X = phgx.value    # p(h | X)
+                    i_y_in_h = next(i for i in min_modeling_metadata['y_in_h'][h][y] if i.iter_num == it).value  # I(y in supp(h))
+                    p_y_in_C_given_X += (i_y_in_h * p_h_given_X)  # p(y in C | X) = I(y in supp(h)) * p(h | X)
+                    
+                p_Y_in_C_given_X *= p_y_in_C_given_X    # incorporating each y in Y into p(Y in C | X)
+            print('p(Y in C | X) =', p_Y_in_C_given_X)
+
+            # GROUND TRUTH
+            # find smallest h's
+            clean_small_cfds = set()
+            # find all h that support X
+            clean_x_in_h = dict()
+            for h in scenario['clean_hypothesis_space']:
+                clean_x_in_h[h['cfd']] = list()
+                for x in curr_X:
+                    clean_x_in_h_val = next(v for v in gt_min_metadata['y_in_h'][h['cfd']][x] if v.iter_num == it).value
+                    clean_x_in_h[h['cfd']].append(clean_x_in_h_val)
+            # x_in_h = {h:  for h in discovered_cfds}
+            clean_supporting_cfds = [h['cfd'] for h in scenario['clean_hypothesis_space'] if 0 not in clean_x_in_h[h['cfd']]]
+
+            # find smallest h (think subset/superset) of these h's
+            for cfd in clean_supporting_cfds:
+                clean_lhs = cfd.split(' => ')[0][1:-1].split(', ')
+                clean_lhs_set = set(clean_lhs)
+                clean_subset_cfds = [c for c in clean_supporting_cfds if clean_lhs_set.issuperset(set(c.split(' => ')[0][1:-1].split(', ')))]
+                if len(clean_subset_cfds) > 0:
+                    clean_small_h = min(clean_subset_cfds, key=len)
+                else:
+                    clean_small_h = cfd
+                clean_small_cfds.add(clean_small_h)
                 
-                min_modeling_metadata['p_Y_in_C_given_X']['aCOMBO-sSR'].append(StudyMetric(iter_num=it, value=p_Y_in_C_given_X, elapsed_time=elapsed_time))
+            # find smallest h (think subset/superset) of these h's
+            if len(clean_small_cfds) > 1:
+                clean_smallest_cfd = max(clean_small_cfds, key=lambda x: gt_min_metadata['p_h']['aCOMBO-sSR'][x])
+            else:
+                clean_smallest_cfd = next(iter(clean_small_cfds))
+
+            clean_lhs = clean_smallest_cfd.split(' => ')[0][1:-1].split(', ')
+            clean_lhs_set = set(clean_lhs)
+            # get all hypotheses that are more complex than the "smallest" FD determined above
+            clean_generalized_cfds = [c for c in clean_supporting_cfds if set(c.split(' => ')[0][1:-1].split(', ')).issuperset(clean_lhs_set)]
+
+            clean_p_h_given_X_list = list()
+            # p(h | X) for each h
+            for h in clean_generalized_cfds:
+                clean_elem = next(x for x in gt_min_metadata['p_X_given_h'][h] if x.iter_num == it)     # p(X | h) for this iteration
+                clean_p_X_given_h = clean_elem.value
+                clean_p_h = gt_min_metadata['p_h']['aCOMBO-sSR'][h]   # p(h)
+                clean_p_h_given_X = clean_p_X_given_h * clean_p_h     # p(h | X)
+                clean_p_h_given_X_list.append(PHGivenX(h=h, value=clean_p_h_given_X))
+            
+            # normalized p(h | X) such that sum of all p(h | X) = 1
+            clean_p_h_given_X_list_sum = sum([x.value for x in clean_p_h_given_X_list])
+            clean_p_h_given_X_list = [PHGivenX(h=x.h, value=((x.value/clean_p_h_given_X_list_sum) if x.value > 0 else 0)) for x in clean_p_h_given_X_list]
+
+            # p(Y in C | X)
+            clean_p_Y_in_C_given_X = 1
+            for y in gt_min_metadata['Y'][it-1].value:
+                clean_p_y_in_C_given_X = 0 # p(y in C | X)
+                for phgx in clean_p_h_given_X_list:
+                    h = phgx.h
+                    clean_p_h_given_X = phgx.value    # p(h | X)
+                    clean_i_y_in_h = next(i for i in gt_min_metadata['y_in_h'][h][y] if i.iter_num == it).value  # I(y in supp(h))
+                    clean_p_y_in_C_given_X += (clean_i_y_in_h * clean_p_h_given_X)  # p(y in C | X) = I(y in supp(h)) * p(h | X)
+                    
+                clean_p_Y_in_C_given_X *= clean_p_y_in_C_given_X    # incorporating each y in Y into p(Y in C | X)
+            print('GROUND TRUTH p(Y in C | X) =', clean_p_Y_in_C_given_X)
+            
+            min_modeling_metadata['p_Y_in_C_given_X']['aCOMBO-sSR'].append(StudyMetric(iter_num=it, value=p_Y_in_C_given_X, elapsed_time=elapsed_time))
+            gt_min_metadata['p_Y_in_C_given_X']['aCOMBO-sSR'].append(StudyMetric(iter_num=it, value=clean_p_Y_in_C_given_X, elapsed_time=elapsed_time))
 
         pickle.dump( min_modeling_metadata, open('./store/' + project_id + '/min_modeling_metadata.p', 'wb') )
+        pickle.dump( gt_min_metadata, open('./store/' + project_id + '/gt_min_metadata.p', 'wb') )
 
 if __name__ == '__main__':
     if len(sys.argv) > 2:
