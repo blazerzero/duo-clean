@@ -4,9 +4,12 @@ import json
 from collections import Counter
 import random
 import subprocess as sp
+import re
+import string
 
 # GET FD SUPPORT AND VIOLATIONS
 def getSupportAndVios(data, fd):
+    print("FD:", fd)
     lhs = fd.split(' => ')[0][1:-1]
     rhs = fd.split(' => ')[1]
     patterns = fd2cfd(data, lhs, rhs)
@@ -146,7 +149,7 @@ if __name__ == '__main__':
             scenario['hypothesis_space'] = list()
 
         for h in scenario['hypothesis_space']:
-            fd = h['cfd']
+            fd = "".join(filter(lambda char: char in string.printable, h['cfd']))
             h['conf'] = 1/len(scenario['hypothesis_space'])
             support, vios = getSupportAndVios(data, fd)
             vio_pairs = makeVioPairs(data, support, vios, fd)
@@ -156,7 +159,7 @@ if __name__ == '__main__':
 
         clean_data = pd.read_csv(scenario['clean_dataset'], keep_default_na=False)
         clean_process = sp.Popen(['./data/cfddiscovery/CFDD', scenario['clean_dataset'], str(len(clean_data.index)), '0.8', '3'], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})     # CFDD
-        clean_res = process.communicate()
+        clean_res = clean_process.communicate()
         if clean_process.returncode == 0:
             clean_output = clean_res[0].decode('latin_1').replace(',]', ']').replace('\r', '').replace('\t', '').replace('\n', '')
             clean_fds = [c for c in json.loads(clean_output, strict=False)['cfds'] if '=' not in c['cfd'].split(' => ')[0] and '=' not in c['cfd'].split(' => ')[1] and c['cfd'].split(' => ')[0] != '()']
@@ -165,7 +168,7 @@ if __name__ == '__main__':
             scenario['clean_hypothesis_space'] = list()
 
         for h in scenario['clean_hypothesis_space']:
-            fd = h['cfd']
+            fd = "".join(filter(lambda char: char in string.printable, h['cfd']))
             h['conf'] = 1/len(scenario['clean_hypothesis_space'])
             support, vios = getSupportAndVios(data, fd)
             vio_pairs = makeVioPairs(data, support, vios, fd)

@@ -150,22 +150,8 @@ class Import(Resource):
         for cfd in cfd_metadata.keys():
             modeling_metadata['y_in_h'][cfd] = dict()
 
-        clean_data = pd.read_csv(scenario['clean_dataset'], keep_default_na=False)
-        gt_metadata = dict()
-        gt_metadata['p_X_given_h'] = dict()
-        gt_metadata['X'] = list()
-        gt_metadata['Y'] = list()
-        gt_metadata['y_in_h'] = dict()
-        gt_metadata['p_h'] = dict()
-        gt_metadata['p_h']['aCOMBO-sSR'] = dict()
-        all_fds = [h['cfd'] for h in scenario['clean_hypothesis_space']]
-        for h in scenario['clean_hypothesis_space']:
-            gt_metadata['y_in_h'][h] = dict()
-            wCombo = analyze.aHeuristicCombo(h['cfd'], clean_data)
-            phaCombo = np.prod([v for _, v in wCombo.items()])
-            phsSetRelation = analyze.sHeuristicSetRelation(h['cfd'], all_fds)
-            gt_metadata['p_h']['aCOMBO-sSR'][h['cfd']] = h['conf'] * phaCombo * phsSetRelation
-            
+        gt_metadata = modeling_metadata
+        clean_fd_metadata = cfd_metadata
 
         # modeling_metadata['p_h'] = dict()
         # modeling_metadata['p_h']['hUniform'] = dict()   # TODO: Do this for each p(h) heuristic
@@ -180,7 +166,9 @@ class Import(Resource):
         pickle.dump( study_metrics, open(new_project_dir + '/study_metrics.p', 'wb') )
         pickle.dump( start_time, open(new_project_dir + '/start_time.p', 'wb') )
         pickle.dump( modeling_metadata, open(new_project_dir + '/modeling_metadata.p', 'wb') )
+
         pickle.dump( gt_metadata, open(new_project_dir + '/gt_metadata.p', 'wb') )
+        pickle.dump( clean_fd_metadata, open(new_project_dir + '/clean_fd_metadata.p', 'wb') )
 
         print('*** Metadata and study metric objects saved ***')
 

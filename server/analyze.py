@@ -108,6 +108,7 @@ def bayes(sampling_method):
         modeling_metadata = pickle.load( open('./store/' + project_id + '/modeling_metadata.p', 'rb') )
         gt_metadata = pickle.load( open('./store/' + project_id + '/gt_metadata.p', 'rb') )
         cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
+        clean_fd_metadata = pickle.load( open('./store/' + project_id + '/clean_fd_metadata.p', 'rb') )
         
         bayes_modeling_metadata = modeling_metadata
         gt_bayes_metadata = gt_metadata
@@ -125,6 +126,7 @@ def bayes(sampling_method):
         # p_h['sUNI'] = dict()
         p_h['sSR'] = dict()
         bayes_modeling_metadata['p_h'] = dict()
+        gt_bayes_metadata['p_h'] = dict()
         # bayes_modeling_metadata['p_h']['aUNI-sUNI'] = dict()
         # bayes_modeling_metadata['p_h']['aUNI-sSR'] = dict()
         # bayes_modeling_metadata['p_h']['aUV-sUNI'] = dict()
@@ -133,6 +135,7 @@ def bayes(sampling_method):
         # bayes_modeling_metadata['p_h']['aAC-sSR'] = dict()
         # bayes_modeling_metadata['p_h']['aCOMBO-sUNI'] = dict()
         bayes_modeling_metadata['p_h']['aCOMBO-sSR'] = dict()
+        gt_bayes_metadata['p_h']['aCOMBO-sSR'] = dict()
 
         all_cfds = cfd_metadata.keys()
 
@@ -166,6 +169,7 @@ def bayes(sampling_method):
             # bayes_modeling_metadata['p_h']['aAC-sSR'][cfd] = p_h['aAC'][cfd] * p_h['sSR'][cfd]
             # bayes_modeling_metadata['p_h']['aCOMBO-sUNI'][cfd] = p_h['aCOMBO'][cfd] * p_h['sUNI'][cfd]
             bayes_modeling_metadata['p_h']['aCOMBO-sSR'][cfd] = p_h['aCOMBO'][cfd] * p_h['sSR'][cfd]
+            gt_bayes_metadata['p_h']['aCOMBO-sSR'][cfd] = p_h['aCOMBO'][cfd] * p_h['sSR'][cfd]
 
         # for heur in bayes_modeling_metadata['p_h'].keys():
         # print(heur)
@@ -211,11 +215,18 @@ def bayes(sampling_method):
             bayes_modeling_metadata['p_Y_in_C_given_X']['aCOMBO-sSR'].append(StudyMetric(iter_num=it, value=p_Y_in_C_given_X, elapsed_time=elapsed_time))
 
             # GROUND TRUTH
+            # Get all FDs/CFDs that have were known by the system in this iteration
+            clean_discovered_cfds = [cfd for cfd in clean_fd_metadata.keys()]
+            
+            if len(clean_discovered_cfds) == 0:   # no FDs discovered yet
+                # P(Y in C | X) = 0
+                gt_bayes_metadata['p_Y_in_C_given_X']['aCOMBO-sSR'].append(StudyMetric(iter_num=it, value=0, elapsed_time=elapsed_time))
+                continue
             clean_p_h_given_X_list = list()
-            for h in scenario['clean_hypothesis_space']:
-                clean_elem = next(x for x in bayes_modeling_metadata['p_X_given_h'][h['cfd']] if x.iter_num == it)     # p(X | h) for this iteration
+            for h in clean_discovered_cfds:
+                clean_elem = next(x for x in gt_bayes_metadata['p_X_given_h'][h] if x.iter_num == it)     # p(X | h) for this iteration
                 clean_p_X_given_h = clean_elem.value
-                clean_p_h = gt_bayes_metadata['p_h']['aCOMBO-sSR'][h['cfd']]   # p(h)
+                clean_p_h = gt_bayes_metadata['p_h']['aCOMBO-sSR'][h]   # p(h)
                 clean_p_h_given_X = clean_p_X_given_h * clean_p_h     # p(h | X)
                 clean_p_h_given_X_list.append(PHGivenX(h=h, value=clean_p_h_given_X))
             
@@ -239,7 +250,7 @@ def bayes(sampling_method):
             gt_bayes_metadata['p_Y_in_C_given_X']['aCOMBO-sSR'].append(StudyMetric(iter_num=it, value=clean_p_Y_in_C_given_X, elapsed_time=elapsed_time))
 
         pickle.dump( bayes_modeling_metadata, open('./store/' + project_id + '/bayes_modeling_metadata.p', 'wb') )
-        pickle.dump( bayes_modeling_metadata, open('./store/' + project_id + '/gt_bayes_metadata.p', 'wb') )
+        pickle.dump( gt_bayes_metadata, open('./store/' + project_id + '/gt_bayes_metadata.p', 'wb') )
 
 
 def max_likelihood(sampling_method):

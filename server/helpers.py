@@ -126,6 +126,9 @@ def explainFeedback(full_dataset, dirty_sample, project_id, current_iter):
     cell_metadata = pickle.load( open('./store/' + project_id + '/cell_metadata.p', 'rb') )
     start_time = pickle.load( open('./store/' + project_id + '/start_time.p', 'rb') )
     current_time = pickle.load( open('./store/' + project_id + '/current_time.p', 'rb') )
+    with open('./store/' + project_id + '/project_info.json', 'r') as f:
+        project_info = json.load(f)
+    master_diff = pd.read_json(project_info['scenario']['diff'], orient='index')
 
     elapsed_time = current_time - start_time
 
@@ -135,6 +138,7 @@ def explainFeedback(full_dataset, dirty_sample, project_id, current_iter):
     prepped_sample = dirty_sample.copy(deep=True)
 
     marked_cols = list()
+    master_marked_cols = list()
     
     for idx in dirty_sample.index:
         for col in dirty_sample.columns:
@@ -142,6 +146,12 @@ def explainFeedback(full_dataset, dirty_sample, project_id, current_iter):
 
             if len(cell['feedback_history']) >= 1 and cell['feedback_history'][-1].marked is True:
                 marked_cols.append(idx)
+                break
+
+    for idx in dirty_sample.index:
+        for col in dirty_sample.columns:
+            if master_diff.at[idx, col] is False:
+                master_marked_cols.append(idx)
                 break
     
     prepped_sample = prepped_sample.drop(marked_cols)
@@ -154,6 +164,16 @@ def explainFeedback(full_dataset, dirty_sample, project_id, current_iter):
             f.seek(0)
             f.truncate()
 
+    master_prepped_sample = master_prepped_sample.drop(master_marked_cols)
+    print(master_prepped_sample)
+    print('*** Feedback reflected in \'repaired\' dataset ***')
+
+    master_prepped_sample_fp = './store/' + project_id + '/gt_mining_sample.csv'
+    if os.path.exists(master_prepped_sample_fp):
+        with open(master_prepped_sample_fp, 'r+') as f:
+            f.seek(0)
+            f.truncate()
+
     rep_dict = list(prepped_sample.T.to_dict().values())
     rep_header = rep_dict[0].keys()
     with open(prepped_sample_fp, 'w', newline='') as f:
@@ -162,9 +182,48 @@ def explainFeedback(full_dataset, dirty_sample, project_id, current_iter):
         writer.writerows(rep_dict)
     print('*** Mining dataset saved as CSV ***')
 
-    with open('./store/' + project_id + '/project_info.json', 'r') as f:
-        project_info = json.load(f)
+    master_rep_dict = list(master_prepped_sample.T.to_dict().values())
+    master_rep_header = master_rep_dict[0].keys()
+    with open(master_prepped_sample_fp, 'w', newline='') as f:
+        writer = csv.DictWriter(f, master_rep_header)
+        writer.writeheader()
+        writer.writerows(master_rep_dict)
+    print('*** Mining dataset saved as CSV ***')
+
     h_space = project_info['scenario']['hypothesis_space']
+
+    clean_process = sp.Popen(['./data/cfdddiscovery/CFDD', master_prepped_sample_fp, str(math.ceil(0.5*len(master_prepped_sample.index))), '0.5', '3'], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})     # CFDD
+    clean_res = clean_process.communicate()
+
+    if clean_process.returncode == 0:
+        clean_fd_metadata = pickle.load( open('./store/' + project_id + '/clean_fd_metadata.p', 'rb') )
+        clean_output = clean_res[0].decode('latin_1').replace(',]', ']').replace('\r', '').replace('\t', '').replace('\n', '')
+        clean_cfds = [c for c in json.loads(clean_output, strict=False)['cfds'] if '=' not in c['cfd'].split(' => ')[0] and '=' not in c['cfd'].split(' => ')[1] and c['cfd'].split(' => ')[0] != '()']
+        clean_accepted_cfds = [c for c in clean_cfds if c['cfd'] in clean_fd_metadata.keys()]
+        for c in h_space:
+            if c['cfd'] in [ac['cfd'] for ac in clean_accepted_cfds]:
+                ac = next(a for a in clean_accepted_cfds if a['cfd'] == c['cfd'])
+                clean_fd_metadata[c['cfd']]['conf_history'].append(CFDScore(iter_num=current_iter, score=ac['conf'], elapsed_time=elapsed_time))
+            else:
+                clean_fd_metadata[c['cfd']]['conf_history'].append(CFDScore(iter_num=current_iter, score=clean_fd_metadata[c['cfd']]['conf_history'][-1].score, elapsed_time=elapsed_time))
+            
+            complexity_bias = analyze.sHeuristicSetRelation(c['cfd'], [c['cfd'] for c in h_space])
+
+            # System's weighted prior on rule confidence
+            weighted_conf = 0
+            for h in clean_fd_metadata[c['cfd']]['conf_history']:
+                weighted_conf += (h.score / (current_iter - h.iter_num + 1))
+
+            weight = complexity_bias + weighted_conf
+            clean_fd_metadata[c['cfd']]['weight'] = weight
+            clean_fd_metadata[c['cfd']]['weight_history'].append(CFDWeightHistory(iter_num=current_iter, weight=weight, elapsed_time=elapsed_time))
+        
+        clean_fd_metadata = normalizeWeights(clean_fd_metadata)
+
+        pickle.dump( clean_fd_metadata, open('./store/' + project_id + '/clean_fd_metadata.p', 'wb') )
+    
+    else:
+        print('[ERROR] There was an error running CFDD') 
 
     # process = sp.Popen(['./xplode/CTane', dirty_sample_fp, rep_sample_fp, '0.8', str(math.ceil(0.5*len(dirty_sample.index)))], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})   # XPlode
     process = sp.Popen(['./data/cfddiscovery/CFDD', prepped_sample_fp, str(math.ceil(0.5*len(prepped_sample.index))), '0.5', '3'], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})     # CFDD
