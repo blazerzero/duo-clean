@@ -180,7 +180,7 @@ class Import(Resource):
             'msg': '[SUCCESS] Successfully created new project with project ID = ' + new_project_id + '.'
         }
         response = json.dumps(returned_data)
-        pprint(response)
+        # pprint(response)
         return response, 200, {'Access-Control-Allow-Origin': '*'}
 
 class Sample(Resource):
@@ -202,7 +202,9 @@ class Sample(Resource):
         sampling_method = project_info['scenario']['sampling_method']
         
         # Build sample and update tuple weights post-sampling
-        s_out = helpers.buildSample(data, sample_size, project_id, sampling_method, current_iter=0) # TODO: Update sampling strategy
+        start_time = pickle.load( open('./store/' + project_id + '/start_time.p', 'rb') )
+        current_iter = 0
+        s_out = helpers.buildSample(data, sample_size, project_id, sampling_method, current_iter, start_time) # TODO: Update sampling strategy
         s_index = s_out.index
         pickle.dump( s_index, open('./store/' + project_id + '/current_sample.p', 'wb') )
 
@@ -230,7 +232,7 @@ class Sample(Resource):
             'false_pos': 0,
             'msg': '[SUCCESS] Successfully built sample.'
         }
-        pprint(returned_data)
+        # pprint(returned_data)
         response = json.dumps(returned_data)
         return response, 200, {'Access-Control-Allow-Origin': '*'}
 
@@ -249,7 +251,6 @@ class Resume(Resource):
             response = json.dumps(returned_data)
             return response, 200, {'Access-Control-Allow-Origin': '*'}
             
-        # s_out = pd.read_csv('./store/' + project_id + '/current_sample.csv', keep_default_na=False)
         s_index = pickle.load( open('./store/' + project_id + '/current_sample.p', 'rb') )
 
         with open('./store/' + project_id + '/project_info.json') as f:
@@ -276,12 +277,13 @@ class Resume(Resource):
         print('*** Leaderboard created ***')
 
         current_iter = pickle.load( open('./store/' + project_id + '/current_iter.p', 'rb') )
-        study_metrics = pickle.load( open('./store/' + project_id + '/study_metrics.p', 'rb') )
 
-        if current_iter == 30 or (len(study_metrics['true_error_pct_full']) > 0 and study_metrics['true_error_pct_full'][-1].value >= 0.9):
+        h_space_conf_delta = helpers.getHSpaceConfDelta(project_id, current_iter)
+
+        if current_iter >= 25 or (h_space_conf_delta is not None and h_space_conf_delta < 0.01):
             msg = '[DONE]'
         else:
-            msg = '[SUCCESS] Successfully built sample.'
+            msg = '[SUCCESS]: Saved feedback and built new sample.'
 
         header = s_out.columns.tolist()
         s_out.insert(0, 'id', s_out.index, True)
@@ -297,7 +299,7 @@ class Resume(Resource):
             'scenario_id': project_info['scenario_id'],
             'scenario_desc': project_info['scenario']['description']
         }
-        pprint(returned_data)
+        # pprint(returned_data)
         response = json.dumps(returned_data)
         return response, 200, {'Access-Control-Allow-Origin': '*'}
 
@@ -319,6 +321,9 @@ class Clean(Resource):
         current_iter = pickle.load( open('./store/' + project_id + '/current_iter.p', 'rb') )
         current_iter += 1
 
+        current_time = pickle.load( open('./store/' + project_id + '/current_time.p', 'rb') )
+        current_time = time.time()
+
         print('*** Iteration counter updated ***')
 
         with open('./store/' + project_id + '/project_info.json', 'r') as f:
@@ -334,11 +339,11 @@ class Clean(Resource):
         # percentage_errors_found = 0
         if is_new_feedback == 1 and refresh == 0:
             print('*** NEW FEEDBACK! ***')
-            helpers.saveNoiseFeedback(data, feedback, project_id, current_iter)
+            helpers.saveNoiseFeedback(data, feedback, project_id, current_iter, current_time)
             print('*** Noise feedback saved ***')
             s_in = data.iloc[feedback.index]
             print('*** Extracted sample from dataset ***')
-            helpers.explainFeedback(data, s_in, project_id, current_iter)
+            helpers.explainFeedback(data, s_in, project_id, current_iter, current_time)
             print('*** Mining completed and FD/CFD weights updated ***')
         
         # Update tuple weights pre-sampling
@@ -349,7 +354,7 @@ class Clean(Resource):
         # print('*** Tuples reinforced based on FD/CFD weights ***')
 
         # Build sample
-        s_out = helpers.buildSample(data, sample_size, project_id, sampling_method, current_iter)
+        s_out = helpers.buildSample(data, sample_size, project_id, sampling_method, current_iter, current_time)
         s_index = s_out.index
         pickle.dump( s_index, open('./store/' + project_id + '/current_sample.p', 'wb') )
 
@@ -372,23 +377,6 @@ class Clean(Resource):
 
         print('*** User scores retrieved ***')
 
-        '''cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
-        best_cfd_m = None
-        best_cfd_conf_variation = 1
-        if len(cfd_metadata.keys()) > 0:
-            best_cfd = max(cfd_metadata, key=lambda x: cfd_metadata[x]['weight'])
-            best_cfd_m = cfd_metadata[best_cfd]
-            wh_len = len(best_cfd_m['weight_history'])
-            if wh_len >= 3:
-                best_cfd_conf_variation = best_cfd_m['weight_history'][wh_len-1].weight - best_cfd_m['weight_history'][wh_len-3].weight
-                curr_w_conf = 0
-                for i in range(0, len(best_cfd_m['history'])):
-                    curr_w_conf += (best_cfd_m['history'][i].score / (current_iter - best_cfd_m['history'][i].iter_num + 1))
-                prev_3_w_conf = 0
-                for i in range(0, len(best_cfd_m['history'])-2):
-                    prev_3_w_conf += (best_cfd_m['history'][i].score / (current_iter - best_cfd_m['history'][i].iter_num + 1))
-                best_cfd_conf_variation = curr_w_conf - prev_3_w_conf'''
-
         h_space_conf_delta = helpers.getHSpaceConfDelta(project_id, current_iter)
 
         if refresh == 0 and (current_iter >= 25 or (h_space_conf_delta is not None and h_space_conf_delta < 0.01)):
@@ -397,9 +385,9 @@ class Clean(Resource):
             msg = '[SUCCESS]: Saved feedback and built new sample.'
 
         s_out.insert(0, 'id', s_out.index, True)
-        print(s_out)
 
         pickle.dump( current_iter, open('./store/' + project_id + '/current_iter.p', 'wb') )
+        pickle.dump( current_time, open('./store/' + project_id + '/current_time.p', 'wb') )
         
         # Return information to the user
         returned_data = {
@@ -409,7 +397,7 @@ class Clean(Resource):
             'false_pos': false_pos,
             'msg': msg
         }
-        pprint(returned_data)
+        # pprint(returned_data)
         response = json.dumps(returned_data)
         return response, 200, {'Access-Control-Allow-Origin': '*'}
 
