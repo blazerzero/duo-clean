@@ -191,7 +191,7 @@ def bayes(sampling_method):
             for h in discovered_cfds:
                 elem = next(x for x in bayes_modeling_metadata['p_X_given_h'][h] if x.iter_num == it)     # p(X | h) for this iteration
                 p_X_given_h = elem.value
-                p_h = bayes_modeling_metadata['p_h']['aCOMBO-sSR'][h]   # p(h)
+                p_h = cfd_metadata[h]['weight_history'][it-1].weight * bayes_modeling_metadata['p_h']['aCOMBO-sSR'][h]   # p(h)
                 p_h_given_X = p_X_given_h * p_h     # p(h | X)
                 p_h_given_X_list.append(PHGivenX(h=h, value=p_h_given_X))
             
@@ -226,7 +226,7 @@ def bayes(sampling_method):
             for h in clean_discovered_cfds:
                 clean_elem = next(x for x in gt_bayes_metadata['p_X_given_h'][h] if x.iter_num == it)     # p(X | h) for this iteration
                 clean_p_X_given_h = clean_elem.value
-                clean_p_h = gt_bayes_metadata['p_h']['aCOMBO-sSR'][h]   # p(h)
+                clean_p_h = clean_fd_metadata[h]['weight_history'][it-1].weight * gt_bayes_metadata['p_h']['aCOMBO-sSR'][h]   # p(h)
                 clean_p_h_given_X = clean_p_X_given_h * clean_p_h     # p(h | X)
                 clean_p_h_given_X_list.append(PHGivenX(h=h, value=clean_p_h_given_X))
             
@@ -272,6 +272,7 @@ def max_likelihood(sampling_method):
         modeling_metadata = pickle.load( open('./store/' + project_id + '/modeling_metadata.p', 'rb') )
         gt_metadata = pickle.load( open('./store/' + project_id + '/gt_metadata.p', 'rb') )
         cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
+        clean_fd_metadata = pickle.load( open('./store/' + project_id + '/clean_fd_metadata.p', 'rb') )
         
         min_modeling_metadata = modeling_metadata
         gt_min_metadata = gt_metadata
@@ -386,7 +387,7 @@ def max_likelihood(sampling_method):
             for h in generalized_cfds:
                 elem = next(x for x in min_modeling_metadata['p_X_given_h'][h] if x.iter_num == it)     # p(X | h) for this iteration
                 p_X_given_h = elem.value
-                p_h = min_modeling_metadata['p_h']['aCOMBO-sSR'][h]   # p(h)
+                p_h = cfd_metadata[h]['weight_history'][it-1].weight * min_modeling_metadata['p_h']['aCOMBO-sSR'][h]   # p(h)
                 p_h_given_X = p_X_given_h * p_h     # p(h | X)
                 p_h_given_X_list.append(PHGivenX(h=h, value=p_h_given_X))
             
@@ -447,7 +448,7 @@ def max_likelihood(sampling_method):
             for h in clean_generalized_cfds:
                 clean_elem = next(x for x in gt_min_metadata['p_X_given_h'][h] if x.iter_num == it)     # p(X | h) for this iteration
                 clean_p_X_given_h = clean_elem.value
-                clean_p_h = gt_min_metadata['p_h']['aCOMBO-sSR'][h]   # p(h)
+                clean_p_h = clean_fd_metadata[h]['weight_history'][it-1].weight * gt_min_metadata['p_h']['aCOMBO-sSR'][h]   # p(h)
                 clean_p_h_given_X = clean_p_X_given_h * clean_p_h     # p(h | X)
                 clean_p_h_given_X_list.append(PHGivenX(h=h, value=clean_p_h_given_X))
             

@@ -209,20 +209,19 @@ def explainFeedback(full_dataset, dirty_sample, project_id, current_iter, curren
             else:
                 clean_fd_metadata[c['cfd']]['conf_history'].append(CFDScore(iter_num=current_iter, score=clean_fd_metadata[c['cfd']]['conf_history'][-1].score, elapsed_time=elapsed_time))
             
-            complexity_bias = analyze.sHeuristicSetRelation(c['cfd'], [c['cfd'] for c in h_space])
-
             # System's weighted prior on rule confidence
-            weighted_conf = 0
+            weight = 0
             for h in clean_fd_metadata[c['cfd']]['conf_history']:
-                weighted_conf += (h.score / (current_iter - h.iter_num + 1))
+                weight += (h.score / (current_iter - h.iter_num + 1))
 
-            weight = complexity_bias + weighted_conf
+            # weight = complexity_bias + weighted_conf
             clean_fd_metadata[c['cfd']]['weight'] = weight
             # clean_fd_metadata[c['cfd']]['weight_history'].append(CFDWeightHistory(iter_num=current_iter, weight=weight, elapsed_time=elapsed_time))
         
-        clean_fd_metadata = normalizeWeights(clean_fd_metadata)
+        # clean_fd_metadata = normalizeWeights(clean_fd_metadata)
         for cfd_m in clean_fd_metadata.values():
             cfd_m['weight_history'].append(CFDWeightHistory(iter_num=current_iter, weight=cfd_m['weight'], elapsed_time=elapsed_time))
+        print('ground truth weights:', [cfd_m['weight_history'][-1].weight for cfd_m in clean_fd_metadata.values()])
 
         pickle.dump( clean_fd_metadata, open('./store/' + project_id + '/clean_fd_metadata.p', 'wb') )
     
@@ -261,9 +260,10 @@ def explainFeedback(full_dataset, dirty_sample, project_id, current_iter, curren
             cfd_metadata[c['cfd']]['weight'] = weight
             # cfd_metadata[c['cfd']]['weight_history'].append(CFDWeightHistory(iter_num=current_iter, weight=weight, elapsed_time=elapsed_time))
         
-        cfd_metadata = normalizeWeights(cfd_metadata)
+        # cfd_metadata = normalizeWeights(cfd_metadata)
         for cfd_m in cfd_metadata.values():
             cfd_m['weight_history'].append(CFDWeightHistory(iter_num=current_iter, weight=cfd_m['weight'], elapsed_time=elapsed_time))
+        print('user weights:', [cfd_m['weight_history'][-1].weight for cfd_m in cfd_metadata.values()])
 
         print('*** CFDD output processed and FD weights updated ***')
 
@@ -356,18 +356,23 @@ def buildSample(data, sample_size, project_id, sampling_method, current_iter, cu
 def returnTuples(data, sample_size, project_id):
     tuple_metadata = pickle.load( open('./store/' + project_id + '/tuple_metadata.p', 'rb') )
     cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
-    tuple_weights = {k: v['weight'] for k, v in tuple_metadata.items()}
-    cfd_weights = {k: v['weight'] for k, v in cfd_metadata.items()}
+    tuple_weights = [v['weight'] for v in tuple_metadata.values()]
+    cfd_weights = [v['weight'] for v in cfd_metadata.values()]
+    print(cfd_metadata.keys())
+    print(cfd_weights)
     chosen_tuples = list()
     
     # print('IDs of tuples in next sample:')
     while len(chosen_tuples) < sample_size:
-        fd = pickSingleTuple(cfd_weights)
+        fd = random.choices(list(cfd_metadata.keys()), weights=cfd_weights, k=1).pop()
         # if fd not in chosen_fds:
         cfd_m = cfd_metadata[fd]
         if len(cfd_m['vios']) <= 1 or len(cfd_m['vio_pairs']) == 0:
-            returned_tuple1 = pickSingleTuple(tuple_weights)
-            returned_tuple2 = pickSingleTuple(tuple_weights)
+            # returned_tuple1 = pickSingleTuple(tuple_weights)
+            # returned_tuple2 = pickSingleTuple(tuple_weights)
+            returned_tuples = random.choices(data.index, weights=tuple_weights, k=2)
+            returned_tuple1 = returned_tuples[0]
+            returned_tuple2 = returned_tuples[1]
         else:
             returned_tuple1, returned_tuple2 = random.choice(cfd_m['vio_pairs'])
 
@@ -377,7 +382,7 @@ def returnTuples(data, sample_size, project_id):
             # print(returned_tuple1)
             # print(returned_tuple2)
 
-        if len(chosen_tuples) >= len(tuple_weights.keys()):
+        if len(chosen_tuples) >= len(tuple_weights):
             break
     
     # print(data)
