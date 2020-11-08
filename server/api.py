@@ -113,7 +113,6 @@ class Import(Resource):
         # data = pd.read_csv(scenario['dirty_dataset'], keep_default_na=False)
         for c in scenario['hypothesis_space']:
             cfd_metadata[c['cfd']] = dict()
-            # support, violations = helpers.getSupport(data, c['cfd'], new_project_id)
             cfd_metadata[c['cfd']]['weight'] = c['conf']
             cfd_metadata[c['cfd']]['conf_history'] = list()
             cfd_metadata[c['cfd']]['conf_history'].append(helpers.CFDScore(iter_num=current_iter, score=c['conf'], elapsed_time=0))
@@ -123,10 +122,10 @@ class Import(Resource):
             cfd_metadata[c['cfd']]['vios'] = hypothesis['vios']
             cfd_metadata[c['cfd']]['vio_pairs'] = hypothesis['vio_pairs']
         
-        cfd_metadata = helpers.normalizeWeights(cfd_metadata)
-        for _, cfd_m in cfd_metadata.items():
-            cfd_m['weight_history'] = list()
-            cfd_m['weight_history'].append(helpers.CFDWeightHistory(iter_num=current_iter, weight=cfd_m['weight'], elapsed_time=0))
+        # cfd_metadata = helpers.normalizeWeights(cfd_metadata)
+        # for _, cfd_m in cfd_metadata.items():
+            cfd_metadata[c['cfd']]['weight_history'] = list()
+            cfd_metadata[c['cfd']]['weight_history'].append(helpers.CFDWeightHistory(iter_num=current_iter, weight=cfd_metadata[c['cfd']]['weight'], elapsed_time=0))
 
         # Initialize other metrics/metadata needed in study
         study_metrics = dict()
@@ -152,6 +151,21 @@ class Import(Resource):
 
         gt_metadata = modeling_metadata
         clean_fd_metadata = cfd_metadata
+
+        '''for c in scenario['clean_hypothesis_space']:
+            if c['cfd'] not in cfd_metadata.keys():
+                clean_fd_metadata[c['cfd']] = dict()
+                clean_fd_metadata[c['cfd']]['weight'] = c['conf']
+                clean_fd_metadata[c['cfd']]['conf_history'] = list()
+                clean_fd_metadata[c['cfd']]['conf_history'].append(helpers.CFDScore(iter_num=current_iter, score=c['conf'], elapsed_time=0))
+
+                hypothesis = next(x for x in scenario['clean_hypothesis_space'] if x['cfd'] == c['cfd'])
+                clean_fd_metadata[c['cfd']]['support'] = hypothesis['support']
+                clean_fd_metadata[c['cfd']]['vios'] = hypothesis['vios']
+                clean_fd_metadata[c['cfd']]['vio_pairs'] = hypothesis['vio_pairs']
+                clean_fd_metadata[c['cfd']]['weight_history'] = list()
+                clean_fd_metadata[c['cfd']]['weight_history'].append(helpers.CFDWeightHistory(iter_num=current_iter, weight=clean_fd_metadata[c['cfd']]['weight'], elapsed_time=0))
+                gt_metadata['y_in_h'][c['cfd']] = dict()'''
 
         # modeling_metadata['p_h'] = dict()
         # modeling_metadata['p_h']['hUniform'] = dict()   # TODO: Do this for each p(h) heuristic

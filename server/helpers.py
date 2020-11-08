@@ -219,12 +219,12 @@ def explainFeedback(full_dataset, dirty_sample, project_id, current_iter, curren
             # clean_fd_metadata[c['cfd']]['weight_history'].append(CFDWeightHistory(iter_num=current_iter, weight=weight, elapsed_time=elapsed_time))
         
         # clean_fd_metadata = normalizeWeights(clean_fd_metadata)
-        for cfd_m in clean_fd_metadata.values():
-            cfd_m['weight_history'].append(CFDWeightHistory(iter_num=current_iter, weight=cfd_m['weight'], elapsed_time=elapsed_time))
-        print('ground truth weights:', [cfd_m['weight_history'][-1].weight for cfd_m in clean_fd_metadata.values()])
+    for cfd_m in clean_fd_metadata.values():
+        cfd_m['weight_history'].append(CFDWeightHistory(iter_num=current_iter, weight=cfd_m['weight'], elapsed_time=elapsed_time))
+    print('ground truth weights:', [cfd_m['weight_history'][-1].weight for cfd_m in clean_fd_metadata.values()])
 
-        pickle.dump( clean_fd_metadata, open('./store/' + project_id + '/clean_fd_metadata.p', 'wb') )
-    
+    pickle.dump( clean_fd_metadata, open('./store/' + project_id + '/clean_fd_metadata.p', 'wb') )
+
     else:
         print('[ERROR] There was an error running CFDD') 
 
@@ -324,6 +324,29 @@ def buildSample(data, sample_size, project_id, sampling_method, current_iter, cu
                 modeling_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=1, elapsed_time=elapsed_time))
             else:
                 modeling_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=0, elapsed_time=elapsed_time))
+            '''if y not in modeling_metadata['y_in_h'][cfd].keys():    # this is the first time the user will have been shown y
+                modeling_metadata['y_in_h'][cfd][y] = list()
+            if y in cfd_m['support']:   # FD is applicable to y
+                if y not in cfd_m['vios']:    # y is clean w.r.t. the FD
+                    modeling_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=1, elapsed_time=elapsed_time))
+                
+                # UPDATED CHECK FOR DETECTABILITY
+                else:
+                    vio_pairs = [i for i in cfd_m['vio_pairs'] if y in i]
+                    if len(vio_pairs) == 0:     # y is dirty w.r.t the FD and does not pair with ANY other row in the dataset
+                        modeling_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=0, elapsed_time=elapsed_time))
+                    else:   # y is dirty w.r.t. the FD and DOES pair with some other row in the dataset
+                        match_found = False
+                        for x in new_X:
+                            if len([i for i in vio_pairs if x in i and x != y]) > 0:
+                                match_found = True
+                                break
+                        if match_found is False:    # y does not pair with any other tuple in X w.r.t. the FD and is not detectable YET
+                            modeling_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=0, elapsed_time=elapsed_time))
+                        else:   # y pairs with another tuple in X w.r.t. the FD and is detectable
+                            modeling_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=1, elapsed_time=elapsed_time))
+            else:   # FD is not applicable to y
+                modeling_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=0, elapsed_time=elapsed_time))'''
 
     # GROUND TRUTH
     for cfd, cfd_m in clean_fd_metadata.items():
@@ -344,6 +367,30 @@ def buildSample(data, sample_size, project_id, sampling_method, current_iter, cu
                 gt_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=1, elapsed_time=elapsed_time))
             else:
                 gt_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=0, elapsed_time=elapsed_time))
+            '''if y not in gt_metadata['y_in_h'][cfd].keys():    # this is the first time the user will have been shown y
+                gt_metadata['y_in_h'][cfd][y] = list()
+            if y in cfd_m['support']:   # FD is applicable to y
+                if y not in cfd_m['vios']:    # y is clean w.r.t. the FD
+                    gt_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=1, elapsed_time=elapsed_time))
+                
+                # UPDATED CHECK FOR DETECTABILITY
+                else:
+                    vio_pairs = [i for i in cfd_m['vio_pairs'] if y in i]
+                    if len(vio_pairs) == 0:     # y is dirty w.r.t the FD and does not pair with ANY other row in the dataset
+                        gt_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=0, elapsed_time=elapsed_time))
+                    else:   # y is dirty w.r.t. the FD and DOES pair with some other row in the dataset
+                        match_found = False
+                        for x in new_X:
+                            if len([i for i in vio_pairs if x in i and x != y]) > 0:
+                                match_found = True
+                                break
+                        if match_found is False:    # y does not pair with any other tuple in X w.r.t. the FD and is not detectable YET
+                            gt_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=0, elapsed_time=elapsed_time))
+                        else:   # y pairs with another tuple in X w.r.t. the FD and is detectable
+                            gt_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=1, elapsed_time=elapsed_time))
+            else:   # FD is not applicable to y
+                gt_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=0, elapsed_time=elapsed_time))'''
+        
 
     print('IDs of tuples in next sample:', s_out.index)
 

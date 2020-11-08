@@ -150,7 +150,7 @@ if __name__ == '__main__':
 
         for h in scenario['hypothesis_space']:
             fd = "".join(filter(lambda char: char in string.printable, h['cfd']))
-            h['conf'] = 1/len(scenario['hypothesis_space'])
+            h['conf'] = 1
             support, vios = getSupportAndVios(data, fd)
             vio_pairs = makeVioPairs(data, support, vios, fd)
             h['support'] = support
@@ -169,7 +169,7 @@ if __name__ == '__main__':
 
         for h in scenario['clean_hypothesis_space']:
             fd = "".join(filter(lambda char: char in string.printable, h['cfd']))
-            h['conf'] = 1/len(scenario['clean_hypothesis_space'])
+            h['conf'] = 1
             support, vios = getSupportAndVios(data, fd)
             vio_pairs = makeVioPairs(data, support, vios, fd)
             h['support'] = support
