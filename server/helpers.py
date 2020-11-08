@@ -318,13 +318,13 @@ def buildSample(data, sample_size, project_id, sampling_method, current_iter, cu
     
         # I(y in h)
         for y in new_X:
-            if y not in modeling_metadata['y_in_h'][cfd].keys():    # this is the first time the user will have been shown y
+            '''if y not in modeling_metadata['y_in_h'][cfd].keys():    # this is the first time the user will have been shown y
                 modeling_metadata['y_in_h'][cfd][y] = list()
             if y in cfd_m['support'] and y not in cfd_m['vios']:
                 modeling_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=1, elapsed_time=elapsed_time))
             else:
-                modeling_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=0, elapsed_time=elapsed_time))
-            '''if y not in modeling_metadata['y_in_h'][cfd].keys():    # this is the first time the user will have been shown y
+                modeling_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=0, elapsed_time=elapsed_time))'''
+            if y not in modeling_metadata['y_in_h'][cfd].keys():    # this is the first time the user will have been shown y
                 modeling_metadata['y_in_h'][cfd][y] = list()
             if y in cfd_m['support']:   # FD is applicable to y
                 if y not in cfd_m['vios']:    # y is clean w.r.t. the FD
@@ -346,7 +346,7 @@ def buildSample(data, sample_size, project_id, sampling_method, current_iter, cu
                         else:   # y pairs with another tuple in X w.r.t. the FD and is detectable
                             modeling_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=1, elapsed_time=elapsed_time))
             else:   # FD is not applicable to y
-                modeling_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=0, elapsed_time=elapsed_time))'''
+                modeling_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=0, elapsed_time=elapsed_time))
 
     # GROUND TRUTH
     for cfd, cfd_m in clean_fd_metadata.items():
@@ -361,13 +361,13 @@ def buildSample(data, sample_size, project_id, sampling_method, current_iter, cu
     
         # I(y in h)
         for y in new_X:
-            if y not in gt_metadata['y_in_h'][cfd].keys():    # this is the first time the user will have been shown y
+            '''if y not in gt_metadata['y_in_h'][cfd].keys():    # this is the first time the user will have been shown y
                 gt_metadata['y_in_h'][cfd][y] = list()
             if y in cfd_m['support'] and y not in cfd_m['vios']:
                 gt_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=1, elapsed_time=elapsed_time))
             else:
-                gt_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=0, elapsed_time=elapsed_time))
-            '''if y not in gt_metadata['y_in_h'][cfd].keys():    # this is the first time the user will have been shown y
+                gt_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=0, elapsed_time=elapsed_time))'''
+            if y not in gt_metadata['y_in_h'][cfd].keys():    # this is the first time the user will have been shown y
                 gt_metadata['y_in_h'][cfd][y] = list()
             if y in cfd_m['support']:   # FD is applicable to y
                 if y not in cfd_m['vios']:    # y is clean w.r.t. the FD
@@ -389,7 +389,7 @@ def buildSample(data, sample_size, project_id, sampling_method, current_iter, cu
                         else:   # y pairs with another tuple in X w.r.t. the FD and is detectable
                             gt_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=1, elapsed_time=elapsed_time))
             else:   # FD is not applicable to y
-                gt_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=0, elapsed_time=elapsed_time))'''
+                gt_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=0, elapsed_time=elapsed_time))
         
 
     print('IDs of tuples in next sample:', s_out.index)
