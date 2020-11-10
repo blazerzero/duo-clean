@@ -103,27 +103,41 @@ def fd2cfd(data, lhs, rhs):
 
     return patterns
 
-def makeVioPairs(data, support, vios, fd):
+def makeVioSets(data, support, vios, fd):
     vio_pairs = list()
+    vio_trios = list()
     lhs = fd.split(' => ')[0][1:-1].split(', ')
     rhs = fd.split(' => ')[1]
     for v in vios:
-        for idx in [i for i in support if i not in vios]:
-            match = True
+        for idx1 in [i for i in support if i not in vios]:
+            match1 = True
             for lh in lhs:
-                if data.at[idx, lh] != data.at[v, lh]:
-                    match = False   # idx and v do not have the same LHS
+                if data.at[idx1, lh] != data.at[v, lh]:
+                    match1 = False   # idx and v do not have the same LHS
                     break
-            if match is True:   # if idx and v have the same LHS
-                if idx not in vios and data.at[idx, rhs] != data.at[v, rhs]:    # if idx is clean and v is dirty
-                    if v > idx:
-                        vio_pair = (idx, v)
+            if match1 is True:   # if idx and v have the same LHS
+                if data.at[idx1, rhs] != data.at[v, rhs]:    # if idx is clean and v is dirty
+                    if v > idx1:
+                        vio_pair = (idx1, v)
                     else:
-                        vio_pair = (v, idx)
+                        vio_pair = (v, idx1)
                     if vio_pair not in vio_pairs:
                         vio_pairs.append(vio_pair)
+            for idx2 in [j for j in support if j not in vios and j != idx1]:
+                match2 = True
+                for lh in lhs:
+                    if data.at[idx1, lh] != data.at[v, lh]:
+                        match2 = False   # idx and v do not have the same LHS
+                        break
+                if match1 is True and match2 is True:
+                    if data.at[idx1, rhs] == data.at[idx2, rhs]:
+                        vio_trio_list = [v, idx1, idx2].sort()
+                        vio_trio = tuple(vio_trio_list)
+                        if vio_trio not in vio_trios:
+                            vio_trios.append(vio_trio)
 
-    return vio_pairs
+
+    return vio_pairs, vio_trios
 
 def dataDiff(dirty_df, clean_df):
     diff = pd.DataFrame(columns=clean_df.columns)
@@ -152,10 +166,11 @@ if __name__ == '__main__':
             fd = "".join(filter(lambda char: char in string.printable, h['cfd']))
             h['conf'] = 1
             support, vios = getSupportAndVios(data, fd)
-            vio_pairs = makeVioPairs(data, support, vios, fd)
+            vio_pairs, vio_trios = makeVioSets(data, support, vios, fd)
             h['support'] = support
             h['vios'] = vios
             h['vio_pairs'] = vio_pairs
+            h['vio_trios'] = vio_trios
 
         clean_data = pd.read_csv(scenario['clean_dataset'], keep_default_na=False)
         clean_process = sp.Popen(['./data/cfddiscovery/CFDD', scenario['clean_dataset'], str(len(clean_data.index)), '0.8', '3'], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})     # CFDD
@@ -171,10 +186,11 @@ if __name__ == '__main__':
             fd = "".join(filter(lambda char: char in string.printable, h['cfd']))
             h['conf'] = 1
             support, vios = getSupportAndVios(data, fd)
-            vio_pairs = makeVioPairs(data, support, vios, fd)
+            vio_pairs, vio_trios = makeVioSets(data, support, vios, fd)
             h['support'] = support
             h['vios'] = vios
             h['vio_pairs'] = vio_pairs
+            h['vio_trios'] = vio_trios
 
         diff_df = dataDiff(data, clean_data)
         diff = json.loads(diff_df.to_json(orient='index'))

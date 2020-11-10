@@ -481,18 +481,32 @@ def returnTuples(data, sample_size, project_id):
         fd = random.choices(list(cfd_metadata.keys()), weights=cfd_weights, k=1).pop()
         # if fd not in chosen_fds:
         cfd_m = cfd_metadata[fd]
-        if len(cfd_m['vios']) <= 1 or len(cfd_m['vio_pairs']) == 0:
+        if len(cfd_m['vios']) > 0:
+            if len(cfd_m['vio_trios']) > 0 and sample_size - len(chosen_tuples) >= 3:
+                returned_tuple1, returned_tuple2, returned_tuple3 = random.choice(cfd_m['vio_pairs'])
+                if returned_tuple1 not in chosen_tuples and returned_tuple2 not in chosen_tuples and returned_tuple3 not in chosen_tuples:
+                    chosen_tuples.append(returned_tuple1)
+                    chosen_tuples.append(returned_tuple2)
+                    chosen_tuples.append(returned_tuple3)
+            elif len(cfd_m['vio_pairs']) > 0 and sample_size - len(chosen_tuples) >= 2:
+                returned_tuple1, returned_tuple2 = random.choice(cfd_m['vio_pairs'])
+                if returned_tuple1 not in chosen_tuples and returned_tuple2 not in chosen_tuples:
+                    chosen_tuples.append(returned_tuple1)
+                    chosen_tuples.append(returned_tuple2)
+            else:
+                returned_tuple = random.choices(data.index, weights=tuple_weights, k=1)[0]
+                if returned_tuple not in chosen_tuples:
+                    chosen_tuples.append(returned_tuple1)
+        # if len(cfd_m['vio_pairs']) == 0:
             # returned_tuple1 = pickSingleTuple(tuple_weights)
             # returned_tuple2 = pickSingleTuple(tuple_weights)
-            returned_tuples = random.choices(data.index, weights=tuple_weights, k=2)
-            returned_tuple1 = returned_tuples[0]
-            returned_tuple2 = returned_tuples[1]
-        else:
-            returned_tuple1, returned_tuple2 = random.choice(cfd_m['vio_pairs'])
+            # returned_tuples = random.choices(data.index, weights=tuple_weights, k=3)
+            # returned_tuple1 = returned_tuples[0]
+            # returned_tuple2 = returned_tuples[1]
 
-        if returned_tuple1 not in chosen_tuples and returned_tuple2 not in chosen_tuples:
+        '''if returned_tuple1 not in chosen_tuples and returned_tuple2 not in chosen_tuples:
             chosen_tuples.append(returned_tuple1)
-            chosen_tuples.append(returned_tuple2)
+            chosen_tuples.append(returned_tuple2)'''
             # print(returned_tuple1)
             # print(returned_tuple2)
 
