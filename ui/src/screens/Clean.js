@@ -24,10 +24,21 @@ class Clean extends Component {
     for (var f in this.state.feedbackMap) {
       feedback[this.state.data[f]['id']] = this.state.feedbackMap[f]
     }
+    var is_new_feedback = false
+    for (var idx in feedback) {
+      for (var col in feedback[idx]) {
+        if (feedback[idx][col] === true) {
+          is_new_feedback = true
+          break
+        }
+      }
+      if (is_new_feedback) break
+    }
+
     console.log(feedback);
     formData.append('feedback', JSON.stringify(feedback));
     formData.append('refresh', (this.state.refresh === true ? 1 : 0));
-    formData.append('is_new_feedback', (this.state.noNewFeedback === false ? 1 : 0));
+    formData.append('is_new_feedback', (is_new_feedback === true ? 1 : 0));
     axios.post('http://167.71.155.153:5000/duo/api/clean', formData)
         .then(async(response) => {
           console.log(response.data);
@@ -195,12 +206,12 @@ class Clean extends Component {
     });
   }
 
-  _handleRefreshClick = async() => {
+  /* _handleRefreshClick = async() => {
     var noNewFeedback = true;
     this.setState({ noNewFeedback, refresh: true }, async () => {
       await this._handleSubmit();
     });
-  }
+  } */
 
   _handleDone = async() => {
     this.setState({ isProcessing: true, interactionDone: true });
@@ -401,7 +412,7 @@ class Clean extends Component {
                     </Table>
                   </Row>
                   <Row>
-                    <Col md={4}>
+                    {/*<Col md={4}>
                       <Button
                           variant='primary'
                           className='btn-round right box-blur'
@@ -409,8 +420,8 @@ class Clean extends Component {
                           onClick={this._handleRefreshClick}>
                         REFRESH SAMPLE
                       </Button>
-                    </Col>
-                    <Col md={{ span: 4, offset: 4 }}>
+                    </Col>*/}
+                    <Col md={{ span: 4, offset: 8 }}>
                       <Row>
                         <Button
                             variant='success'
