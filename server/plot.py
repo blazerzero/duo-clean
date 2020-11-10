@@ -44,6 +44,7 @@ def plot_modeling(modeling_method, sampling_method, x_axis):
 
         modeling_metadata = pickle.load( open('./store/' + project_id + '/' + modeling_method + '_modeling_metadata.p', 'rb') )
         gt_metadata = pickle.load( open('./store/' + project_id + '/gt_' + modeling_method + '_metadata.p', 'rb') )
+        study_metrics = pickle.load( open('./store/' + project_id + '/study_metrics.p', 'rb') )
         
         for heur, p_Y_in_C_given_X in modeling_metadata['p_Y_in_C_given_X'].items():
             # print(heur)
