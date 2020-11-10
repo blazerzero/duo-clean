@@ -11,7 +11,7 @@ import math
 import statistics
 from collections import Counter
 
-class HeuristicClassifier(object):
+class PlotData(object):
     def __init__(self, values, color):
         self.values = values
         self.color = color
@@ -32,6 +32,10 @@ def plot_modeling(modeling_method, sampling_method, x_axis):
     lists_s2 = list()
     lists_s3 = list()
     lists_s4 = list()
+    f1_s1 = list()
+    f1_s2 = list()
+    f1_s3 = list()
+    f1_s4 = list()
     project_ids = [d for d in os.listdir('./store') if os.path.isdir(os.path.join('./store/', d))]
     for project_id in project_ids:
         with open('./store/' + project_id + '/project_info.json') as f:
@@ -43,7 +47,7 @@ def plot_modeling(modeling_method, sampling_method, x_axis):
         print("project id:", project_id)
 
         modeling_metadata = pickle.load( open('./store/' + project_id + '/' + modeling_method + '_modeling_metadata.p', 'rb') )
-        gt_metadata = pickle.load( open('./store/' + project_id + '/gt_' + modeling_method + '_metadata.p', 'rb') )
+        #gt_metadata = pickle.load( open('./store/' + project_id + '/gt_' + modeling_method + '_metadata.p', 'rb') )
         study_metrics = pickle.load( open('./store/' + project_id + '/study_metrics.p', 'rb') )
         
         for heur, p_Y_in_C_given_X in modeling_metadata['p_Y_in_C_given_X'].items():
@@ -69,74 +73,117 @@ def plot_modeling(modeling_method, sampling_method, x_axis):
             # color = 'green'
 
             if scenario_id == scenario_ids[0]:
-                lists_s1.append(HeuristicClassifier(values=p_Y_in_C_given_X, color='green'))
+                lists_s1.append(PlotData(values=p_Y_in_C_given_X, color='green'))
+                f1_s1.append(PlotData(values=study_metrics['f1'], color='blue'))
             elif scenario_id == scenario_ids[1]:
-                lists_s2.append(HeuristicClassifier(values=p_Y_in_C_given_X, color='green'))
+                lists_s2.append(PlotData(values=p_Y_in_C_given_X, color='green'))
+                f1_s2.append(PlotData(values=study_metrics['f1'], color='blue'))
             elif scenario_id == scenario_ids[2]:
-                lists_s3.append(HeuristicClassifier(values=p_Y_in_C_given_X, color='green'))
+                lists_s3.append(PlotData(values=p_Y_in_C_given_X, color='green'))
+                f1_s3.append(PlotData(values=study_metrics['f1'], color='blue'))
             elif scenario_id == scenario_ids[3]:
-                lists_s4.append(HeuristicClassifier(values=p_Y_in_C_given_X, color='green'))
+                lists_s4.append(PlotData(values=p_Y_in_C_given_X, color='green'))
+                f1_s4.append(PlotData(values=study_metrics['f1'], color='blue'))
 
-        for heur, p_Y_in_C_given_X in gt_metadata['p_Y_in_C_given_X'].items():
+        '''for heur, p_Y_in_C_given_X in gt_metadata['p_Y_in_C_given_X'].items():
             # print(heur)
             if heur != 'aCOMBO-sSR':
                 continue
 
             if scenario_id == scenario_ids[0]:
-                lists_s1.append(HeuristicClassifier(values=p_Y_in_C_given_X, color='blue'))
+                lists_s1.append(PlotData(values=p_Y_in_C_given_X, color='blue'))
             elif scenario_id == scenario_ids[1]:
-                lists_s2.append(HeuristicClassifier(values=p_Y_in_C_given_X, color='blue'))
+                lists_s2.append(PlotData(values=p_Y_in_C_given_X, color='blue'))
             elif scenario_id == scenario_ids[2]:
-                lists_s3.append(HeuristicClassifier(values=p_Y_in_C_given_X, color='blue'))
+                lists_s3.append(PlotData(values=p_Y_in_C_given_X, color='blue'))
             elif scenario_id == scenario_ids[3]:
-                lists_s4.append(HeuristicClassifier(values=p_Y_in_C_given_X, color='blue'))
+                lists_s4.append(PlotData(values=p_Y_in_C_given_X, color='blue'))'''
 
-    fig, ax = plt.subplots(2, 2)
+    fig, ax1 = plt.subplots(2, 2)
+    ax2 = ax1.twinx()
 
-    ax[0,0].set_ylabel('p(Y in C | X)')
-    ax[0,1].set_ylabel('p(Y in C | X)')
-    ax[1,0].set_ylabel('p(Y in C | X)')
-    ax[1,1].set_ylabel('p(Y in C | X)')
-    ax[0,0].set_title('Scenario ' + scenario_ids[0])
-    ax[0,0].set_xlabel('Iteration #' if x_axis == 'iter' else 'Time Elapsed (seconds)')
-    ax[0,0].set_yticks(np.arange(0.0, 1.25, 0.25))
-    ax[0,0].set_ylim((0, None))
-    ax[0,1].set_title('Scenario ' + scenario_ids[1])
-    ax[0,1].set_xlabel('Iteration #' if x_axis == 'iter' else 'Time Elapsed (seconds)')
-    ax[0,1].set_yticks(np.arange(0.0, 1.25, 0.25))
-    ax[0,1].set_ylim((0, None))
-    ax[1,0].set_title('Scenario ' + scenario_ids[2])
-    ax[1,0].set_xlabel('Iteration #' if x_axis == 'iter' else 'Time Elapsed (seconds)')
-    ax[1,0].set_yticks(np.arange(0.0, 1.25, 0.25))
-    ax[1,0].set_ylim((0, None))
-    ax[1,1].set_title('Scenario ' + scenario_ids[3])
-    ax[1,1].set_xlabel('Iteration #' if x_axis == 'iter' else 'Time Elapsed (seconds)')
-    ax[1,1].set_yticks(np.arange(0.0, 1.25, 0.25))
-    ax[1,1].set_ylim((0, None))
+    ax1[0,0].set_ylabel('p(Y in C | X)')
+    ax2[0,0].set_ylabel('F1 score')
+    ax1[0,1].set_ylabel('p(Y in C | X)')
+    ax2[0,1].set_ylabel('F1 score')
+    ax1[1,0].set_ylabel('p(Y in C | X)')
+    ax2[1,0].set_ylabel('F1 score')
+    ax1[1,1].set_ylabel('p(Y in C | X)')
+    ax2[1,1].set_ylabel('F1 score')
+    ax1[0,0].set_title('Scenario ' + scenario_ids[0])
+    ax1[0,0].set_xlabel('Iteration #' if x_axis == 'iter' else 'Time Elapsed (seconds)')
+    ax1[0,0].set_yticks(np.arange(0.0, 1.25, 0.25))
+    ax2[0,0].set_yticks(np.arange(0.0, 1.25, 0.25))
+    ax1[0,0].set_ylim([0, None])
+    ax2[0,0].set_ylim([0, None])
+    ax1[0,1].set_title('Scenario ' + scenario_ids[1])
+    ax1[0,1].set_xlabel('Iteration #' if x_axis == 'iter' else 'Time Elapsed (seconds)')
+    ax1[0,1].set_yticks(np.arange(0.0, 1.25, 0.25))
+    ax2[0,1].set_yticks(np.arange(0.0, 1.25, 0.25))
+    ax1[0,1].set_ylim([0, None])
+    ax2[0,1].set_ylim([0, None])
+    ax1[1,0].set_title('Scenario ' + scenario_ids[2])
+    ax1[1,0].set_xlabel('Iteration #' if x_axis == 'iter' else 'Time Elapsed (seconds)')
+    ax1[1,0].set_yticks(np.arange(0.0, 1.25, 0.25))
+    ax2[1,0].set_yticks(np.arange(0.0, 1.25, 0.25))
+    ax1[1,0].set_ylim([0, None])
+    ax2[1,0].set_ylim([0, None])
+    ax1[1,1].set_title('Scenario ' + scenario_ids[3])
+    ax1[1,1].set_xlabel('Iteration #' if x_axis == 'iter' else 'Time Elapsed (seconds)')
+    ax1[1,1].set_yticks(np.arange(0.0, 1.25, 0.25))
+    ax2[1,1].set_yticks(np.arange(0.0, 1.25, 0.25))
+    ax1[1,1].set_ylim([0, None])
+    ax2[1,1].set_ylim([0, None])
 
     if x_axis == 'iter':
         for b in lists_s1:
-            ax[0,0].set_xticks(np.arange(0, 36, 6.0))
-            ax[0,0].plot([i for i in range(1, len(b.values) + 1)], [x.value for x in b.values], color=b.color)
+            ax1[0,0].set_xticks(np.arange(0, 36, 6.0))
+            ax1[0,0].plot([i for i in range(1, len(b.values) + 1)], [x.value for x in b.values], color=b.color)
         for b in lists_s2:
-            ax[0,1].set_xticks(np.arange(0, 36, 6.0))
-            ax[0,1].plot([i for i in range(1, len(b.values) + 1)], [x.value for x in b.values], color=b.color)
+            ax1[0,1].set_xticks(np.arange(0, 36, 6.0))
+            ax1[0,1].plot([i for i in range(1, len(b.values) + 1)], [x.value for x in b.values], color=b.color)
         for b in lists_s3:
-            ax[1,0].set_xticks(np.arange(0, 36, 6.0))
-            ax[1,0].plot([i for i in range(1, len(b.values) + 1)], [x.value for x in b.values], color=b.color)
+            ax1[1,0].set_xticks(np.arange(0, 36, 6.0))
+            ax1[1,0].plot([i for i in range(1, len(b.values) + 1)], [x.value for x in b.values], color=b.color)
         for b in lists_s4:
-            ax[1,1].set_xticks(np.arange(0, 36, 6.0))
-            ax[1,1].plot([i for i in range(1, len(b.values) + 1)], [x.value for x in b.values], color=b.color)
+            ax1[1,1].set_xticks(np.arange(0, 36, 6.0))
+            ax1[1,1].plot([i for i in range(1, len(b.values) + 1)], [x.value for x in b.values], color=b.color)
+
+        for b in f1_s1:
+            # ax2[0,0].set_xticks(np.arange(0, 36, 6.0))
+            ax2[0,0].plot([i for i in range(1, len(b.values) + 1)], [x.value for x in b.values], color=b.color)
+        for b in f1_s2:
+            # ax2[0,1].set_xticks(np.arange(0, 36, 6.0))
+            ax2[0,1].plot([i for i in range(1, len(b.values) + 1)], [x.value for x in b.values], color=b.color)
+        for b in f1_s3:
+            # ax2[1,0].set_xticks(np.arange(0, 36, 6.0))
+            ax2[1,0].plot([i for i in range(1, len(b.values) + 1)], [x.value for x in b.values], color=b.color)
+        for b in f1_s4:
+            # ax2[1,1].set_xticks(np.arange(0, 36, 6.0))
+            ax2[1,1].plot([i for i in range(1, len(b.values) + 1)], [x.value for x in b.values], color=b.color)
             
     elif x_axis == 'time':
         for b in lists_s1:
-            ax[0,0].plot([x.elapsed_time for x in b.values], [x.value for x in b.values], color=b.color)
+            ax1[0,0].plot([x.elapsed_time for x in b.values], [x.value for x in b.values], color=b.color)
         for b in lists_s2:
-            ax[0,1].plot([x.elapsed_time for x in b.values], [x.value for x in b.values], color=b.color)
+            ax1[0,1].plot([x.elapsed_time for x in b.values], [x.value for x in b.values], color=b.color)
         for b in lists_s3:
-            ax[1,0].plot([x.elapsed_time for x in b.values], [x.value for x in b.values], color=b.color)
+            ax1[1,0].plot([x.elapsed_time for x in b.values], [x.value for x in b.values], color=b.color)
         for b in lists_s4:
-            ax[1,1].plot([x.elapsed_time for x in b.values], [x.value for x in b.values], color=b.color)
+            ax1[1,1].plot([x.elapsed_time for x in b.values], [x.value for x in b.values], color=b.color)
+
+        for b in f1_s1:
+            # ax2[0,0].set_xticks(np.arange(0, 36, 6.0))
+            ax2[0,0].plot([x.elapsed_time for x in b.values], [x.value for x in b.values], color=b.color)
+        for b in f1_s2:
+            # ax2[0,1].set_xticks(np.arange(0, 36, 6.0))
+            ax2[0,1].plot([x.elapsed_time for x in b.values], [x.value for x in b.values], color=b.color)
+        for b in f1_s3:
+            # ax2[1,0].set_xticks(np.arange(0, 36, 6.0))
+            ax2[1,0].plot([x.elapsed_time for x in b.values], [x.value for x in b.values], color=b.color)
+        for b in f1_s4:
+            # ax2[1,1].set_xticks(np.arange(0, 36, 6.0))
+            ax2[1,1].plot([x.elapsed_time for x in b.values], [x.value for x in b.values], color=b.color)
 
     fig.tight_layout()
     fig.savefig('./plots/' + modeling_method + '-' + sampling_method + '-' + x_axis + '.jpg')
