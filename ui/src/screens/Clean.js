@@ -428,7 +428,7 @@ class Clean extends Component {
                             className='btn-round right box-blur'
                             size='lg'
                             onClick={this._handleSubmit}>
-                          SUBMIT FEEDBACK
+                          NEXT
                         </Button>
                         <Button
                             variant='secondary'
