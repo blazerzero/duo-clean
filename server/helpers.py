@@ -54,7 +54,7 @@ def saveNoiseFeedback(data, feedback, project_id, current_iter, current_time):
     # scoring function: score based on number of true errors correctly identified
     with open('./store/' + project_id + '/project_info.json', 'r') as f:
         project_info = json.load(f)
-        clean_dataset = pd.read_csv(project_info['scenario']['clean_dataset'], keep_default_na=False)    
+        clean_dataset = pd.read_csv(project_info['scenario']['clean_dataset'], keep_default_na=False)
     all_errors_found = 0
     all_errors_total = 0
     all_errors_marked = 0
@@ -80,9 +80,8 @@ def saveNoiseFeedback(data, feedback, project_id, current_iter, current_time):
     print('*** Score updated ***')
 
     project_info['true_pos'] = all_errors_found
-    false_positives_full = all_errors_marked - all_errors_found
-    project_info['false_pos'] = false_positives_full
-    false_positives_iter = iter_errors_marked - iter_errors_found
+    project_info['false_pos'] = all_errors_marked - all_errors_found
+    # false_positives_iter = iter_errors_marked - iter_errors_found
     with open('./store/' + project_id + '/project_info.json', 'w') as f:
         json.dump(project_info, f)
     print('*** Score saved ***')
@@ -90,7 +89,26 @@ def saveNoiseFeedback(data, feedback, project_id, current_iter, current_time):
     pickle.dump( cell_metadata, open('./store/' + project_id + '/cell_metadata.p', 'wb') )
     print('*** Cell metadata updates saved ***')
 
-    if all_errors_total > 0:
+    if iter_errors_marked > 0:
+        precision = iter_errors_found / iter_errors_marked
+    else:
+        precision = 0
+    
+    if iter_errors_total > 0:
+        recall = iter_errors_found / iter_errors_total
+    else:
+        recall = 0
+
+    if precision > 0 and recall > 0:
+        f1 = 2 * (precision * recall) / (precision + recall)
+    else:
+        f1 = 0
+
+    study_metrics['precision'].append(StudyMetric(iter_num=current_iter, value=precision, elapsed_time=elapsed_time))
+    study_metrics['recall'].append(StudyMetric(iter_num=current_iter, value=recall, elapsed_time=elapsed_time))
+    study_metrics['f1'].append(StudyMetric(iter_num=current_iter, value=f1, elapsed_time=elapsed_time))
+
+    '''if all_errors_total > 0:
         true_error_pct_full = all_errors_found / all_errors_total
     else:
         true_error_pct_full = 0
@@ -115,18 +133,18 @@ def saveNoiseFeedback(data, feedback, project_id, current_iter, current_time):
     study_metrics['false_positives_full'].append(StudyMetric(iter_num=current_iter, value=false_positives_full, elapsed_time=elapsed_time))
     study_metrics['false_positives_iter'].append(StudyMetric(iter_num=current_iter, value=false_positives_iter, elapsed_time=elapsed_time))
     study_metrics['error_accuracy_full'].append(StudyMetric(iter_num=current_iter, value=error_accuracy_full, elapsed_time=elapsed_time))
-    study_metrics['error_accuracy_iter'].append(StudyMetric(iter_num=current_iter, value=error_accuracy_iter, elapsed_time=elapsed_time))
+    study_metrics['error_accuracy_iter'].append(StudyMetric(iter_num=current_iter, value=error_accuracy_iter, elapsed_time=elapsed_time))'''
 
     pickle.dump( study_metrics, open('./store/' + project_id + '/study_metrics.p', 'wb') )
 
 
 # DISCOVER CFDs THAT BEST EXPLAIN THE FEEDBACK GIVEN BY THE USER
-def explainFeedback(full_dataset, dirty_sample, project_id, current_iter, current_time):
+def explainFeedback(full_dataset, dirty_sample, project_id, current_iter, current_time, refresh):
     cell_metadata = pickle.load( open('./store/' + project_id + '/cell_metadata.p', 'rb') )
     start_time = pickle.load( open('./store/' + project_id + '/start_time.p', 'rb') )
     with open('./store/' + project_id + '/project_info.json', 'r') as f:
         project_info = json.load(f)
-    master_diff = pd.DataFrame.from_dict(project_info['scenario']['diff'], orient='index')
+    # master_diff = pd.DataFrame.from_dict(project_info['scenario']['diff'], orient='index')
 
     elapsed_time = current_time - start_time
 
@@ -134,10 +152,53 @@ def explainFeedback(full_dataset, dirty_sample, project_id, current_iter, curren
 
     dirty_sample = dirty_sample.applymap(str)
     prepped_sample = dirty_sample.copy(deep=True)
-    master_prepped_sample = dirty_sample.copy(deep=True)
+    # master_prepped_sample = dirty_sample.copy(deep=True)
 
     marked_cols = list()
-    master_marked_cols = list()
+    # master_marked_cols = list()
+
+    h_space = project_info['scenario']['hypothesis_space']
+
+    if refresh == 1:
+        cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
+        # clean_fd_metadata = pickle.load( open('./store/' + project_id + '/clean_fd_metadata.p', 'rb') )
+        for c in h_space:
+            # cfd_metadata[c['cfd']]['conf_history'].append(CFDScore(iter_num=current_iter, score=cfd_metadata[c['cfd']]['conf_history'][-1].score, elapsed_time=elapsed_time))
+            # wCOMBO = analyze.aHeuristicCombo(c['cfd'], full_dataset)
+            # phaCOMBO = np.prod([v for _, v in wCOMBO.items()])  # p(h | aCOMBO)
+            # phsSR = analyze.sHeuristicSetRelation(c['cfd'], [c['cfd'] for c in h_space]) # p(h | sSR)
+            # print('*** Complexity bias calculated ***')
+
+            # System's weighted prior on rule confidence
+            # weight = 0
+            # for h in cfd_metadata[c['cfd']]['conf_history']:
+            #     weight += (h.score / (current_iter - h.iter_num + 1))
+            # print('*** Weighted FD confidence calculated ***')
+
+            # weight = complexity_bias + weighted_conf
+            cfd_metadata[c['cfd']]['weight'] = cfd_metadata[c['cfd']]['weight_history'][-1].weight
+            
+            # clean_fd_metadata[c['cfd']]['conf_history'].append(CFDScore(iter_num=current_iter, score=clean_fd_metadata[c['cfd']]['conf_history'][-1].score, elapsed_time=elapsed_time))
+            # wCOMBO = analyze.aHeuristicCombo(c['cfd'], full_dataset)
+            # phaCOMBO = np.prod([v for _, v in wCOMBO.items()])  # p(h | aCOMBO)
+            # phsSR = analyze.sHeuristicSetRelation(c['cfd'], [c['cfd'] for c in h_space]) # p(h | sSR)
+            # System's weighted prior on rule confidence
+            # weight = 0
+            # for h in clean_fd_metadata[c['cfd']]['conf_history']:
+            #     weight += (h.score / (current_iter - h.iter_num + 1))
+
+            # weight = complexity_bias + weighted_conf
+            # clean_fd_metadata[c['cfd']]['weight'] = clean_fd_metadata[c['cfd']]['weight_history'][-1].weight
+        
+        cfd_metadata = normalizeWeights(cfd_metadata)
+        # clean_fd_metadata = normalizeWeights(clean_fd_metadata)
+        for c in h_space:
+            cfd_metadata[c['cfd']]['weight_history'].append(CFDWeightHistory(iter_num=current_iter, weight=cfd_metadata[c['cfd']]['weight'], elapsed_time=elapsed_time))
+            # clean_fd_metadata[c['cfd']]['weight_history'].append(CFDWeightHistory(iter_num=current_iter, weight=clean_fd_metadata[c['cfd']]['weight'], elapsed_time=elapsed_time))
+
+        pickle.dump( cfd_metadata, open('./store/' + project_id + '/cfd_metadata.p', 'wb') )
+        # pickle.dump( clean_fd_metadata, open('./store/' + project_id + '/clean_fd_metadata.p', 'wb') )
+        return
     
     # USER DATA
     for idx in dirty_sample.index:
@@ -149,11 +210,11 @@ def explainFeedback(full_dataset, dirty_sample, project_id, current_iter, curren
                 break
 
     # GROUND TRUTH
-    for idx in dirty_sample.index:
+    '''for idx in dirty_sample.index:
         for col in dirty_sample.columns:
             if master_diff.at[str(idx), col] is False:
                 master_marked_cols.append(idx)
-                break
+                break'''
     
     prepped_sample = prepped_sample.drop(marked_cols)
     # print(prepped_sample)
@@ -165,15 +226,15 @@ def explainFeedback(full_dataset, dirty_sample, project_id, current_iter, curren
             f.seek(0)
             f.truncate()
 
-    master_prepped_sample = master_prepped_sample.drop(master_marked_cols)
+    # master_prepped_sample = master_prepped_sample.drop(master_marked_cols)
     # print(master_prepped_sample)
     print('*** Feedback reflected in \'repaired\' dataset ***')
 
-    master_prepped_sample_fp = './store/' + project_id + '/gt_mining_sample.csv'
+    '''master_prepped_sample_fp = './store/' + project_id + '/gt_mining_sample.csv'
     if os.path.exists(master_prepped_sample_fp):
         with open(master_prepped_sample_fp, 'r+') as f:
             f.seek(0)
-            f.truncate()
+            f.truncate()'''
 
     rep_dict = list(prepped_sample.T.to_dict().values())
     rep_header = rep_dict[0].keys()
@@ -183,18 +244,16 @@ def explainFeedback(full_dataset, dirty_sample, project_id, current_iter, curren
         writer.writerows(rep_dict)
     print('*** Mining dataset saved as CSV ***')
 
-    master_rep_dict = list(master_prepped_sample.T.to_dict().values())
+    '''master_rep_dict = list(master_prepped_sample.T.to_dict().values())
     master_rep_header = master_rep_dict[0].keys()
     with open(master_prepped_sample_fp, 'w', newline='') as f:
         writer = csv.DictWriter(f, master_rep_header)
         writer.writeheader()
         writer.writerows(master_rep_dict)
-    print('*** Mining dataset saved as CSV ***')
-
-    h_space = project_info['scenario']['hypothesis_space']
+    print('*** Mining dataset saved as CSV ***')'''
 
     # GROUND TRUTH
-    clean_process = sp.Popen(['./data/cfddiscovery/CFDD', master_prepped_sample_fp, str(math.ceil(0.5*len(master_prepped_sample.index))), '0.5', '3'], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})     # CFDD
+    '''clean_process = sp.Popen(['./data/cfddiscovery/CFDD', master_prepped_sample_fp, str(math.ceil(0.8*len(master_prepped_sample.index))), '0.8', '3'], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})     # CFDD
     clean_res = clean_process.communicate()
 
     if clean_process.returncode == 0:
@@ -209,27 +268,30 @@ def explainFeedback(full_dataset, dirty_sample, project_id, current_iter, curren
             else:
                 clean_fd_metadata[c['cfd']]['conf_history'].append(CFDScore(iter_num=current_iter, score=clean_fd_metadata[c['cfd']]['conf_history'][-1].score, elapsed_time=elapsed_time))
             
+            wCOMBO = analyze.aHeuristicCombo(c['cfd'], full_dataset)
+            phaCOMBO = np.prod([v for _, v in wCOMBO.items()])  # p(h | aCOMBO)
+            phsSR = analyze.sHeuristicSetRelation(c['cfd'], [c['cfd'] for c in h_space]) # p(h | sSR)
             # System's weighted prior on rule confidence
             weight = 0
             for h in clean_fd_metadata[c['cfd']]['conf_history']:
                 weight += (h.score / (current_iter - h.iter_num + 1))
 
             # weight = complexity_bias + weighted_conf
-            clean_fd_metadata[c['cfd']]['weight'] = weight
+            clean_fd_metadata[c['cfd']]['weight'] = weight * phaCOMBO * phsSR   # weight * p(h | aCOMBO-sSR)
             # clean_fd_metadata[c['cfd']]['weight_history'].append(CFDWeightHistory(iter_num=current_iter, weight=weight, elapsed_time=elapsed_time))
         
-        # clean_fd_metadata = normalizeWeights(clean_fd_metadata)
-    for cfd_m in clean_fd_metadata.values():
-        cfd_m['weight_history'].append(CFDWeightHistory(iter_num=current_iter, weight=cfd_m['weight'], elapsed_time=elapsed_time))
-    print('ground truth weights:', [cfd_m['weight_history'][-1].weight for cfd_m in clean_fd_metadata.values()])
+        clean_fd_metadata = normalizeWeights(clean_fd_metadata)
+        for cfd_m in clean_fd_metadata.values():
+            cfd_m['weight_history'].append(CFDWeightHistory(iter_num=current_iter, weight=cfd_m['weight'], elapsed_time=elapsed_time))
+        print('ground truth weights:', [cfd_m['weight_history'][-1].weight for cfd_m in clean_fd_metadata.values()])
 
-    pickle.dump( clean_fd_metadata, open('./store/' + project_id + '/clean_fd_metadata.p', 'wb') )
+        pickle.dump( clean_fd_metadata, open('./store/' + project_id + '/clean_fd_metadata.p', 'wb') )
 
     else:
-        print('[ERROR] There was an error running CFDD') 
+        print('[ERROR] There was an error running CFDD') '''
 
     # USER DATA
-    process = sp.Popen(['./data/cfddiscovery/CFDD', prepped_sample_fp, str(math.ceil(0.5*len(prepped_sample.index))), '0.5', '3'], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})     # CFDD
+    process = sp.Popen(['./data/cfddiscovery/CFDD', prepped_sample_fp, str(math.ceil(0.8*len(prepped_sample.index))), '0.8', '3'], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})     # CFDD
     res = process.communicate()
     print('*** CFDD finished running ***')
 
@@ -247,7 +309,9 @@ def explainFeedback(full_dataset, dirty_sample, project_id, current_iter, curren
             else:
                 cfd_metadata[c['cfd']]['conf_history'].append(CFDScore(iter_num=current_iter, score=cfd_metadata[c['cfd']]['conf_history'][-1].score, elapsed_time=elapsed_time))
             
-            # complexity_bias = analyze.sHeuristicSetRelation(c['cfd'], [c['cfd'] for c in h_space])
+            wCOMBO = analyze.aHeuristicCombo(c['cfd'], full_dataset)
+            phaCOMBO = np.prod([v for _, v in wCOMBO.items()])  # p(h | aCOMBO)
+            phsSR = analyze.sHeuristicSetRelation(c['cfd'], [c['cfd'] for c in h_space]) # p(h | sSR)
             # print('*** Complexity bias calculated ***')
 
             # System's weighted prior on rule confidence
@@ -257,11 +321,12 @@ def explainFeedback(full_dataset, dirty_sample, project_id, current_iter, curren
             # print('*** Weighted FD confidence calculated ***')
 
             # weight = complexity_bias + weighted_conf
-            cfd_metadata[c['cfd']]['weight'] = weight
+            cfd_metadata[c['cfd']]['weight'] = weight * phaCOMBO * phsSR    # weight * p(h | aCOMBO-sSR)
             # cfd_metadata[c['cfd']]['weight_history'].append(CFDWeightHistory(iter_num=current_iter, weight=weight, elapsed_time=elapsed_time))
         
-        # cfd_metadata = normalizeWeights(cfd_metadata)
+        cfd_metadata = normalizeWeights(cfd_metadata)
         for cfd_m in cfd_metadata.values():
+            print(cfd_m['weight'])
             cfd_m['weight_history'].append(CFDWeightHistory(iter_num=current_iter, weight=cfd_m['weight'], elapsed_time=elapsed_time))
         print('user weights:', [cfd_m['weight_history'][-1].weight for cfd_m in cfd_metadata.values()])
 
@@ -277,9 +342,9 @@ def explainFeedback(full_dataset, dirty_sample, project_id, current_iter, curren
 # BUILD SAMPLE
 def buildSample(data, sample_size, project_id, sampling_method, current_iter, current_time):
     cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
-    clean_fd_metadata = pickle.load( open('./store/' + project_id + '/clean_fd_metadata.p', 'rb') )
+    # clean_fd_metadata = pickle.load( open('./store/' + project_id + '/clean_fd_metadata.p', 'rb') )
     modeling_metadata = pickle.load( open('./store/' + project_id + '/modeling_metadata.p', 'rb') )
-    gt_metadata = pickle.load( open('./store/' + project_id + '/gt_metadata.p', 'rb') )
+    # gt_metadata = pickle.load( open('./store/' + project_id + '/gt_metadata.p', 'rb') )
     start_time = pickle.load( open('./store/' + project_id + '/start_time.p', 'rb') )
 
     elapsed_time = current_time - start_time
@@ -293,24 +358,26 @@ def buildSample(data, sample_size, project_id, sampling_method, current_iter, cu
         print('RANDOM SAMPLING')
         s_out = data.sample(n=sample_size)      # Y = set(s_out.index)
 
+    dirty_tuples = getDirtyTuples(s_out, project_id)
+
     # MODELING METRICS
     if current_iter == 0:
-        new_X = set(s_out.index)    # X is just being created --> X = set(s_out.index)
+        new_X = dirty_tuples    # X is just being created --> X = set(s_out.index)
     else:
-        new_X = modeling_metadata['X'][-1].value | set(s_out.index)     # X = X | set(s_out.index)
+        new_X = modeling_metadata['X'][-1].value | dirty_tuples     # X = X | set(s_out.index)
     
     modeling_metadata['X'].append(StudyMetric(iter_num=current_iter, value=new_X, elapsed_time=elapsed_time))
-    gt_metadata['X'].append(StudyMetric(iter_num=current_iter, value=new_X, elapsed_time=elapsed_time))
+    # gt_metadata['X'].append(StudyMetric(iter_num=current_iter, value=new_X, elapsed_time=elapsed_time))
 
-    modeling_metadata['Y'].append(StudyMetric(iter_num=current_iter, value=set(s_out.index), elapsed_time=elapsed_time))
-    gt_metadata['Y'].append(StudyMetric(iter_num=current_iter, value=set(s_out.index), elapsed_time=elapsed_time))
+    modeling_metadata['Y'].append(StudyMetric(iter_num=current_iter, value=dirty_tuples, elapsed_time=elapsed_time))
+    # gt_metadata['Y'].append(StudyMetric(iter_num=current_iter, value=set(s_out.index), elapsed_time=elapsed_time))
 
     # USER DATA
     for cfd, cfd_m in cfd_metadata.items():
         # p(X | h)
         if cfd not in modeling_metadata['p_X_given_h'].keys():  # cfd was just discovered in this iteration
             modeling_metadata['p_X_given_h'][cfd] = list()
-        if set(new_X).issubset(cfd_m['support']):
+        if set(new_X).issubset(cfd_m['vios']):
             p_X_given_h = math.pow((1/len(new_X)), sample_size) # p(X | h) = PI_i (p(x_i | h)), where each x_i is in X
             modeling_metadata['p_X_given_h'][cfd].append(StudyMetric(iter_num=current_iter, value=p_X_given_h, elapsed_time=elapsed_time))
         else:
@@ -318,13 +385,13 @@ def buildSample(data, sample_size, project_id, sampling_method, current_iter, cu
     
         # I(y in h)
         for y in new_X:
-            '''if y not in modeling_metadata['y_in_h'][cfd].keys():    # this is the first time the user will have been shown y
+            if y not in modeling_metadata['y_in_h'][cfd].keys():    # this is the first time the user will have been shown y
                 modeling_metadata['y_in_h'][cfd][y] = list()
-            if y in cfd_m['support'] and y not in cfd_m['vios']:
+            if y in cfd_m['vios']:
                 modeling_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=1, elapsed_time=elapsed_time))
             else:
-                modeling_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=0, elapsed_time=elapsed_time))'''
-            if y not in modeling_metadata['y_in_h'][cfd].keys():    # this is the first time the user will have been shown y
+                modeling_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=0, elapsed_time=elapsed_time))
+            '''if y not in modeling_metadata['y_in_h'][cfd].keys():    # this is the first time the user will have been shown y
                 modeling_metadata['y_in_h'][cfd][y] = list()
             if y in cfd_m['support']:   # FD is applicable to y
                 if y not in cfd_m['vios']:    # y is clean w.r.t. the FD
@@ -346,10 +413,10 @@ def buildSample(data, sample_size, project_id, sampling_method, current_iter, cu
                         else:   # y pairs with another tuple in X w.r.t. the FD and is detectable
                             modeling_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=1, elapsed_time=elapsed_time))
             else:   # FD is not applicable to y
-                modeling_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=0, elapsed_time=elapsed_time))
+                modeling_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=0, elapsed_time=elapsed_time))'''
 
     # GROUND TRUTH
-    for cfd, cfd_m in clean_fd_metadata.items():
+    '''for cfd, cfd_m in clean_fd_metadata.items():
         # p(X | h)
         if cfd not in gt_metadata['p_X_given_h'].keys():  # cfd was just discovered in this iteration
             gt_metadata['p_X_given_h'][cfd] = list()
@@ -361,12 +428,12 @@ def buildSample(data, sample_size, project_id, sampling_method, current_iter, cu
     
         # I(y in h)
         for y in new_X:
-            '''if y not in gt_metadata['y_in_h'][cfd].keys():    # this is the first time the user will have been shown y
-                gt_metadata['y_in_h'][cfd][y] = list()
-            if y in cfd_m['support'] and y not in cfd_m['vios']:
-                gt_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=1, elapsed_time=elapsed_time))
-            else:
-                gt_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=0, elapsed_time=elapsed_time))'''
+            # if y not in gt_metadata['y_in_h'][cfd].keys():    # this is the first time the user will have been shown y
+            #     gt_metadata['y_in_h'][cfd][y] = list()
+            # if y in cfd_m['support'] and y not in cfd_m['vios']:
+            #     gt_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=1, elapsed_time=elapsed_time))
+            # else:
+            #     gt_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=0, elapsed_time=elapsed_time))
             if y not in gt_metadata['y_in_h'][cfd].keys():    # this is the first time the user will have been shown y
                 gt_metadata['y_in_h'][cfd][y] = list()
             if y in cfd_m['support']:   # FD is applicable to y
@@ -389,13 +456,13 @@ def buildSample(data, sample_size, project_id, sampling_method, current_iter, cu
                         else:   # y pairs with another tuple in X w.r.t. the FD and is detectable
                             gt_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=1, elapsed_time=elapsed_time))
             else:   # FD is not applicable to y
-                gt_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=0, elapsed_time=elapsed_time))
+                gt_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=0, elapsed_time=elapsed_time))'''
         
 
     print('IDs of tuples in next sample:', s_out.index)
 
     pickle.dump( modeling_metadata, open('./store/' + project_id + '/modeling_metadata.p', 'wb') )
-    pickle.dump( gt_metadata, open('./store/' + project_id + '/gt_metadata.p', 'wb') )
+    # pickle.dump( gt_metadata, open('./store/' + project_id + '/gt_metadata.p', 'wb') )
     
     return s_out
 
@@ -437,6 +504,20 @@ def returnTuples(data, sample_size, project_id):
     s_out = data.iloc[chosen_tuples]
     return s_out
 
+def getDirtyTuples(s_out, project_id):
+    with open('./store/' + project_id + '/project_info.json', 'r') as f:
+        project_info = json.load(f)
+    h_space = project_info['scenario']['hypothesis_space']
+    dirty_tuples = list()
+    for idx in s_out.index:
+        is_dirty = False
+        for h in h_space:
+            if idx in h['vios']:
+                is_dirty = True
+                break
+        if is_dirty is True:
+            dirty_tuples.append(idx)
+    return set(dirty_tuples)
 
 # SELECT ONE TUPLE TO ADD TO SAMPLE
 def pickSingleTuple(tuple_weights):
@@ -470,7 +551,7 @@ def getUserScores(project_id):
 
 def getHSpaceConfDelta(project_id, current_iter):
     cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
-    if current_iter >= 3:
+    if current_iter >= 5:
         h_space_conf_delta = 0
         for fd_m in cfd_metadata.values():
             fd_conf_delta = abs(fd_m['conf_history'][-1].score - fd_m['conf_history'][-3].score)

@@ -129,15 +129,18 @@ class Import(Resource):
 
         # Initialize other metrics/metadata needed in study
         study_metrics = dict()
-        study_metrics['true_error_pct_full'] = list()
-        study_metrics['true_error_pct_iter'] = list()
-        study_metrics['false_positives_full'] = list()
-        study_metrics['false_positives_iter'] = list()
-        study_metrics['cfd_confidence'] = dict()
+        # study_metrics['true_error_pct_full'] = list()
+        # study_metrics['true_error_pct_iter'] = list()
+        # study_metrics['false_positives_full'] = list()
+        # study_metrics['false_positives_iter'] = list()
+        # study_metrics['cfd_confidence'] = dict()
         # for cfd in scenario['cfds']:
         #     study_metrics['cfd_confidence'][cfd] = list()
-        study_metrics['error_accuracy_full'] = list()
-        study_metrics['error_accuracy_iter'] = list()
+        # study_metrics['error_accuracy_full'] = list()
+        # study_metrics['error_accuracy_iter'] = list()
+        study_metrics['precision'] = list()
+        study_metrics['recall'] = list()
+        study_metrics['f1'] = list()
 
         start_time = time.time()
 
@@ -149,8 +152,8 @@ class Import(Resource):
         for cfd in cfd_metadata.keys():
             modeling_metadata['y_in_h'][cfd] = dict()
 
-        gt_metadata = modeling_metadata
-        clean_fd_metadata = cfd_metadata
+        # gt_metadata = modeling_metadata
+        # clean_fd_metadata = cfd_metadata
 
         '''for c in scenario['clean_hypothesis_space']:
             if c['cfd'] not in cfd_metadata.keys():
@@ -181,8 +184,8 @@ class Import(Resource):
         pickle.dump( start_time, open(new_project_dir + '/start_time.p', 'wb') )
         pickle.dump( modeling_metadata, open(new_project_dir + '/modeling_metadata.p', 'wb') )
 
-        pickle.dump( gt_metadata, open(new_project_dir + '/gt_metadata.p', 'wb') )
-        pickle.dump( clean_fd_metadata, open(new_project_dir + '/clean_fd_metadata.p', 'wb') )
+        # pickle.dump( gt_metadata, open(new_project_dir + '/gt_metadata.p', 'wb') )
+        # pickle.dump( clean_fd_metadata, open(new_project_dir + '/clean_fd_metadata.p', 'wb') )
 
         print('*** Metadata and study metric objects saved ***')
 
@@ -354,11 +357,14 @@ class Clean(Resource):
         if is_new_feedback == 1 and refresh == 0:
             print('*** NEW FEEDBACK! ***')
             helpers.saveNoiseFeedback(data, feedback, project_id, current_iter, current_time)
-            print('*** Noise feedback saved ***')
-            s_in = data.iloc[feedback.index]
-            print('*** Extracted sample from dataset ***')
-            helpers.explainFeedback(data, s_in, project_id, current_iter, current_time)
-            print('*** Mining completed and FD/CFD weights updated ***')
+        print('*** Feedback saved ***')
+        s_in = data.iloc[feedback.index]
+        print('*** Extracted sample from dataset ***')
+        if is_new_feedback == 1 and refresh == 0:
+            helpers.explainFeedback(data, s_in, project_id, current_iter, current_time, refresh=0)
+        else:
+            helpers.explainFeedback(data, s_in, project_id, current_iter, current_time, refresh=1)
+        print('*** Mining completed and FD/CFD weights updated ***')
         
         # Update tuple weights pre-sampling
         sampling_method = project_info['scenario']['sampling_method']

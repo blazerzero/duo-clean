@@ -3,6 +3,7 @@ import os
 import json
 import numpy as np
 import pandas as pd
+from scipy.stats import hmean
 import matplotlib.pyplot as plt
 import sys
 import csv
@@ -69,7 +70,7 @@ def aHeuristicCombo(cfd, data):
     lhs = cfd.split(' => ')[0][1:-1].split(', ')
     wUV = aHeuristicUV(cfd, data)
     wAC = aHeuristicAC(cfd)
-    weights = {lh: wUV[lh] * wAC[lh] for lh in lhs}
+    weights = {lh: hmean([wUV[lh], wAC[lh]]) for lh in lhs}
     return weights
 
 def sHeuristicUniform(cfd):
@@ -106,27 +107,27 @@ def bayes(sampling_method):
         data = data.replace(r'\\n\\t\\r','', regex=True) 
 
         modeling_metadata = pickle.load( open('./store/' + project_id + '/modeling_metadata.p', 'rb') )
-        gt_metadata = pickle.load( open('./store/' + project_id + '/gt_metadata.p', 'rb') )
+        # gt_metadata = pickle.load( open('./store/' + project_id + '/gt_metadata.p', 'rb') )
         cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
-        clean_fd_metadata = pickle.load( open('./store/' + project_id + '/clean_fd_metadata.p', 'rb') )
+        # clean_fd_metadata = pickle.load( open('./store/' + project_id + '/clean_fd_metadata.p', 'rb') )
         
         bayes_modeling_metadata = modeling_metadata
-        gt_bayes_metadata = gt_metadata
+        # gt_bayes_metadata = gt_metadata
 
         bayes_modeling_metadata['p_Y_in_C_given_X'] = dict()
-        gt_bayes_metadata['p_Y_in_C_given_X'] = dict()
+        # gt_bayes_metadata['p_Y_in_C_given_X'] = dict()
 
         iter_count = pickle.load( open('./store/' + project_id + '/current_iter.p', 'rb') )
 
-        p_h = dict()
+        # p_h = dict()
         # p_h['aUNI'] = dict()
         # p_h['aUV'] = dict()
         # p_h['aAC'] = dict()
-        p_h['aCOMBO'] = dict()
+        # p_h['aCOMBO'] = dict()
         # p_h['sUNI'] = dict()
-        p_h['sSR'] = dict()
+        # p_h['sSR'] = dict()
         bayes_modeling_metadata['p_h'] = dict()
-        gt_bayes_metadata['p_h'] = dict()
+        # gt_bayes_metadata['p_h'] = dict()
         # bayes_modeling_metadata['p_h']['aUNI-sUNI'] = dict()
         # bayes_modeling_metadata['p_h']['aUNI-sSR'] = dict()
         # bayes_modeling_metadata['p_h']['aUV-sUNI'] = dict()
@@ -135,31 +136,31 @@ def bayes(sampling_method):
         # bayes_modeling_metadata['p_h']['aAC-sSR'] = dict()
         # bayes_modeling_metadata['p_h']['aCOMBO-sUNI'] = dict()
         bayes_modeling_metadata['p_h']['aCOMBO-sSR'] = dict()
-        gt_bayes_metadata['p_h']['aCOMBO-sSR'] = dict()
+        # gt_bayes_metadata['p_h']['aCOMBO-sSR'] = dict()
 
-        all_cfds = cfd_metadata.keys()
+        # all_cfds = cfd_metadata.keys()
 
         # p(h)        
-        for cfd in all_cfds:
+        # for cfd in all_cfds:
             # UNIFORM ATTRIBUTE WEIGHTS
             # wUniform = aHeuristicUniform(cfd)   # attribute weights (aUniform)
             # wUV = aHeuristicUV(cfd, data)       # attribute weights (aUV)
             # wAC = aHeuristicAC(cfd, data) # attribute weights (aAC)
-            wCombo = aHeuristicCombo(cfd, data) # attribute weights (aCombo = aUV * aAC)
+            # wCombo = aHeuristicCombo(cfd, data) # attribute weights (aCombo = aUV * aAC)
 
             # p(h | [heuristic]) = PI_i w(a_i), where a_i is an attribute in the LHS of h
             # phaUniform = np.prod([v for _, v in wUniform.items()])   # p(h | aUniform)
             # phaUV = np.prod([v for _, v in wUV.items()])     # p(h | aUV)
             # phaAC = np.prod([v for _, v in wAC.items()])     # p(h | aAC)
-            phaCombo = np.prod([v for _, v in wCombo.items()])   # p(h | aCombo)
+            # phaCombo = np.prod([v for _, v in wCombo.items()])   # p(h | aCombo)
             # phsUniform = sHeuristicUniform(cfd)
-            phsSetRelation = sHeuristicSetRelation(cfd, all_cfds)
+            # phsSetRelation = sHeuristicSetRelation(cfd, all_cfds)
             # p_h['aUNI'][cfd] = phaUniform
             # p_h['aUV'][cfd] = phaUV
             # p_h['aAC'][cfd] = phaAC
-            p_h['aCOMBO'][cfd] = phaCombo
+            # p_h['aCOMBO'][cfd] = phaCombo
             # p_h['sUNI'][cfd] = phsUniform
-            p_h['sSR'][cfd] = phsSetRelation
+            # p_h['sSR'][cfd] = phsSetRelation
 
             # bayes_modeling_metadata['p_h']['aUNI-sUNI'][cfd] = p_h['aUNI'][cfd] * p_h['sUNI'][cfd]
             # bayes_modeling_metadata['p_h']['aUNI-sSR'][cfd] = p_h['aUNI'][cfd] * p_h['sSR'][cfd]
@@ -168,18 +169,18 @@ def bayes(sampling_method):
             # bayes_modeling_metadata['p_h']['aAC-sUNI'][cfd] = p_h['aAC'][cfd] * p_h['sUNI'][cfd]
             # bayes_modeling_metadata['p_h']['aAC-sSR'][cfd] = p_h['aAC'][cfd] * p_h['sSR'][cfd]
             # bayes_modeling_metadata['p_h']['aCOMBO-sUNI'][cfd] = p_h['aCOMBO'][cfd] * p_h['sUNI'][cfd]
-            bayes_modeling_metadata['p_h']['aCOMBO-sSR'][cfd] = p_h['aCOMBO'][cfd] * p_h['sSR'][cfd]
-            gt_bayes_metadata['p_h']['aCOMBO-sSR'][cfd] = p_h['aCOMBO'][cfd] * p_h['sSR'][cfd]
+            # bayes_modeling_metadata['p_h']['aCOMBO-sSR'][cfd] = p_h['aCOMBO'][cfd] * p_h['sSR'][cfd]
+            # gt_bayes_metadata['p_h']['aCOMBO-sSR'][cfd] = p_h['aCOMBO'][cfd] * p_h['sSR'][cfd]
 
         # for heur in bayes_modeling_metadata['p_h'].keys():
         # print(heur)
         bayes_modeling_metadata['p_Y_in_C_given_X']['aCOMBO-sSR'] = list()
-        gt_bayes_metadata['p_Y_in_C_given_X']['aCOMBO-sSR'] = list()
+        # gt_bayes_metadata['p_Y_in_C_given_X']['aCOMBO-sSR'] = list()
         for it in range(1, iter_count+1):
             elapsed_time = bayes_modeling_metadata['Y'][it-1].elapsed_time
 
             # Get all FDs/CFDs that have were known by the system in this iteration
-            discovered_cfds = [cfd for cfd in cfd_metadata.keys()]
+            discovered_cfds = [cfd for cfd, cfd_m in cfd_metadata.items()]
             
             if len(discovered_cfds) == 0:   # no FDs discovered yet
                 # P(Y in C | X) = 0
@@ -191,7 +192,9 @@ def bayes(sampling_method):
             for h in discovered_cfds:
                 elem = next(x for x in bayes_modeling_metadata['p_X_given_h'][h] if x.iter_num == it)     # p(X | h) for this iteration
                 p_X_given_h = elem.value
-                p_h = cfd_metadata[h]['weight_history'][it-1].weight * bayes_modeling_metadata['p_h']['aCOMBO-sSR'][h]   # p(h)
+                # print(it)
+                # print(cfd_metadata[h]['weight_history'][it-1].iter_num)
+                p_h = cfd_metadata[h]['weight_history'][it-1].weight    # p(h)
                 p_h_given_X = p_X_given_h * p_h     # p(h | X)
                 p_h_given_X_list.append(PHGivenX(h=h, value=p_h_given_X))
             
@@ -216,7 +219,7 @@ def bayes(sampling_method):
 
             # GROUND TRUTH
             # Get all FDs/CFDs that have were known by the system in this iteration
-            clean_discovered_cfds = [cfd for cfd in clean_fd_metadata.keys()]
+            '''clean_discovered_cfds = [cfd for cfd, cfd_m in clean_fd_metadata.items()]
             
             if len(clean_discovered_cfds) == 0:   # no FDs discovered yet
                 # P(Y in C | X) = 0
@@ -226,7 +229,7 @@ def bayes(sampling_method):
             for h in clean_discovered_cfds:
                 clean_elem = next(x for x in gt_bayes_metadata['p_X_given_h'][h] if x.iter_num == it)     # p(X | h) for this iteration
                 clean_p_X_given_h = clean_elem.value
-                clean_p_h = clean_fd_metadata[h]['weight_history'][it-1].weight * gt_bayes_metadata['p_h']['aCOMBO-sSR'][h]   # p(h)
+                clean_p_h = clean_fd_metadata[h]['weight_history'][it-1].weight     # p(h)
                 clean_p_h_given_X = clean_p_X_given_h * clean_p_h     # p(h | X)
                 clean_p_h_given_X_list.append(PHGivenX(h=h, value=clean_p_h_given_X))
             
@@ -247,10 +250,10 @@ def bayes(sampling_method):
                 clean_p_Y_in_C_given_X *= clean_p_y_in_C_given_X    # incorporating each y in Y into p(Y in C | X)
             print('GROUND TRUTH p(Y in C | X) =', clean_p_Y_in_C_given_X)
             
-            gt_bayes_metadata['p_Y_in_C_given_X']['aCOMBO-sSR'].append(StudyMetric(iter_num=it, value=clean_p_Y_in_C_given_X, elapsed_time=elapsed_time))
+            gt_bayes_metadata['p_Y_in_C_given_X']['aCOMBO-sSR'].append(StudyMetric(iter_num=it, value=clean_p_Y_in_C_given_X, elapsed_time=elapsed_time))'''
 
         pickle.dump( bayes_modeling_metadata, open('./store/' + project_id + '/bayes_modeling_metadata.p', 'wb') )
-        pickle.dump( gt_bayes_metadata, open('./store/' + project_id + '/gt_bayes_metadata.p', 'wb') )
+        # pickle.dump( gt_bayes_metadata, open('./store/' + project_id + '/gt_bayes_metadata.p', 'wb') )
 
 
 def max_likelihood(sampling_method):
@@ -270,26 +273,26 @@ def max_likelihood(sampling_method):
         data = data.replace(r'\\n\\t\\r','', regex=True) 
         
         modeling_metadata = pickle.load( open('./store/' + project_id + '/modeling_metadata.p', 'rb') )
-        gt_metadata = pickle.load( open('./store/' + project_id + '/gt_metadata.p', 'rb') )
+        # gt_metadata = pickle.load( open('./store/' + project_id + '/gt_metadata.p', 'rb') )
         cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
-        clean_fd_metadata = pickle.load( open('./store/' + project_id + '/clean_fd_metadata.p', 'rb') )
+        # clean_fd_metadata = pickle.load( open('./store/' + project_id + '/clean_fd_metadata.p', 'rb') )
         
         min_modeling_metadata = modeling_metadata
-        gt_min_metadata = gt_metadata
+        # gt_min_metadata = gt_metadata
 
         min_modeling_metadata['p_Y_in_C_given_X'] = dict()
-        gt_min_metadata['p_Y_in_C_given_X'] = dict()
+        # gt_min_metadata['p_Y_in_C_given_X'] = dict()
 
         iter_count = pickle.load( open('./store/' + project_id + '/current_iter.p', 'rb') )
 
-        p_h = dict()
+        # p_h = dict()
         # p_h['aUNI'] = dict()
         # p_h['aUV'] = dict()
         # p_h['aAC'] = dict()
-        p_h['aCOMBO'] = dict()
+        # p_h['aCOMBO'] = dict()
         # p_h['sUNI'] = dict()
-        p_h['sSR'] = dict()
-        min_modeling_metadata['p_h'] = dict()
+        # p_h['sSR'] = dict()
+        # min_modeling_metadata['p_h'] = dict()
         # min_modeling_metadata['p_h']['aUNI-sUNI'] = dict()
         # min_modeling_metadata['p_h']['aUNI-sSR'] = dict()
         # min_modeling_metadata['p_h']['aUV-sUNI'] = dict()
@@ -297,31 +300,31 @@ def max_likelihood(sampling_method):
         # min_modeling_metadata['p_h']['aAC-sUNI'] = dict()
         # min_modeling_metadata['p_h']['aAC-sSR'] = dict()
         # min_modeling_metadata['p_h']['aCOMBO-sUNI'] = dict()
-        min_modeling_metadata['p_h']['aCOMBO-sSR'] = dict()
+        # min_modeling_metadata['p_h']['aCOMBO-sSR'] = dict()
 
-        all_cfds = cfd_metadata.keys()
+        # all_cfds = cfd_metadata.keys()
 
         # p(h)        
-        for cfd in all_cfds:
+        # for cfd in all_cfds:
             # UNIFORM ATTRIBUTE WEIGHTS
             # wUniform = aHeuristicUniform(cfd)   # attribute weights (aUniform)
             # wUV = aHeuristicUV(cfd, data)       # attribute weights (aUV)
             # wAC = aHeuristicAC(cfd, data) # attribute weights (aAC)
-            wCombo = aHeuristicCombo(cfd, data) # attribute weights (aCombo = aUV * aAC)
+            # wCombo = aHeuristicCombo(cfd, data) # attribute weights (aCombo = aUV * aAC)
 
             # p(h | [heuristic]) = PI_i w(a_i), where a_i is an attribute in the LHS of h
             # phaUniform = np.prod([v for _, v in wUniform.items()])   # p(h | aUniform)
             # phaUV = np.prod([v for _, v in wUV.items()])     # p(h | aUV)
             # phaAC = np.prod([v for _, v in wAC.items()])     # p(h | aAC)
-            phaCombo = np.prod([v for _, v in wCombo.items()])   # p(h | aCombo)
+            # phaCombo = np.prod([v for _, v in wCombo.items()])   # p(h | aCombo)
             # phsUniform = sHeuristicUniform(cfd)
-            phsSetRelation = sHeuristicSetRelation(cfd, all_cfds)
+            # phsSetRelation = sHeuristicSetRelation(cfd, all_cfds)
             # p_h['aUNI'][cfd] = phaUniform
             # p_h['aUV'][cfd] = phaUV
             # p_h['aAC'][cfd] = phaAC
-            p_h['aCOMBO'][cfd] = phaCombo
+            # p_h['aCOMBO'][cfd] = phaCombo
             # p_h['sUNI'][cfd] = phsUniform
-            p_h['sSR'][cfd] = phsSetRelation
+            # p_h['sSR'][cfd] = phsSetRelation
 
             # min_modeling_metadata['p_h']['aUNI-sUNI'][cfd] = p_h['aUNI'][cfd] * p_h['sUNI'][cfd]
             # min_modeling_metadata['p_h']['aUNI-sSR'][cfd] = p_h['aUNI'][cfd] * p_h['sSR'][cfd]
@@ -330,11 +333,11 @@ def max_likelihood(sampling_method):
             # min_modeling_metadata['p_h']['aAC-sUNI'][cfd] = p_h['aAC'][cfd] * p_h['sUNI'][cfd]
             # min_modeling_metadata['p_h']['aAC-sSR'][cfd] = p_h['aAC'][cfd] * p_h['sSR'][cfd]
             # min_modeling_metadata['p_h']['aCOMBO-sUNI'][cfd] = p_h['aCOMBO'][cfd] * p_h['sUNI'][cfd]
-            min_modeling_metadata['p_h']['aCOMBO-sSR'][cfd] = p_h['aCOMBO'][cfd] * p_h['sSR'][cfd]
+            # min_modeling_metadata['p_h']['aCOMBO-sSR'][cfd] = p_h['aCOMBO'][cfd] * p_h['sSR'][cfd]
 
         # for heur in min_modeling_metadata['p_h'].keys():
         min_modeling_metadata['p_Y_in_C_given_X']['aCOMBO-sSR'] = list()
-        gt_min_metadata['p_Y_in_C_given_X']['aCOMBO-sSR'] = list()
+        # gt_min_metadata['p_Y_in_C_given_X']['aCOMBO-sSR'] = list()
 
         for it in range(1, iter_count+1):
             elapsed_time = min_modeling_metadata['Y'][it-1].elapsed_time
@@ -387,7 +390,7 @@ def max_likelihood(sampling_method):
             for h in generalized_cfds:
                 elem = next(x for x in min_modeling_metadata['p_X_given_h'][h] if x.iter_num == it)     # p(X | h) for this iteration
                 p_X_given_h = elem.value
-                p_h = cfd_metadata[h]['weight_history'][it-1].weight * min_modeling_metadata['p_h']['aCOMBO-sSR'][h]   # p(h)
+                p_h = cfd_metadata[h]['weight_history'][it-1].weight    # p(h)
                 p_h_given_X = p_X_given_h * p_h     # p(h | X)
                 p_h_given_X_list.append(PHGivenX(h=h, value=p_h_given_X))
             
@@ -410,7 +413,7 @@ def max_likelihood(sampling_method):
 
             # GROUND TRUTH
             # find smallest h's
-            clean_small_cfds = set()
+            '''clean_small_cfds = set()
             # find all h that support X
             clean_x_in_h = dict()
             for h in scenario['clean_hypothesis_space']:
@@ -448,7 +451,7 @@ def max_likelihood(sampling_method):
             for h in clean_generalized_cfds:
                 clean_elem = next(x for x in gt_min_metadata['p_X_given_h'][h] if x.iter_num == it)     # p(X | h) for this iteration
                 clean_p_X_given_h = clean_elem.value
-                clean_p_h = clean_fd_metadata[h]['weight_history'][it-1].weight * gt_min_metadata['p_h']['aCOMBO-sSR'][h]   # p(h)
+                clean_p_h = clean_fd_metadata[h]['weight_history'][it-1].weight     # p(h)
                 clean_p_h_given_X = clean_p_X_given_h * clean_p_h     # p(h | X)
                 clean_p_h_given_X_list.append(PHGivenX(h=h, value=clean_p_h_given_X))
             
@@ -467,13 +470,13 @@ def max_likelihood(sampling_method):
                     clean_p_y_in_C_given_X += (clean_i_y_in_h * clean_p_h_given_X)  # p(y in C | X) = I(y in supp(h)) * p(h | X)
                     
                 clean_p_Y_in_C_given_X *= clean_p_y_in_C_given_X    # incorporating each y in Y into p(Y in C | X)
-            print('GROUND TRUTH p(Y in C | X) =', clean_p_Y_in_C_given_X)
+            print('GROUND TRUTH p(Y in C | X) =', clean_p_Y_in_C_given_X)'''
             
             min_modeling_metadata['p_Y_in_C_given_X']['aCOMBO-sSR'].append(StudyMetric(iter_num=it, value=p_Y_in_C_given_X, elapsed_time=elapsed_time))
-            gt_min_metadata['p_Y_in_C_given_X']['aCOMBO-sSR'].append(StudyMetric(iter_num=it, value=clean_p_Y_in_C_given_X, elapsed_time=elapsed_time))
+            # gt_min_metadata['p_Y_in_C_given_X']['aCOMBO-sSR'].append(StudyMetric(iter_num=it, value=clean_p_Y_in_C_given_X, elapsed_time=elapsed_time))
 
         pickle.dump( min_modeling_metadata, open('./store/' + project_id + '/min_modeling_metadata.p', 'wb') )
-        pickle.dump( gt_min_metadata, open('./store/' + project_id + '/gt_min_metadata.p', 'wb') )
+        # pickle.dump( gt_min_metadata, open('./store/' + project_id + '/gt_min_metadata.p', 'wb') )
 
 if __name__ == '__main__':
     if len(sys.argv) > 2:
