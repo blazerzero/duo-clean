@@ -191,6 +191,7 @@ def bayes(sampling_method):
             # p(h | X) for each h
             for h in discovered_cfds:
                 elem = next(x for x in bayes_modeling_metadata['p_X_given_h'][h] if x.iter_num == it)     # p(X | h) for this iteration
+                # print(elem.value)
                 p_X_given_h = elem.value
                 # print(it)
                 # print(cfd_metadata[h]['weight_history'][it-1].iter_num)

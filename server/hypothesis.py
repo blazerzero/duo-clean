@@ -6,10 +6,11 @@ import random
 import subprocess as sp
 import re
 import string
+from tqdm import tqdm
 
 # GET FD SUPPORT AND VIOLATIONS
 def getSupportAndVios(data, fd):
-    print("FD:", fd)
+    # print("FD:", fd)
     lhs = fd.split(' => ')[0][1:-1]
     rhs = fd.split(' => ')[1]
     patterns = fd2cfd(data, lhs, rhs)
@@ -52,7 +53,7 @@ def getSupportAndVios(data, fd):
         if str(data.at[idx, rh[0]]) != str(rh[1]):
             violations.append(idx)
         
-    print('*** Support and violations built for (' + lhs + ') => ' + rhs + ' ***')
+    # print('*** Support and violations built for (' + lhs + ') => ' + rhs + ' ***')
     return support, violations
 
 
@@ -84,7 +85,7 @@ def fd2cfd(data, lhs, rhs):
         else:
             patterns[lhspattern] = [rhspattern]
             mappings[(lhspattern, rhspattern)] = [idx]
-    print('*** Patterns and mappings built for (' + lhs + ') => ' + rhs + ' ***')
+    # print('*** Patterns and mappings built for (' + lhs + ') => ' + rhs + ' ***')
 
     # Pick RHS patterns for each LHS from these candidates
     for key in patterns.keys():
@@ -123,18 +124,18 @@ def makeVioSets(data, support, vios, fd):
                         vio_pair = (v, idx1)
                     if vio_pair not in vio_pairs:
                         vio_pairs.append(vio_pair)
-            for idx2 in [j for j in support if j not in vios and j != idx1]:
-                match2 = True
-                for lh in lhs:
-                    if data.at[idx1, lh] != data.at[v, lh]:
-                        match2 = False   # idx and v do not have the same LHS
-                        break
-                if match1 is True and match2 is True:
-                    if data.at[idx1, rhs] == data.at[idx2, rhs]:
-                        vio_trio_list = [v, idx1, idx2].sort()
-                        vio_trio = tuple(vio_trio_list)
-                        if vio_trio not in vio_trios:
-                            vio_trios.append(vio_trio)
+                for idx2 in [j for j in support if j not in vios and j != idx1]:
+                    match2 = True
+                    for lh in lhs:
+                        if data.at[idx2, lh] != data.at[v, lh]:
+                            match2 = False   # idx and v do not have the same LHS
+                            break
+                    if match1 is True and match2 is True:
+                        if data.at[idx1, rhs] == data.at[idx2, rhs]:
+                            vio_trio_list = sorted([v, idx1, idx2])
+                            vio_trio = tuple(vio_trio_list)
+                            if vio_trio not in vio_trios:
+                                vio_trios.append(vio_trio)
 
 
     return vio_pairs, vio_trios
@@ -144,14 +145,14 @@ def dataDiff(dirty_df, clean_df):
     for row in clean_df.index:
         for col in clean_df.columns:
             diff.at[row, col] = dirty_df.at[row, col] == clean_df.at[row, col]
-    print(diff)
+    # print(diff)
     return diff
 
 if __name__ == '__main__':
     with open('scenarios-master.json', 'r') as f:
         scenarios_list = json.load(f)
     
-    for s_id, scenario in scenarios_list.items():
+    for s_id, scenario in tqdm(scenarios_list.items()):
         data = pd.read_csv(scenario['dirty_dataset'], keep_default_na=False)
         process = sp.Popen(['./data/cfddiscovery/CFDD', scenario['dirty_dataset'], str(len(data.index)), '0.8', '3'], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})     # CFDD
         res = process.communicate()

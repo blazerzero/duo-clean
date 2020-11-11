@@ -55,6 +55,7 @@ def saveNoiseFeedback(data, feedback, project_id, current_iter, current_time):
     with open('./store/' + project_id + '/project_info.json', 'r') as f:
         project_info = json.load(f)
         clean_dataset = pd.read_csv(project_info['scenario']['clean_dataset'], keep_default_na=False)
+    
     all_errors_found = 0
     all_errors_total = 0
     all_errors_marked = 0
@@ -62,19 +63,26 @@ def saveNoiseFeedback(data, feedback, project_id, current_iter, current_time):
     iter_errors_total = 0
     iter_errors_marked = 0
 
+    # print(data.index)
+    # print(feedback.index)
+
     for idx in data.index:
         for col in data.columns:
             if data.at[idx, col] != clean_dataset.at[idx, col]:
                 all_errors_total += 1
-                if idx in feedback.index:
+                # print('true error')
+                # print(idx)
+                if str(idx) in feedback.index:
+                    # print('true error in this iter')
                     iter_errors_total += 1
-                    if bool(feedback.at[idx, col]) is True:
+                    if bool(feedback.at[str(idx), col]) is True:
+                        # print('error found!')
                         iter_errors_found += 1
-                if len(cell_metadata[int(idx)][col]['feedback_history']) > 0 and cell_metadata[int(idx)][col]['feedback_history'][-1].marked is True:
+                if len(cell_metadata[idx][col]['feedback_history']) > 0 and cell_metadata[idx][col]['feedback_history'][-1].marked is True:
                     all_errors_found += 1
-            if len(cell_metadata[int(idx)][col]['feedback_history']) > 0 and cell_metadata[int(idx)][col]['feedback_history'][-1].marked is True:
+            if len(cell_metadata[idx][col]['feedback_history']) > 0 and cell_metadata[idx][col]['feedback_history'][-1].marked is True:
                 all_errors_marked += 1
-                if idx in feedback.index:
+                if str(idx) in feedback.index:
                     iter_errors_marked += 1
 
     print('*** Score updated ***')
@@ -93,16 +101,22 @@ def saveNoiseFeedback(data, feedback, project_id, current_iter, current_time):
         precision = iter_errors_found / iter_errors_marked
     else:
         precision = 0
+
+    # print('precision:', precision)
     
     if iter_errors_total > 0:
         recall = iter_errors_found / iter_errors_total
     else:
         recall = 0
 
+    # print('recall:', recall)
+
     if precision > 0 and recall > 0:
         f1 = 2 * (precision * recall) / (precision + recall)
     else:
         f1 = 0
+
+    # print('F1:', f1)
 
     study_metrics['precision'].append(StudyMetric(iter_num=current_iter, value=precision, elapsed_time=elapsed_time))
     study_metrics['recall'].append(StudyMetric(iter_num=current_iter, value=recall, elapsed_time=elapsed_time))
@@ -291,7 +305,7 @@ def explainFeedback(full_dataset, dirty_sample, project_id, current_iter, curren
         print('[ERROR] There was an error running CFDD') '''
 
     # USER DATA
-    process = sp.Popen(['./data/cfddiscovery/CFDD', prepped_sample_fp, str(math.ceil(0.8*len(prepped_sample.index))), '0.8', '3'], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})     # CFDD
+    process = sp.Popen(['./data/cfddiscovery/CFDD', prepped_sample_fp, str(math.ceil(0.5*len(prepped_sample.index))), '0.5', '3'], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})     # CFDD
     res = process.communicate()
     print('*** CFDD finished running ***')
 
@@ -326,9 +340,9 @@ def explainFeedback(full_dataset, dirty_sample, project_id, current_iter, curren
         
         cfd_metadata = normalizeWeights(cfd_metadata)
         for cfd_m in cfd_metadata.values():
-            print(cfd_m['weight'])
+            # print(cfd_m['weight'])
             cfd_m['weight_history'].append(CFDWeightHistory(iter_num=current_iter, weight=cfd_m['weight'], elapsed_time=elapsed_time))
-        print('user weights:', [cfd_m['weight_history'][-1].weight for cfd_m in cfd_metadata.values()])
+        # print('user weights:', [cfd_m['weight_history'][-1].weight for cfd_m in cfd_metadata.values()])
 
         print('*** CFDD output processed and FD weights updated ***')
 
@@ -351,20 +365,24 @@ def buildSample(data, sample_size, project_id, sampling_method, current_iter, cu
     print(elapsed_time)
     
     # GET SAMPLE
-    if (sampling_method == 'DUO'):
+    '''if (sampling_method == 'DUO'):
         print('DUO-INFORMED SAMPLING')
         s_out = returnTuples(data, sample_size, project_id)     # Y = set(s_out.index)
     else:
         print('RANDOM SAMPLING')
-        s_out = data.sample(n=sample_size)      # Y = set(s_out.index)
+        s_out = data.sample(n=sample_size)      # Y = set(s_out.index)'''
+    s_out = returnTuples(data, sample_size, project_id)
 
     dirty_tuples = getDirtyTuples(s_out, project_id)
+    # print(dirty_tuples)
 
     # MODELING METRICS
     if current_iter == 0:
         new_X = dirty_tuples    # X is just being created --> X = set(s_out.index)
     else:
         new_X = modeling_metadata['X'][-1].value | dirty_tuples     # X = X | set(s_out.index)
+
+    print(new_X)
     
     modeling_metadata['X'].append(StudyMetric(iter_num=current_iter, value=new_X, elapsed_time=elapsed_time))
     # gt_metadata['X'].append(StudyMetric(iter_num=current_iter, value=new_X, elapsed_time=elapsed_time))
@@ -375,12 +393,16 @@ def buildSample(data, sample_size, project_id, sampling_method, current_iter, cu
     # USER DATA
     for cfd, cfd_m in cfd_metadata.items():
         # p(X | h)
+        print(cfd)
         if cfd not in modeling_metadata['p_X_given_h'].keys():  # cfd was just discovered in this iteration
             modeling_metadata['p_X_given_h'][cfd] = list()
+        print(cfd_m['vios'])
         if set(new_X).issubset(cfd_m['vios']):
+            print('subset!')
             p_X_given_h = math.pow((1/len(new_X)), sample_size) # p(X | h) = PI_i (p(x_i | h)), where each x_i is in X
             modeling_metadata['p_X_given_h'][cfd].append(StudyMetric(iter_num=current_iter, value=p_X_given_h, elapsed_time=elapsed_time))
         else:
+            print('not subset!')
             modeling_metadata['p_X_given_h'][cfd].append(StudyMetric(iter_num=current_iter, value=0, elapsed_time=elapsed_time))
     
         # I(y in h)
@@ -472,8 +494,8 @@ def returnTuples(data, sample_size, project_id):
     cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
     tuple_weights = [v['weight'] for v in tuple_metadata.values()]
     cfd_weights = [v['weight'] for v in cfd_metadata.values()]
-    print(cfd_metadata.keys())
-    print(cfd_weights)
+    # print(cfd_metadata.keys())
+    # print(cfd_weights)
     chosen_tuples = list()
     
     # print('IDs of tuples in next sample:')
@@ -483,7 +505,7 @@ def returnTuples(data, sample_size, project_id):
         cfd_m = cfd_metadata[fd]
         if len(cfd_m['vios']) > 0:
             if len(cfd_m['vio_trios']) > 0 and sample_size - len(chosen_tuples) >= 3:
-                returned_tuple1, returned_tuple2, returned_tuple3 = random.choice(cfd_m['vio_pairs'])
+                returned_tuple1, returned_tuple2, returned_tuple3 = random.choice(cfd_m['vio_trios'])
                 if returned_tuple1 not in chosen_tuples and returned_tuple2 not in chosen_tuples and returned_tuple3 not in chosen_tuples:
                     chosen_tuples.append(returned_tuple1)
                     chosen_tuples.append(returned_tuple2)
@@ -496,7 +518,7 @@ def returnTuples(data, sample_size, project_id):
             else:
                 returned_tuple = random.choices(data.index, weights=tuple_weights, k=1)[0]
                 if returned_tuple not in chosen_tuples:
-                    chosen_tuples.append(returned_tuple1)
+                    chosen_tuples.append(returned_tuple)
         # if len(cfd_m['vio_pairs']) == 0:
             # returned_tuple1 = pickSingleTuple(tuple_weights)
             # returned_tuple2 = pickSingleTuple(tuple_weights)
@@ -509,6 +531,8 @@ def returnTuples(data, sample_size, project_id):
             chosen_tuples.append(returned_tuple2)'''
             # print(returned_tuple1)
             # print(returned_tuple2)
+        
+        print(chosen_tuples)
 
         if len(chosen_tuples) >= len(tuple_weights):
             break
@@ -521,16 +545,24 @@ def returnTuples(data, sample_size, project_id):
 def getDirtyTuples(s_out, project_id):
     with open('./store/' + project_id + '/project_info.json', 'r') as f:
         project_info = json.load(f)
-    h_space = project_info['scenario']['hypothesis_space']
+    # h_space = project_info['scenario']['hypothesis_space']
+    diff = project_info['scenario']['diff']
     dirty_tuples = list()
     for idx in s_out.index:
         is_dirty = False
+        for col in s_out.columns:
+            if diff[str(idx)][col] is False:
+                is_dirty = True
+                break
+        if is_dirty is True:
+            dirty_tuples.append(idx)
+        '''is_dirty = False
         for h in h_space:
             if idx in h['vios']:
                 is_dirty = True
                 break
         if is_dirty is True:
-            dirty_tuples.append(idx)
+            dirty_tuples.append(idx)'''
     return set(dirty_tuples)
 
 # SELECT ONE TUPLE TO ADD TO SAMPLE

@@ -121,6 +121,7 @@ class Import(Resource):
             cfd_metadata[c['cfd']]['support'] = hypothesis['support']
             cfd_metadata[c['cfd']]['vios'] = hypothesis['vios']
             cfd_metadata[c['cfd']]['vio_pairs'] = hypothesis['vio_pairs']
+            cfd_metadata[c['cfd']]['vio_trios'] = hypothesis['vio_trios']
         
         # cfd_metadata = helpers.normalizeWeights(cfd_metadata)
         # for _, cfd_m in cfd_metadata.items():
@@ -330,7 +331,7 @@ class Clean(Resource):
         is_new_feedback = int(request.form.get('is_new_feedback'))
         refresh = int(request.form.get('refresh'))
         feedback = pd.DataFrame.from_dict(feedback, orient='index')
-        print(feedback)
+        # print(feedback)
         sample_size = 10
 
         print('*** Necessary objects loaded ***')

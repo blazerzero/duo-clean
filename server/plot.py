@@ -22,27 +22,28 @@ class StudyMetric(object):
         self.value = value
         self.elapsed_time = elapsed_time
 
-def plot_modeling(modeling_method, sampling_method, x_axis):
+def plot_modeling(scenario_id, modeling_method, sampling_method, x_axis):
     # with open('scenarios.json') as f:
     #     all_scenarios = json.load(f)
     # scenario_ids = [k for k, s in all_scenarios.items() if s['sampling_method'] == sampling_method]
     scenario_ids = ["1", "2", "3", "4"]
 
-    lists_s1 = list()
-    lists_s2 = list()
-    lists_s3 = list()
-    lists_s4 = list()
-    f1_s1 = list()
-    f1_s2 = list()
-    f1_s3 = list()
-    f1_s4 = list()
+    # lists_s1 = list()
+    # lists_s2 = list()
+    # lists_s3 = list()
+    # lists_s4 = list()
+    preds = list()
+    f1s = list()
+    # f1_s2 = list()
+    # f1_s3 = list()
+    # f1_s4 = list()
     project_ids = [d for d in os.listdir('./store') if os.path.isdir(os.path.join('./store/', d))]
     for project_id in project_ids:
         with open('./store/' + project_id + '/project_info.json') as f:
             project_info = json.load(f)
         scenario = project_info['scenario']
-        scenario_id = project_info['scenario_id']
-        if scenario['sampling_method'] != sampling_method:
+        # scenario_id = project_info['scenario_id']
+        if project_info['scenario_id'] != scenario_id or scenario['sampling_method'] != sampling_method:
             continue
         print("project id:", project_id)
 
@@ -72,7 +73,9 @@ def plot_modeling(modeling_method, sampling_method, x_axis):
             elif heur == 'aCOMBO-sSR':'''
             # color = 'green'
 
-            if scenario_id == scenario_ids[0]:
+            preds.append(PlotData(values=p_Y_in_C_given_X, color='green'))
+            f1s.append(PlotData(values=study_metrics['f1'], color='blue'))
+            '''if scenario_id == scenario_ids[0]:
                 lists_s1.append(PlotData(values=p_Y_in_C_given_X, color='green'))
                 f1_s1.append(PlotData(values=study_metrics['f1'], color='blue'))
             elif scenario_id == scenario_ids[1]:
@@ -83,7 +86,7 @@ def plot_modeling(modeling_method, sampling_method, x_axis):
                 f1_s3.append(PlotData(values=study_metrics['f1'], color='blue'))
             elif scenario_id == scenario_ids[3]:
                 lists_s4.append(PlotData(values=p_Y_in_C_given_X, color='green'))
-                f1_s4.append(PlotData(values=study_metrics['f1'], color='blue'))
+                f1_s4.append(PlotData(values=study_metrics['f1'], color='blue'))'''
 
         '''for heur, p_Y_in_C_given_X in gt_metadata['p_Y_in_C_given_X'].items():
             # print(heur)
@@ -99,24 +102,24 @@ def plot_modeling(modeling_method, sampling_method, x_axis):
             elif scenario_id == scenario_ids[3]:
                 lists_s4.append(PlotData(values=p_Y_in_C_given_X, color='blue'))'''
 
-    fig, ax1 = plt.subplots(2, 2)
+    fig, ax1 = plt.subplots()
     ax2 = ax1.twinx()
 
-    ax1[0,0].set_ylabel('p(Y in C | X)')
-    ax2[0,0].set_ylabel('F1 score')
-    ax1[0,1].set_ylabel('p(Y in C | X)')
+    ax1.set_ylabel('p(Y in C | X)')
+    ax2.set_ylabel('F1 score')
+    '''ax1[0,1].set_ylabel('p(Y in C | X)')
     ax2[0,1].set_ylabel('F1 score')
     ax1[1,0].set_ylabel('p(Y in C | X)')
     ax2[1,0].set_ylabel('F1 score')
     ax1[1,1].set_ylabel('p(Y in C | X)')
-    ax2[1,1].set_ylabel('F1 score')
-    ax1[0,0].set_title('Scenario ' + scenario_ids[0])
-    ax1[0,0].set_xlabel('Iteration #' if x_axis == 'iter' else 'Time Elapsed (seconds)')
-    ax1[0,0].set_yticks(np.arange(0.0, 1.25, 0.25))
-    ax2[0,0].set_yticks(np.arange(0.0, 1.25, 0.25))
-    ax1[0,0].set_ylim([0, None])
-    ax2[0,0].set_ylim([0, None])
-    ax1[0,1].set_title('Scenario ' + scenario_ids[1])
+    ax2[1,1].set_ylabel('F1 score')'''
+    ax1.set_title('Scenario ' + scenario_id)
+    ax1.set_xlabel('Iteration #' if x_axis == 'iter' else 'Time Elapsed (seconds)')
+    ax1.set_yticks(np.arange(0.0, 1.25, 0.25))
+    ax2.set_yticks(np.arange(0.0, 1.25, 0.25))
+    ax1.set_ylim([0, None])
+    ax2.set_ylim([0, None])
+    '''ax1[0,1].set_title('Scenario ' + scenario_ids[1])
     ax1[0,1].set_xlabel('Iteration #' if x_axis == 'iter' else 'Time Elapsed (seconds)')
     ax1[0,1].set_yticks(np.arange(0.0, 1.25, 0.25))
     ax2[0,1].set_yticks(np.arange(0.0, 1.25, 0.25))
@@ -133,13 +136,13 @@ def plot_modeling(modeling_method, sampling_method, x_axis):
     ax1[1,1].set_yticks(np.arange(0.0, 1.25, 0.25))
     ax2[1,1].set_yticks(np.arange(0.0, 1.25, 0.25))
     ax1[1,1].set_ylim([0, None])
-    ax2[1,1].set_ylim([0, None])
+    ax2[1,1].set_ylim([0, None])'''
 
     if x_axis == 'iter':
-        for b in lists_s1:
-            ax1[0,0].set_xticks(np.arange(0, 36, 6.0))
-            ax1[0,0].plot([i for i in range(1, len(b.values) + 1)], [x.value for x in b.values], color=b.color)
-        for b in lists_s2:
+        for b in preds:
+            ax1.set_xticks(np.arange(0, 36, 6.0))
+            ax1.plot([i for i in range(1, len(b.values) + 1)], [x.value for x in b.values], color=b.color)
+        '''for b in lists_s2:
             ax1[0,1].set_xticks(np.arange(0, 36, 6.0))
             ax1[0,1].plot([i for i in range(1, len(b.values) + 1)], [x.value for x in b.values], color=b.color)
         for b in lists_s3:
@@ -147,12 +150,12 @@ def plot_modeling(modeling_method, sampling_method, x_axis):
             ax1[1,0].plot([i for i in range(1, len(b.values) + 1)], [x.value for x in b.values], color=b.color)
         for b in lists_s4:
             ax1[1,1].set_xticks(np.arange(0, 36, 6.0))
-            ax1[1,1].plot([i for i in range(1, len(b.values) + 1)], [x.value for x in b.values], color=b.color)
+            ax1[1,1].plot([i for i in range(1, len(b.values) + 1)], [x.value for x in b.values], color=b.color)'''
 
-        for b in f1_s1:
+        for b in f1s:
             # ax2[0,0].set_xticks(np.arange(0, 36, 6.0))
-            ax2[0,0].plot([i for i in range(1, len(b.values) + 1)], [x.value for x in b.values], color=b.color)
-        for b in f1_s2:
+            ax2.plot([i for i in range(1, len(b.values) + 1)], [x.value for x in b.values], color=b.color)
+        '''for b in f1_s2:
             # ax2[0,1].set_xticks(np.arange(0, 36, 6.0))
             ax2[0,1].plot([i for i in range(1, len(b.values) + 1)], [x.value for x in b.values], color=b.color)
         for b in f1_s3:
@@ -160,22 +163,22 @@ def plot_modeling(modeling_method, sampling_method, x_axis):
             ax2[1,0].plot([i for i in range(1, len(b.values) + 1)], [x.value for x in b.values], color=b.color)
         for b in f1_s4:
             # ax2[1,1].set_xticks(np.arange(0, 36, 6.0))
-            ax2[1,1].plot([i for i in range(1, len(b.values) + 1)], [x.value for x in b.values], color=b.color)
+            ax2[1,1].plot([i for i in range(1, len(b.values) + 1)], [x.value for x in b.values], color=b.color)'''
             
     elif x_axis == 'time':
-        for b in lists_s1:
-            ax1[0,0].plot([x.elapsed_time for x in b.values], [x.value for x in b.values], color=b.color)
-        for b in lists_s2:
+        for b in preds:
+            ax1.plot([x.elapsed_time for x in b.values], [x.value for x in b.values], color=b.color)
+        '''for b in lists_s2:
             ax1[0,1].plot([x.elapsed_time for x in b.values], [x.value for x in b.values], color=b.color)
         for b in lists_s3:
             ax1[1,0].plot([x.elapsed_time for x in b.values], [x.value for x in b.values], color=b.color)
         for b in lists_s4:
-            ax1[1,1].plot([x.elapsed_time for x in b.values], [x.value for x in b.values], color=b.color)
+            ax1[1,1].plot([x.elapsed_time for x in b.values], [x.value for x in b.values], color=b.color)'''
 
-        for b in f1_s1:
+        for b in f1s:
             # ax2[0,0].set_xticks(np.arange(0, 36, 6.0))
-            ax2[0,0].plot([x.elapsed_time for x in b.values], [x.value for x in b.values], color=b.color)
-        for b in f1_s2:
+            ax2.plot([x.elapsed_time for x in b.values], [x.value for x in b.values], color=b.color)
+        '''for b in f1_s2:
             # ax2[0,1].set_xticks(np.arange(0, 36, 6.0))
             ax2[0,1].plot([x.elapsed_time for x in b.values], [x.value for x in b.values], color=b.color)
         for b in f1_s3:
@@ -183,14 +186,34 @@ def plot_modeling(modeling_method, sampling_method, x_axis):
             ax2[1,0].plot([x.elapsed_time for x in b.values], [x.value for x in b.values], color=b.color)
         for b in f1_s4:
             # ax2[1,1].set_xticks(np.arange(0, 36, 6.0))
-            ax2[1,1].plot([x.elapsed_time for x in b.values], [x.value for x in b.values], color=b.color)
+            ax2[1,1].plot([x.elapsed_time for x in b.values], [x.value for x in b.values], color=b.color)'''
 
     fig.tight_layout()
     fig.savefig('./plots/' + modeling_method + '-' + sampling_method + '-' + x_axis + '.jpg')
     plt.clf()
     print('[SUCCESS]')
 
-def plot_error_metrics():
+if __name__ == '__main__':
+    if len(sys.argv) == 5:
+        plot_modeling(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
+    else:
+        print('must specify scenario id, modeling method, sampling method, and x axis')
+
+
+
+
+################
+# IGNORE BELOW #
+#       |      #
+#       |      #
+#       V      #
+################
+
+
+
+
+
+'''def plot_error_metrics():
     with open('scenarios.json') as f:
         scenarios = json.load(f)
     random_pure_scenarios = [k for k, s in scenarios.items() if s['sampling_method'] == 'RANDOM-PURE']
@@ -425,21 +448,4 @@ def plot_error_metrics():
     fig.savefig('./plots/eacc_iter_duo.jpg')
     plt.clf()
 
-    return '[SUCCESS]'
-
-if __name__ == '__main__':
-    if len(sys.argv) > 3:
-        if sys.argv[3] != 'iter' and sys.argv[3] != 'time':
-            print('must specify iter or time x axis')
-        elif sys.argv[2] != 'RANDOM-PURE' and sys.argv[2] != 'DUO':
-            print('must specify RANDOM-PURE or DUO sampling method')
-        
-        elif sys.argv[1] == 'bayes':
-            plot_modeling(sys.argv[1], sys.argv[2], sys.argv[3])
-        elif sys.argv[1] == 'min':
-            plot_modeling(sys.argv[1], sys.argv[2], sys.argv[3])
-        else:
-            print('must specify bayes or min modeling method')
-    else:
-        print('must specify bayes or min modeling method')
-
+    return '[SUCCESS]''''
