@@ -51,10 +51,11 @@ def plot_modeling(scenario_id, modeling_method, sampling_method, x_axis):
         #gt_metadata = pickle.load( open('./store/' + project_id + '/gt_' + modeling_method + '_metadata.p', 'rb') )
         study_metrics = pickle.load( open('./store/' + project_id + '/study_metrics.p', 'rb') )
         
-        for heur, p_Y_in_C_given_X in modeling_metadata['p_Y_in_C_given_X'].items():
+        # for heur, p_Y_in_C_given_X in modeling_metadata['p_Y_in_C_given_X'].items():
+        for p_Y_in_C_given_X in modeling_metadata['p_Y_in_C_given_X']:
             # print(heur)
-            if heur != 'aCOMBO-sSR':
-                continue
+            # if heur != 'aCOMBO-sSR':
+            #     continue
             print([x.value for x in p_Y_in_C_given_X])
             '''if heur == 'aUNI-sUNI':
                 color = 'royalblue'

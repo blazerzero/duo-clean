@@ -373,21 +373,24 @@ def buildSample(data, sample_size, project_id, sampling_method, current_iter, cu
         s_out = data.sample(n=sample_size)      # Y = set(s_out.index)
     # s_out = returnTuples(data, sample_size, project_id)
 
-    dirty_tuples = getDirtyTuples(s_out, project_id)
+    Y = getDirtyTuples(s_out, project_id)
     # print(dirty_tuples)
 
     # MODELING METRICS
     if current_iter == 0:
-        new_X = dirty_tuples    # X is just being created --> X = set(dirty_tuples)
+        # new_X = dirty_tuples    # X is just being created --> X = set(dirty_tuples)
+        X = set()
     else:
-        new_X = modeling_metadata['X'][-1].value | dirty_tuples     # X = X | set(dirty_tuples)
+        # new_X = modeling_metadata['X'][-1].value | dirty_tuples     # X = X | set(dirty_tuples)
+        X = modeling_metadata['X'][-1].value
 
-    print(new_X)
+    # new_X = prev_X | Y
+    # print(new_X)
     
-    modeling_metadata['X'].append(StudyMetric(iter_num=current_iter, value=new_X, elapsed_time=elapsed_time))
+    modeling_metadata['X'].append(StudyMetric(iter_num=current_iter, value=X, elapsed_time=elapsed_time))
     # gt_metadata['X'].append(StudyMetric(iter_num=current_iter, value=new_X, elapsed_time=elapsed_time))
 
-    modeling_metadata['Y'].append(StudyMetric(iter_num=current_iter, value=dirty_tuples, elapsed_time=elapsed_time))
+    modeling_metadata['Y'].append(StudyMetric(iter_num=current_iter, value=Y, elapsed_time=elapsed_time))
     # gt_metadata['Y'].append(StudyMetric(iter_num=current_iter, value=set(s_out.index), elapsed_time=elapsed_time))
 
     # USER DATA
@@ -397,18 +400,19 @@ def buildSample(data, sample_size, project_id, sampling_method, current_iter, cu
         if cfd not in modeling_metadata['p_X_given_h'].keys():  # cfd was just discovered in this iteration
             modeling_metadata['p_X_given_h'][cfd] = list()
         print(cfd_m['vios'])
-        if set(new_X).issubset(cfd_m['vios']):
+        if set(X).issubset(cfd_m['vios']) and len(cfd_m['vios']) > 0:
             print('subset!')
-            print(dirty_tuples)
+            print(X)
             print()
-            p_X_given_h = math.pow((1/len(cfd_m['vios'])), len(new_X)) # p(X | h) = PI_i (p(x_i | h)), where each x_i is in X
+            p_X_given_h = math.pow((1/len(cfd_m['vios'])), len(X)) # p(X | h) = PI_i (p(x_i | h)), where each x_i is in X
             modeling_metadata['p_X_given_h'][cfd].append(StudyMetric(iter_num=current_iter, value=p_X_given_h, elapsed_time=elapsed_time))
         else:
             print('not subset!\n')
             modeling_metadata['p_X_given_h'][cfd].append(StudyMetric(iter_num=current_iter, value=0, elapsed_time=elapsed_time))
     
         # I(y in h)
-        for y in new_X:
+        for y in Y:
+            print('Y!')
             if y not in modeling_metadata['y_in_h'][cfd].keys():    # this is the first time the user will have been shown y
                 modeling_metadata['y_in_h'][cfd][y] = list()
             if y in cfd_m['vios']:
