@@ -365,22 +365,22 @@ def buildSample(data, sample_size, project_id, sampling_method, current_iter, cu
     print(elapsed_time)
     
     # GET SAMPLE
-    '''if (sampling_method == 'DUO'):
+    if (sampling_method == 'DUO'):
         print('DUO-INFORMED SAMPLING')
         s_out = returnTuples(data, sample_size, project_id)     # Y = set(s_out.index)
     else:
         print('RANDOM SAMPLING')
-        s_out = data.sample(n=sample_size)      # Y = set(s_out.index)'''
-    s_out = returnTuples(data, sample_size, project_id)
+        s_out = data.sample(n=sample_size)      # Y = set(s_out.index)
+    # s_out = returnTuples(data, sample_size, project_id)
 
     dirty_tuples = getDirtyTuples(s_out, project_id)
     # print(dirty_tuples)
 
     # MODELING METRICS
     if current_iter == 0:
-        new_X = dirty_tuples    # X is just being created --> X = set(s_out.index)
+        new_X = dirty_tuples    # X is just being created --> X = set(dirty_tuples)
     else:
-        new_X = modeling_metadata['X'][-1].value | dirty_tuples     # X = X | set(s_out.index)
+        new_X = modeling_metadata['X'][-1].value | dirty_tuples     # X = X | set(dirty_tuples)
 
     print(new_X)
     
@@ -399,10 +399,12 @@ def buildSample(data, sample_size, project_id, sampling_method, current_iter, cu
         print(cfd_m['vios'])
         if set(new_X).issubset(cfd_m['vios']):
             print('subset!')
-            p_X_given_h = math.pow((1/len(new_X)), sample_size) # p(X | h) = PI_i (p(x_i | h)), where each x_i is in X
+            print(dirty_tuples)
+            print()
+            p_X_given_h = math.pow((1/len(cfd_m['vios'])), len(new_X)) # p(X | h) = PI_i (p(x_i | h)), where each x_i is in X
             modeling_metadata['p_X_given_h'][cfd].append(StudyMetric(iter_num=current_iter, value=p_X_given_h, elapsed_time=elapsed_time))
         else:
-            print('not subset!')
+            print('not subset!\n')
             modeling_metadata['p_X_given_h'][cfd].append(StudyMetric(iter_num=current_iter, value=0, elapsed_time=elapsed_time))
     
         # I(y in h)
@@ -601,7 +603,7 @@ def getHSpaceConfDelta(project_id, current_iter):
         h_space_conf_delta = 0
         for fd_m in cfd_metadata.values():
             fd_conf_delta = abs(fd_m['conf_history'][-1].score - fd_m['conf_history'][-3].score)
-            print(fd_conf_delta)
+            # print(fd_conf_delta)
             h_space_conf_delta += fd_conf_delta
         h_space_conf_delta /= len(cfd_metadata.keys())
         print("delta h:", h_space_conf_delta)

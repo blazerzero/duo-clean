@@ -189,7 +189,7 @@ def plot_modeling(scenario_id, modeling_method, sampling_method, x_axis):
             ax2[1,1].plot([x.elapsed_time for x in b.values], [x.value for x in b.values], color=b.color)'''
 
     fig.tight_layout()
-    fig.savefig('./plots/' + modeling_method + '-' + sampling_method + '-' + x_axis + '.jpg')
+    fig.savefig('./plots/scenario-' + scenario_id + '-' + modeling_method + '-' + sampling_method + '-' + x_axis + '.jpg')
     plt.clf()
     print('[SUCCESS]')
 
@@ -448,4 +448,4 @@ if __name__ == '__main__':
     fig.savefig('./plots/eacc_iter_duo.jpg')
     plt.clf()
 
-    return '[SUCCESS]''''
+    '''
