@@ -323,9 +323,14 @@ def explainFeedback(full_dataset, dirty_sample, project_id, current_iter, curren
             else:
                 cfd_metadata[c['cfd']]['conf_history'].append(CFDScore(iter_num=current_iter, score=cfd_metadata[c['cfd']]['conf_history'][-1].score, elapsed_time=elapsed_time))
             
-            wCOMBO = analyze.aHeuristicCombo(c['cfd'], full_dataset)
-            phaCOMBO = np.prod([v for _, v in wCOMBO.items()])  # p(h | aCOMBO)
+            # wCOMBO = analyze.aHeuristicCombo(c['cfd'], full_dataset)
+            # phaCOMBO = np.prod([v for _, v in wCOMBO.items()])  # p(h | aCOMBO)
+            wUV = analyze.aHeuristicUV(c['cfd'], full_dataset)
+            wAC = analyze.aHeuristicAC(c['cfd'])
+            phaUV = np.prod([v for v in wUV.values()])
+            phaAC = np.prod([v for v in wAC.values()])
             phsSR = analyze.sHeuristicSetRelation(c['cfd'], [c['cfd'] for c in h_space]) # p(h | sSR)
+            ph = hmean([phaUV, phaAC, phsSR])
             # print('*** Complexity bias calculated ***')
 
             # System's weighted prior on rule confidence
@@ -335,7 +340,8 @@ def explainFeedback(full_dataset, dirty_sample, project_id, current_iter, curren
             # print('*** Weighted FD confidence calculated ***')
 
             # weight = complexity_bias + weighted_conf
-            cfd_metadata[c['cfd']]['weight'] = weight * phaCOMBO * phsSR    # weight * p(h | aCOMBO-sSR)
+            # cfd_metadata[c['cfd']]['weight'] = weight * phaCOMBO * phsSR    # weight * p(h | aCOMBO-sSR)
+            cfd_metadata[c['cfd']]['weight'] = weight * ph
             # cfd_metadata[c['cfd']]['weight_history'].append(CFDWeightHistory(iter_num=current_iter, weight=weight, elapsed_time=elapsed_time))
         
         cfd_metadata = normalizeWeights(cfd_metadata)
