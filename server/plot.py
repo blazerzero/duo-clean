@@ -26,7 +26,7 @@ def plot_modeling(scenario_id, modeling_method, sampling_method, x_axis):
     # with open('scenarios.json') as f:
     #     all_scenarios = json.load(f)
     # scenario_ids = [k for k, s in all_scenarios.items() if s['sampling_method'] == sampling_method]
-    scenario_ids = ["1", "2", "3", "4"]
+    # scenario_ids = ["1", "2", "3", "4"]
 
     # lists_s1 = list()
     # lists_s2 = list()
@@ -52,11 +52,12 @@ def plot_modeling(scenario_id, modeling_method, sampling_method, x_axis):
         study_metrics = pickle.load( open('./store/' + project_id + '/study_metrics.p', 'rb') )
         
         # for heur, p_Y_in_C_given_X in modeling_metadata['p_Y_in_C_given_X'].items():
-        for p_Y_in_C_given_X in modeling_metadata['p_Y_in_C_given_X']:
+        # for p_Y_in_C_given_X in modeling_metadata['p_Y_in_C_given_X']:
+        for pred_accuracy in modeling_metadata['pred_accuracy']:
             # print(heur)
             # if heur != 'aCOMBO-sSR':
             #     continue
-            print([x.value for x in p_Y_in_C_given_X])
+            # print([x.value for x in p_Y_in_C_given_X])
             '''if heur == 'aUNI-sUNI':
                 color = 'royalblue'
             elif heur == 'aUNI-sSR':
@@ -74,7 +75,8 @@ def plot_modeling(scenario_id, modeling_method, sampling_method, x_axis):
             elif heur == 'aCOMBO-sSR':'''
             # color = 'green'
 
-            preds.append(PlotData(values=p_Y_in_C_given_X, color='green'))
+            # preds.append(PlotData(values=p_Y_in_C_given_X, color='green'))
+            preds.append(PlotData(values=pred_accuracy, color='green'))
             f1s.append(PlotData(values=study_metrics['f1'], color='blue'))
             '''if scenario_id == scenario_ids[0]:
                 lists_s1.append(PlotData(values=p_Y_in_C_given_X, color='green'))
@@ -106,7 +108,8 @@ def plot_modeling(scenario_id, modeling_method, sampling_method, x_axis):
     fig, ax1 = plt.subplots()
     ax2 = ax1.twinx()
 
-    ax1.set_ylabel('p(Y in C | X)')
+    # ax1.set_ylabel('p(Y in C | X)')
+    ax1.set_ylabel('Predicted Accuracy')
     ax2.set_ylabel('F1 score')
     '''ax1[0,1].set_ylabel('p(Y in C | X)')
     ax2[0,1].set_ylabel('F1 score')
