@@ -1,9 +1,9 @@
-CC,AC,PN,NM,CT,ST,ZIP
+countrycode,areacode,phone,name,city,state,zip
 01,503,1111111,Michael,Beaverton,OR,97007
 01,541,2222222,Omeed,Corvallis,OR,97333
 01,206,3333333,Nate,Seattle,WA,98802
 01,808,4444444,Leilani,Honolulu,HI,32423
 44,111,1234567,Mitchell,Edinburgh,SCO,12312
 44,222,4353245,Samantha,London,ENG,43153
-44,111,1234567,Michelle,Endiburgh,SCO,12312
-44,112,1324534,Tim,Edinburgh,SCO,12345
+44,111,1234567,Mitchell,Endiburgh,SOC,12312
+44,111,1324534,Tim,Edinburgh,SOC,12345

@@ -1,4 +1,4 @@
-CC,AC,PN,NM,CT,ST,ZIP
+countrycode,areacode,phone,name,city,state,zip
 01,503,1111111,Michael,Beaverton,OR,97007
 01,541,2222222,Omeed,Corvallis,OR,97333
 01,206,3333333,Nate,Seattle,WA,98802
