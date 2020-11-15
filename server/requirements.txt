@@ -12,6 +12,7 @@ idna==2.10
 itsdangerous==1.1.0
 jellyfish==0.7.2
 Jinja2==2.11.2
+joblib==0.17.0
 kiwisolver==1.2.0
 MarkupSafe==1.1.1
 marshmallow==3.7.1
@@ -27,5 +28,7 @@ pytz==2020.1
 requests==2.24.0
 scipy==1.5.2
 six==1.15.0
+threadpoolctl==2.1.0
+tqdm==4.51.0
 urllib3==1.25.10
 Werkzeug==1.0.1

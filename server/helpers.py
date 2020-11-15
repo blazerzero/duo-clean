@@ -306,7 +306,9 @@ def explainFeedback(full_dataset, dirty_sample, project_id, current_iter, curren
         print('[ERROR] There was an error running CFDD') '''
 
     # USER DATA
-    process = sp.Popen(['./data/cfddiscovery/CFDD', prepped_sample_fp, str(math.ceil(0.5*len(prepped_sample.index))), '0.5', '3'], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})     # CFDD
+    min_supp_percentage = 0.8
+    min_conf = 0.5
+    process = sp.Popen(['./data/cfddiscovery/CFDD', prepped_sample_fp, str(math.ceil(min_supp_percentage*len(prepped_sample.index))), str(min_conf), '3'], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})     # CFDD
     res = process.communicate()
     print('*** CFDD finished running ***')
 
@@ -317,32 +319,37 @@ def explainFeedback(full_dataset, dirty_sample, project_id, current_iter, curren
         cfds = [c for c in json.loads(output, strict=False)['cfds'] if '=' not in c['cfd'].split(' => ')[0] and '=' not in c['cfd'].split(' => ')[1] and c['cfd'].split(' => ')[0] != '()']
         print('*** FDs from CFDD extracted ***')
         accepted_cfds = [c for c in cfds if c['cfd'] in cfd_metadata.keys()]
-        for c in h_space:
-            if c['cfd'] in [ac['cfd'] for ac in accepted_cfds]:
-                ac = next(a for a in accepted_cfds if a['cfd'] == c['cfd'])
-                cfd_metadata[c['cfd']]['conf_history'].append(CFDScore(iter_num=current_iter, score=ac['conf'], elapsed_time=elapsed_time))
+        # min_conf = min([c['conf'] for c in cfds])
+        max_conf = max([c['conf'] for c in cfds])
+        for cfd, cfd_m in cfd_metadata.items():
+            if cfd in [ac['cfd'] for ac in accepted_cfds]:
+                ac = next(a for a in accepted_cfds if a['cfd'] == cfd)
+                conf = (ac['conf'] - min_conf) / (max_conf - min_conf)      # normalize between 0 and 1
+                cfd_m['conf_history'].append(CFDScore(iter_num=current_iter, score=conf, elapsed_time=elapsed_time))
             else:
-                cfd_metadata[c['cfd']]['conf_history'].append(CFDScore(iter_num=current_iter, score=cfd_metadata[c['cfd']]['conf_history'][-1].score, elapsed_time=elapsed_time))
+                cfd_m['conf_history'].append(CFDScore(iter_num=current_iter, score=cfd_m['conf_history'][-1].score, elapsed_time=elapsed_time))
             
             # wCOMBO = analyze.aHeuristicCombo(c['cfd'], full_dataset)
             # phaCOMBO = np.prod([v for _, v in wCOMBO.items()])  # p(h | aCOMBO)
-            wUV = analyze.aHeuristicUV(c['cfd'], full_dataset)
-            wAC = analyze.aHeuristicAC(c['cfd'])
-            phaUV = np.prod([v for v in wUV.values()])
-            phaAC = np.prod([v for v in wAC.values()])
-            phsSR = analyze.sHeuristicSetRelation(c['cfd'], [c['cfd'] for c in h_space]) # p(h | sSR)
+            wUV = analyze.aHeuristicUV(cfd, full_dataset)
+            wAC = analyze.aHeuristicAC(cfd)
+            # phaUV = np.prod([v for v in wUV.values()])
+            # phaAC = np.prod([v for v in wAC.values()])
+            phaUV = np.mean([v for v in wUV.values()])
+            phaAC = np.mean([v for v in wAC.values()])
+            phsSR = analyze.sHeuristicSetRelation(cfd, [c['cfd'] for c in h_space]) # p(h | sSR)
             ph = hmean([phaUV, phaAC, phsSR])
             # print('*** Complexity bias calculated ***')
 
             # System's weighted prior on rule confidence
             weight = 0
-            for h in cfd_metadata[c['cfd']]['conf_history']:
+            for h in cfd_m['conf_history']:
                 weight += (h.score / (current_iter - h.iter_num + 1))
             # print('*** Weighted FD confidence calculated ***')
 
             # weight = complexity_bias + weighted_conf
             # cfd_metadata[c['cfd']]['weight'] = weight * phaCOMBO * phsSR    # weight * p(h | aCOMBO-sSR)
-            cfd_metadata[c['cfd']]['weight'] = weight * ph
+            cfd_m['weight'] = weight * ph
             # cfd_metadata[c['cfd']]['weight_history'].append(CFDWeightHistory(iter_num=current_iter, weight=weight, elapsed_time=elapsed_time))
         
         cfd_metadata = normalizeWeights(cfd_metadata)
@@ -407,7 +414,9 @@ def buildSample(data, sample_size, project_id, sampling_method, current_iter, cu
         if cfd not in modeling_metadata['p_X_given_h'].keys():  # cfd was just discovered in this iteration
             modeling_metadata['p_X_given_h'][cfd] = list()
         print(cfd_m['vios'])
-        if set(X).issubset(cfd_m['vios']) and len(cfd_m['vios']) > 0:
+        if current_iter == 0:
+            modeling_metadata['p_X_given_h'][cfd].append(StudyMetric(iter_num=current_iter, value=1, elapsed_time=elapsed_time))    # At the start, there is no X, so p(h | X) is only influenced by p(h), so p(X | h) = 1 to remove its influence at this stage
+        elif set(X).issubset(cfd_m['vios']) and len(cfd_m['vios']) > 0:
             print('subset!')
             print(X)
             print()

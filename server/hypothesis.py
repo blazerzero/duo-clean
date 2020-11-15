@@ -7,6 +7,7 @@ import subprocess as sp
 import re
 import string
 from tqdm import tqdm
+import analyze
 
 # GET FD SUPPORT AND VIOLATIONS
 def getSupportAndVios(data, fd):

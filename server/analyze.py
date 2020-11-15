@@ -115,7 +115,7 @@ def bayes(sampling_method):
         # gt_bayes_metadata = gt_metadata
 
         # bayes_modeling_metadata['p_Y_in_C_given_X'] = dict()
-        bayes_modeling_metadata['pred_accuracy'] = dict()
+        bayes_modeling_metadata['pred_accuracy'] = list()
         # gt_bayes_metadata['p_Y_in_C_given_X'] = dict()
 
         iter_count = pickle.load( open('./store/' + project_id + '/current_iter.p', 'rb') )
@@ -193,6 +193,7 @@ def bayes(sampling_method):
                 continue
                 
             p_h_given_X_list = list()
+            print('iter:', it)
             # p(h | X) for each h
             for h in discovered_cfds:
                 p_X_given_h = next(x for x in bayes_modeling_metadata['p_X_given_h'][h] if x.iter_num == it).value     # p(X | h) for this iteration
@@ -201,6 +202,7 @@ def bayes(sampling_method):
                 # print(it)
                 # print(cfd_metadata[h]['weight_history'][it-1].iter_num)
                 p_h = cfd_metadata[h]['weight_history'][it].weight    # p(h)
+                print('p(h):', p_h)
                 p_h_given_X = p_X_given_h * p_h     # p(h | X)
                 p_h_given_X_list.append(PHGivenX(h=h, value=p_h_given_X))
             
@@ -213,9 +215,10 @@ def bayes(sampling_method):
             # print(len(bayes_modeling_metadata['Y']))
             p_y_in_C_given_X_list = list()
             for y in bayes_modeling_metadata['Y'][it].value:
-                # print(it)
+                # print(y)
                 p_y_in_C_given_X = 0 # p(y in C | X)
                 for phgx in p_h_given_X_list:
+                    # print(phgx.h)
                     h = phgx.h
                     p_h_given_X = phgx.value    # p(h | X)
                     # print(len(bayes_modeling_metadata['y_in_h'][h][y]))
@@ -223,16 +226,24 @@ def bayes(sampling_method):
                     # for i in bayes_modeling_metadata['y_in_h'][h][y]:
                         # print(i.iter_num)
                     i_y_in_h = next(i for i in bayes_modeling_metadata['y_in_h'][h][y] if i.iter_num == it).value  # I(y in supp(h))
+                    # print(i_y_in_h)
+                    # print(p_h_given_X)
                     p_y_in_C_given_X += (i_y_in_h * p_h_given_X)  # p(y in C | X) = I(y in supp(h)) * p(h | X)
-                print(p_y_in_C_given_X)
+                print('p(y in C | X):', p_y_in_C_given_X)
                 p_y_in_C_given_X_list.append(p_y_in_C_given_X)
                 # p_Y_in_C_given_X *= p_y_in_C_given_X    # incorporating each y in Y into p(Y in C | X)
             # print('p(Y in C | X) =', p_Y_in_C_given_X)
-            pred_accuracy = len([y for y in p_y_in_C_given_X_list if y >= 0.5]) / len(p_y_in_C_given_X_list)
+            if len(p_y_in_C_given_X_list) > 0:
+                # pred_accuracy = len([y for y in p_y_in_C_given_X_list if y >= 0.5]) / len(p_y_in_C_given_X_list)
+                pred_accuracy = hmean(p_y_in_C_given_X_list)
+            else:
+                pred_accuracy = 0
+            print(pred_accuracy)
             
             # bayes_modeling_metadata['p_Y_in_C_given_X']['aCOMBO-sSR'].append(StudyMetric(iter_num=it, value=p_Y_in_C_given_X, elapsed_time=elapsed_time))
             # bayes_modeling_metadata['p_Y_in_C_given_X'].append(StudyMetric(iter_num=it, value=p_Y_in_C_given_X, elapsed_time=elapsed_time))
             bayes_modeling_metadata['pred_accuracy'].append(StudyMetric(iter_num=it, value=pred_accuracy, elapsed_time=elapsed_time))
+            # print(bayes_modeling_metadata['pred_accuracy'])
 
             # GROUND TRUTH
             # Get all FDs/CFDs that have were known by the system in this iteration
@@ -285,6 +296,8 @@ def max_likelihood(sampling_method):
         scenario = project_info['scenario']
         if scenario['sampling_method'] != sampling_method:
             continue
+        print("project id:", project_id)
+        print("scenario id:", project_info['scenario_id'])
         
         data = pd.read_csv(project_info['scenario']['clean_dataset'], keep_default_na=False)
         data = data.replace(r'\\n\\t\\r','', regex=True) 
@@ -298,7 +311,7 @@ def max_likelihood(sampling_method):
         # gt_min_metadata = gt_metadata
 
         # min_modeling_metadata['p_Y_in_C_given_X'] = dict()
-        min_modeling_metadata['pred_accuracy'] = dict()
+        min_modeling_metadata['pred_accuracy'] = list()
         # gt_min_metadata['p_Y_in_C_given_X'] = dict()
 
         iter_count = pickle.load( open('./store/' + project_id + '/current_iter.p', 'rb') )
@@ -407,11 +420,13 @@ def max_likelihood(sampling_method):
             generalized_cfds = [c for c in supporting_cfds if set(c.split(' => ')[0][1:-1].split(', ')).issuperset(lhs_set)]
 
             p_h_given_X_list = list()
+            print('iter:', it)
             # p(h | X) for each h
             for h in generalized_cfds:
                 p_X_given_h = next(x for x in min_modeling_metadata['p_X_given_h'][h] if x.iter_num == it).value     # p(X | h) for this iteration
                 # p_X_given_h = elem.value
                 p_h = cfd_metadata[h]['weight_history'][it].weight    # p(h)
+                print('p(h):', p_h)
                 p_h_given_X = p_X_given_h * p_h     # p(h | X)
                 p_h_given_X_list.append(PHGivenX(h=h, value=p_h_given_X))
             
@@ -430,11 +445,16 @@ def max_likelihood(sampling_method):
                     i_y_in_h = next(i for i in min_modeling_metadata['y_in_h'][h][y] if i.iter_num == it).value  # I(y in supp(h))
                     p_y_in_C_given_X += (i_y_in_h * p_h_given_X)  # p(y in C | X) = I(y in supp(h)) * p(h | X)
                     
-                print(p_y_in_C_given_X)
+                print('p(y in C | X):', p_y_in_C_given_X)
                 p_y_in_C_given_X_list.append(p_y_in_C_given_X)
                 # p_Y_in_C_given_X *= p_y_in_C_given_X    # incorporating each y in Y into p(Y in C | X)
             # print('p(Y in C | X) =', p_Y_in_C_given_X)
-            pred_accuracy = len([y for y in p_y_in_C_given_X_list if y >= 0.5]) / len(p_y_in_C_given_X_list)
+            if len(p_y_in_C_given_X_list) > 0:
+                # pred_accuracy = len([y for y in p_y_in_C_given_X_list if y >= 0.5]) / len(p_y_in_C_given_X_list)
+                pred_accuracy = hmean(p_y_in_C_given_X_list)
+            else:
+                pred_accuracy = 0
+            print(pred_accuracy)
 
             # min_modeling_metadata['p_Y_in_C_given_X']['aCOMBO-sSR'].append(StudyMetric(iter_num=it, value=p_Y_in_C_given_X, elapsed_time=elapsed_time))
             # min_modeling_metadata['p_Y_in_C_given_X'].append(StudyMetric(iter_num=it, value=p_Y_in_C_given_X, elapsed_time=elapsed_time))

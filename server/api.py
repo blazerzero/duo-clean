@@ -17,6 +17,7 @@ import shutil
 import logging
 import csv
 import analyze
+from scipy.stats import hmean
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
@@ -90,6 +91,8 @@ class Import(Resource):
             header = reader.fieldnames
             data = list(reader)
 
+        df = pd.read_csv(scenario['dirty_dataset'], keep_default_na=False)
+
         # Initialize iteration counter
         current_iter = 0
 
@@ -111,22 +114,33 @@ class Import(Resource):
         # FD metadata
         cfd_metadata = dict()
         # data = pd.read_csv(scenario['dirty_dataset'], keep_default_na=False)
-        for c in scenario['hypothesis_space']:
-            cfd_metadata[c['cfd']] = dict()
-            cfd_metadata[c['cfd']]['weight'] = c['conf']
-            cfd_metadata[c['cfd']]['conf_history'] = list()
-            cfd_metadata[c['cfd']]['conf_history'].append(helpers.CFDScore(iter_num=current_iter, score=c['conf'], elapsed_time=0))
+        h_space = scenario['hypothesis_space']
+        for h in h_space:
+            cfd_metadata[h['cfd']] = dict()
 
-            hypothesis = next(x for x in scenario['hypothesis_space'] if x['cfd'] == c['cfd'])
-            cfd_metadata[c['cfd']]['support'] = hypothesis['support']
-            cfd_metadata[c['cfd']]['vios'] = hypothesis['vios']
-            cfd_metadata[c['cfd']]['vio_pairs'] = hypothesis['vio_pairs']
-            cfd_metadata[c['cfd']]['vio_trios'] = hypothesis['vio_trios']
+            wUV = analyze.aHeuristicUV(h['cfd'], df)
+            wAC = analyze.aHeuristicAC(h['cfd'])
+            # phaUV = np.prod([v for v in wUV.values()])
+            # phaAC = np.prod([v for v in wAC.values()])
+            phaUV = np.mean([v for v in wUV.values()])
+            phaAC = np.mean([v for v in wAC.values()])
+            phsSR = analyze.sHeuristicSetRelation(h['cfd'], [c['cfd'] for c in h_space]) # p(h | sSR)
+            ph = hmean([phaUV, phaAC, phsSR])
+            
+            cfd_metadata[h['cfd']]['weight'] = h['conf'] * ph
+            cfd_metadata[h['cfd']]['conf_history'] = list()
+            cfd_metadata[h['cfd']]['conf_history'].append(helpers.CFDScore(iter_num=current_iter, score=h['conf'], elapsed_time=0))
+
+            # hypothesis = next(x for x in h_space if x['cfd'] == c['cfd'])
+            cfd_metadata[h['cfd']]['support'] = h['support']
+            cfd_metadata[h['cfd']]['vios'] = h['vios']
+            cfd_metadata[h['cfd']]['vio_pairs'] = h['vio_pairs']
+            cfd_metadata[h['cfd']]['vio_trios'] = h['vio_trios']
         
-        # cfd_metadata = helpers.normalizeWeights(cfd_metadata)
-        # for _, cfd_m in cfd_metadata.items():
-            cfd_metadata[c['cfd']]['weight_history'] = list()
-            cfd_metadata[c['cfd']]['weight_history'].append(helpers.CFDWeightHistory(iter_num=current_iter, weight=cfd_metadata[c['cfd']]['weight'], elapsed_time=0))
+        cfd_metadata = helpers.normalizeWeights(cfd_metadata)
+        for _, cfd_m in cfd_metadata.items():
+            cfd_m['weight_history'] = list()
+            cfd_m['weight_history'].append(helpers.CFDWeightHistory(iter_num=current_iter, weight=cfd_m['weight'], elapsed_time=0))
 
         # Initialize other metrics/metadata needed in study
         study_metrics = dict()

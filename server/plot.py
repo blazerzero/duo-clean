@@ -53,43 +53,44 @@ def plot_modeling(scenario_id, modeling_method, sampling_method, x_axis):
         
         # for heur, p_Y_in_C_given_X in modeling_metadata['p_Y_in_C_given_X'].items():
         # for p_Y_in_C_given_X in modeling_metadata['p_Y_in_C_given_X']:
-        for pred_accuracy in modeling_metadata['pred_accuracy']:
+        # for pred_accuracy in modeling_metadata['pred_accuracy']:
+        pred_accuracy = modeling_metadata['pred_accuracy']
             # print(heur)
             # if heur != 'aCOMBO-sSR':
             #     continue
             # print([x.value for x in p_Y_in_C_given_X])
-            '''if heur == 'aUNI-sUNI':
-                color = 'royalblue'
-            elif heur == 'aUNI-sSR':
-                color = 'green'
-            elif heur == 'aUV-sUNI':
-                color = 'red'
-            elif heur == 'aUV-sSR':
-                color = 'cyan'
-            elif heur == 'aAC-sUNI':
-                color = 'magenta'
-            elif heur == 'aAC-sSR':
-                color = 'darkorange'
-            elif heur == 'aCOMBO-sUNI':
-                color = 'navy'
-            elif heur == 'aCOMBO-sSR':'''
+        '''if heur == 'aUNI-sUNI':
+            color = 'royalblue'
+        elif heur == 'aUNI-sSR':
+            color = 'green'
+        elif heur == 'aUV-sUNI':
+            color = 'red'
+        elif heur == 'aUV-sSR':
+            color = 'cyan'
+        elif heur == 'aAC-sUNI':
+            color = 'magenta'
+        elif heur == 'aAC-sSR':
+            color = 'darkorange'
+        elif heur == 'aCOMBO-sUNI':
+            color = 'navy'
+        elif heur == 'aCOMBO-sSR':'''
             # color = 'green'
 
             # preds.append(PlotData(values=p_Y_in_C_given_X, color='green'))
-            preds.append(PlotData(values=pred_accuracy, color='green'))
-            f1s.append(PlotData(values=study_metrics['f1'], color='blue'))
-            '''if scenario_id == scenario_ids[0]:
-                lists_s1.append(PlotData(values=p_Y_in_C_given_X, color='green'))
-                f1_s1.append(PlotData(values=study_metrics['f1'], color='blue'))
-            elif scenario_id == scenario_ids[1]:
-                lists_s2.append(PlotData(values=p_Y_in_C_given_X, color='green'))
-                f1_s2.append(PlotData(values=study_metrics['f1'], color='blue'))
-            elif scenario_id == scenario_ids[2]:
-                lists_s3.append(PlotData(values=p_Y_in_C_given_X, color='green'))
-                f1_s3.append(PlotData(values=study_metrics['f1'], color='blue'))
-            elif scenario_id == scenario_ids[3]:
-                lists_s4.append(PlotData(values=p_Y_in_C_given_X, color='green'))
-                f1_s4.append(PlotData(values=study_metrics['f1'], color='blue'))'''
+        preds.append(PlotData(values=pred_accuracy, color='green'))
+        f1s.append(PlotData(values=study_metrics['f1'], color='blue'))
+        '''if scenario_id == scenario_ids[0]:
+            lists_s1.append(PlotData(values=p_Y_in_C_given_X, color='green'))
+            f1_s1.append(PlotData(values=study_metrics['f1'], color='blue'))
+        elif scenario_id == scenario_ids[1]:
+            lists_s2.append(PlotData(values=p_Y_in_C_given_X, color='green'))
+            f1_s2.append(PlotData(values=study_metrics['f1'], color='blue'))
+        elif scenario_id == scenario_ids[2]:
+            lists_s3.append(PlotData(values=p_Y_in_C_given_X, color='green'))
+            f1_s3.append(PlotData(values=study_metrics['f1'], color='blue'))
+        elif scenario_id == scenario_ids[3]:
+            lists_s4.append(PlotData(values=p_Y_in_C_given_X, color='green'))
+            f1_s4.append(PlotData(values=study_metrics['f1'], color='blue'))'''
 
         '''for heur, p_Y_in_C_given_X in gt_metadata['p_Y_in_C_given_X'].items():
             # print(heur)
