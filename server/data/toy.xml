@@ -24,8 +24,8 @@
 <![CDATA[
 DCs:
 // FD1: (areacode) -> state
-e1: toy(countrycode: $cc1, areacode: $ac1, phone: $p1, name: $n1, city: $c1, state: $s1, zip: $z1), 
-toy(countrycode: $cc2, areacode: $ac2, phone: $p2, name: $n2, city: $c2, state: $s2, zip: $z2), 
+e1: toy(areacode: $ac1, phone: $p1, name: $n1, state: $s1, zip: $z1), 
+toy(areacode: $ac2, phone: $p2, name: $n2, state: $s2, zip: $z2), 
     $ac1 == $ac2, $s1 != $s2 -> #fail.
 ]]>
     </dependencies>
@@ -96,10 +96,7 @@ toy(countrycode: $cc2, areacode: $ac2, phone: $p2, name: $n2, city: $c2, state: 
                 <strategy charsToSwitch="3">TypoSwitchValue</strategy>
             </defaultStrategy> 
             <attributeStrategy>
-                <attribute table="toy" name="year">
-                    <strategy>TypoActiveDomain</strategy>
-                </attribute>
-                <attribute table="toy" name="rating">
+                <attribute table="toy" name="state">
                     <strategy>TypoActiveDomain</strategy>
                 </attribute>
             </attributeStrategy>
