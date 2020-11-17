@@ -155,7 +155,7 @@ if __name__ == '__main__':
     
     for s_id, scenario in tqdm(scenarios_list.items()):
         data = pd.read_csv(scenario['dirty_dataset'], keep_default_na=False)
-        process = sp.Popen(['./data/cfddiscovery/CFDD', scenario['dirty_dataset'], str(len(data.index)), '0.8', '3'], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})     # CFDD
+        process = sp.Popen(['./data/cfddiscovery/CFDD', scenario['dirty_dataset'], str(len(data.index)), '0.7', '3'], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})     # CFDD
         res = process.communicate()
         if process.returncode == 0:
             output = res[0].decode('latin_1').replace(',]', ']').replace('\r', '').replace('\t', '').replace('\n', '')
@@ -175,7 +175,7 @@ if __name__ == '__main__':
             h['vio_trios'] = vio_trios
 
         clean_data = pd.read_csv(scenario['clean_dataset'], keep_default_na=False)
-        clean_process = sp.Popen(['./data/cfddiscovery/CFDD', scenario['clean_dataset'], str(len(clean_data.index)), '0.8', '3'], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})     # CFDD
+        clean_process = sp.Popen(['./data/cfddiscovery/CFDD', scenario['clean_dataset'], str(len(clean_data.index)), '0.7', '3'], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})     # CFDD
         clean_res = clean_process.communicate()
         if clean_process.returncode == 0:
             clean_output = clean_res[0].decode('latin_1').replace(',]', ']').replace('\r', '').replace('\t', '').replace('\n', '')

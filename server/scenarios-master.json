@@ -39,5 +39,14 @@
         "dirty_dataset": "./data/dirty_omdb_4.csv",
         "clean_dataset": "./data/omdb_4.csv",
         "difficulty": 1
+    },
+    "5": {
+        "cfds": [
+            "(areacode) => state"
+        ],
+        "description": "Identify errors in staff directory data.",
+        "dirty_dataset": "./data/dirty_toy.csv",
+        "clean_dataset": "./data/toy.csv",
+        "difficulty": 1
     }
 }
