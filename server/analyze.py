@@ -51,7 +51,12 @@ def aHeuristicAC(cfd):
         'year': 0.3,
         'rating': 0.75,
         'director': 0.6,
-        'userrating': 0.1
+        'userrating': 0.1,
+        'name': 0.8,
+        'areacode': 0.7,
+        'phone': 0.5,
+        'state': 0.4,
+        'zip': 0.3
     }
     weights = {lh: wAC[lh] for lh in lhs}
     # for lh in lhs:

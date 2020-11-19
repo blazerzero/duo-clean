@@ -37,22 +37,22 @@ class Import(Resource):
         
         # Initialize a new project
         projects = [('0x' + d) for d in os.listdir('./store') if os.path.isdir(os.path.join('./store/', d))]
-        sampling_methods = ['DUO', 'RANDOM-PURE']
+        # sampling_methods = ['DUO', 'RANDOM-PURE']
         if len(projects) == 0:
-            sampling_method = np.random.choice(sampling_methods)
+            # sampling_method = np.random.choice(sampling_methods)
             new_project_id = '{:08x}'.format(1)
         else:
-            sampling_method_distribution = list()
+            # sampling_method_distribution = list()
             project_ids = [int(d, 0) for d in projects]
-            for project in projects:
-                with open('./store/' + project[2:] + '/project_info.json', 'r') as f:
-                    project_id_info = json.load(f)
-                sampling_method_distribution.append(project_id_info['scenario']['sampling_method'])
-            duo_freq = 1 - len([s for s in sampling_method_distribution if s == 'DUO'])/len(sampling_method_distribution)
-            rp_freq = 1 - len([s for s in sampling_method_distribution if s == 'RANDOM-PURE'])/len(sampling_method_distribution)
-            freqs = [duo_freq, rp_freq]
-            print(freqs)
-            sampling_method = np.random.choice(sampling_methods, p=freqs)
+            # for project in projects:
+            #     with open('./store/' + project[2:] + '/project_info.json', 'r') as f:
+            #         project_id_info = json.load(f)
+            #     sampling_method_distribution.append(project_id_info['scenario']['sampling_method'])
+            # duo_freq = 1 - len([s for s in sampling_method_distribution if s == 'DUO'])/len(sampling_method_distribution)
+            # rp_freq = 1 - len([s for s in sampling_method_distribution if s == 'RANDOM-PURE'])/len(sampling_method_distribution)
+            # freqs = [duo_freq, rp_freq]
+            # print(freqs)
+            # sampling_method = np.random.choice(sampling_methods, p=freqs)
             new_project_id = '{:08x}'.format(max(project_ids) + 1)
         new_project_dir = './store/' + new_project_id
         try:
@@ -72,7 +72,7 @@ class Import(Resource):
         with open('scenarios.json', 'r') as f:
             scenarios_list = json.load(f)
         scenario = scenarios_list[scenario_id]
-        scenario['sampling_method'] = sampling_method
+        # scenario['sampling_method'] = sampling_method
         project_info = {
             'scenario_id': scenario_id,
             'scenario': scenario,

@@ -306,9 +306,9 @@ def explainFeedback(full_dataset, dirty_sample, project_id, current_iter, curren
         print('[ERROR] There was an error running CFDD') '''
 
     # USER DATA
-    min_supp_percentage = 0.8
-    min_conf = 0.5
-    process = sp.Popen(['./data/cfddiscovery/CFDD', prepped_sample_fp, str(math.ceil(min_supp_percentage*len(prepped_sample.index))), str(min_conf), '3'], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})     # CFDD
+    # min_supp_percentage = 0.8
+    # min_conf = 0.5
+    process = sp.Popen(['./data/cfddiscovery/CFDD', prepped_sample_fp, str(math.ceil(0.5*len(prepped_sample.index))), '0.5', '3'], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})     # CFDD
     res = process.communicate()
     print('*** CFDD finished running ***')
 
@@ -320,36 +320,53 @@ def explainFeedback(full_dataset, dirty_sample, project_id, current_iter, curren
         print('*** FDs from CFDD extracted ***')
         accepted_cfds = [c for c in cfds if c['cfd'] in cfd_metadata.keys()]
         # min_conf = min([c['conf'] for c in cfds])
-        max_conf = max([c['conf'] for c in cfds])
+        # max_conf = max([c['conf'] for c in cfds])
         for cfd, cfd_m in cfd_metadata.items():
             if cfd in [ac['cfd'] for ac in accepted_cfds]:
-                ac = next(a for a in accepted_cfds if a['cfd'] == cfd)
-                conf = (ac['conf'] - min_conf) / (max_conf - min_conf)      # normalize between 0 and 1
+                # ac = next(a for a in accepted_cfds if a['cfd'] == cfd)
+                # conf = (ac['conf'] - min_conf) / (max_conf - min_conf)      # normalize between 0 and 1
+                support, vios = getSupportAndVios(prepped_sample, cfd)
+                # Reinforce FDs that make user feedback correct.
+                # Prioritize FDs with fewer violations AND that more of the sample supports
+                conf = 1 - ((len(vios) / len(prepped_sample.index)) * (len(support) / len(prepped_sample.index)))
                 cfd_m['conf_history'].append(CFDScore(iter_num=current_iter, score=conf, elapsed_time=elapsed_time))
+                wUV = analyze.aHeuristicUV(cfd, prepped_sample)
+                wAC = analyze.aHeuristicAC(cfd)
+                phaUV = np.mean([v for v in wUV.values()])
+                phaAC = np.mean([v for v in wAC.values()])
+                phsSR = analyze.sHeuristicSetRelation(cfd, [c['cfd'] for c in h_space]) # p(h | sSR)
+                ph = hmean([phaUV, phaAC, phsSR])
+                weight = 0
+                for h in cfd_m['conf_history']:
+                    weight += (h.score / (current_iter - h.iter_num + 1))
+                cfd_m['weight'] = weight * ph
             else:
                 cfd_m['conf_history'].append(CFDScore(iter_num=current_iter, score=cfd_m['conf_history'][-1].score, elapsed_time=elapsed_time))
+                cfd_m['weight'] = cfd_m['weight_history'][-1].weight
             
             # wCOMBO = analyze.aHeuristicCombo(c['cfd'], full_dataset)
             # phaCOMBO = np.prod([v for _, v in wCOMBO.items()])  # p(h | aCOMBO)
-            wUV = analyze.aHeuristicUV(cfd, full_dataset)
-            wAC = analyze.aHeuristicAC(cfd)
+            # wUV = analyze.aHeuristicUV(cfd, prepped_sample)
+            # wAC = analyze.aHeuristicAC(cfd)
             # phaUV = np.prod([v for v in wUV.values()])
             # phaAC = np.prod([v for v in wAC.values()])
-            phaUV = np.mean([v for v in wUV.values()])
-            phaAC = np.mean([v for v in wAC.values()])
-            phsSR = analyze.sHeuristicSetRelation(cfd, [c['cfd'] for c in h_space]) # p(h | sSR)
-            ph = hmean([phaUV, phaAC, phsSR])
+
+            # phaUV = np.mean([v for v in wUV.values()])
+            # phaAC = np.mean([v for v in wAC.values()])
+            # phsSR = analyze.sHeuristicSetRelation(cfd, [c['cfd'] for c in h_space]) # p(h | sSR)
+            # ph = hmean([phaUV, phaAC, phsSR])
+
             # print('*** Complexity bias calculated ***')
 
             # System's weighted prior on rule confidence
-            weight = 0
-            for h in cfd_m['conf_history']:
-                weight += (h.score / (current_iter - h.iter_num + 1))
+            # weight = 0
+            # for h in cfd_m['conf_history']:
+            #     weight += (h.score / (current_iter - h.iter_num + 1))
             # print('*** Weighted FD confidence calculated ***')
 
             # weight = complexity_bias + weighted_conf
             # cfd_metadata[c['cfd']]['weight'] = weight * phaCOMBO * phsSR    # weight * p(h | aCOMBO-sSR)
-            cfd_m['weight'] = weight * ph
+            # cfd_m['weight'] = weight * ph
             # cfd_metadata[c['cfd']]['weight_history'].append(CFDWeightHistory(iter_num=current_iter, weight=weight, elapsed_time=elapsed_time))
         
         cfd_metadata = normalizeWeights(cfd_metadata)
@@ -630,3 +647,99 @@ def getHSpaceConfDelta(project_id, current_iter):
         return h_space_conf_delta
     else:
         return None
+
+# GET FD SUPPORT AND VIOLATIONS
+def getSupportAndVios(data, fd):
+    # print("FD:", fd)
+    lhs = fd.split(' => ')[0][1:-1]
+    rhs = fd.split(' => ')[1]
+    patterns = fd2cfd(data, lhs, rhs)
+        
+    # CODE TO BUILD COVER AND VIOLATION LIST
+    support = list()
+    violations = list()
+    for idx in data.index:
+        # applies = True
+        # for lh in lhs.split(', '):
+            # If this element of the CFD is constant
+            # if '=' in lh:
+            #     lh = np.array(lh.split('='))
+            #     if data.at[idx, lh[0]] != lh[1]:     # CFD does not apply to this row
+            #         applies = False
+            #        break
+
+        # If this CFD applies to this row
+        # if applies:
+        support.append(idx)
+            # if lhs.count('=') == len(lhs.split(', ')) and '=' in rhs:
+            #     rh = np.array(rhs.split('='))
+            #     if data.at[idx, rh[0]] != rh[1]:
+            #         violations.append(idx)
+            # elif lhs.count('=') == len(lhs.split(', ')) and '=' not in rhs:
+            #     rh_attribute = rhs.split('=')[0]
+            #     applicable_rhv = patterns[lhs].split('=')[1]
+            #     if data.at[idx, rh_attribute] != applicable_rhv:
+            #          violations.append(idx)
+            # elif lhs.count('=') < len(lhs.split(', ')):
+        applicable_lhs = ''
+        for lh in lhs.split(', '):
+            # if '=' in lh:
+            #     applicable_lhs += lh + ', '
+            # else:
+            applicable_lhs += lh + '=' + str(data.at[idx, lh]) + ', '
+        applicable_lhs = applicable_lhs[:-2]
+        applicable_rhs = patterns[applicable_lhs]
+        rh = applicable_rhs.split('=')
+        if str(data.at[idx, rh[0]]) != str(rh[1]):
+            violations.append(idx)
+        
+    # print('*** Support and violations built for (' + lhs + ') => ' + rhs + ' ***')
+    return support, violations
+
+
+# CONVERT FD OR PARTIAL CFD TO FULL CFD
+def fd2cfd(data, lhs, rhs):
+    patterns = dict()
+    mappings = dict()
+
+    # Gather all the possible patterns present in the dataset for each pure FD or partial CFD
+    for idx in data.index:
+        lhspattern = ''
+        rhspattern = ''
+        for clause in lhs.split(', '):
+            if '=' in clause:
+                lhspattern += clause + ', '
+            else:
+                lhspattern += clause + '=' + str(data.at[idx, clause]) + ', '
+        lhspattern = lhspattern[:-2]
+        if '=' in rhs:
+            rhspattern = rhs
+        else:
+            rhspattern = rhs + '=' + str(data.at[idx, rhs])
+        if lhspattern in patterns.keys():
+            patterns[lhspattern].append(rhspattern)
+            if (lhspattern, rhspattern) in mappings.keys():
+                mappings[(lhspattern, rhspattern)].append(idx)
+            else:
+                mappings[(lhspattern, rhspattern)] = [idx]
+        else:
+            patterns[lhspattern] = [rhspattern]
+            mappings[(lhspattern, rhspattern)] = [idx]
+    # print('*** Patterns and mappings built for (' + lhs + ') => ' + rhs + ' ***')
+
+    # Pick RHS patterns for each LHS from these candidates
+    for key in patterns.keys():
+        counts = Counter(patterns[key])
+        get_mode = dict(counts)
+        patterns[key] = [k for k, v in get_mode.items() if v == max(list(counts.values()))]
+        # pprint('All RHS patterns for' + key + ':' + repr(patterns[key]))
+
+        # If there is only one top RHS pattern for this LHS, pick it
+        if len(patterns[key]) == 1:
+            patterns[key] = patterns[key].pop()
+        else:
+            random_idx = random.randint(0, len(patterns[key])-1)
+            patterns[key] = patterns[key][random_idx]
+        # print('*** RHS pattern picked ***')
+
+    return patterns
