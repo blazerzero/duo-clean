@@ -22,3 +22,5 @@ server/venv/
 server/.vscode/
 server/BART/
 ui/src/global.js
+server/metanome-cli/
+server/results/

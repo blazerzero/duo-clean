@@ -12,6 +12,7 @@ import math
 import statistics
 from collections import Counter
 from scipy.stats import hmean
+import re
 
 import analyze
 
@@ -308,12 +309,37 @@ def explainFeedback(full_dataset, dirty_sample, project_id, current_iter, curren
     # USER DATA
     # min_supp_percentage = 0.8
     # min_conf = 0.5
-    process = sp.Popen(['./data/cfddiscovery/CFDD', prepped_sample_fp, str(math.ceil(0.5*len(prepped_sample.index))), '0.5', '3'], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})     # CFDD
+    # process = sp.Popen(['./data/cfddiscovery/CFDD', prepped_sample_fp, str(math.ceil(0.5*len(prepped_sample.index))), '0.5', '3'], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})     # CFDD
+    process = sp.Popen(['java -cp metanome-cli-1.1.0.jar:pyro-distro-1.0-SNAPSHOT-distro.jar de.metanome.cli.App --algorithm de.hpi.isg.pyro.algorithms.Pyro --algorithm-config maxArity:3,isFindFds:true,maxFdError:0.20,topKFds:5 --table-key inputFile --header $true --output print --separator , --tables', prepped_sample_fp], shell=True, stdout=sp.PIPE, stderr=sp.PIPE)   # PYRO
     res = process.communicate()
     print('*** CFDD finished running ***')
 
     if process.returncode == 0:
         cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
+        print('*** FD meteadata object loaded ***')
+        output = res[0].decode('latin_1')
+        cfds = parseOutputPYRO(output)
+        print('*** FDs from PYRO extracted ***')
+        accepted_cfds = [c for c in cfds if c in cfd_metadata.keys()]
+        for cfd, cfd_m in cfd_metadata.items():
+            if cfd in accepted_cfds:
+                support, vios = getSupportAndVios(prepped_sample, cfd)
+                conf = 1 - ((len(vios) / len(prepped_sample.index)) * (len(support) / len(prepped_sample.index)))
+                cfd_m['conf_history'].append(CFDScore(iter_num=current_iter, score=conf, elapsed_time=elapsed_time))
+                wUV = analyze.aHeuristicUV(cfd, prepped_sample)
+                wAC = analyze.aHeuristicAC(cfd)
+                phaUV = np.mean([v for v in wUV.values()])
+                phaAC = np.mean([v for v in wAC.values()])
+                phsSR = analyze.sHeuristicSetRelation(cfd, [c['cfd'] for c in h_space]) # p(h | sSR)
+                ph = hmean([phaUV, phaAC, phsSR])
+                weight = 0
+                for h in cfd_m['conf_history']:
+                    weight += (h.score / (current_iter - h.iter_num + 1))
+                cfd_m['weight'] = weight * ph
+            else:
+                cfd_m['conf_history'].append(CFDScore(iter_num=current_iter, score=cfd_m['conf_history'][-1].score, elapsed_time=elapsed_time))
+                cfd_m['weight'] = cfd_m['weight_history'][-1].weight
+        '''cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
         print('*** FD meteadata object loaded ***')
         output = res[0].decode('latin_1').replace(',]', ']').replace('\r', '').replace('\t', '').replace('\n', '')
         cfds = [c for c in json.loads(output, strict=False)['cfds'] if '=' not in c['cfd'].split(' => ')[0] and '=' not in c['cfd'].split(' => ')[1] and c['cfd'].split(' => ')[0] != '()']
@@ -342,7 +368,7 @@ def explainFeedback(full_dataset, dirty_sample, project_id, current_iter, curren
                 cfd_m['weight'] = weight * ph
             else:
                 cfd_m['conf_history'].append(CFDScore(iter_num=current_iter, score=cfd_m['conf_history'][-1].score, elapsed_time=elapsed_time))
-                cfd_m['weight'] = cfd_m['weight_history'][-1].weight
+                cfd_m['weight'] = cfd_m['weight_history'][-1].weight'''
             
             # wCOMBO = analyze.aHeuristicCombo(c['cfd'], full_dataset)
             # phaCOMBO = np.prod([v for _, v in wCOMBO.items()])  # p(h | aCOMBO)
@@ -743,3 +769,18 @@ def fd2cfd(data, lhs, rhs):
         # print('*** RHS pattern picked ***')
 
     return patterns
+
+def parseOutputPYRO(output):
+    keyword = 'Results:\n'
+    _, keyword, after = output.partition(keyword)
+    unformatted_fds = after.split('\n')
+    formatted_fds = list()
+    for c in unformatted_fds:
+        if '->' not in c:
+            continue
+        lhs_attrs = [x.split('.')[-1] for x in c.split('->')[0][1:-1].split(', ')]
+        rhs = c.split('->')[1].split('.')[-1]
+        lhs = ', '.join(lhs_attrs)
+        fd = '(' + lhs + ') => ' + rhs
+        formatted_fds.append(fd)
+    return formatted_fds
