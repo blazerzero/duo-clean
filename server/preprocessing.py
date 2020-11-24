@@ -64,27 +64,41 @@ if __name__ == '__main__':
         data = pd.read_csv(scenario['dirty_dataset'], keep_default_na=False)
         if int(s_id) <= 4:
             # Restrict hypothesis space to the minimum requirement for still including the FDs of concern in the hypothesis space
-            process = sp.Popen(['./data/cfddiscovery/CFDD', scenario['dirty_dataset'], str(len(data.index)), '0.7', '2'], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})     # CFDD
+            # process = sp.Popen(['./data/cfddiscovery/CFDD', scenario['dirty_dataset'], str(len(data.index)), '0.7', '2'], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})     # CFDD
+            process = sp.Popen(['java -cp metanome-cli-1.1.0.jar:pyro-distro-1.0-SNAPSHOT-distro.jar de.metanome.cli.App --algorithm de.hpi.isg.pyro.algorithms.Pyro --algorithm-config maxArity:2,isFindFds:true,maxFdError:0.30,topKFds:6 --table-key inputFile --header $true --output print --separator , --tables ' + scenario['dirty_dataset']], shell=True, stdout=sp.PIPE, stderr=sp.PIPE)   # PYRO
+
         else:
             # Loosen parameters of hypothesis space for a bigger hypothesis space
-            process = sp.Popen(['./data/cfddiscovery/CFDD', scenario['dirty_dataset'], str(len(data.index)), '0.5', '3'], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})     # CFDD
-        res = process.communicate()
-        if process.returncode == 0:
-            output = res[0].decode('latin_1').replace(',]', ']').replace('\r', '').replace('\t', '').replace('\n', '')
-            fds = [c for c in json.loads(output, strict=False)['cfds'] if '=' not in c['cfd'].split(' => ')[0] and '=' not in c['cfd'].split(' => ')[1] and c['cfd'].split(' => ')[0] != '()']
-            scenario['hypothesis_space'] = fds
-        else:
-            scenario['hypothesis_space'] = list()
+            # process = sp.Popen(['./data/cfddiscovery/CFDD', scenario['dirty_dataset'], str(len(data.index)), '0.5', '3'], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})     # CFDD
+            process = sp.Popen(['java -cp metanome-cli-1.1.0.jar:pyro-distro-1.0-SNAPSHOT-distro.jar de.metanome.cli.App --algorithm de.hpi.isg.pyro.algorithms.Pyro --algorithm-config maxArity:3,isFindFds:true,maxFdError:0.50,topKFds:10 --table-key inputFile --header $true --output print --separator , --tables ' + scenario['dirty_dataset']], shell=True, stdout=sp.PIPE, stderr=sp.PIPE)   # PYRO
 
-        for h in scenario['hypothesis_space']:
-            fd = "".join(filter(lambda char: char in string.printable, h['cfd']))
-            h['conf'] = 1
+        res = process.communicate()
+        # print(res)
+        # print(process.returncode)
+        if process.returncode == 0:
+            # output = res[0].decode('latin_1').replace(',]', ']').replace('\r', '').replace('\t', '').replace('\n', '')
+            # fds = [c for c in json.loads(output, strict=False)['cfds'] if '=' not in c['cfd'].split(' => ')[0] and '=' not in c['cfd'].split(' => ')[1] and c['cfd'].split(' => ')[0] != '()']
+            output = res[0].decode('latin_1')
+            fds = helpers.parseOutputPYRO(output)
+            # scenario['hypothesis_space'] = fds
+        else:
+            fds = list()
+            # scenario['hypothesis_space'] = list()
+
+        h_space = list()
+        for fd in fds:
+            h = dict()
+            h['cfd'] = fd
+            h['score'] = 1
             support, vios = helpers.getSupportAndVios(data, fd)
             vio_pairs, vio_trios = makeVioSets(data, support, vios, fd)
             h['support'] = support
             h['vios'] = vios
             h['vio_pairs'] = vio_pairs
             h['vio_trios'] = vio_trios
+            h_space.append(h)
+        
+        scenario['hypothesis_space'] = h_space
 
         clean_data = pd.read_csv(scenario['clean_dataset'], keep_default_na=False)
         '''clean_process = sp.Popen(['./data/cfddiscovery/CFDD', scenario['clean_dataset'], str(len(clean_data.index)), '0.7', '3'], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})     # CFDD

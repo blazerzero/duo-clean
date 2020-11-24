@@ -127,9 +127,11 @@ class Import(Resource):
             phsSR = analyze.sHeuristicSetRelation(h['cfd'], [c['cfd'] for c in h_space]) # p(h | sSR)
             ph = hmean([phaUV, phaAC, phsSR])
             
-            cfd_metadata[h['cfd']]['weight'] = h['conf'] * ph
-            cfd_metadata[h['cfd']]['conf_history'] = list()
-            cfd_metadata[h['cfd']]['conf_history'].append(helpers.CFDScore(iter_num=current_iter, score=h['conf'], elapsed_time=0))
+            # cfd_metadata[h['cfd']]['weight'] = h['conf'] * ph
+            cfd_metadata[h['cfd']]['score'] = 1
+            cfd_metadata[h['cfd']]['weight'] = cfd_metadata[h['cfd']]['score'] * ph
+            # cfd_metadata[h['cfd']]['conf_history'] = list()
+            # cfd_metadata[h['cfd']]['conf_history'].append(helpers.CFDScore(iter_num=current_iter, score=h['conf'], elapsed_time=0))
 
             # hypothesis = next(x for x in h_space if x['cfd'] == c['cfd'])
             cfd_metadata[h['cfd']]['support'] = h['support']
@@ -139,6 +141,8 @@ class Import(Resource):
         
         cfd_metadata = helpers.normalizeWeights(cfd_metadata)
         for _, cfd_m in cfd_metadata.items():
+            cfd_m['score_history'] = list()
+            cfd_m['score_history'].append(helpers.CFDScore(iter_num=current_iter, score=cfd_m['score'], elapsed_time=0))
             cfd_m['weight_history'] = list()
             cfd_m['weight_history'].append(helpers.CFDWeightHistory(iter_num=current_iter, weight=cfd_m['weight'], elapsed_time=0))
 
