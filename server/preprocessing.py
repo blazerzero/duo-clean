@@ -65,12 +65,12 @@ if __name__ == '__main__':
         if int(s_id) <= 4:
             # Restrict hypothesis space to the minimum requirement for still including the FDs of concern in the hypothesis space
             # process = sp.Popen(['./data/cfddiscovery/CFDD', scenario['dirty_dataset'], str(len(data.index)), '0.7', '2'], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})     # CFDD
-            process = sp.Popen(['java -cp metanome-cli-1.1.0.jar:pyro-distro-1.0-SNAPSHOT-distro.jar de.metanome.cli.App --algorithm de.hpi.isg.pyro.algorithms.Pyro --algorithm-config maxArity:2,isFindFds:true,maxFdError:0.30,topKFds:6 --table-key inputFile --header $true --output print --separator , --tables ' + scenario['dirty_dataset']], shell=True, stdout=sp.PIPE, stderr=sp.PIPE)   # PYRO
+            process = sp.Popen(['java -cp metanome-cli-1.1.0.jar:pyro-distro-1.0-SNAPSHOT-distro.jar de.metanome.cli.App --algorithm de.hpi.isg.pyro.algorithms.Pyro --algorithm-config maxArity:2,isFindFds:true,maxFdError:0.20,topKFds:5 --table-key inputFile --header $true --output print --separator , --tables ' + scenario['dirty_dataset']], shell=True, stdout=sp.PIPE, stderr=sp.PIPE)   # PYRO
 
         else:
             # Loosen parameters of hypothesis space for a bigger hypothesis space
             # process = sp.Popen(['./data/cfddiscovery/CFDD', scenario['dirty_dataset'], str(len(data.index)), '0.5', '3'], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})     # CFDD
-            process = sp.Popen(['java -cp metanome-cli-1.1.0.jar:pyro-distro-1.0-SNAPSHOT-distro.jar de.metanome.cli.App --algorithm de.hpi.isg.pyro.algorithms.Pyro --algorithm-config maxArity:3,isFindFds:true,maxFdError:0.50,topKFds:10 --table-key inputFile --header $true --output print --separator , --tables ' + scenario['dirty_dataset']], shell=True, stdout=sp.PIPE, stderr=sp.PIPE)   # PYRO
+            process = sp.Popen(['java -cp metanome-cli-1.1.0.jar:pyro-distro-1.0-SNAPSHOT-distro.jar de.metanome.cli.App --algorithm de.hpi.isg.pyro.algorithms.Pyro --algorithm-config maxArity:2,isFindFds:true,maxFdError:0.20,topKFds:10 --table-key inputFile --header $true --output print --separator , --tables ' + scenario['dirty_dataset']], shell=True, stdout=sp.PIPE, stderr=sp.PIPE)   # PYRO
 
         res = process.communicate()
         # print(res)

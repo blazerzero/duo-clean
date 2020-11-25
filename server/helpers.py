@@ -310,7 +310,7 @@ def explainFeedback(full_dataset, dirty_sample, project_id, current_iter, curren
     # min_supp_percentage = 0.8
     # min_conf = 0.5
     # process = sp.Popen(['./data/cfddiscovery/CFDD', prepped_sample_fp, str(math.ceil(0.5*len(prepped_sample.index))), '0.5', '3'], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})     # CFDD
-    process = sp.Popen(['java -cp metanome-cli-1.1.0.jar:pyro-distro-1.0-SNAPSHOT-distro.jar de.metanome.cli.App --algorithm de.hpi.isg.pyro.algorithms.Pyro --algorithm-config maxArity:3,isFindFds:true,maxFdError:0.20,topKFds:5 --table-key inputFile --header $true --output print --separator , --tables ' + prepped_sample_fp], shell=True, stdout=sp.PIPE, stderr=sp.PIPE)   # PYRO
+    process = sp.Popen(['java -cp metanome-cli-1.1.0.jar:pyro-distro-1.0-SNAPSHOT-distro.jar de.metanome.cli.App --algorithm de.hpi.isg.pyro.algorithms.Pyro --algorithm-config maxArity:2,isFindFds:true,maxFdError:0.20,topKFds:5 --table-key inputFile --header $true --output print --separator , --tables ' + prepped_sample_fp], shell=True, stdout=sp.PIPE, stderr=sp.PIPE)   # PYRO
     res = process.communicate()
     print('*** CFDD finished running ***')
 
