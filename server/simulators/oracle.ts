@@ -102,7 +102,11 @@ async function run(s: number) {
             .pipe(csv())
             .on('data', (d) => {
                 // console.log(d)
-                master_data.push(d)
+                const row: any = {}
+                for (const i in d) {
+                    row[i.replace(/[^a-zA-Z ]/g, '')] = d[i]
+                }
+                master_data.push(row)
             })
             .on('end', () => {
                 console.log('read csv at '.concat(file.toString()));
@@ -120,8 +124,8 @@ async function run(s: number) {
     while (msg !== '[DONE]') {
         const feedbackMap = buildFeedbackMap(data, feedback, header);
 
-        let numDirtyTuples: number = 0;
-        let numDirtyCells: number = 0;
+        let numMarkedTuples: number = 0;
+        let numMarkedCells: number = 0;
 
         /* Oracle behavior */
         for (const i in data) {
@@ -133,18 +137,18 @@ async function run(s: number) {
                 return filtered;
             }, {})
             if (JSON.stringify(sample_row) !== JSON.stringify(master_data[data[i].id])) {
-                numDirtyTuples++;
+                numMarkedTuples++;
                 for (let j = 0; j < header.length; j++) {
                     if (sample_row[header[j]] !== master_data[data[i].id][header[j]]) {
-                        numDirtyCells++;
+                        numMarkedCells++;
                         feedbackMap[i][header[j]] = true;
                     }
                 }
             }
         }
 
-        console.log(numDirtyTuples)
-        console.log(numDirtyCells)
+        console.log('numMarkedTuples: '.concat(numMarkedTuples.toString()))
+        console.log('numMarkedCells: '.concat(numMarkedCells.toString()))
 
         feedback = {};
         for (const f in feedbackMap) {

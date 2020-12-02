@@ -253,6 +253,19 @@ def explainFeedback(full_dataset, dirty_sample, project_id, current_iter, curren
             f.truncate()'''
 
     rep_dict = list(prepped_sample.T.to_dict().values())
+    print(rep_dict)
+    if len(rep_dict) == 0:
+        cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
+        for cfd, cfd_m in cfd_metadata.items():
+            cfd_m['weight'] = cfd_m['weight_history'][-1].weight
+        cfd_metadata = normalizeWeights(cfd_metadata)
+        for cfd_m in cfd_metadata.values():
+            # print(cfd_m['weight'])
+            cfd_m['score_history'].append(CFDScore(iter_num=current_iter, score=cfd_m['score'], elapsed_time=elapsed_time))
+            cfd_m['weight_history'].append(CFDWeightHistory(iter_num=current_iter, weight=cfd_m['weight'], elapsed_time=elapsed_time))
+        pickle.dump( cfd_metadata, open('./store/' + project_id + '/cfd_metadata.p', 'wb') )
+        return
+
     rep_header = rep_dict[0].keys()
     with open(prepped_sample_fp, 'w', newline='') as f:
         writer = csv.DictWriter(f, rep_header)

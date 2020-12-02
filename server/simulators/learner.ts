@@ -102,7 +102,11 @@ async function run(s: number) {
             .pipe(csv())
             .on('data', (d) => {
                 // console.log(d)
-                master_data.push(d)
+                const row: any = {}
+                for (const i in d) {
+                    row[i.replace(/[^a-zA-Z ]/g, '')] = d[i]
+                }
+                master_data.push(row)
             })
             .on('end', () => {
                 console.log('read csv at '.concat(file.toString()));
@@ -121,6 +125,9 @@ async function run(s: number) {
     while (msg !== '[DONE]') {
         const feedbackMap = buildFeedbackMap(data, feedback, header);
 
+        let numMarkedTuples: number = 0;
+        let numMarkedCells: number = 0;
+
         /* Learner behavior */
         for (const i in data) {
             const sample_row = Object.keys(data[i]).reduce((filtered: any, key: string) => {
@@ -137,23 +144,27 @@ async function run(s: number) {
                         const d = Math.floor(Math.random() * header.length)
                         if (d === j) {
                             feedbackMap[i][header[j]] = true
+                            numMarkedCells++
                         }
                     }
                 }
+                if (JSON.stringify(feedback[i]).includes('true')) numMarkedTuples++
             } else {
                 for (let j = 0; j < header.length; j++) {
                     const decision: number = Math.random()
                     if (decision <= threshold) { // Oracle
                         if (sample_row[header[j]] !== master_data[data[i].id][header[j]]) {
-                            feedbackMap[i][header[j]] = true;
+                            feedbackMap[i][header[j]] = true
+                            numMarkedCells++
                         }
                     }
                 }
+                if (JSON.stringify(feedback[i]).includes('true')) numMarkedTuples++
             }
         }
 
-        // console.log(numMarkedTuples)
-        // console.log(numMarkedCells)
+        console.log('numMarkedTuples: '.concat(numMarkedTuples.toString()))
+        console.log('numMarkedCells: '.concat(numMarkedCells.toString()))
 
         feedback = {};
         for (const f in feedbackMap) {
