@@ -117,34 +117,43 @@ async function run(s: number) {
 
     console.log('initialized feedback object')
 
+    let threshold: number = 0.3
     while (msg !== '[DONE]') {
         const feedbackMap = buildFeedbackMap(data, feedback, header);
 
-        let numDirtyTuples: number = 0;
-        let numDirtyCells: number = 0;
-
-        /* Oracle behavior */
+        /* Learner behavior */
         for (const i in data) {
             const sample_row = Object.keys(data[i]).reduce((filtered: any, key: string) => {
                 if (key !== 'id') {
-                    if (typeof (data[i][key]) === 'number') filtered[key] = data[i][key].toString();
+                    if (typeof (data[i][key]) === 'number') filtered[key] = data[i][key].toString()
                     else filtered[key] = data[i][key]
                 }
-                return filtered;
+                return filtered
             }, {})
-            if (JSON.stringify(sample_row) !== JSON.stringify(master_data[data[i].id])) {
-                numDirtyTuples++;
+            if (JSON.stringify(sample_row) === JSON.stringify(master_data[data[i].id])) {
                 for (let j = 0; j < header.length; j++) {
-                    if (sample_row[header[j]] !== master_data[data[i].id][header[j]]) {
-                        numDirtyCells++;
-                        feedbackMap[i][header[j]] = true;
+                    const decision: number = Math.random()
+                    if (decision > threshold) { // Anti-oracle
+                        const d = Math.floor(Math.random() * header.length)
+                        if (d === j) {
+                            feedbackMap[i][header[j]] = true
+                        }
+                    }
+                }
+            } else {
+                for (let j = 0; j < header.length; j++) {
+                    const decision: number = Math.random()
+                    if (decision <= threshold) { // Oracle
+                        if (sample_row[header[j]] !== master_data[data[i].id][header[j]]) {
+                            feedbackMap[i][header[j]] = true;
+                        }
                     }
                 }
             }
         }
 
-        console.log(numDirtyTuples)
-        console.log(numDirtyCells)
+        // console.log(numMarkedTuples)
+        // console.log(numMarkedCells)
 
         feedback = {};
         for (const f in feedbackMap) {
@@ -195,6 +204,9 @@ async function run(s: number) {
                             row[j] = Math.ceil(row[j]).toString();
                         }
                     }
+                }
+                if (threshold < 0.9) {
+                    threshold += 0.1
                 }
             }
         } catch (err) {

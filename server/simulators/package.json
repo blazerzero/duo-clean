@@ -14,7 +14,7 @@
   "scripts": {
     "oracle": "ts-node oracle.ts",
     "anti-oracle": "ts-node anti-oracle.ts",
-    "bayesian-learner": "ts-node bayesian-learner.ts"
+    "learner": "ts-node learner.ts"
   },
   "devDependencies": {
     "@types/filesystem": "^0.0.29",
