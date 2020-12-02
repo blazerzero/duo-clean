@@ -69,6 +69,8 @@ class Import(Resource):
 
         # Read the scenario number and initialize the scenario accordingly
         scenario_id = request.form.get('scenario_id')
+        if scenario_id is None:
+            scenario_id = json.loads(request.data)['scenario_id']
         with open('scenarios.json', 'r') as f:
             scenarios_list = json.load(f)
         scenario = scenarios_list[scenario_id]
@@ -225,6 +227,8 @@ class Sample(Resource):
 
     def post(self):
         project_id = request.form.get('project_id')
+        if project_id is None:
+            project_id = json.loads(request.data)['project_id']
         sample_size = 10
         with open('./store/' + project_id + '/project_info.json') as f:
             project_info = json.load(f)
@@ -345,9 +349,18 @@ class Clean(Resource):
 
     def post(self):
         project_id = request.form.get('project_id')
-        feedback = json.loads(request.form.get('feedback'))
-        is_new_feedback = int(request.form.get('is_new_feedback'))
-        refresh = int(request.form.get('refresh'))
+        if project_id is None:
+            req = json.loads(request.data)
+            print(req)
+            project_id = req['project_id']
+            feedback = req['feedback']
+            is_new_feedback = req['is_new_feedback']
+            refresh = req['refresh']
+        else:
+            feedback = json.loads(request.form.get('feedback'))
+            is_new_feedback = int(request.form.get('is_new_feedback'))
+            refresh = int(request.form.get('refresh'))
+
         feedback = pd.DataFrame.from_dict(feedback, orient='index')
         # print(feedback)
         sample_size = 10
@@ -416,10 +429,19 @@ class Clean(Resource):
 
         print('*** User scores retrieved ***')
 
+        with open('./store/' + project_id + '/project_info.json', 'r') as f:
+            project_info = json.load(f)
+        clean_h_space = project_info['scenario']['clean_hypothesis_space']
+        cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
+
         h_space_conf_delta = helpers.getHSpaceConfDelta(project_id, current_iter)
 
         if refresh == 0 and (current_iter >= 25 or (h_space_conf_delta is not None and h_space_conf_delta < 0.01)):
             msg = '[DONE]'
+            # TODO: Flag interactions that converge to unusual FDs
+            top_fd = max(cfd_metadata, key=lambda x: cfd_metadata[x]['weight'])
+            top_fd_conf = next(h for h in clean_h_space if h['cfd'] == top_fd)['conf'] if top_fd in [k['cfd'] for k in clean_h_space] else None
+            project_info['flagged'] = True if top_fd_conf is None or top_fd_conf < (0.85 / len(project_info['scenario']['cfds'])) else False
         else:
             msg = '[SUCCESS]: Saved feedback and built new sample.'
 
@@ -427,6 +449,8 @@ class Clean(Resource):
 
         pickle.dump( current_iter, open('./store/' + project_id + '/current_iter.p', 'wb') )
         pickle.dump( current_time, open('./store/' + project_id + '/current_time.p', 'wb') )
+        with open('./store/' + project_id + '/project_info.json', 'w') as f:
+            json.dump(project_info, f)
         
         # Return information to the user
         returned_data = {

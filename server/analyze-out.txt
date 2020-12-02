@@ -1,0 +1,651 @@
+project id: 00000002
+scenario id: 1
+iter: 0
+p(h) for (manager, ownertype) => region: 0.03674799934996531
+p(h) for (manager, ownertype) => type: 0.03674799934996531
+p(h) for (manager, type) => region: 0.03572886824138758
+p(h) for (manager) => type: 0.07118877922507348
+p(h) for (owner, type) => ownertype: 0.03252599714330123
+p(h) for (manager) => region: 0.07118877922507348
+p(h) for (manager, region) => owner: 0.040202643573138186
+p(h) for (manager, region) => facilityname: 0.040202643573138186
+p(h) for (owner) => type: 0.06611281025583876
+p(h) for (manager, type) => owner: 0.03572886824138758
+p(h) for (ownertype, region) => type: 0.022619070527283448
+p(h) for (manager, type) => facilityname: 0.03572886824138758
+p(h) for (owner) => ownertype: 0.06611281025583876
+p(h) for (manager, ownertype) => owner: 0.03674799934996531
+p(h) for (ownertype, owner) => region: 0.033468150646337416
+p(h) for (manager, ownertype) => facilityname: 0.03674799934996531
+p(h) for (manager) => owner: 0.07118877922507348
+p(h) for (region, type) => ownertype: 0.02139336688373725
+p(h) for (manager) => facilityname: 0.07118877922507348
+p(h) for (ownertype, owner) => manager: 0.033468150646337416
+p(h) for (ownertype, owner) => facilityname: 0.033468150646337416
+p(h) for (owner, type) => region: 0.03252599714330123
+p(h) for (region) => type: 0.03896648968109284
+individual p(y in C | X): 0.3913438026028568
+individual p(y in C | X): 0.5203762154600035
+individual p(y in C | X): 0.18258020202328512
+individual p(y in C | X): 0.5988979544866324
+combined p(y in C | X): 0.34412263497107654 
+
+iter: 1
+p(h) for (manager, ownertype) => region: 0.0006143159218482897
+p(h) for (manager, ownertype) => type: 0.0006143159218482897
+p(h) for (manager, type) => region: 0.0005972791177358288
+p(h) for (manager) => type: 0.16549819674207134
+p(h) for (owner, type) => ownertype: 0.0005437367549953653
+p(h) for (manager) => region: 0.16549819674207134
+p(h) for (manager, region) => owner: 0.0006720671732948073
+p(h) for (manager, region) => facilityname: 0.0006720671732948073
+p(h) for (owner) => type: 0.16413044304998808
+p(h) for (manager, type) => owner: 0.0005972791177358288
+p(h) for (ownertype, region) => type: 0.00037812276608557
+p(h) for (manager, type) => facilityname: 0.0005972791177358288
+p(h) for (owner) => ownertype: 0.16413044304998808
+p(h) for (manager, ownertype) => owner: 0.0006143159218482897
+p(h) for (ownertype, owner) => region: 0.0005594867252788718
+p(h) for (manager, ownertype) => facilityname: 0.0006143159218482897
+p(h) for (manager) => owner: 0.16549819674207134
+p(h) for (region, type) => ownertype: 0.00035763269106061214
+p(h) for (manager) => facilityname: 0.16549819674207134
+p(h) for (ownertype, owner) => manager: 0.0005594867252788718
+p(h) for (ownertype, owner) => facilityname: 0.0005594867252788718
+p(h) for (owner, type) => region: 0.0005437367549953653
+p(h) for (region) => type: 0.0006514024015746863
+individual p(y in C | X): 0.8308625254511292
+individual p(y in C | X): 0.49887349618816856
+individual p(y in C | X): 0.3316684606574375
+individual p(y in C | X): 0.6659614107359096
+individual p(y in C | X): 0.6624102880880285
+individual p(y in C | X): 0.665931662415358
+combined p(y in C | X): 0.5588659940010295 
+
+iter: 2
+p(h) for (manager, ownertype) => region: 1.1342859039576433e-05
+p(h) for (manager, ownertype) => type: 1.1342859039576433e-05
+p(h) for (manager, type) => region: 0.07864386331617755
+p(h) for (manager) => type: 0.003055793688858675
+p(h) for (owner, type) => ownertype: 1.003967038326618e-05
+p(h) for (manager) => region: 0.003055793688858675
+p(h) for (manager, region) => owner: 1.240919035416469e-05
+p(h) for (manager, region) => facilityname: 1.240919035416469e-05
+p(h) for (owner) => type: 0.003030539195562322
+p(h) for (manager, type) => owner: 1.1028287887080335e-05
+p(h) for (ownertype, region) => type: 0.0810424253500657
+p(h) for (manager, type) => facilityname: 0.07864386331617755
+p(h) for (owner) => ownertype: 0.30555291747331703
+p(h) for (manager, ownertype) => owner: 1.1342859039576433e-05
+p(h) for (ownertype, owner) => region: 1.0330481163924167e-05
+p(h) for (manager, ownertype) => facilityname: 1.1342859039576433e-05
+p(h) for (manager) => owner: 0.2870345588385706
+p(h) for (region, type) => ownertype: 0.07553541022067649
+p(h) for (manager) => facilityname: 0.003055793688858675
+p(h) for (ownertype, owner) => manager: 1.0330481163924167e-05
+p(h) for (ownertype, owner) => facilityname: 1.0330481163924167e-05
+p(h) for (owner, type) => region: 0.08121476437260704
+p(h) for (region) => type: 1.2027631640854563e-05
+individual p(y in C | X): 0.2931773323663541
+individual p(y in C | X): 0.4504363099773898
+individual p(y in C | X): 0.3116505932167777
+individual p(y in C | X): 0.08721045337114552
+combined p(y in C | X): 0.19698406028375148 
+
+iter: 3
+p(h) for (manager, ownertype) => region: 1.4189138319031398e-07
+p(h) for (manager, ownertype) => type: 1.4189138319031398e-07
+p(h) for (manager, type) => region: 0.13301360811460894
+p(h) for (manager) => type: 3.822588218222101e-05
+p(h) for (owner, type) => ownertype: 1.2558938733930202e-07
+p(h) for (manager) => region: 3.822588218222101e-05
+p(h) for (manager, region) => owner: 1.5523045622632374e-07
+p(h) for (manager, region) => facilityname: 1.5523045622632374e-07
+p(h) for (owner) => type: 3.790996580054976e-05
+p(h) for (manager, type) => owner: 1.379563139292303e-07
+p(h) for (ownertype, region) => type: 0.12659425572299085
+p(h) for (manager, type) => facilityname: 0.0009837807651869683
+p(h) for (owner) => ownertype: 0.2786449650424527
+p(h) for (manager, ownertype) => owner: 1.4189138319031398e-07
+p(h) for (ownertype, owner) => region: 1.2922723065290081e-07
+p(h) for (manager, ownertype) => facilityname: 1.4189138319031398e-07
+p(h) for (manager) => owner: 0.33172019647911033
+p(h) for (region, type) => ownertype: 0.12787298557877863
+p(h) for (manager) => facilityname: 3.822588218222101e-05
+p(h) for (ownertype, owner) => manager: 1.2922723065290081e-07
+p(h) for (ownertype, owner) => facilityname: 1.2922723065290081e-07
+p(h) for (owner, type) => region: 0.0010159409732676148
+p(h) for (region) => type: 1.5045741854587733e-07
+individual p(y in C | X): 0.4606923296894732
+combined p(y in C | X): 0.4606923296894732 
+
+iter: 4
+p(h) for (manager, ownertype) => region: 9.580409671649364e-10
+p(h) for (manager, ownertype) => type: 9.580409671649364e-10
+p(h) for (manager, type) => region: 0.12461899139372017
+p(h) for (manager) => type: 2.580985561855308e-07
+p(h) for (owner, type) => ownertype: 8.479710001192673e-10
+p(h) for (manager) => region: 2.580985561855308e-07
+p(h) for (manager, region) => owner: 1.0481054809160075e-09
+p(h) for (manager, region) => facilityname: 0.059219174075288615
+p(h) for (owner) => type: 2.559655102666421e-07
+p(h) for (manager, type) => owner: 9.314716471964847e-10
+p(h) for (ownertype, region) => type: 0.0008547558030899415
+p(h) for (manager, type) => facilityname: 0.07988396884212831
+p(h) for (owner) => ownertype: 0.2881550323600224
+p(h) for (manager, ownertype) => owner: 9.580409671649364e-10
+p(h) for (ownertype, owner) => region: 8.72533470709043e-10
+p(h) for (manager, ownertype) => facilityname: 9.580409671649364e-10
+p(h) for (manager) => owner: 0.2855234795530815
+p(h) for (region, type) => ownertype: 0.0008633897000908499
+p(h) for (manager) => facilityname: 2.580985561855308e-07
+p(h) for (ownertype, owner) => manager: 8.72533470709043e-10
+p(h) for (ownertype, owner) => facilityname: 8.72533470709043e-10
+p(h) for (owner, type) => region: 0.08017348184328589
+p(h) for (region) => type: 0.08070668689080132
+individual p(y in C | X): 0.2855237415472967
+individual p(y in C | X): 0.44611465324573657
+individual p(y in C | X): 0.4254498572863457
+individual p(y in C | X): 0.5715886594991438
+individual p(y in C | X): 0.3662716170445347
+combined p(y in C | X): 0.39764311048795664 
+
+iter: 5
+p(h) for (manager, ownertype) => region: 8.598208325314982e-12
+p(h) for (manager, ownertype) => type: 8.598208325314982e-12
+p(h) for (manager, type) => region: 0.0011184282155121779
+p(h) for (manager) => type: 0.14135280824624355
+p(h) for (owner, type) => ownertype: 7.610354424014867e-12
+p(h) for (manager) => region: 2.3163781410238505e-09
+p(h) for (manager, region) => owner: 0.04569445882898975
+p(h) for (manager, region) => facilityname: 0.0005314791465120754
+p(h) for (owner) => type: 0.16822152386329808
+p(h) for (manager, type) => owner: 8.359754484633481e-12
+p(h) for (ownertype, region) => type: 7.671246548034057e-06
+p(h) for (manager, type) => facilityname: 0.0007169411637898576
+p(h) for (owner) => ownertype: 0.47262237656831374
+p(h) for (manager, ownertype) => owner: 0.04726081734676836
+p(h) for (ownertype, owner) => region: 7.8307972300676e-12
+p(h) for (manager, ownertype) => facilityname: 8.598208325314982e-12
+p(h) for (manager) => owner: 0.002562510835242347
+p(h) for (region, type) => ownertype: 0.11846711548256603
+p(h) for (manager) => facilityname: 2.3163781410238505e-09
+p(h) for (ownertype, owner) => manager: 7.8307972300676e-12
+p(h) for (ownertype, owner) => facilityname: 7.8307972300676e-12
+p(h) for (owner, type) => region: 0.0007195394797096939
+p(h) for (region) => type: 0.0007243248784930195
+individual p(y in C | X): 0.17203984106418344
+individual p(y in C | X): 0.4777398009201308
+individual p(y in C | X): 0.7821967086864534
+individual p(y in C | X): 0.18777926554091226
+combined p(y in C | X): 0.2756786170129049 
+
+iter: 6
+p(h) for (manager, ownertype) => region: 4.6384514705693006e-14
+p(h) for (manager, ownertype) => type: 4.6384514705693006e-14
+p(h) for (manager, type) => region: 6.033553508694051e-06
+p(h) for (manager) => type: 0.16022176186439582
+p(h) for (owner, type) => ownertype: 4.105536680902899e-14
+p(h) for (manager) => region: 0.11166971281457891
+p(h) for (manager, region) => owner: 0.0002465066229299944
+p(h) for (manager, region) => facilityname: 2.867155732267679e-06
+p(h) for (owner) => type: 0.0009074999642050883
+p(h) for (manager, type) => owner: 4.509813442026129e-14
+p(h) for (ownertype, region) => type: 4.138385985259869e-08
+p(h) for (manager, type) => facilityname: 3.867662505573109e-06
+p(h) for (owner) => ownertype: 0.3182026599264923
+p(h) for (manager, ownertype) => owner: 0.0002549566135505261
+p(h) for (ownertype, owner) => region: 4.2244583468156945e-14
+p(h) for (manager, ownertype) => facilityname: 4.6384514705693006e-14
+p(h) for (manager) => owner: 0.2961674992038832
+p(h) for (region, type) => ownertype: 0.0006390912446333189
+p(h) for (manager) => facilityname: 0.11166971281457891
+p(h) for (ownertype, owner) => manager: 4.2244583468156945e-14
+p(h) for (ownertype, owner) => facilityname: 4.2244583468156945e-14
+p(h) for (owner, type) => region: 3.881679568016089e-06
+p(h) for (region) => type: 3.907495225399528e-06
+individual p(y in C | X): 0.6146206146324781
+individual p(y in C | X): 0.8377233676552494
+individual p(y in C | X): 0.40925395037697004
+combined p(y in C | X): 0.5698869418682686 
+
+--------
+
+project id: 00000003
+scenario id: 2
+iter: 0
+p(h) for (type, facilityname) => manager: 0.03514614144912532
+p(h) for (type, facilityname) => region: 0.03514614144912532
+p(h) for (manager, type) => owner: 0.031577507388215825
+p(h) for (type, facilityname) => owner: 0.03514614144912532
+p(h) for (facilityname) => region: 0.07278068046954204
+p(h) for (manager, owner) => region: 0.041177702332048996
+p(h) for (owner, region) => facilityname: 0.03462819887676212
+p(h) for (facilityname) => manager: 0.07278068046954204
+p(h) for (facilityname) => owner: 0.07278068046954204
+p(h) for (owner) => type: 0.060216299816329456
+p(h) for (manager) => type: 0.06277197702679485
+p(h) for (manager, owner) => facilityname: 0.041177702332048996
+p(h) for (manager) => owner: 0.06277197702679485
+p(h) for (manager, type) => region: 0.031577507388215825
+p(h) for (manager, type) => facilityname: 0.031577507388215825
+p(h) for (owner, type) => manager: 0.029629333887031917
+p(h) for (manager) => region: 0.06277197702679485
+p(h) for (manager) => facilityname: 0.06277197702679485
+p(h) for (region) => type: 0.03372423302458827
+p(h) for (owner, type) => region: 0.029629333887031917
+p(h) for (owner) => manager: 0.060216299816329456
+individual p(y in C | X): 0.49503648797580846
+individual p(y in C | X): 0.3980452636463444
+combined p(y in C | X): 0.44127411407294803 
+
+iter: 1
+p(h) for (type, facilityname) => manager: 0.0005906157256083488
+p(h) for (type, facilityname) => region: 0.0005906157256083488
+p(h) for (manager, type) => owner: 0.0005306463716931928
+p(h) for (type, facilityname) => owner: 0.0005906157256083488
+p(h) for (facilityname) => region: 0.26338086408974
+p(h) for (manager, owner) => region: 0.0006919735009014189
+p(h) for (owner, region) => facilityname: 0.0005819119244060874
+p(h) for (facilityname) => manager: 0.26338086408974
+p(h) for (facilityname) => owner: 0.26338086408974
+p(h) for (owner) => type: 0.0010119089078655147
+p(h) for (manager) => type: 0.0010548559594576407
+p(h) for (manager, owner) => facilityname: 0.0006919735009014189
+p(h) for (manager) => owner: 0.19777683933478643
+p(h) for (manager, type) => region: 0.0005306463716931928
+p(h) for (manager, type) => facilityname: 0.0005306463716931928
+p(h) for (owner, type) => manager: 0.0004979081575231327
+p(h) for (manager) => region: 0.0010548559594576407
+p(h) for (manager) => facilityname: 0.0010548559594576407
+p(h) for (region) => type: 0.000566721168730115
+p(h) for (owner, type) => region: 0.0004979081575231327
+p(h) for (owner) => manager: 0.0010119089078655147
+individual p(y in C | X): 0.5289051080220689
+individual p(y in C | X): 0.5326345067328706
+individual p(y in C | X): 0.7277265944788909
+combined p(y in C | X): 0.5833964438987702 
+
+iter: 2
+p(h) for (type, facilityname) => manager: 1.0366667476792647e-05
+p(h) for (type, facilityname) => region: 1.0366667476792647e-05
+p(h) for (manager, type) => owner: 9.314067073719792e-06
+p(h) for (type, facilityname) => owner: 1.0366667476792647e-05
+p(h) for (facilityname) => region: 0.46823664493221906
+p(h) for (manager, owner) => region: 1.2145730083986923e-05
+p(h) for (owner, region) => facilityname: 0.1464819652851317
+p(h) for (facilityname) => manager: 0.0046229413125705235
+p(h) for (facilityname) => owner: 0.0046229413125705235
+p(h) for (owner) => type: 1.7761333994012966e-05
+p(h) for (manager) => type: 1.8515153751361355e-05
+p(h) for (manager, owner) => facilityname: 1.2145730083986923e-05
+p(h) for (manager) => owner: 0.003471439447168342
+p(h) for (manager, type) => region: 9.314067073719792e-06
+p(h) for (manager, type) => facilityname: 9.314067073719792e-06
+p(h) for (owner, type) => manager: 8.73943594662703e-06
+p(h) for (manager) => region: 1.8515153751361355e-05
+p(h) for (manager) => facilityname: 1.8515153751361355e-05
+p(h) for (region) => type: 9.947262921645028e-06
+p(h) for (owner, type) => region: 0.13117592346610918
+p(h) for (owner) => manager: 0.2412128170862947
+individual p(y in C | X): 0.3970157705684625
+individual p(y in C | X): 0.7175820386665542
+individual p(y in C | X): 0.7187329659008294
+combined p(y in C | X): 0.5656430839846709 
+
+iter: 3
+p(h) for (type, facilityname) => manager: 8.309179689632855e-08
+p(h) for (type, facilityname) => region: 8.309179689632855e-08
+p(h) for (manager, type) => owner: 7.465490441367478e-08
+p(h) for (type, facilityname) => owner: 8.309179689632855e-08
+p(h) for (facilityname) => region: 0.3447931179508245
+p(h) for (manager, owner) => region: 9.735149116681319e-08
+p(h) for (owner, region) => facilityname: 0.0011740947354291862
+p(h) for (facilityname) => manager: 3.7054193304423644e-05
+p(h) for (facilityname) => owner: 3.7054193304423644e-05
+p(h) for (owner) => type: 0.10272754827177474
+p(h) for (manager) => type: 0.10820635084626941
+p(h) for (manager, owner) => facilityname: 9.735149116681319e-08
+p(h) for (manager) => owner: 0.22362645841562345
+p(h) for (manager, type) => region: 7.465490441367478e-08
+p(h) for (manager, type) => facilityname: 7.465490441367478e-08
+p(h) for (owner, type) => manager: 7.004907201772022e-08
+p(h) for (manager) => region: 0.10820635084626941
+p(h) for (manager) => facilityname: 0.10820635084626941
+p(h) for (region) => type: 7.97301497525636e-08
+p(h) for (owner, type) => region: 0.001051412444233866
+p(h) for (owner) => manager: 0.0019333895343893782
+individual p(y in C | X): 0.34777829703502994
+individual p(y in C | X): 0.32232200544268763
+individual p(y in C | X): 0.6785965286871124
+combined p(y in C | X): 0.40260283854420914 
+
+iter: 4
+p(h) for (type, facilityname) => manager: 5.427038172590599e-10
+p(h) for (type, facilityname) => region: 5.427038172590599e-10
+p(h) for (manager, type) => owner: 4.875992951862825e-10
+p(h) for (type, facilityname) => owner: 5.427038172590599e-10
+p(h) for (facilityname) => region: 0.36465007618586753
+p(h) for (manager, owner) => region: 6.358392506303546e-10
+p(h) for (owner, region) => facilityname: 0.10314645674976054
+p(h) for (facilityname) => manager: 0.1853139731436376
+p(h) for (facilityname) => owner: 0.1853139731436376
+p(h) for (owner) => type: 0.0006709523041644543
+p(h) for (manager) => type: 0.0007067364270532253
+p(h) for (manager, owner) => facilityname: 6.358392506303546e-10
+p(h) for (manager) => owner: 0.001460588615909999
+p(h) for (manager, type) => region: 4.875992951862825e-10
+p(h) for (manager, type) => facilityname: 4.875992951862825e-10
+p(h) for (owner, type) => manager: 4.5751686928738587e-10
+p(h) for (manager) => region: 0.0007067364270532253
+p(h) for (manager) => facilityname: 0.0007067364270532253
+p(h) for (region) => type: 5.207476337927728e-10
+p(h) for (owner, type) => region: 6.867170627099654e-06
+p(h) for (owner) => manager: 0.15731689806438298
+individual p(y in C | X): 0.7094482734671544
+combined p(y in C | X): 0.7094482734671544 
+
+iter: 5
+p(h) for (type, facilityname) => manager: 4.1606309470596015e-12
+p(h) for (type, facilityname) => region: 4.1606309470596015e-12
+p(h) for (manager, type) => owner: 3.738172927477468e-12
+p(h) for (type, facilityname) => owner: 4.1606309470596015e-12
+p(h) for (facilityname) => region: 0.5031573408125074
+p(h) for (manager, owner) => region: 4.8746523967510856e-12
+p(h) for (owner, region) => facilityname: 0.0007907708152856817
+p(h) for (facilityname) => manager: 0.0014207068884793605
+p(h) for (facilityname) => owner: 0.0014207068884793605
+p(h) for (owner) => type: 5.1438461126117545e-06
+p(h) for (manager) => type: 5.418184571951049e-06
+p(h) for (manager, owner) => facilityname: 4.8746523967510856e-12
+p(h) for (manager) => owner: 0.29399305274038456
+p(h) for (manager, type) => region: 3.738172927477468e-12
+p(h) for (manager, type) => facilityname: 3.738172927477468e-12
+p(h) for (owner, type) => manager: 3.507546445449555e-12
+p(h) for (manager) => region: 0.19799532123332023
+p(h) for (manager) => facilityname: 5.418184571951049e-06
+p(h) for (region) => type: 3.992304184829467e-12
+p(h) for (owner, type) => region: 5.2647064054481797e-08
+p(h) for (owner) => manager: 0.0012060677182774426
+individual p(y in C | X): 0.9951511329866052
+individual p(y in C | X): 0.9977833257779106
+combined p(y in C | X): 0.9964654911316947 
+
+iter: 6
+p(h) for (type, facilityname) => manager: 3.3621507914227936e-14
+p(h) for (type, facilityname) => region: 3.3621507914227936e-14
+p(h) for (manager, type) => owner: 3.020768058141733e-14
+p(h) for (type, facilityname) => owner: 3.3621507914227936e-14
+p(h) for (facilityname) => region: 0.6922735801175643
+p(h) for (manager, owner) => region: 3.9391420729662e-14
+p(h) for (owner, region) => facilityname: 6.390114279003167e-06
+p(h) for (facilityname) => manager: 1.1480544297870096e-05
+p(h) for (facilityname) => owner: 1.1480544297870096e-05
+p(h) for (owner) => type: 4.1566739512662017e-08
+p(h) for (manager) => type: 4.378363228667066e-08
+p(h) for (manager, owner) => facilityname: 3.9391420729662e-14
+p(h) for (manager) => owner: 0.0023757189414803617
+p(h) for (manager, type) => region: 3.020768058141733e-14
+p(h) for (manager, type) => facilityname: 3.020768058141733e-14
+p(h) for (owner, type) => manager: 2.8344018509631813e-14
+p(h) for (manager) => region: 0.0015999739809969785
+p(h) for (manager) => facilityname: 4.378363228667066e-08
+p(h) for (region) => type: 3.226128163112142e-14
+p(h) for (owner, type) => region: 4.2543395540033907e-10
+p(h) for (owner) => manager: 0.30372124619731466
+individual p(y in C | X): 0.003975693347969847
+individual p(y in C | X): 0.9999883898960591
+individual p(y in C | X): 0.30771994399220626
+individual p(y in C | X): 0.6962493168238019
+individual p(y in C | X): 0.3037507265342594
+individual p(y in C | X): 0.9999819997817181
+combined p(y in C | X): 0.022943968805592622 
+
+--------
+
+project id: 00000004
+scenario id: 3
+iter: 0
+p(h) for (director, year) => rating: 0.04274743509011864
+p(h) for (userrating, director) => rating: 0.04295703494666182
+p(h) for (director, rating) => year: 0.05096983569084789
+p(h) for (title) => rating: 0.1580475638902373
+p(h) for (userrating, director) => year: 0.04295703494666182
+p(h) for (title) => year: 0.1580475638902373
+p(h) for (director) => rating: 0.0802288817995705
+p(h) for (year, title) => userrating: 0.07682275188278768
+p(h) for (rating, title) => userrating: 0.08468443687250309
+p(h) for (title) => userrating: 0.1580475638902373
+p(h) for (director) => year: 0.0802288817995705
+p(h) for (userrating, rating) => year: 0.024261015300566176
+individual p(y in C | X): 0.3239809157265883
+individual p(y in C | X): 0.5991963323906242
+individual p(y in C | X): 0.3239809157265883
+combined p(y in C | X): 0.38255033906297153 
+
+iter: 1
+p(h) for (director, year) => rating: 0.0018135623080410492
+p(h) for (userrating, director) => rating: 0.0018224545935968063
+p(h) for (director, rating) => year: 0.002162398110228012
+p(h) for (title) => rating: 0.5619942422647329
+p(h) for (userrating, director) => year: 0.0018224545935968063
+p(h) for (title) => year: 0.006705176676560419
+p(h) for (director) => rating: 0.4056895936348541
+p(h) for (year, title) => userrating: 0.003259209515632874
+p(h) for (rating, title) => userrating: 0.003592741937987161
+p(h) for (title) => userrating: 0.006705176676560419
+p(h) for (director) => year: 0.00340371476654081
+p(h) for (userrating, rating) => year: 0.0010292749216685667
+individual p(y in C | X): 0.9713198528012248
+individual p(y in C | X): 0.017686486084913206
+individual p(y in C | X): 0.9713198528012248
+individual p(y in C | X): 0.0158640314913164
+individual p(y in C | X): 0.9713198528012248
+combined p(y in C | X): 0.04076155506453601 
+
+iter: 2
+p(h) for (director, year) => rating: 2.5305001561149904e-05
+p(h) for (userrating, director) => rating: 2.542907741940574e-05
+p(h) for (director, rating) => year: 3.0172378038807857e-05
+p(h) for (title) => rating: 0.37351648928889963
+p(h) for (userrating, director) => year: 2.542907741940574e-05
+p(h) for (title) => year: 0.16743842623295502
+p(h) for (director) => rating: 0.29134286164534173
+p(h) for (year, title) => userrating: 4.547640933842e-05
+p(h) for (rating, title) => userrating: 5.0130254663142255e-05
+p(h) for (title) => userrating: 0.16743842623295502
+p(h) for (director) => year: 4.749272032128859e-05
+p(h) for (userrating, rating) => year: 1.4361681087102737e-05
+individual p(y in C | X): 0.6649100850132218
+individual p(y in C | X): 0.16759165066339762
+individual p(y in C | X): 0.8323960039664982
+individual p(y in C | X): 0.6649100850132218
+individual p(y in C | X): 0.6649100850132218
+individual p(y in C | X): 0.3350444385774397
+individual p(y in C | X): 0.16760135849916
+combined p(y in C | X): 0.33928962176494715 
+
+iter: 3
+p(h) for (director, year) => rating: 3.150893451747098e-07
+p(h) for (userrating, director) => rating: 3.1663429591637833e-07
+p(h) for (director, rating) => year: 3.7569627552236945e-07
+p(h) for (title) => rating: 0.4162412974408031
+p(h) for (userrating, director) => year: 3.1663429591637833e-07
+p(h) for (title) => year: 0.2454756369522685
+p(h) for (director) => rating: 0.33619489408680253
+p(h) for (year, title) => userrating: 5.662569118880812e-07
+p(h) for (rating, title) => userrating: 6.242050243340574e-07
+p(h) for (title) => userrating: 0.0020848868138314525
+p(h) for (director) => year: 5.913633362336946e-07
+p(h) for (userrating, rating) => year: 1.7882680933284966e-07
+individual p(y in C | X): 0.6638020000337125
+individual p(y in C | X): 0.24756243166503197
+individual p(y in C | X): 0.7524368232512467
+individual p(y in C | X): 0.24547722821690462
+individual p(y in C | X): 0.7524368232512467
+individual p(y in C | X): 0.7524368232512467
+combined p(y in C | X): 0.4409624176263489 
+
+--------
+
+project id: 00000001
+scenario id: 0
+iter: 0
+p(h) for (zip, state) => name: 0.10586332364483214
+p(h) for (zip, state) => phone: 0.10586332364483214
+p(h) for (zip, areacode) => state: 0.1232878181068858
+p(h) for (zip) => state: 0.14635972799617158
+p(h) for (state, areacode) => zip: 0.10547111701119737
+p(h) for (areacode) => state: 0.16657905338230936
+p(h) for (zip, areacode) => phone: 0.1232878181068858
+p(h) for (zip, areacode) => name: 0.1232878181068858
+individual p(y in C | X): 0.4362265994853668
+individual p(y in C | X): 0.16657905338230936
+individual p(y in C | X): 0.4131546895960809
+individual p(y in C | X): 0.4362265994853668
+combined p(y in C | X): 0.3074952782489515 
+
+iter: 1
+p(h) for (zip, state) => name: 0.10586332364483214
+p(h) for (zip, state) => phone: 0.10586332364483214
+p(h) for (zip, areacode) => state: 0.1232878181068858
+p(h) for (zip) => state: 0.14635972799617158
+p(h) for (state, areacode) => zip: 0.10547111701119737
+p(h) for (areacode) => state: 0.16657905338230936
+p(h) for (zip, areacode) => phone: 0.1232878181068858
+p(h) for (zip, areacode) => name: 0.1232878181068858
+individual p(y in C | X): 0.4362265994853668
+individual p(y in C | X): 0.16657905338230936
+individual p(y in C | X): 0.4362265994853668
+combined p(y in C | X): 0.28334153283329927 
+
+iter: 2
+p(h) for (zip, state) => name: 0.005615033293178744
+p(h) for (zip, state) => phone: 0.005615033293178744
+p(h) for (zip, areacode) => state: 0.006539235492322677
+p(h) for (zip) => state: 0.39235366212396733
+p(h) for (state, areacode) => zip: 0.005594230495478443
+p(h) for (areacode) => state: 0.571204334317229
+p(h) for (zip, areacode) => phone: 0.006539235492322677
+p(h) for (zip, areacode) => name: 0.006539235492322677
+individual p(y in C | X): 0.5842828053018743
+individual p(y in C | X): 0.9766364674258414
+individual p(y in C | X): 0.590822040794197
+individual p(y in C | X): 0.5777435698095515
+individual p(y in C | X): 0.963557996441196
+combined p(y in C | X): 0.6947656385101785 
+
+iter: 3
+p(h) for (zip, state) => name: 0.005615033293178743
+p(h) for (zip, state) => phone: 0.005615033293178743
+p(h) for (zip, areacode) => state: 0.006539235492322676
+p(h) for (zip) => state: 0.3923536621239672
+p(h) for (state, areacode) => zip: 0.0055942304954784425
+p(h) for (areacode) => state: 0.5712043343172288
+p(h) for (zip, areacode) => phone: 0.006539235492322676
+p(h) for (zip, areacode) => name: 0.006539235492322676
+individual p(y in C | X): 0.5842828053018743
+individual p(y in C | X): 0.9766364674258414
+individual p(y in C | X): 0.590822040794197
+individual p(y in C | X): 0.963557996441196
+individual p(y in C | X): 0.5712043343172288
+combined p(y in C | X): 0.6928579262131278 
+
+iter: 4
+p(h) for (zip, state) => name: 0.00017666653330219268
+p(h) for (zip, state) => phone: 0.00017666653330219268
+p(h) for (zip, areacode) => state: 0.00020574482902509995
+p(h) for (zip) => state: 0.4226390856449695
+p(h) for (state, areacode) => zip: 0.000176012012133607
+p(h) for (areacode) => state: 0.5762143347892172
+p(h) for (zip, areacode) => phone: 0.00020574482902509995
+p(h) for (zip, areacode) => name: 0.00020574482902509995
+individual p(y in C | X): 0.9990591652632118
+individual p(y in C | X): 0.9990591652632118
+individual p(y in C | X): 0.999264910092237
+individual p(y in C | X): 0.9988534204341868
+individual p(y in C | X): 0.5762143347892172
+combined p(y in C | X): 0.8711966586338656 
+
+--------
+
+project id: 00000006
+scenario id: 4
+iter: 0
+p(h) for (title) => listingnumber: 0.17751934447965362
+p(h) for (listingnumber) => title: 0.18464013344945762
+p(h) for (listingnumber) => director: 0.18464013344945762
+p(h) for (title) => year: 0.17751934447965362
+p(h) for (title) => director: 0.17751934447965362
+p(h) for (director) => year: 0.09816169966212386
+individual p(y in C | X): 0.6378405220708886
+individual p(y in C | X): 0.1846401334494576
+individual p(y in C | X): 0.3550386889593072
+individual p(y in C | X): 0.1846401334494576
+individual p(y in C | X): 0.2828018331115814
+individual p(y in C | X): 0.2828018331115814
+combined p(y in C | X): 0.2691988629633583 
+
+iter: 1
+p(h) for (title) => listingnumber: 0.167345829937517
+p(h) for (listingnumber) => title: 0.17481662591687044
+p(h) for (listingnumber) => director: 0.17481662591687044
+p(h) for (title) => year: 0.167345829937517
+p(h) for (title) => director: 0.167345829937517
+p(h) for (director) => year: 0.14832925835370822
+individual p(y in C | X): 0.17481662591687044
+individual p(y in C | X): 0.32314588427057866
+individual p(y in C | X): 0.6768541157294214
+individual p(y in C | X): 0.4904917142080957
+individual p(y in C | X): 0.14832925835370822
+individual p(y in C | X): 0.14832925835370822
+combined p(y in C | X): 0.23242690463704332 
+
+iter: 2
+p(h) for (title) => listingnumber: 0.16944024205748867
+p(h) for (listingnumber) => title: 0.17700453857791226
+p(h) for (listingnumber) => director: 0.17700453857791226
+p(h) for (title) => year: 0.16944024205748867
+p(h) for (title) => director: 0.16944024205748867
+p(h) for (director) => year: 0.13767019667170954
+individual p(y in C | X): 0.33888048411497734
+individual p(y in C | X): 0.5158850226928896
+individual p(y in C | X): 0.17700453857791226
+individual p(y in C | X): 0.3071104387291982
+individual p(y in C | X): 0.13767019667170954
+individual p(y in C | X): 0.13767019667170954
+combined p(y in C | X): 0.21184561526612447 
+
+iter: 3
+p(h) for (title) => listingnumber: 0.2437482335891598
+p(h) for (listingnumber) => title: 0.25462985116010445
+p(h) for (listingnumber) => director: 0.25462985116010445
+p(h) for (title) => year: 0.001789699587018743
+p(h) for (title) => director: 0.2437482335891598
+p(h) for (director) => year: 0.0014541309144527287
+individual p(y in C | X): 0.2546298511601045
+individual p(y in C | X): 0.48749646717831974
+individual p(y in C | X): 0.2546298511601045
+individual p(y in C | X): 0.2546298511601045
+individual p(y in C | X): 0.7439160179254429
+individual p(y in C | X): 0.2546298511601045
+individual p(y in C | X): 0.4998322156637171
+combined p(y in C | X): 0.3316705067349903 
+
+iter: 4
+p(h) for (title) => listingnumber: 0.2445347059349638
+p(h) for (listingnumber) => title: 0.25545143387848895
+p(h) for (listingnumber) => director: 0.25545143387848895
+p(h) for (title) => year: 1.5293998948672602e-05
+p(h) for (title) => director: 0.2445347059349638
+p(h) for (director) => year: 1.2426374145796489e-05
+individual p(y in C | X): 0.49998613981345286
+individual p(y in C | X): 0.48906941186992764
+individual p(y in C | X): 0.255451433878489
+individual p(y in C | X): 0.2554638602526348
+individual p(y in C | X): 0.255451433878489
+individual p(y in C | X): 0.2554638602526348
+combined p(y in C | X): 0.30452326890463083 
+
+--------
+

@@ -146,6 +146,7 @@ def plot_modeling(scenario_id, modeling_method, sampling_method, x_axis):
     if x_axis == 'iter':
         for b in preds:
             ax1.set_xticks(np.arange(0, 36, 6.0))
+            print([x.value for x in b.values])
             ax1.plot([i for i in range(1, len(b.values) + 1)], [x.value for x in b.values], color=b.color)
         '''for b in lists_s2:
             ax1[0,1].set_xticks(np.arange(0, 36, 6.0))
@@ -159,6 +160,7 @@ def plot_modeling(scenario_id, modeling_method, sampling_method, x_axis):
 
         for b in f1s:
             # ax2[0,0].set_xticks(np.arange(0, 36, 6.0))
+            print([x.value for x in b.values])
             ax2.plot([i for i in range(1, len(b.values) + 1)], [x.value for x in b.values], color=b.color)
         '''for b in f1_s2:
             # ax2[0,1].set_xticks(np.arange(0, 36, 6.0))

@@ -207,7 +207,7 @@ def bayes(sampling_method):
                 # print(it)
                 # print(cfd_metadata[h]['weight_history'][it-1].iter_num)
                 p_h = cfd_metadata[h]['weight_history'][it].weight    # p(h)
-                print('p(h):', p_h)
+                print('p(h) for ' + h + ': ' + str(p_h))
                 p_h_given_X = p_X_given_h * p_h     # p(h | X)
                 p_h_given_X_list.append(PHGivenX(h=h, value=p_h_given_X))
             
@@ -234,7 +234,7 @@ def bayes(sampling_method):
                     # print(i_y_in_h)
                     # print(p_h_given_X)
                     p_y_in_C_given_X += (i_y_in_h * p_h_given_X)  # p(y in C | X) = I(y in supp(h)) * p(h | X)
-                print('p(y in C | X):', p_y_in_C_given_X)
+                print('individual p(y in C | X):', p_y_in_C_given_X)
                 p_y_in_C_given_X_list.append(p_y_in_C_given_X)
                 # p_Y_in_C_given_X *= p_y_in_C_given_X    # incorporating each y in Y into p(Y in C | X)
             # print('p(Y in C | X) =', p_Y_in_C_given_X)
@@ -243,7 +243,7 @@ def bayes(sampling_method):
                 pred_accuracy = hmean(p_y_in_C_given_X_list)
             else:
                 pred_accuracy = 0
-            print(pred_accuracy)
+            print('combined p(y in C | X):', pred_accuracy, '\n')
             
             # bayes_modeling_metadata['p_Y_in_C_given_X']['aCOMBO-sSR'].append(StudyMetric(iter_num=it, value=p_Y_in_C_given_X, elapsed_time=elapsed_time))
             # bayes_modeling_metadata['p_Y_in_C_given_X'].append(StudyMetric(iter_num=it, value=p_Y_in_C_given_X, elapsed_time=elapsed_time))
@@ -285,6 +285,7 @@ def bayes(sampling_method):
             
             gt_bayes_metadata['p_Y_in_C_given_X']['aCOMBO-sSR'].append(StudyMetric(iter_num=it, value=clean_p_Y_in_C_given_X, elapsed_time=elapsed_time))'''
 
+        print('--------\n')
         pickle.dump( bayes_modeling_metadata, open('./store/' + project_id + '/bayes_modeling_metadata.p', 'wb') )
         # pickle.dump( gt_bayes_metadata, open('./store/' + project_id + '/gt_bayes_metadata.p', 'wb') )
 

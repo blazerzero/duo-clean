@@ -436,7 +436,7 @@ def buildSample(data, sample_size, project_id, sampling_method, current_iter, cu
     #     s_out = data.sample(n=sample_size)      # Y = set(s_out.index)
     # s_out = returnTuples(data, sample_size, project_id)
 
-    fds = cfd_metadata.keys()
+    # fds = cfd_metadata.keys()
     s_out = returnTuples(data, cfd_metadata, sample_size, sampling_method)
 
     Y = getDirtyTuples(s_out, project_id)
@@ -448,7 +448,9 @@ def buildSample(data, sample_size, project_id, sampling_method, current_iter, cu
         X = set()
     else:
         # new_X = modeling_metadata['X'][-1].value | dirty_tuples     # X = X | set(dirty_tuples)
-        X = modeling_metadata['X'][-1].value
+        prev_sample = pickle.load( open('./store/' + project_id + '/current_sample.p', 'rb') )
+        prev_sample_Y = getDirtyTuples(data.iloc[prev_sample], project_id)
+        X = modeling_metadata['X'][-1].value | set(prev_sample_Y)
 
     # new_X = prev_X | Y
     # print(new_X)
@@ -622,9 +624,9 @@ def returnTuples(data, fd_metadata, sample_size, sampling_method):
     weights = [f['weight'] for f in fd_metadata.values()]
     while len(chosen) < sample_size:
         if sampling_method == 'DUO':
-            fd = random.choice(fds)
+            fd = random.choices(fds, weights=weights, k=1).pop()
         else:
-            fd = random.choices(fds, k=1).pop()
+            fd = random.choice(fds)
         fd_m = fd_metadata[fd]
         if len(fd_m['vios']) > 0:
             tupSet = list()
@@ -702,7 +704,7 @@ def getHSpaceConfDelta(project_id, current_iter):
     if current_iter >= 5:
         h_space_conf_delta = 0
         for fd_m in cfd_metadata.values():
-            fd_conf_delta = abs(fd_m['weight_history'][-1].score - fd_m['weight_history'][-3].score)
+            fd_conf_delta = abs(fd_m['weight_history'][-1].weight - fd_m['weight_history'][-3].weight)
             # print(fd_conf_delta)
             h_space_conf_delta += fd_conf_delta
         h_space_conf_delta /= len(cfd_metadata.keys())
