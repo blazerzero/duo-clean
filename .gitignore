@@ -24,3 +24,6 @@ server/BART/
 ui/src/global.js
 server/metanome-cli/
 server/results/
+server/analysis-results/
+server/analyze-out-1.txt
+server/analyze-out.txt
