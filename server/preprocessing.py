@@ -81,6 +81,7 @@ if __name__ == '__main__':
     all_scenarios_random = dict()
     for s_id, scenario in tqdm(scenarios.items()):
         data = pd.read_csv(scenario['dirty_dataset'], keep_default_na=False)
+        clean_data = pd.read_csv(scenario['clean_dataset'], keep_default_na=False)
         g1Prime = calculateG1Prime(data, scenario['cfds'])
         # print(g1Prime)
         if int(s_id) <= 4:
@@ -124,7 +125,7 @@ if __name__ == '__main__':
             h = dict()
             h['cfd'] = fd['cfd']
             h['score'] = 1
-            support, vios = helpers.getSupportAndVios(data, h['cfd'])
+            support, vios = helpers.getSupportAndVios(data, clean_data, h['cfd'])
             h['conf'] = (len(support) - len(vios)) / len(support)
             if h['conf'] <= 0.9:
                 vio_pairs, vio_trios = makeVioSets(data, support, vios, h['cfd'])
@@ -139,7 +140,7 @@ if __name__ == '__main__':
             h = dict()
             h['cfd'] = fd['cfd']
             h['score'] = 1
-            support, vios = helpers.getSupportAndVios(data, h['cfd'])
+            support, vios = helpers.getSupportAndVios(clean_data, clean_data, h['cfd'])
             h['conf'] = (len(support) - len(vios)) / len(support)
             clean_h_space.append(h)
         

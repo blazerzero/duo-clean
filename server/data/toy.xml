@@ -85,7 +85,7 @@ toy(areacode: $ac2, phone: $p2, name: $n2, state: $s2, zip: $z2),
                 </vioGenQuery>
                 <vioGenQuery id="e1">
                     <comparison>(s1 != s2)</comparison>
-                    <percentage>30.0</percentage> 
+                    <percentage>20.0</percentage> 
                 </vioGenQuery>
             </vioGenQueries>
         </errorPercentages>

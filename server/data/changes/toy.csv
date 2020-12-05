@@ -1,11 +1,7 @@
 29.state,ME,HI
-23.state,HI,OR
-15.state,CA,ME
-13.state,WA,FL
-5.state,HI,OR
-31.state,GA,CA
-17.state,NV,FL
-7.state,GA,OR
-32.state,OR,CA
+17.state,HI,FL
+16.state,CA,FL
+27.state,AZ,HI
+9.state,FL,NV
 14.state,FL,ME
-20.state,AZ,GA
+38.state,FL,AZ

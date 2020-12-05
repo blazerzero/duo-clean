@@ -134,13 +134,19 @@ def bayes(scenario_id):
             for h in discovered_cfds:
                 p_X_given_h = next(x for x in bayes_modeling_metadata['p_X_given_h'][h] if x.iter_num == it).value     # p(X | h) for this iteration
                 p_h = cfd_metadata[h]['weight_history'][it].weight    # p(h)
-                print('p(h) for ' + h + ': ' + str(p_h))
+                # print('p(h) for ' + h + ': ' + str(p_h))
                 p_h_given_X = p_X_given_h * p_h     # p(h | X)
+                # print('p(h | X) for ' + h + ': ' + str(p_h_given_X))
                 p_h_given_X_list.append(PHGivenX(h=h, value=p_h_given_X))
             
             # normalized p(h | X) such that sum of all p(h | X) = 1
             p_h_given_X_list_sum = sum([x.value for x in p_h_given_X_list])
             p_h_given_X_list = [PHGivenX(h=x.h, value=((x.value/p_h_given_X_list_sum) if p_h_given_X_list_sum > 0 else 0)) for x in p_h_given_X_list]
+
+            for phgx in p_h_given_X_list:
+                h = phgx.h
+                p_h_given_X = phgx.value
+                print('p(h | X) for ' + h + ': ' + str(p_h_given_X))
 
             # p(Y in C | X)
             p_y_in_C_given_X_list = list()
@@ -151,7 +157,7 @@ def bayes(scenario_id):
                     p_h_given_X = phgx.value    # p(h | X)
                     i_y_in_h = next(i for i in bayes_modeling_metadata['y_in_h'][h][y] if i.iter_num == it).value  # I(y in supp(h))
                     p_y_in_C_given_X += (i_y_in_h * p_h_given_X)  # p(y in C | X) = I(y in supp(h)) * p(h | X)
-                print('individual p(y in C | X):', p_y_in_C_given_X)
+                print('tuple ' + str(y) + ' individual p(y in C | X): ' + str(p_y_in_C_given_X))
                 p_y_in_C_given_X_list.append(p_y_in_C_given_X)
             if len(p_y_in_C_given_X_list) > 0:
                 # pred_accuracy = len([y for y in p_y_in_C_given_X_list if y >= 0.5]) / len(p_y_in_C_given_X_list)
@@ -205,13 +211,19 @@ def max_likelihood(scenario_id):
             # find smallest h's
             small_cfds = set()
             # find all h that support X
-            x_in_h = dict()
+            # x_in_h = dict()
+            supporting_cfds = list()
             for h in discovered_cfds:
-                x_in_h[h] = list()
+                # print(h)
+                # print(cfd_metadata[h]['vios'])
+                # print(curr_X)
+                all_X_in_h = True
                 for x in curr_X:
-                    x_in_h_val = 1 if x in cfd_metadata[h]['vios'] else 0
-                    x_in_h[h].append(x_in_h_val)
-            supporting_cfds = [h for h in discovered_cfds if 0 not in x_in_h[h]]
+                    if x not in cfd_metadata[h]['vios']:
+                        all_X_in_h = False
+                        break
+                if all_X_in_h is True:
+                    supporting_cfds.append(h)
 
             # find smallest h (think subset/superset) of these h's
             for cfd in supporting_cfds:
@@ -231,6 +243,8 @@ def max_likelihood(scenario_id):
                 try:
                     smallest_cfd = next(iter(small_cfds))
                 except StopIteration:
+                    # print('no FD that covers all violating tuples X')
+                    print('combined p(y in C | X):', float(0))
                     min_modeling_metadata['pred_accuracy'].append(StudyMetric(iter_num=it, value=0, elapsed_time=elapsed_time))
                     continue
 
@@ -245,13 +259,17 @@ def max_likelihood(scenario_id):
             for h in generalized_cfds:
                 p_X_given_h = next(x for x in min_modeling_metadata['p_X_given_h'][h] if x.iter_num == it).value     # p(X | h) for this iteration
                 p_h = cfd_metadata[h]['weight_history'][it].weight    # p(h)
-                print('p(h) for ' + h + ': ' + str(p_h))
                 p_h_given_X = p_X_given_h * p_h     # p(h | X)
                 p_h_given_X_list.append(PHGivenX(h=h, value=p_h_given_X))
             
             # normalized p(h | X) such that sum of all p(h | X) = 1
             p_h_given_X_list_sum = sum([x.value for x in p_h_given_X_list])
             p_h_given_X_list = [PHGivenX(h=x.h, value=((x.value/p_h_given_X_list_sum) if p_h_given_X_list_sum > 0 else 0)) for x in p_h_given_X_list]
+
+            for phgx in p_h_given_X_list:
+                h = phgx.h
+                p_h_given_X = phgx.value
+                print('p(h | X) for ' + h + ': ' + str(p_h_given_X))
 
             # p(Y in C | X)
             p_y_in_C_given_X_list = list()
@@ -262,7 +280,7 @@ def max_likelihood(scenario_id):
                     p_h_given_X = phgx.value    # p(h | X)
                     i_y_in_h = next(i for i in min_modeling_metadata['y_in_h'][h][y] if i.iter_num == it).value  # I(y in supp(h))
                     p_y_in_C_given_X += (i_y_in_h * p_h_given_X)  # p(y in C | X) = I(y in supp(h)) * p(h | X)   
-                print('individual p(y in C | X):', p_y_in_C_given_X)
+                print('tuple ' + str(y) + ' individual p(y in C | X): ' + str(p_y_in_C_given_X))
                 p_y_in_C_given_X_list.append(p_y_in_C_given_X)
             if len(p_y_in_C_given_X_list) > 0:
                 # pred_accuracy = len([y for y in p_y_in_C_given_X_list if y >= 0.5]) / len(p_y_in_C_given_X_list)

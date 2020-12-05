@@ -434,14 +434,15 @@ class Clean(Resource):
         clean_h_space = project_info['scenario']['clean_hypothesis_space']
         cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
 
-        h_space_conf_delta = helpers.getHSpaceConfDelta(project_id, current_iter)
+        top_fd_conf, variance_delta = helpers.checkForTermination(project_id, clean_h_space, current_iter)
+        conf_threshold = (0.85 / len(project_info['scenario']['cfds']))
 
-        if refresh == 0 and (current_iter >= 25 or (h_space_conf_delta is not None and h_space_conf_delta < 0.01)):
+        if refresh == 0 and (current_iter >= 25 or (top_fd_conf >= conf_threshold and variance_delta is not None and variance_delta < 0.01)):
             msg = '[DONE]'
             # TODO: Flag interactions that converge to unusual FDs
             top_fd = max(cfd_metadata, key=lambda x: cfd_metadata[x]['weight'])
-            top_fd_conf = next(h for h in clean_h_space if h['cfd'] == top_fd)['conf'] if top_fd in [k['cfd'] for k in clean_h_space] else None
-            project_info['flagged'] = True if top_fd_conf is None or top_fd_conf < (0.85 / len(project_info['scenario']['cfds'])) else False
+            concerned_fd_conf = next(h for h in clean_h_space if h['cfd'] == top_fd)['conf'] if top_fd in [k['cfd'] for k in clean_h_space] else None
+            project_info['flagged'] = True if concerned_fd_conf is None or concerned_fd_conf < conf_threshold else False
         else:
             msg = '[SUCCESS]: Saved feedback and built new sample.'
 

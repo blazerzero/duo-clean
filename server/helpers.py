@@ -336,7 +336,7 @@ def explainFeedback(full_dataset, dirty_sample, project_id, current_iter, curren
         accepted_cfds = [c for c in cfds if c in cfd_metadata.keys()]
         for cfd, cfd_m in cfd_metadata.items():
             if cfd in accepted_cfds:
-                support, vios = getSupportAndVios(prepped_sample, cfd)
+                support, vios = getSupportAndVios(prepped_sample, None, cfd)
                 # conf = 1 - ((len(vios) / len(prepped_sample.index)) * (len(support) / len(prepped_sample.index)))
                 # cfd_m['conf_history'].append(CFDScore(iter_num=current_iter, score=conf, elapsed_time=elapsed_time))
                 cfd_m['score'] = reinforceFD(cfd, prepped_sample, cfd_m['score'], support, vios, 1)
@@ -439,6 +439,10 @@ def buildSample(data, sample_size, project_id, sampling_method, current_iter, cu
 
     elapsed_time = current_time - start_time
     print(elapsed_time)
+
+    with open('./store/' + project_id + '/project_info.json', 'r') as f:
+        project_info = json.load(f)
+    diff = project_info['scenario']['diff']
     
     # GET SAMPLE
     # if (sampling_method == 'DUO'):
@@ -453,7 +457,7 @@ def buildSample(data, sample_size, project_id, sampling_method, current_iter, cu
     s_out = returnTuples(data, cfd_metadata, sample_size, sampling_method)
 
     Y = getDirtyTuples(s_out, project_id)
-    # print(dirty_tuples)
+    print(Y)
 
     # MODELING METRICS
     if current_iter == 0:
@@ -476,6 +480,7 @@ def buildSample(data, sample_size, project_id, sampling_method, current_iter, cu
 
     # USER DATA
     for cfd, cfd_m in cfd_metadata.items():
+        rhs = cfd.split(' => ')[1]
         # p(X | h)
         print(cfd)
         if cfd not in modeling_metadata['p_X_given_h'].keys():  # cfd was just discovered in this iteration
@@ -498,7 +503,7 @@ def buildSample(data, sample_size, project_id, sampling_method, current_iter, cu
             print('Y!')
             if y not in modeling_metadata['y_in_h'][cfd].keys():    # this is the first time the user will have been shown y
                 modeling_metadata['y_in_h'][cfd][y] = list()
-            if y in cfd_m['vios']:
+            if y in cfd_m['vios'] and diff[str(y)][rhs] is False:
                 modeling_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=1, elapsed_time=elapsed_time))
             else:
                 modeling_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=0, elapsed_time=elapsed_time))
@@ -660,26 +665,33 @@ def returnTuples(data, fd_metadata, sample_size, sampling_method):
     return s_out
 
 def getDirtyTuples(s_out, project_id):
+    # fd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
     with open('./store/' + project_id + '/project_info.json', 'r') as f:
         project_info = json.load(f)
-    # h_space = project_info['scenario']['hypothesis_space']
+    h_space = project_info['scenario']['hypothesis_space']
+    # scenario_fds = project_info['scenario']['cfds']
+    # dirty_tuples = set()
+    # for fd in scenario_fds:
+    #     dirty_tuples |= set(fd_metadata[fd]['vios'])
     diff = project_info['scenario']['diff']
     dirty_tuples = list()
     for idx in s_out.index:
+        print(idx)
         is_dirty = False
         for col in s_out.columns:
             if diff[str(idx)][col] is False:
+                print('dirty')
                 is_dirty = True
                 break
         if is_dirty is True:
             dirty_tuples.append(idx)
-        '''is_dirty = False
-        for h in h_space:
-            if idx in h['vios']:
-                is_dirty = True
-                break
-        if is_dirty is True:
-            dirty_tuples.append(idx)'''
+        # is_dirty = False
+        # for h in h_space:
+        #     if idx in h['vios']:
+        #         is_dirty = True
+        #         break
+        # if is_dirty is True:
+        #     dirty_tuples.append(idx)
     return set(dirty_tuples)
 
 # SELECT ONE TUPLE TO ADD TO SAMPLE
@@ -712,66 +724,65 @@ def getUserScores(project_id):
         project_info = json.load(f)
     return project_info['true_pos'], project_info['false_pos']
 
-def getHSpaceConfDelta(project_id, current_iter):
+def checkForTermination(project_id, clean_h_space, current_iter):
     cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
+    top_fd = max(cfd_metadata, key=lambda x: cfd_metadata[x]['weight'])
+    top_fd_conf = next(h for h in clean_h_space if h['cfd'] == top_fd)['conf']
+
     if current_iter >= 5:
-        h_space_conf_delta = 0
-        for fd_m in cfd_metadata.values():
-            fd_conf_delta = abs(fd_m['weight_history'][-1].weight - fd_m['weight_history'][-3].weight)
+        # h_space_conf_delta = 0
+        # for fd_m in cfd_metadata.values():
+        #     fd_conf_delta = abs(fd_m['weight_history'][-1].weight - fd_m['weight_history'][-3].weight)
             # print(fd_conf_delta)
-            h_space_conf_delta += fd_conf_delta
-        h_space_conf_delta /= len(cfd_metadata.keys())
-        print("delta h:", h_space_conf_delta)
-        return h_space_conf_delta
+        #     h_space_conf_delta += fd_conf_delta
+        # h_space_conf_delta /= len(cfd_metadata.keys())
+        variance_delta = abs(np.var([fd_m['weight_history'][-1].weight for fd_m in cfd_metadata.values()]) - np.var([fd_m['weight_history'][-3].weight for fd_m in cfd_metadata.values()]))
+        print("variance delta:", variance_delta)
+        return top_fd_conf, variance_delta
     else:
-        return None
+        return top_fd_conf, None
 
 # GET FD SUPPORT AND VIOLATIONS
-def getSupportAndVios(data, fd):
-    # print("FD:", fd)
+def getSupportAndVios(dirty_data, clean_data, fd):
     lhs = fd.split(' => ')[0][1:-1]
     rhs = fd.split(' => ')[1]
-    patterns = fd2cfd(data, lhs, rhs)
+    clean_patterns = None
+    if clean_data is not None:
+        clean_patterns = fd2cfd(clean_data, lhs, rhs)
+        # ENFORCE ONE LHS TO RHS FOR CLEAN PATTERNS
+        for l in clean_patterns.keys():
+            if len(clean_patterns[l]) == 1:
+                clean_patterns[l] = clean_patterns[l].pop()
+            else:
+                random_idx = random.randint(0, len(clean_patterns[l])-1)
+                clean_patterns[l] = clean_patterns[l][random_idx]
+    dirty_patterns = fd2cfd(dirty_data, lhs, rhs)
+
+    # IF DIRTY PATTERNS HAS >1 RHS TO 1 LHS, PICK CLEAN RHS
+    for l in dirty_patterns.keys():
+        if len(dirty_patterns[l]) == 1:
+            dirty_patterns[l] = dirty_patterns[l].pop()
+        else:
+            if clean_patterns is not None and l in clean_patterns.keys() and clean_patterns[l] in dirty_patterns[l]:
+                dirty_patterns[l] = clean_patterns[l]
+            else:
+                random_idx = random.randint(0, len(dirty_patterns[l])-1)
+                dirty_patterns[l] = dirty_patterns[l][random_idx]
         
     # CODE TO BUILD COVER AND VIOLATION LIST
     support = list()
     violations = list()
-    for idx in data.index:
-        # applies = True
-        # for lh in lhs.split(', '):
-            # If this element of the CFD is constant
-            # if '=' in lh:
-            #     lh = np.array(lh.split('='))
-            #     if data.at[idx, lh[0]] != lh[1]:     # CFD does not apply to this row
-            #         applies = False
-            #        break
-
-        # If this CFD applies to this row
-        # if applies:
+    for idx in dirty_data.index:
         support.append(idx)
-            # if lhs.count('=') == len(lhs.split(', ')) and '=' in rhs:
-            #     rh = np.array(rhs.split('='))
-            #     if data.at[idx, rh[0]] != rh[1]:
-            #         violations.append(idx)
-            # elif lhs.count('=') == len(lhs.split(', ')) and '=' not in rhs:
-            #     rh_attribute = rhs.split('=')[0]
-            #     applicable_rhv = patterns[lhs].split('=')[1]
-            #     if data.at[idx, rh_attribute] != applicable_rhv:
-            #          violations.append(idx)
-            # elif lhs.count('=') < len(lhs.split(', ')):
         applicable_lhs = ''
         for lh in lhs.split(', '):
-            # if '=' in lh:
-            #     applicable_lhs += lh + ', '
-            # else:
-            applicable_lhs += lh + '=' + str(data.at[idx, lh]) + ', '
+            applicable_lhs += lh + '=' + str(dirty_data.at[idx, lh]) + ', '
         applicable_lhs = applicable_lhs[:-2]
-        applicable_rhs = patterns[applicable_lhs]
+        applicable_rhs = dirty_patterns[applicable_lhs]
         rh = applicable_rhs.split('=')
-        if str(data.at[idx, rh[0]]) != str(rh[1]):
+        if str(dirty_data.at[idx, rh[0]]) != str(rh[1]):
             violations.append(idx)
         
-    # print('*** Support and violations built for (' + lhs + ') => ' + rhs + ' ***')
     return support, violations
 
 
@@ -813,11 +824,11 @@ def fd2cfd(data, lhs, rhs):
         # pprint('All RHS patterns for' + key + ':' + repr(patterns[key]))
 
         # If there is only one top RHS pattern for this LHS, pick it
-        if len(patterns[key]) == 1:
-            patterns[key] = patterns[key].pop()
-        else:
-            random_idx = random.randint(0, len(patterns[key])-1)
-            patterns[key] = patterns[key][random_idx]
+        # if len(patterns[key]) == 1:
+        #     patterns[key] = patterns[key]
+        # else:
+        #     random_idx = random.randint(0, len(patterns[key])-1)
+        #     patterns[key] = patterns[key]
         # print('*** RHS pattern picked ***')
 
     return patterns
