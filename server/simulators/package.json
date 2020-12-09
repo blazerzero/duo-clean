@@ -6,15 +6,18 @@
   "author": "Omeed Habibelahian",
   "license": "MIT",
   "dependencies": {
+    "array-means": "^2.0.0",
     "axios": "^0.21.0",
     "csv-parser": "^2.3.4",
+    "express": "^4.17.1",
     "form-data": "^3.0.0",
     "lodash": "^4.17.20"
   },
   "scripts": {
     "oracle": "ts-node oracle.ts",
     "anti-oracle": "ts-node anti-oracle.ts",
-    "learner": "ts-node learner.ts"
+    "learner": "ts-node learner.ts",
+    "informed-bayesian": "ts-node informed-bayesian.ts"
   },
   "devDependencies": {
     "@types/filesystem": "^0.0.29",

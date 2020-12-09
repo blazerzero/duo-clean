@@ -37,22 +37,10 @@ class Import(Resource):
         
         # Initialize a new project
         projects = [('0x' + d) for d in os.listdir('./store') if os.path.isdir(os.path.join('./store/', d))]
-        # sampling_methods = ['DUO', 'RANDOM-PURE']
         if len(projects) == 0:
-            # sampling_method = np.random.choice(sampling_methods)
             new_project_id = '{:08x}'.format(1)
         else:
-            # sampling_method_distribution = list()
             project_ids = [int(d, 0) for d in projects]
-            # for project in projects:
-            #     with open('./store/' + project[2:] + '/project_info.json', 'r') as f:
-            #         project_id_info = json.load(f)
-            #     sampling_method_distribution.append(project_id_info['scenario']['sampling_method'])
-            # duo_freq = 1 - len([s for s in sampling_method_distribution if s == 'DUO'])/len(sampling_method_distribution)
-            # rp_freq = 1 - len([s for s in sampling_method_distribution if s == 'RANDOM-PURE'])/len(sampling_method_distribution)
-            # freqs = [duo_freq, rp_freq]
-            # print(freqs)
-            # sampling_method = np.random.choice(sampling_methods, p=freqs)
             new_project_id = '{:08x}'.format(max(project_ids) + 1)
         new_project_dir = './store/' + new_project_id
         try:
@@ -74,7 +62,6 @@ class Import(Resource):
         with open('scenarios.json', 'r') as f:
             scenarios_list = json.load(f)
         scenario = scenarios_list[scenario_id]
-        # scenario['sampling_method'] = sampling_method
         project_info = {
             'scenario_id': scenario_id,
             'scenario': scenario,
@@ -115,7 +102,6 @@ class Import(Resource):
                 
         # FD metadata
         cfd_metadata = dict()
-        # data = pd.read_csv(scenario['dirty_dataset'], keep_default_na=False)
         h_space = scenario['hypothesis_space']
         for h in h_space:
             cfd_metadata[h['cfd']] = dict()
@@ -129,13 +115,10 @@ class Import(Resource):
             phsSR = analyze.sHeuristicSetRelation(h['cfd'], [c['cfd'] for c in h_space]) # p(h | sSR)
             ph = hmean([phaUV, phaAC, phsSR])
             
-            # cfd_metadata[h['cfd']]['weight'] = h['conf'] * ph
+            cfd_metadata[h['cfd']]['conf'] = h['conf']
             cfd_metadata[h['cfd']]['score'] = 1
             cfd_metadata[h['cfd']]['weight'] = cfd_metadata[h['cfd']]['score'] * ph
-            # cfd_metadata[h['cfd']]['conf_history'] = list()
-            # cfd_metadata[h['cfd']]['conf_history'].append(helpers.CFDScore(iter_num=current_iter, score=h['conf'], elapsed_time=0))
 
-            # hypothesis = next(x for x in h_space if x['cfd'] == c['cfd'])
             cfd_metadata[h['cfd']]['support'] = h['support']
             cfd_metadata[h['cfd']]['vios'] = h['vios']
             cfd_metadata[h['cfd']]['vio_pairs'] = h['vio_pairs']
@@ -150,15 +133,6 @@ class Import(Resource):
 
         # Initialize other metrics/metadata needed in study
         study_metrics = dict()
-        # study_metrics['true_error_pct_full'] = list()
-        # study_metrics['true_error_pct_iter'] = list()
-        # study_metrics['false_positives_full'] = list()
-        # study_metrics['false_positives_iter'] = list()
-        # study_metrics['cfd_confidence'] = dict()
-        # for cfd in scenario['cfds']:
-        #     study_metrics['cfd_confidence'][cfd] = list()
-        # study_metrics['error_accuracy_full'] = list()
-        # study_metrics['error_accuracy_iter'] = list()
         study_metrics['precision'] = list()
         study_metrics['recall'] = list()
         study_metrics['f1'] = list()
@@ -169,30 +143,9 @@ class Import(Resource):
         modeling_metadata['p_X_given_h'] = dict()
         modeling_metadata['X'] = list()
         modeling_metadata['Y'] = list()
-        modeling_metadata['y_in_h'] = dict()  # TODO: Update y_supp_h to y_in_h (y satisfies h or is a detectable violation of h)
+        modeling_metadata['y_in_h'] = dict()
         for cfd in cfd_metadata.keys():
             modeling_metadata['y_in_h'][cfd] = dict()
-
-        # gt_metadata = modeling_metadata
-        # clean_fd_metadata = cfd_metadata
-
-        '''for c in scenario['clean_hypothesis_space']:
-            if c['cfd'] not in cfd_metadata.keys():
-                clean_fd_metadata[c['cfd']] = dict()
-                clean_fd_metadata[c['cfd']]['weight'] = c['conf']
-                clean_fd_metadata[c['cfd']]['conf_history'] = list()
-                clean_fd_metadata[c['cfd']]['conf_history'].append(helpers.CFDScore(iter_num=current_iter, score=c['conf'], elapsed_time=0))
-
-                hypothesis = next(x for x in scenario['clean_hypothesis_space'] if x['cfd'] == c['cfd'])
-                clean_fd_metadata[c['cfd']]['support'] = hypothesis['support']
-                clean_fd_metadata[c['cfd']]['vios'] = hypothesis['vios']
-                clean_fd_metadata[c['cfd']]['vio_pairs'] = hypothesis['vio_pairs']
-                clean_fd_metadata[c['cfd']]['weight_history'] = list()
-                clean_fd_metadata[c['cfd']]['weight_history'].append(helpers.CFDWeightHistory(iter_num=current_iter, weight=clean_fd_metadata[c['cfd']]['weight'], elapsed_time=0))
-                gt_metadata['y_in_h'][c['cfd']] = dict()'''
-
-        # modeling_metadata['p_h'] = dict()
-        # modeling_metadata['p_h']['hUniform'] = dict()   # TODO: Do this for each p(h) heuristic
 
         print('*** Metadata and study metric objects initialized ***')
 
@@ -204,9 +157,6 @@ class Import(Resource):
         pickle.dump( study_metrics, open(new_project_dir + '/study_metrics.p', 'wb') )
         pickle.dump( start_time, open(new_project_dir + '/start_time.p', 'wb') )
         pickle.dump( modeling_metadata, open(new_project_dir + '/modeling_metadata.p', 'wb') )
-
-        # pickle.dump( gt_metadata, open(new_project_dir + '/gt_metadata.p', 'wb') )
-        # pickle.dump( clean_fd_metadata, open(new_project_dir + '/clean_fd_metadata.p', 'wb') )
 
         print('*** Metadata and study metric objects saved ***')
 
@@ -272,7 +222,6 @@ class Sample(Resource):
             'false_pos': 0,
             'msg': '[SUCCESS] Successfully built sample.'
         }
-        # pprint(returned_data)
         response = json.dumps(returned_data)
         return response, 200, {'Access-Control-Allow-Origin': '*'}
 
@@ -339,7 +288,6 @@ class Resume(Resource):
             'scenario_id': project_info['scenario_id'],
             'scenario_desc': project_info['scenario']['description']
         }
-        # pprint(returned_data)
         response = json.dumps(returned_data)
         return response, 200, {'Access-Control-Allow-Origin': '*'}
 
@@ -362,7 +310,6 @@ class Clean(Resource):
             refresh = int(request.form.get('refresh'))
 
         feedback = pd.DataFrame.from_dict(feedback, orient='index')
-        # print(feedback)
         sample_size = 10
 
         print('*** Necessary objects loaded ***')
@@ -385,7 +332,6 @@ class Clean(Resource):
         print('*** Loaded dirty dataset ***')
 
         # Save noise feedback
-        # percentage_errors_found = 0
         if is_new_feedback == 1 and refresh == 0:
             print('*** NEW FEEDBACK! ***')
             helpers.saveNoiseFeedback(data, feedback, project_id, current_iter, current_time)
@@ -401,9 +347,6 @@ class Clean(Resource):
         # Update tuple weights pre-sampling
         sampling_method = project_info['scenario']['sampling_method']
         print('*** Sampling method retrieved ***')
-        # if refresh == 0:
-        #     helpers.reinforceTuplesBasedOnDependencies(data, project_id, current_iter, is_new_feedback, project_info)
-        # print('*** Tuples reinforced based on FD/CFD weights ***')
 
         # Build sample
         s_out = helpers.buildSample(data, sample_size, project_id, sampling_method, current_iter, current_time)
@@ -437,9 +380,9 @@ class Clean(Resource):
         top_fd_conf, variance_delta = helpers.checkForTermination(project_id, clean_h_space, current_iter)
         conf_threshold = (0.85 / len(project_info['scenario']['cfds']))
 
-        if refresh == 0 and (current_iter >= 25 or (top_fd_conf >= conf_threshold and variance_delta is not None and variance_delta < 0.01)):
+        # if refresh == 0 and (current_iter >= 25 or (top_fd_conf >= conf_threshold and variance_delta is not None and variance_delta < 0.01)):
+        if refresh == 0 and current_iter >= 25:
             msg = '[DONE]'
-            # TODO: Flag interactions that converge to unusual FDs
             top_fd = max(cfd_metadata, key=lambda x: cfd_metadata[x]['weight'])
             concerned_fd_conf = next(h for h in clean_h_space if h['cfd'] == top_fd)['conf'] if top_fd in [k['cfd'] for k in clean_h_space] else None
             project_info['flagged'] = True if concerned_fd_conf is None or concerned_fd_conf < conf_threshold else False
@@ -461,7 +404,6 @@ class Clean(Resource):
             'false_pos': false_pos,
             'msg': msg
         }
-        # pprint(returned_data)
         response = json.dumps(returned_data)
         return response, 200, {'Access-Control-Allow-Origin': '*'}
 

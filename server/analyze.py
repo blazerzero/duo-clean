@@ -106,7 +106,7 @@ def bayes(scenario_id):
         print("project id:", project_id)
         print("scenario id:", project_info['scenario_id'])
         
-        data = pd.read_csv(project_info['scenario']['clean_dataset'], keep_default_na=False)
+        data = pd.read_csv(scenario['clean_dataset'], keep_default_na=False)
         data = data.replace(r'\\n\\t\\r','', regex=True) 
 
         modeling_metadata = pickle.load( open('./store/' + project_id + '/modeling_metadata.p', 'rb') )
@@ -115,6 +115,10 @@ def bayes(scenario_id):
         bayes_modeling_metadata = modeling_metadata
 
         bayes_modeling_metadata['pred_accuracy'] = list()
+        bayes_modeling_metadata['phgX'] = dict()
+        bayes_modeling_metadata['phgX_variance'] = list()
+        bayes_modeling_metadata['phgX_delta'] = dict()
+        bayes_modeling_metadata['total_phgX_delta'] = list()
 
         iter_count = pickle.load( open('./store/' + project_id + '/current_iter.p', 'rb') )
 
@@ -142,6 +146,30 @@ def bayes(scenario_id):
             # normalized p(h | X) such that sum of all p(h | X) = 1
             p_h_given_X_list_sum = sum([x.value for x in p_h_given_X_list])
             p_h_given_X_list = [PHGivenX(h=x.h, value=((x.value/p_h_given_X_list_sum) if p_h_given_X_list_sum > 0 else 0)) for x in p_h_given_X_list]
+
+            if it == 0:
+                for h in discovered_cfds:
+                    phgX = next(p.value for p in p_h_given_X_list if p.h == h)
+                    # print(phgX)
+                    bayes_modeling_metadata['phgX'][h] = list()
+                    bayes_modeling_metadata['phgX'][h].append(StudyMetric(iter_num=it, value=phgX, elapsed_time=elapsed_time))
+                    bayes_modeling_metadata['phgX_delta'][h] = list()
+            
+            if it >= 1:
+                total_phgX_delta = 0
+                for h in discovered_cfds:
+                    phgX = next(p.value for p in p_h_given_X_list if p.h == h)
+                    # print(phgX)
+                    # print(bayes_modeling_metadata['phgX'][h][-1].value)
+                    conf_delta = abs(phgX - bayes_modeling_metadata['phgX'][h][-1].value)
+                    bayes_modeling_metadata['phgX'][h].append(StudyMetric(iter_num=it, value=phgX, elapsed_time=elapsed_time))
+                    bayes_modeling_metadata['phgX_delta'][h].append(StudyMetric(iter_num=it, value=conf_delta, elapsed_time=elapsed_time))
+                    total_phgX_delta += conf_delta
+                    print(total_phgX_delta)
+                bayes_modeling_metadata['total_phgX_delta'].append(StudyMetric(iter_num=it, value=total_phgX_delta, elapsed_time=elapsed_time))
+
+            phgX_var = np.var([x.value for x in p_h_given_X_list])
+            bayes_modeling_metadata['phgX_variance'].append(StudyMetric(iter_num=it, value=phgX_var, elapsed_time=elapsed_time))
 
             for phgx in p_h_given_X_list:
                 h = phgx.h
@@ -185,7 +213,7 @@ def max_likelihood(scenario_id):
         print("project id:", project_id)
         print("scenario id:", project_info['scenario_id'])
         
-        data = pd.read_csv(project_info['scenario']['clean_dataset'], keep_default_na=False)
+        data = pd.read_csv(scenario['clean_dataset'], keep_default_na=False)
         data = data.replace(r'\\n\\t\\r','', regex=True) 
         
         modeling_metadata = pickle.load( open('./store/' + project_id + '/modeling_metadata.p', 'rb') )
@@ -194,6 +222,10 @@ def max_likelihood(scenario_id):
         min_modeling_metadata = modeling_metadata
 
         min_modeling_metadata['pred_accuracy'] = list()
+        min_modeling_metadata['phgX_variance'] = list()
+        min_modeling_metadata['phgX'] = dict()
+        min_modeling_metadata['phgX_delta'] = dict()
+        min_modeling_metadata['total_phgX_delta'] = list()
 
         iter_count = pickle.load( open('./store/' + project_id + '/current_iter.p', 'rb') )
 
@@ -261,16 +293,39 @@ def max_likelihood(scenario_id):
                 p_h = cfd_metadata[h]['weight_history'][it].weight    # p(h)
                 p_h_given_X = p_X_given_h * p_h     # p(h | X)
                 p_h_given_X_list.append(PHGivenX(h=h, value=p_h_given_X))
+
+            for h in [fd for fd in discovered_cfds if fd not in generalized_cfds]:
+                p_h_given_X_list.append(PHGivenX(h=h, value=0))
             
             # normalized p(h | X) such that sum of all p(h | X) = 1
             p_h_given_X_list_sum = sum([x.value for x in p_h_given_X_list])
             p_h_given_X_list = [PHGivenX(h=x.h, value=((x.value/p_h_given_X_list_sum) if p_h_given_X_list_sum > 0 else 0)) for x in p_h_given_X_list]
+
+            phgX_var = np.var([x.value for x in p_h_given_X_list])
+            min_modeling_metadata['phgX_variance'].append(StudyMetric(iter_num=it, value=phgX_var, elapsed_time=elapsed_time))
 
             for phgx in p_h_given_X_list:
                 h = phgx.h
                 p_h_given_X = phgx.value
                 print('p(h | X) for ' + h + ': ' + str(p_h_given_X))
 
+            if it == 0:
+                for h in discovered_cfds:
+                    phgX = next(p.value for p in p_h_given_X_list if p.h == h)
+                    min_modeling_metadata['phgX'][h] = list()
+                    min_modeling_metadata['phgX'][h].append(StudyMetric(iter_num=it, value=phgX, elapsed_time=elapsed_time))
+                    min_modeling_metadata['phgX_delta'][h] = list()
+            if it >= 1:
+                total_phgX_delta = 0
+                for h in discovered_cfds:
+                    phgX = next(p.value for p in p_h_given_X_list if p.h == h)
+                    conf_delta = abs(phgX - min_modeling_metadata['phgX'][h][-1].value)
+                    min_modeling_metadata['phgX'][h].append(StudyMetric(iter_num=it, value=phgX, elapsed_time=elapsed_time))
+                    min_modeling_metadata['phgX_delta'][h].append(StudyMetric(iter_num=it, value=conf_delta, elapsed_time=elapsed_time))
+                    total_phgX_delta += conf_delta
+                    print(total_phgX_delta)
+                min_modeling_metadata['total_phgX_delta'].append(StudyMetric(iter_num=it, value=0, elapsed_time=elapsed_time))
+            
             # p(Y in C | X)
             p_y_in_C_given_X_list = list()
             for y in min_modeling_metadata['Y'][it].value:

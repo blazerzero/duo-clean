@@ -16,11 +16,76 @@ class PlotData(object):
         self.values = values
         self.color = color
 
+class ExpandedPlotData(object):
+    def __init__(self, values, color, linestyle):
+        self.values = values
+        self.color = color
+        self.linestyle = linestyle
+
 class StudyMetric(object):
     def __init__(self, iter_num, value, elapsed_time):
         self.iter_num = iter_num
         self.value = value
         self.elapsed_time = elapsed_time
+
+def plot_phgX_delta(scenario_id, x_axis):
+    lines = list()
+    project_ids = [d for d in os.listdir('./store') if os.path.isdir(os.path.join('./store/', d))]
+    for project_id in project_ids:
+        with open('./store/' + project_id + '/project_info.json') as f:
+            project_info = json.load(f)
+        scenario = project_info['scenario']
+        sampling_method = scenario['sampling_method']
+        # scenario_id = project_info['scenario_id']
+        if scenario_id != project_info['scenario_id'] or scenario['sampling_method'] != sampling_method:
+            continue
+        print("project id:", project_id)
+
+        # cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
+        # current_iter = pickle.load( open('./store/' + project_id + '/current_iter.p', 'rb') )
+        # variances = [np.var([cfd_m['weight_history'][i].weight for cfd_m in cfd_metadata.values()]) for i in range(0, current_iter)]
+        for modeling_method in ['bayes', 'min']:
+            modeling_metadata = pickle.load( open('./store/' + project_id + '/' + modeling_method + '_modeling_metadata.p', 'rb') )
+            phgX_delta = modeling_metadata['total_phgX_delta']
+
+            if scenario_id in ["1", "2", "3", "4", "9", "10", "11", "12"]:
+                if sampling_method == 'DUO':
+                    if modeling_method == 'bayes':
+                        lines.append(ExpandedPlotData(values=phgX_delta, color='cyan', linestyle='solid'))
+                    else:
+                        lines.append(ExpandedPlotData(values=phgX_delta, color='lime', linestyle='solid'))
+                else:
+                    if sampling_method == 'bayes':
+                        lines.append(ExpandedPlotData(values=phgX_delta, color='cyan', linestyle='dashed'))
+                    else:
+                        lines.append(ExpandedPlotData(values=phgX_delta, color='lime', linestyle='dashed'))
+            else:
+                if sampling_method == 'DUO':
+                    if modeling_method == 'bayes':
+                        lines.append(ExpandedPlotData(values=phgX_delta, color='blue', linestyle='solid'))
+                    else:
+                        lines.append(ExpandedPlotData(values=phgX_delta, color='green', linestyle='solid'))
+                else:
+                    if modeling_method == 'bayes':
+                        lines.append(ExpandedPlotData(values=phgX_delta, color='blue', linestyle='dashed'))
+                    else:
+                        lines.append(ExpandedPlotData(values=phgX_delta, color='green', linestyle='dashed'))
+
+    fig, ax1 = plt.subplots()
+    ax1.set_ylabel('Cumulative Change in p(h | X) Over All h')
+    ax1.set_xlabel('Iteration #' if x_axis == 'iter' else 'Time Elapsed (seconds)')
+    ax1.set_title('Scenario #' + scenario_id)
+
+    if x_axis == 'iter':
+        ax1.set_xticks(np.arange(0, 36, 6.0))
+    for v in lines:
+        ax1.plot([i for i in range(1, len(v.values) + 1)], [x.value for x in v.values], color=v.color, linestyle=v.linestyle)
+
+    fig.tight_layout()
+    fig.savefig('./plots/plot-' + scenario_id + '-' + x_axis + '.jpg')
+    plt.clf()
+    print('[SUCCESS]')
+
 
 def plot_modeling(scenario_id, modeling_method, sampling_method, x_axis):
     # with open('scenarios.json') as f:
@@ -201,8 +266,9 @@ def plot_modeling(scenario_id, modeling_method, sampling_method, x_axis):
     print('[SUCCESS]')
 
 if __name__ == '__main__':
-    if len(sys.argv) == 5:
-        plot_modeling(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
+    if len(sys.argv) == 3:
+        # plot_modeling(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
+        plot_phgX_delta(sys.argv[1], sys.argv[2])
     else:
         print('must specify scenario id, modeling method, sampling method, and x axis')
 

@@ -65,20 +65,13 @@ def saveNoiseFeedback(data, feedback, project_id, current_iter, current_time):
     iter_errors_total = 0
     iter_errors_marked = 0
 
-    # print(data.index)
-    # print(feedback.index)
-
     for idx in data.index:
         for col in data.columns:
             if data.at[idx, col] != clean_dataset.at[idx, col]:
                 all_errors_total += 1
-                # print('true error')
-                # print(idx)
                 if str(idx) in feedback.index:
-                    # print('true error in this iter')
                     iter_errors_total += 1
                     if bool(feedback.at[str(idx), col]) is True:
-                        # print('error found!')
                         iter_errors_found += 1
                 if len(cell_metadata[idx][col]['feedback_history']) > 0 and cell_metadata[idx][col]['feedback_history'][-1].marked is True:
                     all_errors_found += 1
@@ -91,7 +84,6 @@ def saveNoiseFeedback(data, feedback, project_id, current_iter, current_time):
 
     project_info['true_pos'] = all_errors_found
     project_info['false_pos'] = all_errors_marked - all_errors_found
-    # false_positives_iter = iter_errors_marked - iter_errors_found
     with open('./store/' + project_id + '/project_info.json', 'w') as f:
         json.dump(project_info, f)
     print('*** Score saved ***')
@@ -103,53 +95,20 @@ def saveNoiseFeedback(data, feedback, project_id, current_iter, current_time):
         precision = iter_errors_found / iter_errors_marked
     else:
         precision = 0
-
-    # print('precision:', precision)
     
     if iter_errors_total > 0:
         recall = iter_errors_found / iter_errors_total
     else:
         recall = 0
 
-    # print('recall:', recall)
-
     if precision > 0 and recall > 0:
         f1 = 2 * (precision * recall) / (precision + recall)
     else:
         f1 = 0
 
-    # print('F1:', f1)
-
     study_metrics['precision'].append(StudyMetric(iter_num=current_iter, value=precision, elapsed_time=elapsed_time))
     study_metrics['recall'].append(StudyMetric(iter_num=current_iter, value=recall, elapsed_time=elapsed_time))
     study_metrics['f1'].append(StudyMetric(iter_num=current_iter, value=f1, elapsed_time=elapsed_time))
-
-    '''if all_errors_total > 0:
-        true_error_pct_full = all_errors_found / all_errors_total
-    else:
-        true_error_pct_full = 0
-
-    if iter_errors_total > 0:
-        true_error_pct_iter = iter_errors_found / iter_errors_total
-    else:
-        true_error_pct_iter = 0
-
-    if all_errors_marked > 0:
-        error_accuracy_full = all_errors_found / all_errors_marked
-    else:
-        error_accuracy_full = 0
-
-    if iter_errors_marked > 0:
-        error_accuracy_iter = iter_errors_found / iter_errors_marked
-    else:
-        error_accuracy_iter = 0
-
-    study_metrics['true_error_pct_full'].append(StudyMetric(iter_num=current_iter, value=true_error_pct_full, elapsed_time=elapsed_time))
-    study_metrics['true_error_pct_iter'].append(StudyMetric(iter_num=current_iter, value=true_error_pct_iter, elapsed_time=elapsed_time))
-    study_metrics['false_positives_full'].append(StudyMetric(iter_num=current_iter, value=false_positives_full, elapsed_time=elapsed_time))
-    study_metrics['false_positives_iter'].append(StudyMetric(iter_num=current_iter, value=false_positives_iter, elapsed_time=elapsed_time))
-    study_metrics['error_accuracy_full'].append(StudyMetric(iter_num=current_iter, value=error_accuracy_full, elapsed_time=elapsed_time))
-    study_metrics['error_accuracy_iter'].append(StudyMetric(iter_num=current_iter, value=error_accuracy_iter, elapsed_time=elapsed_time))'''
 
     pickle.dump( study_metrics, open('./store/' + project_id + '/study_metrics.p', 'wb') )
 
@@ -160,7 +119,6 @@ def explainFeedback(full_dataset, dirty_sample, project_id, current_iter, curren
     start_time = pickle.load( open('./store/' + project_id + '/start_time.p', 'rb') )
     with open('./store/' + project_id + '/project_info.json', 'r') as f:
         project_info = json.load(f)
-    # master_diff = pd.DataFrame.from_dict(project_info['scenario']['diff'], orient='index')
 
     elapsed_time = current_time - start_time
 
@@ -168,52 +126,21 @@ def explainFeedback(full_dataset, dirty_sample, project_id, current_iter, curren
 
     dirty_sample = dirty_sample.applymap(str)
     prepped_sample = dirty_sample.copy(deep=True)
-    # master_prepped_sample = dirty_sample.copy(deep=True)
 
     marked_cols = list()
-    # master_marked_cols = list()
 
     h_space = project_info['scenario']['hypothesis_space']
 
     if refresh == 1:
         cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
-        # clean_fd_metadata = pickle.load( open('./store/' + project_id + '/clean_fd_metadata.p', 'rb') )
         for c in h_space:
-            # cfd_metadata[c['cfd']]['conf_history'].append(CFDScore(iter_num=current_iter, score=cfd_metadata[c['cfd']]['conf_history'][-1].score, elapsed_time=elapsed_time))
-            # wCOMBO = analyze.aHeuristicCombo(c['cfd'], full_dataset)
-            # phaCOMBO = np.prod([v for _, v in wCOMBO.items()])  # p(h | aCOMBO)
-            # phsSR = analyze.sHeuristicSetRelation(c['cfd'], [c['cfd'] for c in h_space]) # p(h | sSR)
-            # print('*** Complexity bias calculated ***')
-
-            # System's weighted prior on rule confidence
-            # weight = 0
-            # for h in cfd_metadata[c['cfd']]['conf_history']:
-            #     weight += (h.score / (current_iter - h.iter_num + 1))
-            # print('*** Weighted FD confidence calculated ***')
-
-            # weight = complexity_bias + weighted_conf
             cfd_metadata[c['cfd']]['weight'] = cfd_metadata[c['cfd']]['weight_history'][-1].weight
-            
-            # clean_fd_metadata[c['cfd']]['conf_history'].append(CFDScore(iter_num=current_iter, score=clean_fd_metadata[c['cfd']]['conf_history'][-1].score, elapsed_time=elapsed_time))
-            # wCOMBO = analyze.aHeuristicCombo(c['cfd'], full_dataset)
-            # phaCOMBO = np.prod([v for _, v in wCOMBO.items()])  # p(h | aCOMBO)
-            # phsSR = analyze.sHeuristicSetRelation(c['cfd'], [c['cfd'] for c in h_space]) # p(h | sSR)
-            # System's weighted prior on rule confidence
-            # weight = 0
-            # for h in clean_fd_metadata[c['cfd']]['conf_history']:
-            #     weight += (h.score / (current_iter - h.iter_num + 1))
-
-            # weight = complexity_bias + weighted_conf
-            # clean_fd_metadata[c['cfd']]['weight'] = clean_fd_metadata[c['cfd']]['weight_history'][-1].weight
         
         cfd_metadata = normalizeWeights(cfd_metadata)
-        # clean_fd_metadata = normalizeWeights(clean_fd_metadata)
         for c in h_space:
             cfd_metadata[c['cfd']]['weight_history'].append(CFDWeightHistory(iter_num=current_iter, weight=cfd_metadata[c['cfd']]['weight'], elapsed_time=elapsed_time))
-            # clean_fd_metadata[c['cfd']]['weight_history'].append(CFDWeightHistory(iter_num=current_iter, weight=clean_fd_metadata[c['cfd']]['weight'], elapsed_time=elapsed_time))
 
         pickle.dump( cfd_metadata, open('./store/' + project_id + '/cfd_metadata.p', 'wb') )
-        # pickle.dump( clean_fd_metadata, open('./store/' + project_id + '/clean_fd_metadata.p', 'wb') )
         return
     
     # USER DATA
@@ -224,16 +151,8 @@ def explainFeedback(full_dataset, dirty_sample, project_id, current_iter, curren
             if len(cell['feedback_history']) >= 1 and cell['feedback_history'][-1].marked is True:
                 marked_cols.append(idx)
                 break
-
-    # GROUND TRUTH
-    '''for idx in dirty_sample.index:
-        for col in dirty_sample.columns:
-            if master_diff.at[str(idx), col] is False:
-                master_marked_cols.append(idx)
-                break'''
     
     prepped_sample = prepped_sample.drop(marked_cols)
-    # print(prepped_sample)
     print('*** Feedback reflected in \'repaired\' dataset ***')
 
     prepped_sample_fp = './store/' + project_id + '/mining_sample.csv'
@@ -242,15 +161,7 @@ def explainFeedback(full_dataset, dirty_sample, project_id, current_iter, curren
             f.seek(0)
             f.truncate()
 
-    # master_prepped_sample = master_prepped_sample.drop(master_marked_cols)
-    # print(master_prepped_sample)
     print('*** Feedback reflected in \'repaired\' dataset ***')
-
-    '''master_prepped_sample_fp = './store/' + project_id + '/gt_mining_sample.csv'
-    if os.path.exists(master_prepped_sample_fp):
-        with open(master_prepped_sample_fp, 'r+') as f:
-            f.seek(0)
-            f.truncate()'''
 
     rep_dict = list(prepped_sample.T.to_dict().values())
     print(rep_dict)
@@ -260,7 +171,6 @@ def explainFeedback(full_dataset, dirty_sample, project_id, current_iter, curren
             cfd_m['weight'] = cfd_m['weight_history'][-1].weight
         cfd_metadata = normalizeWeights(cfd_metadata)
         for cfd_m in cfd_metadata.values():
-            # print(cfd_m['weight'])
             cfd_m['score_history'].append(CFDScore(iter_num=current_iter, score=cfd_m['score'], elapsed_time=elapsed_time))
             cfd_m['weight_history'].append(CFDWeightHistory(iter_num=current_iter, weight=cfd_m['weight'], elapsed_time=elapsed_time))
         pickle.dump( cfd_metadata, open('./store/' + project_id + '/cfd_metadata.p', 'wb') )
@@ -273,72 +183,27 @@ def explainFeedback(full_dataset, dirty_sample, project_id, current_iter, curren
         writer.writerows(rep_dict)
     print('*** Mining dataset saved as CSV ***')
 
-    '''master_rep_dict = list(master_prepped_sample.T.to_dict().values())
-    master_rep_header = master_rep_dict[0].keys()
-    with open(master_prepped_sample_fp, 'w', newline='') as f:
-        writer = csv.DictWriter(f, master_rep_header)
-        writer.writeheader()
-        writer.writerows(master_rep_dict)
-    print('*** Mining dataset saved as CSV ***')'''
-
-    # GROUND TRUTH
-    '''clean_process = sp.Popen(['./data/cfddiscovery/CFDD', master_prepped_sample_fp, str(math.ceil(0.8*len(master_prepped_sample.index))), '0.8', '3'], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})     # CFDD
-    clean_res = clean_process.communicate()
-
-    if clean_process.returncode == 0:
-        clean_fd_metadata = pickle.load( open('./store/' + project_id + '/clean_fd_metadata.p', 'rb') )
-        clean_output = clean_res[0].decode('latin_1').replace(',]', ']').replace('\r', '').replace('\t', '').replace('\n', '')
-        clean_cfds = [c for c in json.loads(clean_output, strict=False)['cfds'] if '=' not in c['cfd'].split(' => ')[0] and '=' not in c['cfd'].split(' => ')[1] and c['cfd'].split(' => ')[0] != '()']
-        clean_accepted_cfds = [c for c in clean_cfds if c['cfd'] in clean_fd_metadata.keys()]
-        for c in h_space:
-            if c['cfd'] in [ac['cfd'] for ac in clean_accepted_cfds]:
-                ac = next(a for a in clean_accepted_cfds if a['cfd'] == c['cfd'])
-                clean_fd_metadata[c['cfd']]['conf_history'].append(CFDScore(iter_num=current_iter, score=ac['conf'], elapsed_time=elapsed_time))
-            else:
-                clean_fd_metadata[c['cfd']]['conf_history'].append(CFDScore(iter_num=current_iter, score=clean_fd_metadata[c['cfd']]['conf_history'][-1].score, elapsed_time=elapsed_time))
-            
-            wCOMBO = analyze.aHeuristicCombo(c['cfd'], full_dataset)
-            phaCOMBO = np.prod([v for _, v in wCOMBO.items()])  # p(h | aCOMBO)
-            phsSR = analyze.sHeuristicSetRelation(c['cfd'], [c['cfd'] for c in h_space]) # p(h | sSR)
-            # System's weighted prior on rule confidence
-            weight = 0
-            for h in clean_fd_metadata[c['cfd']]['conf_history']:
-                weight += (h.score / (current_iter - h.iter_num + 1))
-
-            # weight = complexity_bias + weighted_conf
-            clean_fd_metadata[c['cfd']]['weight'] = weight * phaCOMBO * phsSR   # weight * p(h | aCOMBO-sSR)
-            # clean_fd_metadata[c['cfd']]['weight_history'].append(CFDWeightHistory(iter_num=current_iter, weight=weight, elapsed_time=elapsed_time))
-        
-        clean_fd_metadata = normalizeWeights(clean_fd_metadata)
-        for cfd_m in clean_fd_metadata.values():
-            cfd_m['weight_history'].append(CFDWeightHistory(iter_num=current_iter, weight=cfd_m['weight'], elapsed_time=elapsed_time))
-        print('ground truth weights:', [cfd_m['weight_history'][-1].weight for cfd_m in clean_fd_metadata.values()])
-
-        pickle.dump( clean_fd_metadata, open('./store/' + project_id + '/clean_fd_metadata.p', 'wb') )
-
-    else:
-        print('[ERROR] There was an error running CFDD') '''
-
     # USER DATA
-    # min_supp_percentage = 0.8
-    # min_conf = 0.5
-    # process = sp.Popen(['./data/cfddiscovery/CFDD', prepped_sample_fp, str(math.ceil(0.5*len(prepped_sample.index))), '0.5', '3'], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})     # CFDD
-    process = sp.Popen(['java -cp metanome-cli-1.1.0.jar:pyro-distro-1.0-SNAPSHOT-distro.jar de.metanome.cli.App --algorithm de.hpi.isg.pyro.algorithms.Pyro --algorithm-config maxArity:2,isFindFds:true,maxFdError:0.20,topKFds:5 --table-key inputFile --header $true --output print --separator , --tables ' + prepped_sample_fp], shell=True, stdout=sp.PIPE, stderr=sp.PIPE)   # PYRO
+    process = sp.Popen(['./data/cfddiscovery/CFDD', prepped_sample_fp, str(len(prepped_sample.index)), '0.8', '3'], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})     # CFDD
+    # process = sp.Popen(['java -cp metanome-cli-1.1.0.jar:pyro-distro-1.0-SNAPSHOT-distro.jar de.metanome.cli.App --algorithm de.hpi.isg.pyro.algorithms.Pyro --algorithm-config maxArity:2,isFindFds:true,maxFdError:0.20,topKFds:5 --table-key inputFile --header $true --output print --separator , --tables ' + prepped_sample_fp], shell=True, stdout=sp.PIPE, stderr=sp.PIPE)   # PYRO
     res = process.communicate()
-    print('*** CFDD finished running ***')
+    print('*** Mining algorithm finished running ***')
 
     if process.returncode == 0:
         cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
         print('*** FD meteadata object loaded ***')
-        output = res[0].decode('latin_1')
-        cfds = parseOutputPYRO(output)
-        print('*** FDs from PYRO extracted ***')
-        accepted_cfds = [c for c in cfds if c in cfd_metadata.keys()]
+        # output = res[0].decode('latin_1')
+        # cfds = parseOutputPYRO(output)
+        output = res[0].decode('latin_1').replace(',]', ']').replace('\r', '').replace('\t', '').replace('\n', '')
+        cfds = [c['cfd'] for c in json.loads(output, strict=False)['cfds'] if '=' not in c['cfd'].split(' => ')[0] and '=' not in c['cfd'].split(' => ')[1] and c['cfd'].split(' => ')[0] != '()']
+        expanded_cfds = buildCompositionSpace(cfds, h_space, prepped_sample, None, project_info['scenario']['min_conf'], project_info['scenario']['max_ant'])
+        # print(cfds)
+        # print(cfd_metadata)
+        print('*** FDs from mining algorithm extracted ***')
+        accepted_cfds = [c['cfd'] for c in expanded_cfds if c['cfd'] in cfd_metadata.keys()]
         for cfd, cfd_m in cfd_metadata.items():
             if cfd in accepted_cfds:
                 support, vios = getSupportAndVios(prepped_sample, None, cfd)
-                # conf = 1 - ((len(vios) / len(prepped_sample.index)) * (len(support) / len(prepped_sample.index)))
-                # cfd_m['conf_history'].append(CFDScore(iter_num=current_iter, score=conf, elapsed_time=elapsed_time))
                 cfd_m['score'] = reinforceFD(cfd, prepped_sample, cfd_m['score'], support, vios, 1)
                 wUV = analyze.aHeuristicUV(cfd, prepped_sample)
                 wAC = analyze.aHeuristicAC(cfd)
@@ -346,81 +211,16 @@ def explainFeedback(full_dataset, dirty_sample, project_id, current_iter, curren
                 phaAC = np.mean([v for v in wAC.values()])
                 phsSR = analyze.sHeuristicSetRelation(cfd, [c['cfd'] for c in h_space]) # p(h | sSR)
                 ph = hmean([phaUV, phaAC, phsSR])
-                # weight = 0
-                # for h in cfd_m['conf_history']:
-                #     weight += (h.score / (current_iter - h.iter_num + 1))
                 cfd_m['weight'] = cfd_m['score'] * ph
             else:
                 cfd_m['weight'] = cfd_m['weight_history'][-1].weight
-                #     cfd_m['conf_history'].append(CFDScore(iter_num=current_iter, score=cfd_m['conf_history'][-1].score, elapsed_time=elapsed_time))
 
         cfd_metadata = normalizeWeights(cfd_metadata)
         for cfd_m in cfd_metadata.values():
-            # print(cfd_m['weight'])
             cfd_m['score_history'].append(CFDScore(iter_num=current_iter, score=cfd_m['score'], elapsed_time=elapsed_time))
             cfd_m['weight_history'].append(CFDWeightHistory(iter_num=current_iter, weight=cfd_m['weight'], elapsed_time=elapsed_time))
-            # print([w.weight for w in cfd_m['weight_history']])
 
-        '''cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
-        print('*** FD meteadata object loaded ***')
-        output = res[0].decode('latin_1').replace(',]', ']').replace('\r', '').replace('\t', '').replace('\n', '')
-        cfds = [c for c in json.loads(output, strict=False)['cfds'] if '=' not in c['cfd'].split(' => ')[0] and '=' not in c['cfd'].split(' => ')[1] and c['cfd'].split(' => ')[0] != '()']
-        print('*** FDs from CFDD extracted ***')
-        accepted_cfds = [c for c in cfds if c['cfd'] in cfd_metadata.keys()]
-        # min_conf = min([c['conf'] for c in cfds])
-        # max_conf = max([c['conf'] for c in cfds])
-        for cfd, cfd_m in cfd_metadata.items():
-            if cfd in [ac['cfd'] for ac in accepted_cfds]:
-                # ac = next(a for a in accepted_cfds if a['cfd'] == cfd)
-                # conf = (ac['conf'] - min_conf) / (max_conf - min_conf)      # normalize between 0 and 1
-                support, vios = getSupportAndVios(prepped_sample, cfd)
-                # Reinforce FDs that make user feedback correct.
-                # Prioritize FDs with fewer violations AND that more of the sample supports
-                conf = 1 - ((len(vios) / len(prepped_sample.index)) * (len(support) / len(prepped_sample.index)))
-                cfd_m['conf_history'].append(CFDScore(iter_num=current_iter, score=conf, elapsed_time=elapsed_time))
-                wUV = analyze.aHeuristicUV(cfd, prepped_sample)
-                wAC = analyze.aHeuristicAC(cfd)
-                phaUV = np.mean([v for v in wUV.values()])
-                phaAC = np.mean([v for v in wAC.values()])
-                phsSR = analyze.sHeuristicSetRelation(cfd, [c['cfd'] for c in h_space]) # p(h | sSR)
-                ph = hmean([phaUV, phaAC, phsSR])
-                weight = 0
-                for h in cfd_m['conf_history']:
-                    weight += (h.score / (current_iter - h.iter_num + 1))
-                cfd_m['weight'] = weight * ph
-            else:
-                cfd_m['conf_history'].append(CFDScore(iter_num=current_iter, score=cfd_m['conf_history'][-1].score, elapsed_time=elapsed_time))
-                cfd_m['weight'] = cfd_m['weight_history'][-1].weight'''
-            
-            # wCOMBO = analyze.aHeuristicCombo(c['cfd'], full_dataset)
-            # phaCOMBO = np.prod([v for _, v in wCOMBO.items()])  # p(h | aCOMBO)
-            # wUV = analyze.aHeuristicUV(cfd, prepped_sample)
-            # wAC = analyze.aHeuristicAC(cfd)
-            # phaUV = np.prod([v for v in wUV.values()])
-            # phaAC = np.prod([v for v in wAC.values()])
-
-            # phaUV = np.mean([v for v in wUV.values()])
-            # phaAC = np.mean([v for v in wAC.values()])
-            # phsSR = analyze.sHeuristicSetRelation(cfd, [c['cfd'] for c in h_space]) # p(h | sSR)
-            # ph = hmean([phaUV, phaAC, phsSR])
-
-            # print('*** Complexity bias calculated ***')
-
-            # System's weighted prior on rule confidence
-            # weight = 0
-            # for h in cfd_m['conf_history']:
-            #     weight += (h.score / (current_iter - h.iter_num + 1))
-            # print('*** Weighted FD confidence calculated ***')
-
-            # weight = complexity_bias + weighted_conf
-            # cfd_metadata[c['cfd']]['weight'] = weight * phaCOMBO * phsSR    # weight * p(h | aCOMBO-sSR)
-            # cfd_m['weight'] = weight * ph
-            # cfd_metadata[c['cfd']]['weight_history'].append(CFDWeightHistory(iter_num=current_iter, weight=weight, elapsed_time=elapsed_time))
-        
-        
-        # print('user weights:', [cfd_m['weight_history'][-1].weight for cfd_m in cfd_metadata.values()])
-
-        print('*** CFDD output processed and FD weights updated ***')
+        print('*** Mining output processed and FD weights updated ***')
 
         pickle.dump( cfd_metadata, open('./store/' + project_id + '/cfd_metadata.p', 'wb') )
         print('*** CFD metadata updates saved ***')
@@ -432,9 +232,7 @@ def explainFeedback(full_dataset, dirty_sample, project_id, current_iter, curren
 # BUILD SAMPLE
 def buildSample(data, sample_size, project_id, sampling_method, current_iter, current_time):
     cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
-    # clean_fd_metadata = pickle.load( open('./store/' + project_id + '/clean_fd_metadata.p', 'rb') )
     modeling_metadata = pickle.load( open('./store/' + project_id + '/modeling_metadata.p', 'rb') )
-    # gt_metadata = pickle.load( open('./store/' + project_id + '/gt_metadata.p', 'rb') )
     start_time = pickle.load( open('./store/' + project_id + '/start_time.p', 'rb') )
 
     elapsed_time = current_time - start_time
@@ -445,15 +243,6 @@ def buildSample(data, sample_size, project_id, sampling_method, current_iter, cu
     diff = project_info['scenario']['diff']
     
     # GET SAMPLE
-    # if (sampling_method == 'DUO'):
-    #     print('DUO-INFORMED SAMPLING')
-    #     s_out = returnTuples(data, sample_size, project_id)     # Y = set(s_out.index)
-    # else:
-    #     print('RANDOM SAMPLING')
-    #     s_out = data.sample(n=sample_size)      # Y = set(s_out.index)
-    # s_out = returnTuples(data, sample_size, project_id)
-
-    # fds = cfd_metadata.keys()
     s_out = returnTuples(data, cfd_metadata, sample_size, sampling_method)
 
     Y = getDirtyTuples(s_out, project_id)
@@ -461,26 +250,19 @@ def buildSample(data, sample_size, project_id, sampling_method, current_iter, cu
 
     # MODELING METRICS
     if current_iter == 0:
-        # new_X = dirty_tuples    # X is just being created --> X = set(dirty_tuples)
         X = set()
     else:
-        # new_X = modeling_metadata['X'][-1].value | dirty_tuples     # X = X | set(dirty_tuples)
         prev_sample = pickle.load( open('./store/' + project_id + '/current_sample.p', 'rb') )
         prev_sample_Y = getDirtyTuples(data.iloc[prev_sample], project_id)
         X = modeling_metadata['X'][-1].value | set(prev_sample_Y)
-
-    # new_X = prev_X | Y
-    # print(new_X)
     
     modeling_metadata['X'].append(StudyMetric(iter_num=current_iter, value=X, elapsed_time=elapsed_time))
-    # gt_metadata['X'].append(StudyMetric(iter_num=current_iter, value=new_X, elapsed_time=elapsed_time))
 
     modeling_metadata['Y'].append(StudyMetric(iter_num=current_iter, value=Y, elapsed_time=elapsed_time))
-    # gt_metadata['Y'].append(StudyMetric(iter_num=current_iter, value=set(s_out.index), elapsed_time=elapsed_time))
 
     # USER DATA
     for cfd, cfd_m in cfd_metadata.items():
-        rhs = cfd.split(' => ')[1]
+        # rhs = cfd.split(' => ')[1]
         # p(X | h)
         print(cfd)
         if cfd not in modeling_metadata['p_X_given_h'].keys():  # cfd was just discovered in this iteration
@@ -495,146 +277,49 @@ def buildSample(data, sample_size, project_id, sampling_method, current_iter, cu
             p_X_given_h = math.pow((1/len(cfd_m['vios'])), len(X)) # p(X | h) = PI_i (p(x_i | h)), where each x_i is in X
             modeling_metadata['p_X_given_h'][cfd].append(StudyMetric(iter_num=current_iter, value=p_X_given_h, elapsed_time=elapsed_time))
         else:
-            print('not subset!\n')
-            modeling_metadata['p_X_given_h'][cfd].append(StudyMetric(iter_num=current_iter, value=0, elapsed_time=elapsed_time))
+            true_nil = True
+            all_fds = cfd_metadata.keys()
+            related_fds = [c for c in all_fds if c.split(' => ')[0] == cfd.split(' => ')[0] and c.split(' => ')[1] != cfd.split(' => ')[1]]
+            # combined_rhs = set([cfd.split(' => ')[1]])
+            combined_vios = set(cfd_m['vios'])
+            while true_nil is True:
+                if len(related_fds) > 0:
+                # for s_fd in superset_fds:
+                    r_fd = related_fds.pop()    # Expand the RHS
+                    # r_fd_rhs = r_fd.split(' => ')[1]
+
+                    if (cfd_m['conf'] * cfd_metadata[r_fd]['conf'] >= project_info['scenario']['min_conf']):    # If this new combination has a sufficiently high confidence
+                        # combined_rhs |= set(r_fd_rhs)
+                        combined_vios |= set(cfd_metadata[r_fd]['vios'])
+                        if set(X).issubset(combined_vios) and len(combined_vios) > 0:
+                            print('subset!')
+                            print(X)
+                            print()
+                            p_X_given_h = math.pow((1/len(combined_vios)), len(X)) # p(X | h) = PI_i (p(x_i | h)), where each x_i is in X
+                            modeling_metadata['p_X_given_h'][cfd].append(StudyMetric(iter_num=current_iter, value=p_X_given_h, elapsed_time=elapsed_time))
+                            true_nil = False
+                else:
+                    break
+                
+            if true_nil is True:
+                print('not subset!\n')
+                modeling_metadata['p_X_given_h'][cfd].append(StudyMetric(iter_num=current_iter, value=0, elapsed_time=elapsed_time))
     
         # I(y in h)
         for y in Y:
             print('Y!')
             if y not in modeling_metadata['y_in_h'][cfd].keys():    # this is the first time the user will have been shown y
                 modeling_metadata['y_in_h'][cfd][y] = list()
-            if y in cfd_m['vios'] and diff[str(y)][rhs] is False:
+            if y in cfd_m['vios']:
                 modeling_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=1, elapsed_time=elapsed_time))
             else:
-                modeling_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=0, elapsed_time=elapsed_time))
-            '''if y not in modeling_metadata['y_in_h'][cfd].keys():    # this is the first time the user will have been shown y
-                modeling_metadata['y_in_h'][cfd][y] = list()
-            if y in cfd_m['support']:   # FD is applicable to y
-                if y not in cfd_m['vios']:    # y is clean w.r.t. the FD
-                    modeling_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=1, elapsed_time=elapsed_time))
-                
-                # UPDATED CHECK FOR DETECTABILITY
-                else:
-                    vio_pairs = [i for i in cfd_m['vio_pairs'] if y in i]
-                    if len(vio_pairs) == 0:     # y is dirty w.r.t the FD and does not pair with ANY other row in the dataset
-                        modeling_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=0, elapsed_time=elapsed_time))
-                    else:   # y is dirty w.r.t. the FD and DOES pair with some other row in the dataset
-                        match_found = False
-                        for x in new_X:
-                            if len([i for i in vio_pairs if x in i and x != y]) > 0:
-                                match_found = True
-                                break
-                        if match_found is False:    # y does not pair with any other tuple in X w.r.t. the FD and is not detectable YET
-                            modeling_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=0, elapsed_time=elapsed_time))
-                        else:   # y pairs with another tuple in X w.r.t. the FD and is detectable
-                            modeling_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=1, elapsed_time=elapsed_time))
-            else:   # FD is not applicable to y
-                modeling_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=0, elapsed_time=elapsed_time))'''
-
-    # GROUND TRUTH
-    '''for cfd, cfd_m in clean_fd_metadata.items():
-        # p(X | h)
-        if cfd not in gt_metadata['p_X_given_h'].keys():  # cfd was just discovered in this iteration
-            gt_metadata['p_X_given_h'][cfd] = list()
-        if set(new_X).issubset(cfd_m['support']):
-            p_X_given_h = math.pow((1/len(new_X)), sample_size) # p(X | h) = PI_i (p(x_i | h)), where each x_i is in X
-            gt_metadata['p_X_given_h'][cfd].append(StudyMetric(iter_num=current_iter, value=p_X_given_h, elapsed_time=elapsed_time))
-        else:
-            gt_metadata['p_X_given_h'][cfd].append(StudyMetric(iter_num=current_iter, value=0, elapsed_time=elapsed_time))
-    
-        # I(y in h)
-        for y in new_X:
-            # if y not in gt_metadata['y_in_h'][cfd].keys():    # this is the first time the user will have been shown y
-            #     gt_metadata['y_in_h'][cfd][y] = list()
-            # if y in cfd_m['support'] and y not in cfd_m['vios']:
-            #     gt_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=1, elapsed_time=elapsed_time))
-            # else:
-            #     gt_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=0, elapsed_time=elapsed_time))
-            if y not in gt_metadata['y_in_h'][cfd].keys():    # this is the first time the user will have been shown y
-                gt_metadata['y_in_h'][cfd][y] = list()
-            if y in cfd_m['support']:   # FD is applicable to y
-                if y not in cfd_m['vios']:    # y is clean w.r.t. the FD
-                    gt_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=1, elapsed_time=elapsed_time))
-                
-                # UPDATED CHECK FOR DETECTABILITY
-                else:
-                    vio_pairs = [i for i in cfd_m['vio_pairs'] if y in i]
-                    if len(vio_pairs) == 0:     # y is dirty w.r.t the FD and does not pair with ANY other row in the dataset
-                        gt_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=0, elapsed_time=elapsed_time))
-                    else:   # y is dirty w.r.t. the FD and DOES pair with some other row in the dataset
-                        match_found = False
-                        for x in new_X:
-                            if len([i for i in vio_pairs if x in i and x != y]) > 0:
-                                match_found = True
-                                break
-                        if match_found is False:    # y does not pair with any other tuple in X w.r.t. the FD and is not detectable YET
-                            gt_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=0, elapsed_time=elapsed_time))
-                        else:   # y pairs with another tuple in X w.r.t. the FD and is detectable
-                            gt_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=1, elapsed_time=elapsed_time))
-            else:   # FD is not applicable to y
-                gt_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=0, elapsed_time=elapsed_time))'''
-        
+                modeling_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=0, elapsed_time=elapsed_time))       
 
     print('IDs of tuples in next sample:', s_out.index)
 
     pickle.dump( modeling_metadata, open('./store/' + project_id + '/modeling_metadata.p', 'wb') )
-    # pickle.dump( gt_metadata, open('./store/' + project_id + '/gt_metadata.p', 'wb') )
     
     return s_out
-
-# RETURN TUPLES BASED ON WEIGHT
-'''def returnTuples(data, sample_size, project_id):
-    tuple_metadata = pickle.load( open('./store/' + project_id + '/tuple_metadata.p', 'rb') )
-    cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
-    tuple_weights = [v['weight'] for v in tuple_metadata.values()]
-    cfd_weights = [v['weight'] for v in cfd_metadata.values()]
-    # print(cfd_metadata.keys())
-    # print(cfd_weights)
-    chosen_tuples = list()
-    
-    # print('IDs of tuples in next sample:')
-    while len(chosen_tuples) < sample_size:
-        fd = random.choices(list(cfd_metadata.keys()), weights=cfd_weights, k=1).pop()
-        # if fd not in chosen_fds:
-        cfd_m = cfd_metadata[fd]
-        if len(cfd_m['vios']) > 0:
-            if len(cfd_m['vio_trios']) > 0 and sample_size - len(chosen_tuples) >= 3:
-                returned_tuple1, returned_tuple2, returned_tuple3 = random.choice(cfd_m['vio_trios'])
-                if returned_tuple1 not in chosen_tuples and returned_tuple2 not in chosen_tuples and returned_tuple3 not in chosen_tuples:
-                    chosen_tuples.append(returned_tuple1)
-                    chosen_tuples.append(returned_tuple2)
-                    chosen_tuples.append(returned_tuple3)
-            elif len(cfd_m['vio_pairs']) > 0 and sample_size - len(chosen_tuples) >= 2:
-                returned_tuple1, returned_tuple2 = random.choice(cfd_m['vio_pairs'])
-                if returned_tuple1 not in chosen_tuples and returned_tuple2 not in chosen_tuples:
-                    chosen_tuples.append(returned_tuple1)
-                    chosen_tuples.append(returned_tuple2)
-            else:
-                returned_tuple = random.choices(data.index, weights=tuple_weights, k=1)[0]
-                if returned_tuple not in chosen_tuples:
-                    chosen_tuples.append(returned_tuple)
-        # if len(cfd_m['vio_pairs']) == 0:
-            # returned_tuple1 = pickSingleTuple(tuple_weights)
-            # returned_tuple2 = pickSingleTuple(tuple_weights)
-            # returned_tuples = random.choices(data.index, weights=tuple_weights, k=3)
-            # returned_tuple1 = returned_tuples[0]
-            # returned_tuple2 = returned_tuples[1]
-
-        # if returned_tuple1 not in chosen_tuples and returned_tuple2 not in chosen_tuples:
-            # chosen_tuples.append(returned_tuple1)
-            # chosen_tuples.append(returned_tuple2)
-            # print(returned_tuple1)
-            # print(returned_tuple2)
-        
-        print(chosen_tuples)
-
-        if len(chosen_tuples) >= len(tuple_weights):
-            break
-    
-    # print(data)
-    # print(chosen_tuples)
-    s_out = data.iloc[chosen_tuples]
-    return s_out'''
 
 def returnTuples(data, fd_metadata, sample_size, sampling_method):
     chosen = list()
@@ -665,14 +350,8 @@ def returnTuples(data, fd_metadata, sample_size, sampling_method):
     return s_out
 
 def getDirtyTuples(s_out, project_id):
-    # fd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
     with open('./store/' + project_id + '/project_info.json', 'r') as f:
         project_info = json.load(f)
-    h_space = project_info['scenario']['hypothesis_space']
-    # scenario_fds = project_info['scenario']['cfds']
-    # dirty_tuples = set()
-    # for fd in scenario_fds:
-    #     dirty_tuples |= set(fd_metadata[fd]['vios'])
     diff = project_info['scenario']['diff']
     dirty_tuples = list()
     for idx in s_out.index:
@@ -685,13 +364,6 @@ def getDirtyTuples(s_out, project_id):
                 break
         if is_dirty is True:
             dirty_tuples.append(idx)
-        # is_dirty = False
-        # for h in h_space:
-        #     if idx in h['vios']:
-        #         is_dirty = True
-        #         break
-        # if is_dirty is True:
-        #     dirty_tuples.append(idx)
     return set(dirty_tuples)
 
 # SELECT ONE TUPLE TO ADD TO SAMPLE
@@ -704,7 +376,6 @@ def pickSingleTuple(tuple_weights):
         if cumulative > chance:
             tup = id
             del (id, weight)
-            # print(tup)
             return tup
 
 
@@ -730,12 +401,6 @@ def checkForTermination(project_id, clean_h_space, current_iter):
     top_fd_conf = next(h for h in clean_h_space if h['cfd'] == top_fd)['conf']
 
     if current_iter >= 5:
-        # h_space_conf_delta = 0
-        # for fd_m in cfd_metadata.values():
-        #     fd_conf_delta = abs(fd_m['weight_history'][-1].weight - fd_m['weight_history'][-3].weight)
-            # print(fd_conf_delta)
-        #     h_space_conf_delta += fd_conf_delta
-        # h_space_conf_delta /= len(cfd_metadata.keys())
         variance_delta = abs(np.var([fd_m['weight_history'][-1].weight for fd_m in cfd_metadata.values()]) - np.var([fd_m['weight_history'][-3].weight for fd_m in cfd_metadata.values()]))
         print("variance delta:", variance_delta)
         return top_fd_conf, variance_delta
@@ -746,6 +411,8 @@ def checkForTermination(project_id, clean_h_space, current_iter):
 def getSupportAndVios(dirty_data, clean_data, fd):
     lhs = fd.split(' => ')[0][1:-1]
     rhs = fd.split(' => ')[1]
+    # print(lhs)
+    # print(rhs)
     clean_patterns = None
     if clean_data is not None:
         clean_patterns = fd2cfd(clean_data, lhs, rhs)
@@ -757,6 +424,8 @@ def getSupportAndVios(dirty_data, clean_data, fd):
                 random_idx = random.randint(0, len(clean_patterns[l])-1)
                 clean_patterns[l] = clean_patterns[l][random_idx]
     dirty_patterns = fd2cfd(dirty_data, lhs, rhs)
+    # print(dirty_patterns)
+    # print(clean_patterns)
 
     # IF DIRTY PATTERNS HAS >1 RHS TO 1 LHS, PICK CLEAN RHS
     for l in dirty_patterns.keys():
@@ -779,8 +448,15 @@ def getSupportAndVios(dirty_data, clean_data, fd):
             applicable_lhs += lh + '=' + str(dirty_data.at[idx, lh]) + ', '
         applicable_lhs = applicable_lhs[:-2]
         applicable_rhs = dirty_patterns[applicable_lhs]
-        rh = applicable_rhs.split('=')
-        if str(dirty_data.at[idx, rh[0]]) != str(rh[1]):
+        is_vio = False
+        # rh = applicable_rhs.split('=')
+        for rhs_piece in applicable_rhs.split(', '):
+            rh = rhs_piece.split('=')
+            if str(dirty_data.at[idx, rh[0]]) != str(rh[1]):
+                is_vio = True
+                break
+        # if str(dirty_data.at[idx, rh[0]]) != str(rh[1]):
+        if is_vio is True:
             violations.append(idx)
         
     return support, violations
@@ -790,6 +466,8 @@ def getSupportAndVios(dirty_data, clean_data, fd):
 def fd2cfd(data, lhs, rhs):
     patterns = dict()
     mappings = dict()
+    # print(lhs)
+    # print(rhs)
 
     # Gather all the possible patterns present in the dataset for each pure FD or partial CFD
     for idx in data.index:
@@ -801,10 +479,14 @@ def fd2cfd(data, lhs, rhs):
             else:
                 lhspattern += clause + '=' + str(data.at[idx, clause]) + ', '
         lhspattern = lhspattern[:-2]
-        if '=' in rhs:
-            rhspattern = rhs
-        else:
-            rhspattern = rhs + '=' + str(data.at[idx, rhs])
+
+        for clause in rhs.split(', '):
+            if '=' in clause:
+                rhspattern += clause + ', '
+            else:
+                rhspattern += clause + '=' + str(data.at[idx, clause]) + ', '
+        rhspattern = rhspattern[:-2]
+
         if lhspattern in patterns.keys():
             patterns[lhspattern].append(rhspattern)
             if (lhspattern, rhspattern) in mappings.keys():
@@ -814,22 +496,12 @@ def fd2cfd(data, lhs, rhs):
         else:
             patterns[lhspattern] = [rhspattern]
             mappings[(lhspattern, rhspattern)] = [idx]
-    # print('*** Patterns and mappings built for (' + lhs + ') => ' + rhs + ' ***')
 
     # Pick RHS patterns for each LHS from these candidates
     for key in patterns.keys():
         counts = Counter(patterns[key])
         get_mode = dict(counts)
         patterns[key] = [k for k, v in get_mode.items() if v == max(list(counts.values()))]
-        # pprint('All RHS patterns for' + key + ':' + repr(patterns[key]))
-
-        # If there is only one top RHS pattern for this LHS, pick it
-        # if len(patterns[key]) == 1:
-        #     patterns[key] = patterns[key]
-        # else:
-        #     random_idx = random.randint(0, len(patterns[key])-1)
-        #     patterns[key] = patterns[key]
-        # print('*** RHS pattern picked ***')
 
     return patterns
 
@@ -850,9 +522,94 @@ def parseOutputPYRO(output):
 
 def reinforceFD(fd, data, score, support, vios, r):
     for idx in data.index:
-        # for col in data.columns:
         if idx in support:
             score += r
             if idx not in vios:
                 score += r
     return score
+
+def buildCompositionSpace(fds, h_space, dirty_data, clean_data, min_conf, max_ant):
+    composed_fds = set(fds)
+    composed_combos = set()
+    for fd1 in fds:
+        for fd2 in fds:
+            if fd1 == fd2 or (fd1, fd2) in composed_combos or (fd2, fd1) in composed_combos:
+                continue
+            fd1_lhs = set(fd1.split(' => ')[0][1:-1].split(', '))
+            fd1_rhs = set(fd1.split(' => ')[1].split(', '))
+            fd2_lhs = set(fd2.split(' => ')[0][1:-1].split(', '))
+            fd2_rhs = set(fd2.split(' => ')[1].split(', '))
+
+            if not fd1_rhs.isdisjoint(fd2_lhs) or not fd2_rhs.isdisjoint(fd1_lhs):
+                continue
+
+            composed_fd_lhs_set = fd1_lhs | fd2_lhs
+            if len(composed_fd_lhs_set) > max_ant:
+                continue
+            
+            composed_fd_lhs = '(' + ', '.join(composed_fd_lhs_set) + ')'
+
+            if h_space is not None: # H space already exists, so match the LHS with a currently existing FD if possible
+                try:
+                    matching_fd = next(h['cfd'] for h in h_space if composed_fd_lhs_set == set(h['cfd'].split(' => ')[0][1:-1].split(', ')))
+                    matching_fd_lhs = matching_fd.split(' => ')[0]  # Ensures the LHS is in an order that does not throw off future calculations
+                    composed_fd_lhs = matching_fd_lhs
+                except StopIteration:
+                    pass
+
+            composed_fd_rhs_set = fd1_rhs | fd2_rhs
+            composed_fd_rhs = ', '.join(composed_fd_rhs_set)
+
+            if h_space is not None: # H space already exists, so match the RHS with a currently existing FD if possible
+                try:
+                    matching_fd = next(h['cfd'] for h in h_space if composed_fd_lhs_set == set(h['cfd'].split(' => ')[0][1:-1].split(', ')) and composed_fd_rhs_set == set(h['cfd'].split(' => ')[1].split(', ')))
+                    matching_fd_rhs = matching_fd.split(' => ')[1]    # Ensures the RHS is in an order that does not throw off future calculations
+                    composed_fd_rhs = matching_fd_rhs
+                except StopIteration:
+                    pass
+
+            composed_fd = composed_fd_lhs + ' => ' + composed_fd_rhs
+
+            # if composed_fd not in composed_fds:
+                # print(composed_fd)
+                # composed_fds.add(composed_fd)
+            
+            try:    # Prune duplicates from space of composed FDs
+                _ = next(h for h in composed_fds if composed_fd_lhs_set == set(h.split(' => ')[0][1:-1].split(', ')) and composed_fd_rhs_set == set(h.split(' => ')[1].split(', ')))
+                pass
+            except StopIteration:
+                # print(fd1)
+                # print(fd2)
+                # print(composed_fd, '\n')
+                composed_fds.add(composed_fd)
+
+            composed_combos.add((fd1, fd2))
+
+    # print(composed_fds)
+
+    composition_space = [{ 'cfd': h['cfd'], 'conf': h['conf'] } for h in h_space] if h_space is not None else list()
+    for composed_fd in composed_fds:
+        # if composed_fd != '(manager) => owner':
+        #     continue
+        # print(composed_fd)
+        if clean_data is not None:
+            support, vios = getSupportAndVios(dirty_data, clean_data, composed_fd)
+            # print(support)
+            # print(vios)
+            conf = (len(support) - len(vios)) / len(support)
+            # print(conf)
+            if conf >= min_conf and len(composed_fd.split(' => ')[0][1:-1].split(', ')) <= max_ant:
+                # print(composed_fd)
+                composition_space.append({
+                    'cfd': composed_fd,
+                    'conf': conf
+                })
+        else:
+            if len(composed_fd.split(' => ')[0][1:-1].split(', ')) <= max_ant:
+                # print(composed_fd)
+                composition_space.append({
+                    'cfd': composed_fd,
+                    'conf': None
+                })
+
+    return composition_space
