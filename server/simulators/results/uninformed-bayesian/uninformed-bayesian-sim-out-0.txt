@@ -1,0 +1,327 @@
+yarn run v1.22.10
+$ ts-node bayesian.ts 0 0.5
+read csv at ../data/toy.csv
+read csv at ../data/dirty_toy.csv
+p((zip, state) => phone): 0.08736843238753875
+p((zip, state) => name, phone): 0.08736843238753875
+p((zip, areacode) => state): 0.10749672150849819
+p((zip, state) => areacode, name): 0.08736843238753875
+p((zip) => areacode, state): 0.09004297623613688
+p((zip, state) => areacode, phone): 0.08736843238753875
+p((areacode) => state): 0.10244314169824824
+p((state, areacode) => zip): 0.08576358999574757
+p((zip) => state): 0.09004297623613688
+p((zip, state) => name): 0.08736843238753875
+p((zip, state) => areacode, name, phone): 0.08736843238753875
+0
+../data/toy.csv
+00000023
+7
+before sample
+after sample
+parsed data
+prepped data
+got master data
+initialized feedback object
+iter: 1
+p((zip, state) => phone): 0
+p((zip, state) => areacode, name): 0
+p((zip) => areacode, state): 0.4527001148985063
+p((areacode) => state): 0.09459977020298736
+p((state, areacode) => zip): 0
+p((zip, state) => areacode, phone): 0
+p((zip, areacode) => state): 0
+p((zip, state) => name): 0
+p((zip) => state): 0.4527001148985063
+p((zip, state) => name, phone): 0
+p((zip, state) => areacode, name, phone): 0
+iter: 2
+p((zip) => areacode, state): 0
+p((areacode) => state): 1
+p((zip) => state): 0
+p((zip, state) => areacode, name): 0
+p((zip, areacode) => state): 0
+p((zip, state) => areacode, name, phone): 0
+p((zip, state) => name): 0
+p((zip, state) => name, phone): 0
+p((state, areacode) => zip): 0
+p((zip, state) => areacode, phone): 0
+p((zip, state) => phone): 0
+iter: 3
+p((areacode) => state): 1
+p((zip, state) => areacode, name): 0
+p((zip, state) => phone): 0
+p((zip) => areacode, state): 0
+p((zip) => state): 0
+p((zip, state) => areacode, phone): 0
+p((zip, state) => name, phone): 0
+p((zip, state) => areacode, name, phone): 0
+p((zip, areacode) => state): 0
+p((state, areacode) => zip): 0
+p((zip, state) => name): 0
+iter: 4
+p((areacode) => state): 1
+p((zip, state) => areacode, phone): 0
+p((zip, areacode) => state): 0
+p((zip, state) => name, phone): 0
+p((zip, state) => name): 0
+p((state, areacode) => zip): 0
+p((zip, state) => areacode, name, phone): 0
+p((zip, state) => areacode, name): 0
+p((zip, state) => phone): 0
+p((zip) => state): 0
+p((zip) => areacode, state): 0
+iter: 5
+p((areacode) => state): 1
+p((zip, state) => areacode, name, phone): 0
+p((zip, state) => areacode, name): 0
+p((zip, state) => name, phone): 0
+p((zip, state) => name): 0
+p((zip, state) => phone): 0
+p((zip, areacode) => state): 0
+p((zip) => state): 0
+p((state, areacode) => zip): 0
+p((zip, state) => areacode, phone): 0
+p((zip) => areacode, state): 0
+iter: 6
+p((areacode) => state): 1
+p((state, areacode) => zip): 0
+p((zip, state) => phone): 0
+p((zip, state) => name, phone): 0
+p((zip, state) => areacode, phone): 0
+p((zip, state) => areacode, name): 0
+p((zip, state) => name): 0
+p((zip, areacode) => state): 0
+p((zip) => areacode, state): 0
+p((zip) => state): 0
+p((zip, state) => areacode, name, phone): 0
+iter: 7
+p((areacode) => state): 1
+p((state, areacode) => zip): 0
+p((zip) => areacode, state): 0
+p((zip, areacode) => state): 0
+p((zip, state) => areacode, name, phone): 0
+p((zip, state) => name, phone): 0
+p((zip, state) => areacode, phone): 0
+p((zip, state) => phone): 0
+p((zip, state) => name): 0
+p((zip, state) => areacode, name): 0
+p((zip) => state): 0
+iter: 8
+p((areacode) => state): 1
+p((zip, areacode) => state): 0
+p((zip) => areacode, state): 0
+p((zip, state) => areacode, name, phone): 0
+p((zip, state) => areacode, phone): 0
+p((zip, state) => name): 0
+p((zip, state) => name, phone): 0
+p((state, areacode) => zip): 0
+p((zip) => state): 0
+p((zip, state) => areacode, name): 0
+p((zip, state) => phone): 0
+iter: 9
+p((areacode) => state): 1
+p((zip, state) => name): 0
+p((zip, areacode) => state): 0
+p((state, areacode) => zip): 0
+p((zip) => areacode, state): 0
+p((zip) => state): 0
+p((zip, state) => name, phone): 0
+p((zip, state) => areacode, phone): 0
+p((zip, state) => areacode, name, phone): 0
+p((zip, state) => phone): 0
+p((zip, state) => areacode, name): 0
+iter: 10
+p((areacode) => state): 1
+p((zip, state) => areacode, phone): 0
+p((zip, state) => phone): 0
+p((zip, state) => areacode, name): 0
+p((zip, areacode) => state): 0
+p((zip) => state): 0
+p((zip) => areacode, state): 0
+p((zip, state) => areacode, name, phone): 0
+p((zip, state) => name): 0
+p((state, areacode) => zip): 0
+p((zip, state) => name, phone): 0
+iter: 11
+p((areacode) => state): 1
+p((state, areacode) => zip): 0
+p((zip, state) => areacode, phone): 0
+p((zip, state) => areacode, name): 0
+p((zip) => areacode, state): 0
+p((zip, state) => name, phone): 0
+p((zip) => state): 0
+p((zip, areacode) => state): 0
+p((zip, state) => phone): 0
+p((zip, state) => areacode, name, phone): 0
+p((zip, state) => name): 0
+iter: 12
+p((areacode) => state): 1
+p((zip, state) => areacode, name, phone): 0
+p((state, areacode) => zip): 0
+p((zip, state) => areacode, name): 0
+p((zip, state) => areacode, phone): 0
+p((zip, state) => name, phone): 0
+p((zip, areacode) => state): 0
+p((zip, state) => phone): 0
+p((zip, state) => name): 0
+p((zip) => areacode, state): 0
+p((zip) => state): 0
+iter: 13
+p((areacode) => state): 1
+p((zip, state) => name, phone): 0
+p((zip, areacode) => state): 0
+p((zip) => areacode, state): 0
+p((zip, state) => name): 0
+p((zip, state) => areacode, name): 0
+p((zip, state) => areacode, phone): 0
+p((state, areacode) => zip): 0
+p((zip, state) => phone): 0
+p((zip, state) => areacode, name, phone): 0
+p((zip) => state): 0
+iter: 14
+p((areacode) => state): 1
+p((zip, state) => areacode, phone): 0
+p((zip, areacode) => state): 0
+p((zip) => areacode, state): 0
+p((zip, state) => phone): 0
+p((zip, state) => name, phone): 0
+p((zip) => state): 0
+p((zip, state) => name): 0
+p((state, areacode) => zip): 0
+p((zip, state) => areacode, name, phone): 0
+p((zip, state) => areacode, name): 0
+iter: 15
+p((areacode) => state): 1
+p((zip) => state): 0
+p((zip, state) => phone): 0
+p((state, areacode) => zip): 0
+p((zip) => areacode, state): 0
+p((zip, state) => name): 0
+p((zip, state) => areacode, name): 0
+p((zip, areacode) => state): 0
+p((zip, state) => areacode, name, phone): 0
+p((zip, state) => name, phone): 0
+p((zip, state) => areacode, phone): 0
+iter: 16
+p((areacode) => state): 1
+p((zip) => areacode, state): 0
+p((zip, state) => areacode, name): 0
+p((zip, areacode) => state): 0
+p((zip, state) => areacode, name, phone): 0
+p((state, areacode) => zip): 0
+p((zip, state) => name): 0
+p((zip) => state): 0
+p((zip, state) => areacode, phone): 0
+p((zip, state) => name, phone): 0
+p((zip, state) => phone): 0
+iter: 17
+p((areacode) => state): 1
+p((zip) => state): 0
+p((zip, state) => name, phone): 0
+p((zip, state) => phone): 0
+p((zip, state) => name): 0
+p((zip, areacode) => state): 0
+p((zip, state) => areacode, name): 0
+p((zip, state) => areacode, name, phone): 0
+p((state, areacode) => zip): 0
+p((zip, state) => areacode, phone): 0
+p((zip) => areacode, state): 0
+iter: 18
+p((areacode) => state): 1
+p((zip, state) => name, phone): 0
+p((state, areacode) => zip): 0
+p((zip, state) => areacode, phone): 0
+p((zip, state) => phone): 0
+p((zip, state) => areacode, name, phone): 0
+p((zip) => state): 0
+p((zip, state) => areacode, name): 0
+p((zip) => areacode, state): 0
+p((zip, state) => name): 0
+p((zip, areacode) => state): 0
+iter: 19
+p((areacode) => state): 1
+p((zip, areacode) => state): 0
+p((zip, state) => areacode, name, phone): 0
+p((zip, state) => areacode, phone): 0
+p((state, areacode) => zip): 0
+p((zip, state) => areacode, name): 0
+p((zip) => state): 0
+p((zip) => areacode, state): 0
+p((zip, state) => name): 0
+p((zip, state) => phone): 0
+p((zip, state) => name, phone): 0
+iter: 20
+p((areacode) => state): 1
+p((zip, state) => phone): 0
+p((zip, areacode) => state): 0
+p((zip) => areacode, state): 0
+p((zip, state) => areacode, name): 0
+p((zip, state) => name, phone): 0
+p((zip, state) => areacode, name, phone): 0
+p((zip, state) => name): 0
+p((state, areacode) => zip): 0
+p((zip) => state): 0
+p((zip, state) => areacode, phone): 0
+iter: 21
+p((areacode) => state): 1
+p((state, areacode) => zip): 0
+p((zip, state) => name): 0
+p((zip, state) => phone): 0
+p((zip, state) => name, phone): 0
+p((zip) => areacode, state): 0
+p((zip, state) => areacode, phone): 0
+p((zip, areacode) => state): 0
+p((zip, state) => areacode, name, phone): 0
+p((zip, state) => areacode, name): 0
+p((zip) => state): 0
+iter: 22
+p((areacode) => state): 1
+p((zip) => state): 0
+p((state, areacode) => zip): 0
+p((zip, areacode) => state): 0
+p((zip, state) => areacode, name, phone): 0
+p((zip, state) => name): 0
+p((zip, state) => areacode, phone): 0
+p((zip, state) => phone): 0
+p((zip) => areacode, state): 0
+p((zip, state) => name, phone): 0
+p((zip, state) => areacode, name): 0
+iter: 23
+p((areacode) => state): 1
+p((state, areacode) => zip): 0
+p((zip, state) => areacode, name): 0
+p((zip) => state): 0
+p((zip, state) => name, phone): 0
+p((zip, areacode) => state): 0
+p((zip, state) => areacode, name, phone): 0
+p((zip, state) => name): 0
+p((zip, state) => areacode, phone): 0
+p((zip, state) => phone): 0
+p((zip) => areacode, state): 0
+iter: 24
+p((areacode) => state): 1
+p((zip, state) => phone): 0
+p((zip) => areacode, state): 0
+p((zip, state) => areacode, name): 0
+p((zip, areacode) => state): 0
+p((zip, state) => areacode, name, phone): 0
+p((zip, state) => name): 0
+p((state, areacode) => zip): 0
+p((zip, state) => name, phone): 0
+p((zip) => state): 0
+p((zip, state) => areacode, phone): 0
+iter: 25
+Results:
+(areacode) => state: 0.10244314169824824, 0.09459977020298736, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+(zip, state) => name: 0.08736843238753875, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+(zip, state) => name, phone: 0.08736843238753875, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+(zip) => areacode, state: 0.09004297623613688, 0.4527001148985063, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+(zip, state) => phone: 0.08736843238753875, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+(zip, state) => areacode, name, phone: 0.08736843238753875, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+(state, areacode) => zip: 0.08576358999574757, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+(zip) => state: 0.09004297623613688, 0.4527001148985063, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+(zip, state) => areacode, phone: 0.08736843238753875, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+(zip, state) => areacode, name: 0.08736843238753875, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+(zip, areacode) => state: 0.10749672150849819, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+Done in 6.33s.

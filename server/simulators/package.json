@@ -17,7 +17,7 @@
     "oracle": "ts-node oracle.ts",
     "anti-oracle": "ts-node anti-oracle.ts",
     "learner": "ts-node learner.ts",
-    "informed-bayesian": "ts-node informed-bayesian.ts"
+    "bayesian": "ts-node bayesian.ts"
   },
   "devDependencies": {
     "@types/filesystem": "^0.0.29",

@@ -569,26 +569,68 @@ def buildCompositionSpace(fds, h_space, dirty_data, clean_data, min_conf, max_an
                     pass
 
             composed_fd = composed_fd_lhs + ' => ' + composed_fd_rhs
-
-            # if composed_fd not in composed_fds:
-                # print(composed_fd)
-                # composed_fds.add(composed_fd)
             
             try:    # Prune duplicates from space of composed FDs
                 _ = next(h for h in composed_fds if composed_fd_lhs_set == set(h.split(' => ')[0][1:-1].split(', ')) and composed_fd_rhs_set == set(h.split(' => ')[1].split(', ')))
                 pass
             except StopIteration:
-                # print(fd1)
-                # print(fd2)
-                # print(composed_fd, '\n')
                 composed_fds.add(composed_fd)
+
+            composed_combos.add((fd1, fd2))
+
+    further_composed_fds = set(composed_fds)
+    for fd1 in composed_fds:
+        for fd2 in composed_fds:
+            if fd1 == fd2 or (fd1, fd2) in composed_combos or (fd2, fd1) in composed_combos:
+                continue
+            fd1_lhs = set(fd1.split(' => ')[0][1:-1].split(', '))
+            fd1_rhs = set(fd1.split(' => ')[1].split(', '))
+            fd2_lhs = set(fd2.split(' => ')[0][1:-1].split(', '))
+            fd2_rhs = set(fd2.split(' => ')[1].split(', '))
+
+            if not fd1_rhs.isdisjoint(fd2_lhs) or not fd2_rhs.isdisjoint(fd1_lhs):
+                continue
+
+            composed_fd_lhs_set = fd1_lhs | fd2_lhs
+            if len(composed_fd_lhs_set) > max_ant:
+                continue
+            
+            composed_fd_lhs = '(' + ', '.join(composed_fd_lhs_set) + ')'
+
+            if h_space is not None: # H space already exists, so match the LHS with a currently existing FD if possible
+                try:
+                    matching_fd = next(h['cfd'] for h in h_space if composed_fd_lhs_set == set(h['cfd'].split(' => ')[0][1:-1].split(', ')))
+                    matching_fd_lhs = matching_fd.split(' => ')[0]  # Ensures the LHS is in an order that does not throw off future calculations
+                    composed_fd_lhs = matching_fd_lhs
+                except StopIteration:
+                    pass
+
+            composed_fd_rhs_set = fd1_rhs | fd2_rhs
+            composed_fd_rhs = ', '.join(composed_fd_rhs_set)
+
+            if h_space is not None: # H space already exists, so match the RHS with a currently existing FD if possible
+                try:
+                    matching_fd = next(h['cfd'] for h in h_space if composed_fd_lhs_set == set(h['cfd'].split(' => ')[0][1:-1].split(', ')) and composed_fd_rhs_set == set(h['cfd'].split(' => ')[1].split(', ')))
+                    matching_fd_rhs = matching_fd.split(' => ')[1]    # Ensures the RHS is in an order that does not throw off future calculations
+                    composed_fd_rhs = matching_fd_rhs
+                except StopIteration:
+                    pass
+
+            composed_fd = composed_fd_lhs + ' => ' + composed_fd_rhs
+            
+            try:    # Prune duplicates from space of composed FDs
+                _ = next(h for h in further_composed_fds if composed_fd_lhs_set == set(h.split(' => ')[0][1:-1].split(', ')) and composed_fd_rhs_set == set(h.split(' => ')[1].split(', ')))
+                pass
+            except StopIteration:
+                further_composed_fds.add(composed_fd)
 
             composed_combos.add((fd1, fd2))
 
     # print(composed_fds)
 
+
     composition_space = [{ 'cfd': h['cfd'], 'conf': h['conf'] } for h in h_space] if h_space is not None else list()
-    for composed_fd in composed_fds:
+    for composed_fd in further_composed_fds:
         # if composed_fd != '(manager) => owner':
         #     continue
         # print(composed_fd)

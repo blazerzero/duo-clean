@@ -46,6 +46,7 @@ interface AttrP {
 function buildFeedbackMap(data: any, feedback: any, header: any): any {
     const feedbackMap: any = {};
     const rows = Object.keys(data);
+    // console.log(data)
     const cols = header;
     for (let i = 0; i < rows.length; i++) {
         const tup: any = {};
@@ -89,7 +90,7 @@ function calculateP(fd: string, all_fds: string[], data: any): number {
     let wAC_sum: number = 0
     lhs.forEach((lh) => {
         // UV
-        console.log(lh)
+        // console.log(lh)
         const uv: Set<string> = new Set<string>()
         for (const row of data) {
             uv.add(row[lh].toString())
@@ -172,32 +173,41 @@ function pickFD(fds: FD[], p_max: number): FD | null {
         // console.log(random)
         // console.log(cumul)
         if (cumul >= p_max) {
-            console.log('done!')
+            // console.log('done!')
             return fds[i]
         }
     }
     return null
 }
 
-async function run(s: number) {
+async function run(s: number, p_max: number) {
     let master_data_fp: PathLike
+    let full_dirty_data_fp: PathLike
     if (s === 0) {
         master_data_fp = '../data/toy.csv'
+        full_dirty_data_fp = '../data/dirty_toy.csv'
     } else if (s % 4 === 1) {
         master_data_fp = '../data/airport_1.csv'
+        full_dirty_data_fp = '../data/dirty_airport_1.csv'
     } else if (s % 4 === 2) {
         master_data_fp = '../data/airport_2.csv'
+        full_dirty_data_fp = '../data/dirty_airport_2.csv'
     } else if (s % 4 === 3) {
         master_data_fp = '../data/omdb_3.csv'
+        full_dirty_data_fp = '../data/dirty_omdb_3.csv'
     } else if (s % 4 === 0) {
         master_data_fp = '../data/omdb_4.csv'
+        full_dirty_data_fp = '../data/dirty_omdb_4.csv'
     } else {
         console.error('there was a problem determining the master data filepath. defaulting to example scenario')
-        master_data_fp = '../data/dirty_toy.csv'
+        master_data_fp = '../data/toy.csv'
+        full_dirty_data_fp = '../data/dirty_toy.csv'
+        s = 0
     }
 
     const master_data: any = []
-    const readFile = (file: PathLike): Promise<void> => new Promise((resolve, reject) => {
+    const full_dirty_data: any = []
+    const readFile = (file: PathLike, data: any): Promise<void> => new Promise((resolve, reject) => {
         fs.createReadStream(file)
             .pipe(csv())
             .on('data', (d) => {
@@ -206,7 +216,7 @@ async function run(s: number) {
                 for (const i in d) {
                     row[i.replace(/[^a-zA-Z ]/g, '')] = d[i]
                 }
-                master_data.push(row)
+               data.push(row)
             })
             .on('end', () => {
                 console.log('read csv at '.concat(file.toString()));
@@ -214,9 +224,11 @@ async function run(s: number) {
             });
     })
 
-    await readFile(master_data_fp)
+    await readFile(master_data_fp, master_data)
+    await readFile(full_dirty_data_fp, full_dirty_data)
 
     const h_space: Hypothesis[] = scenarios[s].hypothesis_space as Hypothesis[]
+    const target_fds: string[] = scenarios[s].cfds
     const fds: string[] = [] as string[]
     h_space.forEach((h) => {
         fds.push(h.cfd)
@@ -229,11 +241,21 @@ async function run(s: number) {
             lhs: h.cfd.split(' => ')[0].replace('(', '').replace(')', '').split(', '),
             rhs: h.cfd.split(' => ')[1].split(', '),
             curr_p: p,
-            p_history: [p],
+            p_history: [],
             support: h.support,
             vios: h.vios,
         }
         fd_metadata.push(new_fd)
+    })
+
+    let curr_p_sum = 0
+    fd_metadata.forEach((fd) => {
+        curr_p_sum += fd.curr_p
+    })
+    fd_metadata.forEach((fd) => {
+        fd.curr_p /= curr_p_sum
+        console.log('p('.concat(fd.fd, '): ', fd.curr_p.toString()))
+        fd.p_history.push(fd.curr_p)
     })
 
     console.log(s.toString())
@@ -250,6 +272,15 @@ async function run(s: number) {
         console.error(err)
     }
     console.log(project_id)
+
+    let num_dirty_tuples: number = 0
+    for (const i in master_data) {
+        if (JSON.stringify(master_data[i]) !== JSON.stringify(full_dirty_data[i])) {
+            num_dirty_tuples++
+        }
+    }
+
+    console.log(num_dirty_tuples)
 
     let data: any
     let feedback: any
@@ -298,9 +329,10 @@ async function run(s: number) {
         }
     }
 
-    const p_max = 0.9
-
+    let iter: number = 0
     while (msg !== '[DONE]') {
+        iter++
+        console.log('iter: '.concat(iter.toString()))
         const feedbackMap = buildFeedbackMap(data, feedback, header);
 
         let numMarkedTuples: number = 0;
@@ -326,7 +358,8 @@ async function run(s: number) {
             } */
 
             // pick an FD
-            if (fd_metadata.find((el) => el.curr_p >= p_max) === undefined) {
+            // console.log(feedbackMap)
+            if (fd_metadata.find((el) => el.curr_p >= (p_max / target_fds.length)) === undefined) {
                 const uninformed_p: number = 0.5
                 const col: string = header[Math.floor(Math.random() * header.length)]
                 const decider: number = Math.random()
@@ -340,12 +373,12 @@ async function run(s: number) {
                 do {
                     let cumul = 1
                     const random = Math.random()
-                    chosen_fd = pickFD(fd_metadata, p_max)
+                    chosen_fd = pickFD(fd_metadata, (p_max / target_fds.length))
                     if (chosen_fd === null) {
                         console.log('null')
                         return
                     }
-                } while (chosen_fd.curr_p >= p_max)
+                } while (chosen_fd.curr_p <= (p_max / target_fds.length))
                 if (chosen_fd.vios.includes(data[i].id)) {
                     header.forEach((col) => {
                         if (chosen_fd !== null && chosen_fd.rhs.includes(col)) {
@@ -394,6 +427,7 @@ async function run(s: number) {
                 data = Object.values(JSON.parse(sample));
 
                 for (const i in data) {
+                    // console.log(data[i])
                     const row: any = data[i]
                     for (const j in row) {
                         if (j === 'id') break;
@@ -401,11 +435,6 @@ async function run(s: number) {
                         if (row[j] == null) row[j] = '';
                         else if (typeof row[j] !== 'string') {
                             row[j] = row[j].toString();
-                            if (j === 'zip') {
-                                while (row[j].length < 5) {
-                                    row[j] = '0'.concat(row[j])
-                                }
-                            }
                         }
                         if (!Number.isNaN(row[j]) && Math.ceil(parseFloat(row[j])) - parseFloat(row[j]) === 0) {
                             row[j] = Math.ceil(row[j]).toString();
@@ -415,9 +444,11 @@ async function run(s: number) {
 
                 /* Reinforce FDs */
                 fd_metadata.forEach((fd) => {
+                    // console.log(fd.fd)
                     /* Calculate p(X | fd) by checking the violating tuples to see if they're actually dirty tuples
                     If they all are, p(X | fd) = prod(1/fd.support.length for each x in X), else p(X | h) = 0 */
-                    let p_X_given_h = 1
+                    let p_X_given_h: number = 1
+                    let counter: number = 0
                     for (const i in data) {
                         const sample_row = Object.keys(data[i]).reduce((filtered: any, key: string) => {
                             if (key !== 'id') {
@@ -426,18 +457,53 @@ async function run(s: number) {
                             }
                             return filtered;
                         }, {})
+                        // console.log(JSON.stringify(sample_row))
+                        // console.log(JSON.stringify(master_data[data[i].id]))
                         if (JSON.stringify(sample_row) !== JSON.stringify(master_data[data[i].id])) {
+                            // console.log(data[i].id)
+                            // console.log(fd.vios)
+                            counter++
                             if (fd.vios.includes(data[i].id)) {
-                                p_X_given_h *= (1/fd.support.length)
+                                p_X_given_h *= (1/fd.vios.length)
                             } else {
                                 p_X_given_h = 0
                                 break
                             }
                         }
                     }
-                    const new_p = fd.curr_p * p_X_given_h   // THIS NEEDS PATCHING; MAYBE NORMALIZING?
+                    let p_X: number = 1
+                    // console.log(counter)
+                    for (let i = 0; i < counter; i++) {
+                        p_X *= 1/(num_dirty_tuples - i)
+                    }
+                    /* console.log(fd.fd)
+                    console.log(fd.curr_p)
+                    console.log(p_X_given_h)
+                    console.log(p_X)
+                    console.log('\n') */
+                    // console.log('p_prev(h): '.concat(fd.curr_p.toString()))
+                    //console.log('p(X | h): '.concat(p_X_given_h.toString()))
+                    // console.log('p(X): '.concat(p_X.toString()))
+                    const new_p: number = p_X_given_h === 0 ? 0 : (fd.curr_p * p_X_given_h) / p_X
+                    // console.log(new_p)
                     fd.curr_p = new_p
-                    fd.p_history.push(new_p)
+                })
+
+                // NORMALIZE WEIGHTS
+                curr_p_sum = 0
+                fd_metadata.forEach((fd) => {
+                    curr_p_sum += fd.curr_p
+                })
+                fd_metadata.forEach((fd) => {
+                    fd.curr_p /= curr_p_sum
+                    console.log('p('.concat(fd.fd, '): ', fd.curr_p.toString()))
+                    fd.p_history.push(fd.curr_p)
+                })
+            }
+            else {
+                console.log('Results:')
+                fd_metadata.forEach((fd) => {
+                    console.log(fd.fd + ': ' + fd.p_history.join(', '))
                 })
             }
         } catch (err) {
@@ -447,5 +513,6 @@ async function run(s: number) {
     }
 }
 
-const s = parseInt(process.argv[2])
-run(s)
+const s: number = parseInt(process.argv[2])
+const p_max: number = parseInt(process.argv[3])
+run(s, p_max)
