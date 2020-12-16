@@ -348,9 +348,9 @@ class Clean(Resource):
         s_in = data.iloc[feedback.index]
         print('*** Extracted sample from dataset ***')
         if is_new_feedback == 1 and refresh == 0:
-            helpers.explainFeedback(data, s_in, project_id, current_iter, current_time, refresh=0)
+            helpers.explainFeedback(data, s_in, project_id, current_iter, current_time, 0)
         else:
-            helpers.explainFeedback(data, s_in, project_id, current_iter, current_time, refresh=1)
+            helpers.explainFeedback(data, s_in, project_id, current_iter, current_time, 1)
         print('*** Mining completed and FD/CFD weights updated ***')
         
         # Update tuple weights pre-sampling

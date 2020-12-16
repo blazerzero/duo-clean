@@ -115,7 +115,7 @@ def saveNoiseFeedback(data, feedback, project_id, current_iter, current_time):
 
 
 # DISCOVER CFDs THAT BEST EXPLAIN THE FEEDBACK GIVEN BY THE USER
-def explainFeedback(full_dataset, dirty_sample, project_id, current_iter, current_time, refresh, update_method):
+def explainFeedback(full_dataset, dirty_sample, project_id, current_iter, current_time, refresh):
     cell_metadata = pickle.load( open('./store/' + project_id + '/cell_metadata.p', 'rb') )
     start_time = pickle.load( open('./store/' + project_id + '/start_time.p', 'rb') )
     with open('./store/' + project_id + '/project_info.json', 'r') as f:
@@ -131,6 +131,7 @@ def explainFeedback(full_dataset, dirty_sample, project_id, current_iter, curren
     marked_cols = list()
 
     h_space = project_info['scenario']['hypothesis_space']
+    update_method = project_info['scenario']['update_method']
 
     if refresh == 1:
         cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
