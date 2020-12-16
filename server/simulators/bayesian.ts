@@ -16,6 +16,7 @@ import { pick } from 'lodash'
 import csv from 'csv-parser'
 import fs, { PathLike } from 'fs'
 import { harmonic } from 'array-means'
+import Chance from 'chance'
 import * as scenarios from './scenarios.json'
 
 interface Hypothesis {
@@ -35,7 +36,9 @@ interface FD {
     curr_p: number
     p_history: number[],
     support: number[],
-    vios: number[]
+    vios: number[],
+    vio_pairs: number[][],
+    vio_trios: number[][]
 }
 
 interface AttrP {
@@ -180,7 +183,10 @@ function pickFD(fds: FD[], p_max: number): FD | null {
     return null
 }
 
-async function run(s: number, p_max: number) {
+async function run(s: number, type: string) {
+    const chance: Chance.Chance = new Chance()
+    const p_max: number = type === 'informed' ? 0.9 : 0.5
+
     let master_data_fp: PathLike
     let full_dirty_data_fp: PathLike
     if (s === 0) {
@@ -230,25 +236,41 @@ async function run(s: number, p_max: number) {
     const h_space: Hypothesis[] = scenarios[s].hypothesis_space as Hypothesis[]
     const target_fds: string[] = scenarios[s].cfds
     const fds: string[] = [] as string[]
-    h_space.forEach((h) => {
+    h_space.forEach((h: Hypothesis) => {
         fds.push(h.cfd)
     })
     const fd_metadata: FD[] = [] as FD[]
-    h_space.forEach((h) => {
-        const p: number = calculateP(h.cfd, fds, master_data)
+    h_space.forEach((h: Hypothesis) => {
+        // const p: number = calculateP(h.cfd, fds, master_data)
         const new_fd: FD = {
             fd: h.cfd,
             lhs: h.cfd.split(' => ')[0].replace('(', '').replace(')', '').split(', '),
             rhs: h.cfd.split(' => ')[1].split(', '),
-            curr_p: p,
+            curr_p: type === 'informed' ? ((h.support.length - h.vios.length) / h.support.length) : 0.5,
             p_history: [],
             support: h.support,
             vios: h.vios,
+            vio_pairs: h.vio_pairs,
+            vio_trios: h.vio_trios
         }
         fd_metadata.push(new_fd)
     })
 
-    let curr_p_sum = 0
+    const all_vios: number[][] = [] as number[][]
+    fd_metadata.forEach((fd: FD) => {
+        fd.p_history.push(fd.curr_p)
+        for (const vio of fd.vios) {
+            if (!all_vios.includes([vio])) all_vios.push([vio])
+        }
+        for (const vio_pair of fd.vio_pairs) {
+            if (!all_vios.includes(vio_pair)) all_vios.push(vio_pair)
+        }
+        for (const vio_trio of fd.vio_trios) {
+            if (!all_vios.includes(vio_trio)) all_vios.push(vio_trio)
+        }
+    })
+
+    /* let curr_p_sum = 0
     fd_metadata.forEach((fd) => {
         curr_p_sum += fd.curr_p
     })
@@ -256,7 +278,7 @@ async function run(s: number, p_max: number) {
         fd.curr_p /= curr_p_sum
         console.log('p('.concat(fd.fd, '): ', fd.curr_p.toString()))
         fd.p_history.push(fd.curr_p)
-    })
+    }) */
 
     console.log(s.toString())
     console.log(master_data_fp)
@@ -284,14 +306,18 @@ async function run(s: number, p_max: number) {
 
     let data: any
     let feedback: any
+    let vios: number[][]
     try {
         console.log('before sample')
-        const response = await axios.post('http://localhost:5000/duo/api/sample', { project_id });
+        const response = await axios.post('http://localhost:5000/duo/api/sample', { project_id })
         console.log('after sample')
-        const res = JSON.parse(response.data);
-        const { sample } = pick(res, ['sample']);
-        feedback = JSON.parse(res.feedback)
-        data = Object.values(JSON.parse(sample));
+        const res = JSON.parse(response.data)
+        const { sample, sample_vios } = pick(res, ['sample', 'sample_vios'])
+        // console.log(sample_vios)
+        vios = sample_vios
+        console.log(vios)
+        //feedback = JSON.parse(res.feedback)
+        data = Object.values(JSON.parse(sample))
         console.log('parsed data')
         for (const i in data) {
             const row: any = data[i]
@@ -299,9 +325,9 @@ async function run(s: number, p_max: number) {
                 if (j === 'id') break;
 
                 if (row[j] == null) row[j] = '';
-                else if (typeof row[j] !== 'string') row[j] = row[j].toString();
+                else if (typeof row[j] !== 'string') row[j] = row[j].toString()
                 if (!Number.isNaN(row[j]) && Math.ceil(parseFloat(row[j])) - parseFloat(row[j]) === 0) {
-                    row[j] = Math.ceil(row[j]).toString();
+                    row[j] = Math.ceil(row[j]).toString()
                 }
             }
         }
@@ -329,6 +355,40 @@ async function run(s: number, p_max: number) {
         }
     }
 
+    /* Reinforce FDs */
+    fd_metadata.forEach((fd) => {
+        let p_X_given_h: number = 1
+        /* for (const i in data) {
+            const sample_row = Object.keys(data[i]).reduce((filtered: any, key: string) => {
+                if (key !== 'id') {
+                    if (typeof (data[i][key]) === 'number') filtered[key] = data[i][key].toString();
+                    else filtered[key] = data[i][key]
+                }
+                return filtered;
+            }, {})
+            if (JSON.stringify(sample_row) !== JSON.stringify(master_data[data[i].id])) {
+
+                counter++
+                if (fd.vios.includes(data[i].id)) {
+                    p_X_given_h *= (1/fd.vios.length)
+                } else {
+                    p_X_given_h = 0
+                    break
+                }
+            }
+        } */
+        // console.log(vios)
+        for (const vio of vios) {
+            p_X_given_h *= (all_vios.includes(vio) ? (1-fd.curr_p) : fd.curr_p)
+        }
+        let p_X: number = 1
+        for (let i = 0; i < vios.length; i++) {
+            p_X *= 1/(all_vios.length - i)
+        }
+        const new_p: number = p_X_given_h === 0 ? 0 : (fd.curr_p * p_X_given_h) / p_X
+        fd.curr_p = new_p
+    })
+
     let iter: number = 0
     while (msg !== '[DONE]') {
         iter++
@@ -339,49 +399,20 @@ async function run(s: number, p_max: number) {
         let numMarkedCells: number = 0;
 
         /* Bayesian behavior */
-        for (const i in data) {
-            /* const sample_row = Object.keys(data[i]).reduce((filtered: any, key: string) => {
-                if (key !== 'id') {
-                    if (typeof (data[i][key]) === 'number') filtered[key] = data[i][key].toString();
-                    else filtered[key] = data[i][key]
-                }
-                return filtered;
-            }, {}) */
-            /* if (JSON.stringify(sample_row) !== JSON.stringify(master_data[data[i].id])) {
-                numMarkedTuples++;
-                for (let j = 0; j < header.length; j++) {
-                    if (sample_row[header[j]] !== master_data[data[i].id][header[j]]) {
-                        numMarkedCells++;
-                        feedbackMap[i][header[j]] = true;
-                    }
-                }
-            } */
-
-            // pick an FD
-            // console.log(feedbackMap)
-            if (fd_metadata.find((el) => el.curr_p >= (p_max / target_fds.length)) === undefined) {
-                const uninformed_p: number = 0.5
-                const col: string = header[Math.floor(Math.random() * header.length)]
-                const decider: number = Math.random()
-                if (decider >= uninformed_p) {
-                    // numMarkedCells++
-                    feedbackMap[i][col] = true
-                }
+        const strong_fds: FD[] = [] as FD[]
+        const strong_fd_ps: number[] = [] as number[]
+        fd_metadata.forEach((fd) => {
+            if (fd.curr_p >= p_max) {
+                strong_fds.push(fd)
+                strong_fd_ps.push(fd.curr_p)
             }
-            else {
-                let chosen_fd: FD | null
-                do {
-                    let cumul = 1
-                    const random = Math.random()
-                    chosen_fd = pickFD(fd_metadata, (p_max / target_fds.length))
-                    if (chosen_fd === null) {
-                        console.log('null')
-                        return
-                    }
-                } while (chosen_fd.curr_p <= (p_max / target_fds.length))
+        })
+        if (strong_fds.length > 0) {
+            for (const i in data) {
+                const chosen_fd: FD = chance.weighted(strong_fds, strong_fd_ps)
                 if (chosen_fd.vios.includes(data[i].id)) {
                     header.forEach((col) => {
-                        if (chosen_fd !== null && chosen_fd.rhs.includes(col)) {
+                        if (chosen_fd.rhs.includes(col)) {
                             feedbackMap[i][col] = true
                         }
                         else {
@@ -389,11 +420,13 @@ async function run(s: number, p_max: number) {
                         }
                     })
                 }
+                else {
+                    header.forEach((col) => {
+                        feedbackMap[i][col] = false
+                    })
+                }
             }
         }
-
-        // console.log('numMarkedTuples: '.concat(numMarkedTuples.toString()))
-        // console.log('numMarkedCells: '.concat(numMarkedCells.toString()))
 
         feedback = {};
         for (const f in feedbackMap) {
@@ -422,12 +455,12 @@ async function run(s: number, p_max: number) {
             const res = JSON.parse(response.data);
             msg = res.msg;
             if (msg !== '[DONE]') {
-                const { sample } = pick(res, ['sample']);
+                const { sample, sample_vios } = pick(res, ['sample', 'sample_vios']);
                 feedback = JSON.parse(res.feedback);
                 data = Object.values(JSON.parse(sample));
+                vios = sample_vios
 
                 for (const i in data) {
-                    // console.log(data[i])
                     const row: any = data[i]
                     for (const j in row) {
                         if (j === 'id') break;
@@ -444,12 +477,8 @@ async function run(s: number, p_max: number) {
 
                 /* Reinforce FDs */
                 fd_metadata.forEach((fd) => {
-                    // console.log(fd.fd)
-                    /* Calculate p(X | fd) by checking the violating tuples to see if they're actually dirty tuples
-                    If they all are, p(X | fd) = prod(1/fd.support.length for each x in X), else p(X | h) = 0 */
                     let p_X_given_h: number = 1
-                    let counter: number = 0
-                    for (const i in data) {
+                    /* for (const i in data) {
                         const sample_row = Object.keys(data[i]).reduce((filtered: any, key: string) => {
                             if (key !== 'id') {
                                 if (typeof (data[i][key]) === 'number') filtered[key] = data[i][key].toString();
@@ -457,45 +486,46 @@ async function run(s: number, p_max: number) {
                             }
                             return filtered;
                         }, {})
-                        // console.log(JSON.stringify(sample_row))
-                        // console.log(JSON.stringify(master_data[data[i].id]))
                         if (JSON.stringify(sample_row) !== JSON.stringify(master_data[data[i].id])) {
-                            // console.log(data[i].id)
-                            // console.log(fd.vios)
+
                             counter++
                             if (fd.vios.includes(data[i].id)) {
-                                p_X_given_h *= (1/fd.vios.length)
+                                // p_X_given_h *= (1/fd.vios.length)
+                                p_X_given_h *= (1 - fd.curr_p)
                             } else {
-                                p_X_given_h = 0
+                                // p_X_given_h = 0
+                                p_X_given_h *= fd.curr_p
                                 break
                             }
                         }
+                    } */
+                    for (const vio of vios) {
+                        if (vio.length === 3) {
+                            p_X_given_h *= (fd.vio_trios.includes(vio) ? (1-fd.curr_p) : fd.curr_p)
+                        } else if (vio.length === 2) {
+                            p_X_given_h *= (fd.vio_pairs.includes(vio) ? (1-fd.curr_p) : fd.curr_p)
+                        } else {
+                            p_X_given_h *= (fd.vios.includes(vio[0]) ? (1-fd.curr_p) : fd.curr_p)
+                        }
                     }
                     let p_X: number = 1
-                    // console.log(counter)
-                    for (let i = 0; i < counter; i++) {
-                        p_X *= 1/(num_dirty_tuples - i)
+                    for (let i = 0; i < vios.length; i++) {
+                        p_X *= 1/(all_vios.length - i)
                     }
-                    /* console.log(fd.fd)
-                    console.log(fd.curr_p)
-                    console.log(p_X_given_h)
-                    console.log(p_X)
-                    console.log('\n') */
-                    // console.log('p_prev(h): '.concat(fd.curr_p.toString()))
-                    //console.log('p(X | h): '.concat(p_X_given_h.toString()))
-                    // console.log('p(X): '.concat(p_X.toString()))
+                    /* for (let i = 0; i < counter; i++) {
+                        p_X *= 1/(num_dirty_tuples - i)
+                    } */
                     const new_p: number = p_X_given_h === 0 ? 0 : (fd.curr_p * p_X_given_h) / p_X
-                    // console.log(new_p)
                     fd.curr_p = new_p
                 })
 
                 // NORMALIZE WEIGHTS
-                curr_p_sum = 0
+                /* curr_p_sum = 0
                 fd_metadata.forEach((fd) => {
                     curr_p_sum += fd.curr_p
-                })
+                }) */
                 fd_metadata.forEach((fd) => {
-                    fd.curr_p /= curr_p_sum
+                    // fd.curr_p /= curr_p_sum
                     console.log('p('.concat(fd.fd, '): ', fd.curr_p.toString()))
                     fd.p_history.push(fd.curr_p)
                 })
@@ -514,5 +544,5 @@ async function run(s: number, p_max: number) {
 }
 
 const s: number = parseInt(process.argv[2])
-const p_max: number = parseInt(process.argv[3])
-run(s, p_max)
+const type: string = process.argv[3]
+run(s, type)

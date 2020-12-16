@@ -15,11 +15,11 @@ for sim in simulators:
         if sim == 'informed-bayesian':
             f_out = open('./results/informed-bayesian/' + sim + '-sim-out-' + str(s) + '.txt', 'w')
             f_err = open('./results/informed-bayesian/' + sim + '-sim-err-' + str(s) + '.txt', 'w')
-            cmd = 'yarn run bayesian ' + str(s) + ' 0.9'
+            cmd = 'yarn run bayesian ' + str(s) + ' informed'
         elif sim == 'uninformed-bayesian':
             f_out = open('./results/uninformed-bayesian/' + sim + '-sim-out-' + str(s) + '.txt', 'w')
             f_err = open('./results/uninformed-bayesian/' + sim + '-sim-err-' + str(s) + '.txt', 'w')
-            cmd = 'yarn run bayesian ' + str(s) + ' 0.5'
+            cmd = 'yarn run bayesian ' + str(s) + ' uninformed'
         else:
             f_out = open('./results/oracle/' + sim + '-sim-out' + str(s) + '.txt', 'w')
             f_err = open('./results/oracle/' + sim + '-sim-err' + str(s) + '.txt', 'w')

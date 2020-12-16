@@ -240,7 +240,7 @@ async function run(s: number, p_max: number) {
             fd: h.cfd,
             lhs: h.cfd.split(' => ')[0].replace('(', '').replace(')', '').split(', '),
             rhs: h.cfd.split(' => ')[1].split(', '),
-            curr_p: p,
+            curr_p: target_fds.includes(h.cfd) ? 1/(target_fds.length) : 0,
             p_history: [],
             support: h.support,
             vios: h.vios,
@@ -463,11 +463,11 @@ async function run(s: number, p_max: number) {
                             }
                         }
                     }
-                    let p_X: number = 1
+                    // let p_X: number = 1
                     // console.log(counter)
-                    for (let i = 0; i < counter; i++) {
-                        p_X *= 1/(num_dirty_tuples - i)
-                    }
+                    // for (let i = 0; i < counter; i++) {
+                    //    p_X *= 1/(num_dirty_tuples - i)
+                    // }
                     /* console.log(fd.fd)
                     console.log(fd.curr_p)
                     console.log(p_X_given_h)
@@ -476,9 +476,9 @@ async function run(s: number, p_max: number) {
                     // console.log('p_prev(h): '.concat(fd.curr_p.toString()))
                     //console.log('p(X | h): '.concat(p_X_given_h.toString()))
                     // console.log('p(X): '.concat(p_X.toString()))
-                    const new_p: number = p_X_given_h === 0 ? 0 : (fd.curr_p * p_X_given_h) / p_X
+                    // const new_p: number = p_X_given_h === 0 ? 0 : (fd.curr_p * p_X_given_h) / p_X
                     // console.log(new_p)
-                    fd.curr_p = new_p
+                    // fd.curr_p = new_p
                 })
 
                 // NORMALIZE WEIGHTS

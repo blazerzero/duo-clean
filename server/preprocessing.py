@@ -201,15 +201,12 @@ if __name__ == '__main__':
 
     for s_id in all_scenarios.keys():
         print(s_id)
-        if int(s_id) == 0:
-            print('DUO')
-            all_scenarios[s_id]['sampling_method'] = 'DUO'
-        elif int(s_id) >= 1 and int(s_id) <= 8:
-            print('DUO')
-            all_scenarios[s_id]['sampling_method'] = 'DUO'
+        if int(s_id) == 0 or (int(s_id) >= 1 and int(s_id) <= 8):
+            # all_scenarios[s_id]['sampling_method'] = 'DUO'
+            all_scenarios[s_id]['update_method'] = 'BAYESIAN'
         else:
-            print('RANDOM-PURE')
-            all_scenarios[s_id]['sampling_method'] = 'RANDOM-PURE'
+            # all_scenarios[s_id]['sampling_method'] = 'RANDOM-PURE'
+            all_scenarios[s_id]['update_method'] = 'REINFORCEMENT'
 
     with open('scenarios.json', 'w') as f:
         json.dump(all_scenarios, f)

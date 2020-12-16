@@ -12,6 +12,7 @@ import math
 import statistics
 from collections import Counter
 from scipy.stats import hmean
+from scipy.special import comb
 import re
 
 import analyze
@@ -114,7 +115,7 @@ def saveNoiseFeedback(data, feedback, project_id, current_iter, current_time):
 
 
 # DISCOVER CFDs THAT BEST EXPLAIN THE FEEDBACK GIVEN BY THE USER
-def explainFeedback(full_dataset, dirty_sample, project_id, current_iter, current_time, refresh):
+def explainFeedback(full_dataset, dirty_sample, project_id, current_iter, current_time, refresh, update_method):
     cell_metadata = pickle.load( open('./store/' + project_id + '/cell_metadata.p', 'rb') )
     start_time = pickle.load( open('./store/' + project_id + '/start_time.p', 'rb') )
     with open('./store/' + project_id + '/project_info.json', 'r') as f:
@@ -204,20 +205,23 @@ def explainFeedback(full_dataset, dirty_sample, project_id, current_iter, curren
         for cfd, cfd_m in cfd_metadata.items():
             if cfd in accepted_cfds:
                 support, vios = getSupportAndVios(prepped_sample, None, cfd)
-                cfd_m['score'] = reinforceFD(cfd, prepped_sample, cfd_m['score'], support, vios, 1)
-                wUV = analyze.aHeuristicUV(cfd, prepped_sample)
-                wAC = analyze.aHeuristicAC(cfd)
-                phaUV = np.mean([v for v in wUV.values()])
-                phaAC = np.mean([v for v in wAC.values()])
-                phsSR = analyze.sHeuristicSetRelation(cfd, [c['cfd'] for c in h_space]) # p(h | sSR)
-                ph = hmean([phaUV, phaAC, phsSR])
-                cfd_m['weight'] = cfd_m['score'] * ph
+                if update_method == 'BAYESIAN':
+                    cfd_m['weight'] = bayesianUpdateFD(cfd, prepped_sample, cfd['weight'], support, cfd_m['vios'], vios, None)
+                else:
+                    cfd_m['weight'] = reinforceFD(cfd, prepped_sample, cfd_m['weight'], support, vios, 1)
+                    # wUV = analyze.aHeuristicUV(cfd, prepped_sample)
+                    # wAC = analyze.aHeuristicAC(cfd)
+                    # phaUV = np.mean([v for v in wUV.values()])
+                    # phaAC = np.mean([v for v in wAC.values()])
+                    # phsSR = analyze.sHeuristicSetRelation(cfd, [c['cfd'] for c in h_space]) # p(h | sSR)
+                    # ph = hmean([phaUV, phaAC, phsSR])
+                    # cfd_m['weight'] = cfd_m['score']
             else:
-                cfd_m['weight'] = cfd_m['weight_history'][-1].weight
+                cfd_m['weight'] = cfd_m['score_history'][-1].score
 
         cfd_metadata = normalizeWeights(cfd_metadata)
         for cfd_m in cfd_metadata.values():
-            cfd_m['score_history'].append(CFDScore(iter_num=current_iter, score=cfd_m['score'], elapsed_time=elapsed_time))
+            # cfd_m['score_history'].append(CFDScore(iter_num=current_iter, score=cfd_m['score'], elapsed_time=elapsed_time))
             cfd_m['weight_history'].append(CFDWeightHistory(iter_num=current_iter, weight=cfd_m['weight'], elapsed_time=elapsed_time))
 
         print('*** Mining output processed and FD weights updated ***')
@@ -230,31 +234,34 @@ def explainFeedback(full_dataset, dirty_sample, project_id, current_iter, curren
 
 
 # BUILD SAMPLE
-def buildSample(data, sample_size, project_id, sampling_method, current_iter, current_time):
+def buildSample(data, sample_size, project_id, current_iter, current_time):
     cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
     modeling_metadata = pickle.load( open('./store/' + project_id + '/modeling_metadata.p', 'rb') )
     start_time = pickle.load( open('./store/' + project_id + '/start_time.p', 'rb') )
+    all_vios = pickle.load( open('./store/' + project_id + '/all_vios.p', 'rb') )
 
     elapsed_time = current_time - start_time
-    print(elapsed_time)
+    # print(elapsed_time)
 
-    with open('./store/' + project_id + '/project_info.json', 'r') as f:
-        project_info = json.load(f)
-    diff = project_info['scenario']['diff']
+    # with open('./store/' + project_id + '/project_info.json', 'r') as f:
+    #     project_info = json.load(f)
+    # diff = project_info['scenario']['diff']
     
     # GET SAMPLE
-    s_out = returnTuples(data, cfd_metadata, sample_size, sampling_method)
+    s_out, vios = returnTuples(data, cfd_metadata, sample_size)
 
-    Y = getDirtyTuples(s_out, project_id)
+    # Y = getDirtyTuples(s_out, project_id)
+    Y = vios
     print(Y)
 
     # MODELING METRICS
     if current_iter == 0:
         X = set()
     else:
-        prev_sample = pickle.load( open('./store/' + project_id + '/current_sample.p', 'rb') )
-        prev_sample_Y = getDirtyTuples(data.iloc[prev_sample], project_id)
-        X = modeling_metadata['X'][-1].value | set(prev_sample_Y)
+        # prev_sample = pickle.load( open('./store/' + project_id + '/current_sample.p', 'rb') )
+        prev_Y = pickle.load( open('./store/' + project_id + '/current_vios.p', 'rb') )
+        # prev_sample_Y = getDirtyTuples(data.iloc[prev_sample], project_id)
+        X = modeling_metadata['X'][-1].value | set(prev_Y)
     
     modeling_metadata['X'].append(StudyMetric(iter_num=current_iter, value=X, elapsed_time=elapsed_time))
 
@@ -267,50 +274,28 @@ def buildSample(data, sample_size, project_id, sampling_method, current_iter, cu
         print(cfd)
         if cfd not in modeling_metadata['p_X_given_h'].keys():  # cfd was just discovered in this iteration
             modeling_metadata['p_X_given_h'][cfd] = list()
+            modeling_metadata['p_X'][cfd] = list()
+            modeling_metadata['p_h_given_X'][cfd] = list()
         print(cfd_m['vios'])
         if current_iter == 0:
             modeling_metadata['p_X_given_h'][cfd].append(StudyMetric(iter_num=current_iter, value=1, elapsed_time=elapsed_time))    # At the start, there is no X, so p(h | X) is only influenced by p(h), so p(X | h) = 1 to remove its influence at this stage
-        elif set(X).issubset(cfd_m['vios']) and len(cfd_m['vios']) > 0:
+        elif set(X).issubset(all_vios):
             print('subset!')
             print(X)
             print()
-            p_X_given_h = math.pow((1/len(cfd_m['vios'])), len(X)) # p(X | h) = PI_i (p(x_i | h)), where each x_i is in X
+            p_X_given_h = math.pow((1/len(all_vios)), len(X)) # p(X | h) = PI_i (p(x_i | h)), where each x_i is in X
+            
             modeling_metadata['p_X_given_h'][cfd].append(StudyMetric(iter_num=current_iter, value=p_X_given_h, elapsed_time=elapsed_time))
         else:
-            true_nil = True
-            all_fds = cfd_metadata.keys()
-            related_fds = [c for c in all_fds if c.split(' => ')[0] == cfd.split(' => ')[0] and c.split(' => ')[1] != cfd.split(' => ')[1]]
-            # combined_rhs = set([cfd.split(' => ')[1]])
-            combined_vios = set(cfd_m['vios'])
-            while true_nil is True:
-                if len(related_fds) > 0:
-                # for s_fd in superset_fds:
-                    r_fd = related_fds.pop()    # Expand the RHS
-                    # r_fd_rhs = r_fd.split(' => ')[1]
-
-                    if (cfd_m['conf'] * cfd_metadata[r_fd]['conf'] >= project_info['scenario']['min_conf']):    # If this new combination has a sufficiently high confidence
-                        # combined_rhs |= set(r_fd_rhs)
-                        combined_vios |= set(cfd_metadata[r_fd]['vios'])
-                        if set(X).issubset(combined_vios) and len(combined_vios) > 0:
-                            print('subset!')
-                            print(X)
-                            print()
-                            p_X_given_h = math.pow((1/len(combined_vios)), len(X)) # p(X | h) = PI_i (p(x_i | h)), where each x_i is in X
-                            modeling_metadata['p_X_given_h'][cfd].append(StudyMetric(iter_num=current_iter, value=p_X_given_h, elapsed_time=elapsed_time))
-                            true_nil = False
-                else:
-                    break
-                
-            if true_nil is True:
-                print('not subset!\n')
-                modeling_metadata['p_X_given_h'][cfd].append(StudyMetric(iter_num=current_iter, value=0, elapsed_time=elapsed_time))
+            print('not subset!\n')
+            modeling_metadata['p_X_given_h'][cfd].append(StudyMetric(iter_num=current_iter, value=0, elapsed_time=elapsed_time))
     
         # I(y in h)
         for y in Y:
             print('Y!')
             if y not in modeling_metadata['y_in_h'][cfd].keys():    # this is the first time the user will have been shown y
                 modeling_metadata['y_in_h'][cfd][y] = list()
-            if y in cfd_m['vios']:
+            if y in all_vios:
                 modeling_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=1, elapsed_time=elapsed_time))
             else:
                 modeling_metadata['y_in_h'][cfd][y].append(StudyMetric(iter_num=current_iter, value=0, elapsed_time=elapsed_time))       
@@ -319,17 +304,18 @@ def buildSample(data, sample_size, project_id, sampling_method, current_iter, cu
 
     pickle.dump( modeling_metadata, open('./store/' + project_id + '/modeling_metadata.p', 'wb') )
     
-    return s_out
+    return s_out, vios
 
-def returnTuples(data, fd_metadata, sample_size, sampling_method):
+def returnTuples(data, fd_metadata, sample_size):
     chosen = list()
     fds = list(fd_metadata.keys())
-    weights = [f['weight'] for f in fd_metadata.values()]
+    # weights = [f['weight'] for f in fd_metadata.values()]
+    vios = set()
     while len(chosen) < sample_size:
-        if sampling_method == 'DUO':
-            fd = random.choices(fds, weights=weights, k=1).pop()
-        else:
-            fd = random.choice(fds)
+        # if sampling_method == 'DUO':
+        #     fd = random.choices(fds, weights=weights, k=1).pop()
+        # else:
+        fd = random.choice(fds)
         fd_m = fd_metadata[fd]
         if len(fd_m['vios']) > 0:
             tupSet = list()
@@ -341,13 +327,15 @@ def returnTuples(data, fd_metadata, sample_size, sampling_method):
                 tupSet = random.choices(fd_m['vios'], k=1)
         else:
             tupSet = random.choices(data.index, k=1)
-        for i in tupSet:
-            if i not in chosen:
-                chosen.append(i)
+        if tuple(tupSet) not in vios:
+            vios.add(tuple(tupSet))
+            for i in tupSet:
+                if i not in chosen:
+                    chosen.append(i)
         if len(chosen) >= sample_size:
             break
     s_out = data.iloc[chosen]
-    return s_out
+    return s_out, vios
 
 def getDirtyTuples(s_out, project_id):
     with open('./store/' + project_id + '/project_info.json', 'r') as f:
@@ -527,6 +515,22 @@ def reinforceFD(fd, data, score, support, vios, r):
             if idx not in vios:
                 score += r
     return score
+
+def bayesianUpdateFD(fd, data, weight, support, vios, sample_vios, all_vios):
+    p_X_given_h = 1
+    for sv in sample_vios:
+        if sv in vios:
+            p_X_given_h *= (1 - weight)
+        else:
+            p_X_given_h *= weight
+
+    p_X = 1
+    for vios in sample_vios:
+        # TODO: Calculate p(X) given that we have vio trios, pairs, AND singles, and depending on sample size available, some may not be able to be added
+        pass
+
+    weight = (weight * p_X_given_h) / p_X
+    return weight
 
 def buildCompositionSpace(fds, h_space, dirty_data, clean_data, min_conf, max_ant):
     composed_fds = set(fds)

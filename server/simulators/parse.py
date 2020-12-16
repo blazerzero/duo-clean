@@ -4,7 +4,12 @@ import numpy as np
 
 if __name__ == '__main__':
     for s in range(0, 17):
-        fp_start = 'informed-bayesian-sim-out-' if sys.argv[1] == 'informed' else 'uninformed-bayesian-sim-out-'
+        if sys.argv[1] == 'informed':
+            fp_start = './results/informed-bayesian/informed-bayesian-sim-out-'
+        elif sys.argv[1] == 'uninformed':
+            fp_start = './results/uninformed-bayesian/uninformed-bayesian-sim-out-'
+        else:
+            fp_start = './results/oracle/oracle-sim-out'
         with open(fp_start + str(s) + '.txt', 'r') as f:
             output = f.read()
         keyword = 'Results:\n'
@@ -26,6 +31,9 @@ if __name__ == '__main__':
             ax1.plot([i for i in range(1, 26)], p_history)
 
         fig.tight_layout()
-        fig.savefig('../plots/sim-bayesian-' + sys.argv[1] + '-scenario-' + str(s) + '-p(h|X).jpg')
+        if sys.argv[1] == 'informed' or sys.argv[1] == 'uninformed':
+            fig.savefig('../plots/sim-bayesian-' + sys.argv[1] + '-scenario-' + str(s) + '-p(h|X).jpg')
+        else:
+            fig.savefig('../plots/sim-' + sys.argv[1] + '-scenario-' + str(s) + '-p(h|X).jpg')
         plt.clf()
     print('[SUCCESS]')

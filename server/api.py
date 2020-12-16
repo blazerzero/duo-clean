@@ -141,6 +141,8 @@ class Import(Resource):
 
         modeling_metadata = dict()
         modeling_metadata['p_X_given_h'] = dict()
+        modeling_metadata['p_X'] = dict()
+        modeling_metadata['p_h_given_X'] = dict()
         modeling_metadata['X'] = list()
         modeling_metadata['Y'] = list()
         modeling_metadata['y_in_h'] = dict()
@@ -189,16 +191,17 @@ class Sample(Resource):
         print('*** Project info loaded ***')
             
         data = pd.read_csv(project_info['scenario']['dirty_dataset'], keep_default_na=False)
-        sampling_method = project_info['scenario']['sampling_method']
+        # sampling_method = project_info['scenario']['sampling_method']
         
         # Build sample and update tuple weights post-sampling
         start_time = pickle.load( open('./store/' + project_id + '/start_time.p', 'rb') )
         current_iter = 0
-        s_out = helpers.buildSample(data, sample_size, project_id, sampling_method, current_iter, start_time) # TODO: Update sampling strategy
+        s_out, vios = helpers.buildSample(data, sample_size, project_id, current_iter, start_time) # TODO: Update sampling strategy
         s_index = s_out.index
         pickle.dump( s_index, open('./store/' + project_id + '/current_sample.p', 'wb') )
+        pickle.dump( vios, open('./store/' + project_id + '/current_vios.p', 'wb') )
 
-        print('*** Sample built and saved with ' + sampling_method + ' ***')
+        # print('*** Sample built and saved with ' + sampling_method + ' ***')
 
         # Build initial feedback map for frontend
         feedback = list()
@@ -217,6 +220,7 @@ class Sample(Resource):
         # Return information to the user
         returned_data = {
             'sample': s_out.to_json(orient='index'),
+            'sample_vios': [list(v) for v in vios],
             'feedback': json.dumps(feedback),
             'true_pos': 0,
             'false_pos': 0,
@@ -241,6 +245,7 @@ class Resume(Resource):
             return response, 200, {'Access-Control-Allow-Origin': '*'}
             
         s_index = pickle.load( open('./store/' + project_id + '/current_sample.p', 'rb') )
+        vios = pickle.load( open('./store/' + project_id + '/current_vios.p', 'rb') )
 
         with open('./store/' + project_id + '/project_info.json') as f:
             project_info = json.load(f)
@@ -267,9 +272,12 @@ class Resume(Resource):
 
         current_iter = pickle.load( open('./store/' + project_id + '/current_iter.p', 'rb') )
 
-        h_space_conf_delta = helpers.getHSpaceConfDelta(project_id, current_iter)
+        clean_h_space = project_info['scenario']['clean_hypothesis_space']
 
-        if current_iter >= 25 or (h_space_conf_delta is not None and h_space_conf_delta < 0.01):
+        top_fd_conf, variance_delta = helpers.checkForTermination(project_id, clean_h_space, current_iter)
+        conf_threshold = (0.85 / len(project_info['scenario']['cfds']))
+        
+        if current_iter >= 25 or (top_fd_conf >= conf_threshold and variance_delta is not None and variance_delta < 0.01):
             msg = '[DONE]'
         else:
             msg = '[SUCCESS]: Saved feedback and built new sample.'
@@ -281,6 +289,7 @@ class Resume(Resource):
         returned_data = {
             'header': header,
             'sample': s_out.to_json(orient='index'),
+            'sample_vios': [list(v) for v in vios],
             'feedback': json.dumps(feedback),
             'true_pos': true_pos,
             'false_pos': false_pos,
@@ -345,13 +354,14 @@ class Clean(Resource):
         print('*** Mining completed and FD/CFD weights updated ***')
         
         # Update tuple weights pre-sampling
-        sampling_method = project_info['scenario']['sampling_method']
+        # sampling_method = project_info['scenario']['sampling_method']
         print('*** Sampling method retrieved ***')
 
         # Build sample
-        s_out = helpers.buildSample(data, sample_size, project_id, sampling_method, current_iter, current_time)
+        s_out, vios = helpers.buildSample(data, sample_size, project_id, current_iter, current_time)
         s_index = s_out.index
         pickle.dump( s_index, open('./store/' + project_id + '/current_sample.p', 'wb') )
+        pickle.dump( vios, open('./store/' + project_id + '/current_vios.p', 'wb') )
 
         print('*** New sample created and saved ***')
 
@@ -399,6 +409,7 @@ class Clean(Resource):
         # Return information to the user
         returned_data = {
             'sample': s_out.to_json(orient='index'),
+            'sample_vios': [list(v) for v in vios],
             'feedback': json.dumps(feedback),
             'true_pos': true_pos,
             'false_pos': false_pos,
