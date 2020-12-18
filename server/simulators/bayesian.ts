@@ -17,6 +17,7 @@ import csv from 'csv-parser'
 import fs, { PathLike } from 'fs'
 import { harmonic } from 'array-means'
 import Chance from 'chance'
+import { factorial } from 'mathjs'
 import * as scenarios from './scenarios.json'
 
 interface Hypothesis {
@@ -25,8 +26,7 @@ interface Hypothesis {
     conf: number,
     support: number[],
     vios: number[],
-    vio_pairs: number[][],
-    vio_trios: number[][]
+    vio_pairs: number[][]
 }
 
 interface FD {
@@ -37,8 +37,7 @@ interface FD {
     p_history: number[],
     support: number[],
     vios: number[],
-    vio_pairs: number[][],
-    vio_trios: number[][]
+    vio_pairs: number[][]
 }
 
 interface AttrP {
@@ -240,6 +239,7 @@ async function run(s: number, type: string) {
         fds.push(h.cfd)
     })
     const fd_metadata: FD[] = [] as FD[]
+    const X: number[][] = [] as number[][]
     h_space.forEach((h: Hypothesis) => {
         // const p: number = calculateP(h.cfd, fds, master_data)
         const new_fd: FD = {
@@ -250,23 +250,13 @@ async function run(s: number, type: string) {
             p_history: [],
             support: h.support,
             vios: h.vios,
-            vio_pairs: h.vio_pairs,
-            vio_trios: h.vio_trios
+            vio_pairs: h.vio_pairs
         }
         fd_metadata.push(new_fd)
-    })
-
-    const all_vios: number[][] = [] as number[][]
-    fd_metadata.forEach((fd: FD) => {
-        fd.p_history.push(fd.curr_p)
-        for (const vio of fd.vios) {
-            if (!all_vios.includes([vio])) all_vios.push([vio])
-        }
-        for (const vio_pair of fd.vio_pairs) {
-            if (!all_vios.includes(vio_pair)) all_vios.push(vio_pair)
-        }
-        for (const vio_trio of fd.vio_trios) {
-            if (!all_vios.includes(vio_trio)) all_vios.push(vio_trio)
+        for (const vp of h.vio_pairs) {
+            if (!X.includes(vp)) {
+                X.push(vp)
+            }
         }
     })
 
@@ -295,18 +285,10 @@ async function run(s: number, type: string) {
     }
     console.log(project_id)
 
-    let num_dirty_tuples: number = 0
-    for (const i in master_data) {
-        if (JSON.stringify(master_data[i]) !== JSON.stringify(full_dirty_data[i])) {
-            num_dirty_tuples++
-        }
-    }
-
-    console.log(num_dirty_tuples)
-
     let data: any
     let feedback: any
     let vios: number[][]
+    const p_X: number[] = [] as number[]
     try {
         console.log('before sample')
         const response = await axios.post('http://localhost:5000/duo/api/sample', { project_id })
@@ -331,6 +313,8 @@ async function run(s: number, type: string) {
                 }
             }
         }
+        const curr_p_X: number = (factorial(vios.length) * factorial(X.length - vios.length)) / factorial(X.length)
+        p_X.push(curr_p_X)
         console.log('prepped data')
     } catch (err) {
         console.error(err);
@@ -378,7 +362,7 @@ async function run(s: number, type: string) {
             }
         } */
         // console.log(vios)
-        for (const vio of vios) {
+        /* for (const vio of vios) {
             p_X_given_h *= (all_vios.includes(vio) ? (1-fd.curr_p) : fd.curr_p)
         }
         let p_X: number = 1
@@ -386,7 +370,7 @@ async function run(s: number, type: string) {
             p_X *= 1/(all_vios.length - i)
         }
         const new_p: number = p_X_given_h === 0 ? 0 : (fd.curr_p * p_X_given_h) / p_X
-        fd.curr_p = new_p
+        fd.curr_p = new_p */
     })
 
     let iter: number = 0
@@ -399,7 +383,7 @@ async function run(s: number, type: string) {
         let numMarkedCells: number = 0;
 
         /* Bayesian behavior */
-        const strong_fds: FD[] = [] as FD[]
+        /* const strong_fds: FD[] = [] as FD[]
         const strong_fd_ps: number[] = [] as number[]
         fd_metadata.forEach((fd) => {
             if (fd.curr_p >= p_max) {
@@ -426,7 +410,7 @@ async function run(s: number, type: string) {
                     })
                 }
             }
-        }
+        } */
 
         feedback = {};
         for (const f in feedbackMap) {
@@ -499,7 +483,7 @@ async function run(s: number, type: string) {
                             }
                         }
                     } */
-                    for (const vio of vios) {
+                    /* for (const vio of vios) {
                         if (vio.length === 3) {
                             p_X_given_h *= (fd.vio_trios.includes(vio) ? (1-fd.curr_p) : fd.curr_p)
                         } else if (vio.length === 2) {
@@ -511,12 +495,12 @@ async function run(s: number, type: string) {
                     let p_X: number = 1
                     for (let i = 0; i < vios.length; i++) {
                         p_X *= 1/(all_vios.length - i)
-                    }
+                    } */
                     /* for (let i = 0; i < counter; i++) {
                         p_X *= 1/(num_dirty_tuples - i)
                     } */
-                    const new_p: number = p_X_given_h === 0 ? 0 : (fd.curr_p * p_X_given_h) / p_X
-                    fd.curr_p = new_p
+                    // const new_p: number = p_X_given_h === 0 ? 0 : (fd.curr_p * p_X_given_h) / p_X
+                    // fd.curr_p = new_p
                 })
 
                 // NORMALIZE WEIGHTS
