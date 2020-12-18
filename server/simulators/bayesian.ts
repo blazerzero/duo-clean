@@ -33,16 +33,19 @@ interface FD {
     fd: string,
     lhs: string[],
     rhs: string[],
-    curr_p: number
-    p_history: number[],
+    theta: number,
+    theta_history: number[],
+    p_theta: number,
+    p_theta_history: number[],
+    p_X_given_h: number,
+    p_X_given_h_history: number[],
+    alpha: number,
+    alpha_history: number,
+    beta: number,
+    beta_history: number,
     support: number[],
     vios: number[],
     vio_pairs: number[][]
-}
-
-interface AttrP {
-    attr: string,
-    p: number
 }
 
 function buildFeedbackMap(data: any, feedback: any, header: any): any {
@@ -64,100 +67,6 @@ function buildFeedbackMap(data: any, feedback: any, header: any): any {
     return feedbackMap;
 }
 
-function calculateP(fd: string, all_fds: string[], data: any): number {
-    const lhs: string[] = fd.split(' => ')[0].replace('(', '').replace(')', '').split(', ')
-    const wUV: AttrP[] = [] as AttrP[]
-    const wAC: AttrP[] = [] as AttrP[]
-
-    const wAC_def: AttrP[] = [
-        { attr: 'type', p: 0.4 },
-        { attr: 'region', p: 0.6 },
-        { attr: 'facilityname', p: 0.9 },
-        { attr: 'owner', p: 0.9 },
-        { attr: 'ownertype', p: 0.5 },
-        { attr: 'manager', p: 0.75 },
-        { attr: 'listingnumber', p: 0.9 },
-        { attr: 'title', p: 0.8 },
-        { attr: 'year', p: 0.3 },
-        { attr: 'rating', p: 0.75 },
-        { attr: 'director', p: 0.6 },
-        { attr: 'userrating', p: 0.1 },
-        { attr: 'name', p: 0.8 },
-        { attr: 'areacode', p: 0.7 },
-        { attr: 'phone', p: 0.5 },
-        { attr: 'state', p: 0.4 },
-        { attr: 'zip', p: 0.3 },
-    ]
-    let wUV_sum: number = 0
-    let wAC_sum: number = 0
-    lhs.forEach((lh) => {
-        // UV
-        // console.log(lh)
-        const uv: Set<string> = new Set<string>()
-        for (const row of data) {
-            uv.add(row[lh].toString())
-        }
-        wUV.push({
-            attr: lh,
-            p: uv.size / data.length,
-        })
-
-        wUV_sum += (uv.size / data.length)
-
-        // AC
-        let idx: AttrP | undefined = wAC_def.find((a) => a.attr === lh)
-        if (idx === undefined) {
-            idx = {
-                attr: lh,
-                p: 0,
-            }
-        }
-        wAC.push({
-            attr: lh,
-            p: idx.p,
-        })
-
-        wAC_sum += idx.p
-    })
-
-    const wUV_avg: number = wUV_sum / wUV.length
-    const wAC_avg: number = wAC_sum / wAC.length
-
-    // SetRelation
-    const subset_cfds: string[] = [] as string[]
-    const superset_cfds: string[] = [] as string[]
-
-    all_fds.forEach((f) => {
-        const f_lhs: string[] = f.split(' => ')[0].replace('(', '').replace(')', '').split(', ')
-        if (f_lhs.every((v) => lhs.includes(v) === true)) {
-            subset_cfds.push(f.split(' => ')[0].replace('(', '').replace(')', ''))
-        }
-        if (lhs.every((v) => f_lhs.includes(v) === true)) {
-            superset_cfds.push(f.split(' => ')[0].replace('(', '').replace(')', ''))
-        }
-    })
-
-    const similar_cfd_set: Set<string> = new Set<string>()
-    similar_cfd_set.add(fd.split(' => ')[0].replace('(', '').replace(')', ''))
-    subset_cfds.forEach((sc) => {
-        similar_cfd_set.add(sc)
-    })
-    superset_cfds.forEach((sc) => {
-        similar_cfd_set.add(sc)
-    })
-    const similar_cfds: string[][] = [] as string[][]
-    similar_cfd_set.forEach((scs) => {
-        similar_cfds.push(scs.split(', '))
-    })
-    similar_cfds.sort((a, b) => a.length - b.length)
-
-    const lhs_idx: number = similar_cfds.findIndex((l) => l === lhs)
-    const wSR: number = (similar_cfds.length - lhs_idx) / similar_cfds.length
-
-    const weight: number = harmonic([wUV_avg, wAC_avg, wSR])
-    return weight
-}
-
 function shuffleFDs(fds: FD[]) {
     for (let i = fds.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -166,21 +75,21 @@ function shuffleFDs(fds: FD[]) {
     return fds
 }
 
-function pickFD(fds: FD[], p_max: number): FD | null {
-    let cumul = 0
-    const shuffled_fds: FD[] = shuffleFDs(fds)
-    for (let i = 0; i < fds.length; i++) {
-        // console.log(fd.curr_p)
-        cumul += fds[i].curr_p
-        // console.log(random)
-        // console.log(cumul)
-        if (cumul >= p_max) {
-            // console.log('done!')
-            return fds[i]
-        }
-    }
-    return null
-}
+// function pickFD(fds: FD[], p_max: number): FD | null {
+//     let cumul = 0
+//     const shuffled_fds: FD[] = shuffleFDs(fds)
+//     for (let i = 0; i < fds.length; i++) {
+//         // console.log(fd.curr_p)
+//         cumul += fds[i].p
+//         // console.log(random)
+//         // console.log(cumul)
+//         if (cumul >= p_max) {
+//             // console.log('done!')
+//             return fds[i]
+//         }
+//     }
+//     return null
+// }
 
 async function run(s: number, type: string) {
     const chance: Chance.Chance = new Chance()
@@ -242,11 +151,24 @@ async function run(s: number, type: string) {
     const X: number[][] = [] as number[][]
     h_space.forEach((h: Hypothesis) => {
         // const p: number = calculateP(h.cfd, fds, master_data)
+        let a: number, b: number, mu: number
+        if (type === 'uninformed') {
+            a = 1
+            b = 1
+        }
+        else {
+            mu = h.conf
+            a = 1
+            b = a * (a - mu) / mu
+        }
+
+
+
         const new_fd: FD = {
             fd: h.cfd,
             lhs: h.cfd.split(' => ')[0].replace('(', '').replace(')', '').split(', '),
             rhs: h.cfd.split(' => ')[1].split(', '),
-            curr_p: type === 'informed' ? ((h.support.length - h.vios.length) / h.support.length) : 0.5,
+            p: type === 'informed' ? ((h.support.length - h.vios.length) / h.support.length) : 0.5,
             p_history: [],
             support: h.support,
             vios: h.vios,
@@ -510,8 +432,8 @@ async function run(s: number, type: string) {
                 }) */
                 fd_metadata.forEach((fd) => {
                     // fd.curr_p /= curr_p_sum
-                    console.log('p('.concat(fd.fd, '): ', fd.curr_p.toString()))
-                    fd.p_history.push(fd.curr_p)
+                    console.log('p('.concat(fd.fd, '): ', fd.p.toString()))
+                    fd.p_history.push(fd.p)
                 })
             }
             else {
