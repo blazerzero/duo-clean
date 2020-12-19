@@ -10,7 +10,7 @@ import time
 import pandas as pd
 import numpy as np
 import pickle
-import match
+import math
 import shutil
 import logging
 import csv
@@ -59,6 +59,7 @@ class Import(Resource):
         scenario_id = request.form.get('scenario_id')
         if scenario_id is None:
             scenario_id = json.loads(request.data)['scenario_id']
+        print(scenario_id)
         with open('scenarios.json', 'r') as f:
             scenarios_list = json.load(f)
         scenario = scenarios_list[scenario_id]
@@ -110,17 +111,14 @@ class Import(Resource):
 
         # TODO: Initialize weight history
 
-        start_time = time.time()
-
         modeling_metadata = dict()
         #TODO: Finish initializing modeling metadata
         modeling_metadata['X'] = list()
-        modeling_metadata['p_X'] = dict()
+        modeling_metadata['p_X'] = list()
 
         pickle.dump( cell_metadata, open(new_project_dir + '/cell_metadata.p', 'wb') )
         pickle.dump( fd_metadata, open(new_project_dir + '/fd_metadata.p', 'wb') )
         pickle.dump( current_iter, open(new_project_dir + '/current_iter.p', 'wb') )
-        pickle.dump( start_time, open(new_project_dir + '/start_time.p', 'wb') )
         pickle.dump( modeling_metadata, open(new_project_dir + '/modeling_metadata.p', 'wb') )
         pickle.dump( X, open(new_project_dir + '/X.p', 'wb') )
 
@@ -143,25 +141,24 @@ class Sample(Resource):
     def post(self):
         project_id = request.form.get('project_id')
         if project_id is None:
+            print(request.data)
             project_id = json.loads(request.data)['project_id']
         sample_size = 10
         with open('./store/' + project_id + '/project_info.json') as f:
             project_info = json.load(f)
 
-        current_time = time.time()
-        pickle.dump( current_time, open('./store/' + project_id + '/current_time.p', 'wb') )
+        start_time = time.time()
+        pickle.dump( start_time, open('./store/' + project_id + '/start_time.p', 'wb') )
 
         print('*** Project info loaded ***')
 
         data = pd.read_csv(project_info['scenario']['dirty_dataset'], keep_default_na=False)
         
-        start_time = pickle.load( open('./store/' + project_id + '/start_time.p', 'rb') )
         current_iter = pickle.load( open('./store/' + project_id + '/current_iter.p', 'rb') )
-        X = pickle.load( open('./store/' + project_id + '/X.p', 'wb') )
+        X = pickle.load( open('./store/' + project_id + '/X.p', 'rb') )
         
         # Build sample and X_t
-        start_time = pickle.load( open('./store/' + project_id + '/start_time.p', 'rb') )
-        s_out, sample_X = helpers.buildSample(data, X, sample_size, project_id, current_iter, current_time)
+        s_out, sample_X = helpers.buildSample(data, X, sample_size, project_id, current_iter, start_time)
         s_index = s_out.index
         pickle.dump( s_index, open('./store/' + project_id + '/current_sample.p', 'wb') )
         pickle.dump( sample_X, open('./store/' + project_id + '/current_X.p', 'wb') )    
@@ -281,6 +278,10 @@ class Clean(Resource):
             is_new_feedback = int(request.form.get('is_new_feedback'))
             refresh = int(request.form.get('refresh'))
 
+        print(project_id)
+        print(is_new_feedback)
+        print(feedback)
+
         feedback = pd.DataFrame.from_dict(feedback, orient='index')
         sample_size = 10
 
@@ -288,11 +289,11 @@ class Clean(Resource):
 
         current_iter = pickle.load( open('./store/' + project_id + '/current_iter.p', 'rb') )
 
-        current_time = pickle.load( open('./store/' + project_id + '/current_time.p', 'rb') )
+        # current_time = pickle.load( open('./store/' + project_id + '/current_time.p', 'rb') )
         current_time = time.time()
 
-        curr_sample_X = pickle.load( open('./store/' + project_id + '/current_X.p', 'wb') )
-        X = pickle.load( open('./store/' + project_id + '/X.p', 'wb') )
+        curr_sample_X = pickle.load( open('./store/' + project_id + '/current_X.p', 'rb') )
+        X = pickle.load( open('./store/' + project_id + '/X.p', 'rb') )
 
         print('*** Iteration counter updated ***')
 
@@ -308,14 +309,17 @@ class Clean(Resource):
         # Save noise feedback
         if is_new_feedback == 1 and refresh == 0:
             print('*** NEW FEEDBACK! ***')
-            helpers.saveNoiseFeedback(data, feedback, project_id, current_iter, current_time)
+            # helpers.saveNoiseFeedback(data, feedback, project_id, current_iter, current_time)
+            helpers.recordFeedback()
         print('*** Feedback saved ***')
         s_in = data.iloc[feedback.index]
         print('*** Extracted sample from dataset ***')
         if is_new_feedback == 1 and refresh == 0:
-            helpers.explainFeedback(data, s_in, project_id, current_iter, current_time, 0)
+            # helpers.explainFeedback(data, s_in, project_id, current_iter, current_time, 0)
+            helpers.interpretFeedback()
         else:
-            helpers.explainFeedback(data, s_in, project_id, current_iter, current_time, 1)
+            # helpers.explainFeedback(data, s_in, project_id, current_iter, current_time, 1)
+            helpers.interpretFeedback()
         print('*** Mining completed and FD weights updated ***')
 
         current_iter += 1
@@ -361,14 +365,14 @@ class Clean(Resource):
         s_out.insert(0, 'id', s_out.index, True)
 
         pickle.dump( current_iter, open('./store/' + project_id + '/current_iter.p', 'wb') )
-        pickle.dump( current_time, open('./store/' + project_id + '/current_time.p', 'wb') )
+        # pickle.dump( current_time, open('./store/' + project_id + '/current_time.p', 'wb') )
         with open('./store/' + project_id + '/project_info.json', 'w') as f:
             json.dump(project_info, f)
         
         # Return information to the user
         returned_data = {
             'sample': s_out.to_json(orient='index'),
-            'sample_vios': [list(v) for v in new_sample_X],
+            'X': [list(v) for v in new_sample_X],
             'feedback': json.dumps(feedback),
             'true_pos': true_pos,
             'false_pos': false_pos,

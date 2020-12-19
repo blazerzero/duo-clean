@@ -9,7 +9,7 @@ import sys
 import pickle
 import math
 import scipy.special as sc
-import scipy.stats.beta as betaD
+from scipy.stats import beta as betaD
 import re
 
 # class Hypothesis(object):
@@ -40,9 +40,8 @@ class FDMeta(object):
 
 def buildFeedbackMap(data, feedback, header):
     feedbackMap = dict()
-    rows = data.keys()
     cols = header
-    for row in rows:
+    for row in data.keys():
         tup = dict()
         for col in cols:
             trimmedCol = re.sub(r'/[\n\r]+/g', '', col)
@@ -84,7 +83,6 @@ def run(s, b_type):
     # full_dirty_data = pd.read_csv(full_dirty_data_fp, keep_default_na=False)
     with open('../scenarios.json', 'r') as f:
         scenarios = json.load(f)
-    
     scenario = scenarios[s]
     h_space = scenario['hypothesis_space']
     # target_fds = scenario['cfds']
@@ -123,7 +121,7 @@ def run(s, b_type):
 
     try:
         r = requests.post('http://localhost:5000/duo/api/import', data={'scenario_id': str(s)})
-        res = r.json()
+        res = json.loads(r.json())
         header = res['header']
         project_id = res['project_id']
     except Exception as e:
@@ -140,22 +138,23 @@ def run(s, b_type):
         print('before sample')
         r = requests.post('http://localhost:5000/duo/api/sample', data={'project_id': project_id})
         print('after sample')
-        res = r.json()
-        sample = r['sample']
-        sample_X = r['sample_vios']
-        data = json.loads(sample).values()
+        res = json.loads(r.json())
+
+        sample = res['sample']
+        print('extracted sample')
+        sample_X = set(tuple(x) for x in res['X'])
+        print('got vios')
+        data = json.loads(sample)
+        feedback = json.loads(res['feedback'])
         print('parsed data')
-        for row in data:
-            for j in row.keys():
+        for row in data.keys():
+            for j in data[row].keys():
                 if j == 'id':
                     continue
-
-                if row[j] is None:
-                    row[j] = ''
-                elif type(row[j]) != 'str':
-                    row[j] = str(row[j])
-                if math.isnan(row[j]) is False and math.ceil(float(row[j]) - float(row[j])) == 0:
-                    row[j] = str(math.ceil(row[j]))
+                if data[row][j] is None:
+                    data[row][j] = ''
+                elif type(data[row][j]) != 'str':
+                    data[row][j] = str(data[row][j])
         
         p_X = (math.factorial(len(sample_X)) * math.factorial(len(X) - len(sample_X))) / math.factorial(len(X))
         print('prepped data')
@@ -174,27 +173,29 @@ def run(s, b_type):
         # Bayesian behavior
         user_X = set()
 
-        # mark errors as see fit
+        # TODO: mark errors as see fit
 
         # update hyperparameters
         for _, fd_m in fd_metadata.items():
             p_X_given_theta = 1
             caught_X = set()
             missed_X = set()
-            for x in [vio for vio in sample_X if vio in fd_m['vio_pairs']]:
+            for x in [vio for vio in sample_X if vio in fd_m.vio_pairs]:
                 if x not in user_X:
-                    p_X_given_theta *= fd_m['theta']
+                    p_X_given_theta *= fd_m.theta
                     missed_X.add(x)
                 else:
-                    p_X_given_theta *= (1 - fd_m['theta'])
+                    p_X_given_theta *= (1 - fd_m.theta)
                     caught_X.add(x)
             
-            fd_m['p_theta'] = (p_X_given_theta * fd_m['p_theta']) / p_X
-            fd_m['p_theta_history'].append(fd_m['p_theta'])
-            fd_m['alpha'] += len(caught_X)
-            fd_m['alpha_history'].append(fd_m['alpha'])
-            fd_m['beta'] += len(missed_X)
-            fd_m['beta_history'].append(fd_m['beta'])
+            fd_m.p_theta = (p_X_given_theta * fd_m.p_theta) / p_X
+            fd_m.p_theta_history.append(fd_m.p_theta)
+            fd_m.alpha += len(caught_X)
+            fd_m.alpha_history.append(fd_m.alpha)
+            fd_m.beta += len(missed_X)
+            fd_m.beta_history.append(fd_m.beta)
+
+        print('updated probabilities')
 
         feedback = dict()
         for f in feedbackMap.keys():
@@ -209,39 +210,40 @@ def run(s, b_type):
             if is_new_feedback is True:
                 break
         
+        print('built new feedback map')
+
         formData = {
             'project_id': project_id,
-            'feedback': feedback,
+            'feedback': json.dumps(feedback),
             'refresh': 0,
             'is_new_feedback': 1 if is_new_feedback is True else 0
         }
 
         try:
             r = requests.post('http://localhost:5000/duo/api/clean', data=formData)
-            res = r.json()
+            res = json.loads(r.json())
             msg = res['msg']
             if msg != '[DONE]':
                 sample = res['sample']
-                sample_X = res['sample_vios']
-                feedback = json.loads(feedback)
-                data = json.loads(sample).values()
+                sample_X = set(tuple(x) for x in res['X'])
+                feedback = json.loads(res['feedback'])
+                data = json.loads(sample)
 
-                for row in data:
-                    for j in row.keys():
+                for row in data.keys():
+                    for j in data[row].keys():
                         if j == 'id':
                             continue
 
-                        if row[j] is None:
-                            row[j] = ''
-                        elif type(row[j]) != 'str':
-                            row[j] = str(row[j])
-                        if math.isnan(row[j]) is False and math.ceil(float(row[j]) - float(row[j])) == 0:
-                            row[j] = str(math.ceil(row[j]))
+                        if data[row][j] is None:
+                            data[row][j] = ''
+                        elif type(data[row][j]) != 'str':
+                            data[row][j] = str(data[row][j])
+
         except Exception as e:
             print(e)
             msg = '[DONE]'
 
 if __name__ == '__main__':
-    s = int(sys.argv[2])
-    b_type = sys.argv[3]
+    s = sys.argv[1]
+    b_type = sys.argv[2]
     run(s, b_type)

@@ -44,7 +44,9 @@ def recordFeedback():
     pass
 
 # INTERPRET USER FEEDBACK AND UPDATE PROBABILITIES
-def explainFeedback():
+def interpretFeedback():
+    # TODO: calculate P(X | \theta_h) for each FD
+    # TODO: calculate P(\theta_h | X) for each FD using previous p(\theta_h) and p(X) (calculated in previous iteration's buildSample run)
     pass
 
 # BUILD SAMPLE
@@ -63,8 +65,6 @@ def buildSample(data, X, sample_size, project_id, current_iter, current_time):
     modeling_metadata['X'].append(StudyMetric(iter_num=current_iter, value=sample_X, elapsed_time=elapsed_time))
     modeling_metadata['p_X'].append(StudyMetric(iter_num=current_iter, value=p_sample_X, elapsed_time=elapsed_time))
 
-    # TODO: Calculate probabilities related to P(X | \theta_h)
-
     print('IDs of tuples in next sample:', s_out.index)
 
     pickle.dump( modeling_metadata, open('./store/' + project_id + '/modeling_metadata.p', 'wb') )
@@ -77,7 +77,7 @@ def returnTuples(X, sample_size):
     s_out = list()
     sample_X = list()
     while len(s_out) < sample_size:
-        t1, t2 = random.choice(X)
+        t1, t2 = random.choice(list(X))
         if t1 in s_out or t2 in s_out:
             continue
         sample_X.append((t1, t2))

@@ -25,7 +25,6 @@ interface Hypothesis {
     support: number[],
     vios: number[],
     vio_pairs: number[][],
-    vio_trios: number[][]
 }
 
 interface FD {
@@ -38,15 +37,9 @@ interface FD {
     vios: number[]
 }
 
-interface AttrP {
-    attr: string,
-    p: number
-}
-
 function buildFeedbackMap(data: any, feedback: any, header: any): any {
     const feedbackMap: any = {};
     const rows = Object.keys(data);
-    // console.log(data)
     const cols = header;
     for (let i = 0; i < rows.length; i++) {
         const tup: any = {};
@@ -62,125 +55,7 @@ function buildFeedbackMap(data: any, feedback: any, header: any): any {
     return feedbackMap;
 }
 
-function calculateP(fd: string, all_fds: string[], data: any): number {
-    const lhs: string[] = fd.split(' => ')[0].replace('(', '').replace(')', '').split(', ')
-    const wUV: AttrP[] = [] as AttrP[]
-    const wAC: AttrP[] = [] as AttrP[]
-
-    const wAC_def: AttrP[] = [
-        { attr: 'type', p: 0.4 },
-        { attr: 'region', p: 0.6 },
-        { attr: 'facilityname', p: 0.9 },
-        { attr: 'owner', p: 0.9 },
-        { attr: 'ownertype', p: 0.5 },
-        { attr: 'manager', p: 0.75 },
-        { attr: 'listingnumber', p: 0.9 },
-        { attr: 'title', p: 0.8 },
-        { attr: 'year', p: 0.3 },
-        { attr: 'rating', p: 0.75 },
-        { attr: 'director', p: 0.6 },
-        { attr: 'userrating', p: 0.1 },
-        { attr: 'name', p: 0.8 },
-        { attr: 'areacode', p: 0.7 },
-        { attr: 'phone', p: 0.5 },
-        { attr: 'state', p: 0.4 },
-        { attr: 'zip', p: 0.3 },
-    ]
-    let wUV_sum: number = 0
-    let wAC_sum: number = 0
-    lhs.forEach((lh) => {
-        // UV
-        // console.log(lh)
-        const uv: Set<string> = new Set<string>()
-        for (const row of data) {
-            uv.add(row[lh].toString())
-        }
-        wUV.push({
-            attr: lh,
-            p: uv.size / data.length,
-        })
-
-        wUV_sum += (uv.size / data.length)
-
-        // AC
-        let idx: AttrP | undefined = wAC_def.find((a) => a.attr === lh)
-        if (idx === undefined) {
-            idx = {
-                attr: lh,
-                p: 0,
-            }
-        }
-        wAC.push({
-            attr: lh,
-            p: idx.p,
-        })
-
-        wAC_sum += idx.p
-    })
-
-    const wUV_avg: number = wUV_sum / wUV.length
-    const wAC_avg: number = wAC_sum / wAC.length
-
-    // SetRelation
-    const subset_cfds: string[] = [] as string[]
-    const superset_cfds: string[] = [] as string[]
-
-    all_fds.forEach((f) => {
-        const f_lhs: string[] = f.split(' => ')[0].replace('(', '').replace(')', '').split(', ')
-        if (f_lhs.every((v) => lhs.includes(v) === true)) {
-            subset_cfds.push(f.split(' => ')[0].replace('(', '').replace(')', ''))
-        }
-        if (lhs.every((v) => f_lhs.includes(v) === true)) {
-            superset_cfds.push(f.split(' => ')[0].replace('(', '').replace(')', ''))
-        }
-    })
-
-    const similar_cfd_set: Set<string> = new Set<string>()
-    similar_cfd_set.add(fd.split(' => ')[0].replace('(', '').replace(')', ''))
-    subset_cfds.forEach((sc) => {
-        similar_cfd_set.add(sc)
-    })
-    superset_cfds.forEach((sc) => {
-        similar_cfd_set.add(sc)
-    })
-    const similar_cfds: string[][] = [] as string[][]
-    similar_cfd_set.forEach((scs) => {
-        similar_cfds.push(scs.split(', '))
-    })
-    similar_cfds.sort((a, b) => a.length - b.length)
-
-    const lhs_idx: number = similar_cfds.findIndex((l) => l === lhs)
-    const wSR: number = (similar_cfds.length - lhs_idx) / similar_cfds.length
-
-    const weight: number = harmonic([wUV_avg, wAC_avg, wSR])
-    return weight
-}
-
-function shuffleFDs(fds: FD[]) {
-    for (let i = fds.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [fds[i], fds[j]] = [fds[j], fds[i]];
-    }
-    return fds
-}
-
-function pickFD(fds: FD[], p_max: number): FD | null {
-    let cumul = 0
-    const shuffled_fds: FD[] = shuffleFDs(fds)
-    for (let i = 0; i < fds.length; i++) {
-        // console.log(fd.curr_p)
-        cumul += fds[i].curr_p
-        // console.log(random)
-        // console.log(cumul)
-        if (cumul >= p_max) {
-            // console.log('done!')
-            return fds[i]
-        }
-    }
-    return null
-}
-
-async function run(s: number, p_max: number) {
+async function run(s: number) {
     let master_data_fp: PathLike
     let full_dirty_data_fp: PathLike
     if (s === 0) {
@@ -227,7 +102,7 @@ async function run(s: number, p_max: number) {
     await readFile(master_data_fp, master_data)
     await readFile(full_dirty_data_fp, full_dirty_data)
 
-    const h_space: Hypothesis[] = scenarios[s].hypothesis_space as Hypothesis[]
+    /* const h_space: Hypothesis[] = scenarios[s].hypothesis_space as Hypothesis[]
     const target_fds: string[] = scenarios[s].cfds
     const fds: string[] = [] as string[]
     h_space.forEach((h) => {
@@ -256,7 +131,7 @@ async function run(s: number, p_max: number) {
         fd.curr_p /= curr_p_sum
         console.log('p('.concat(fd.fd, '): ', fd.curr_p.toString()))
         fd.p_history.push(fd.curr_p)
-    })
+    }) */
 
     console.log(s.toString())
     console.log(master_data_fp)
@@ -315,28 +190,11 @@ async function run(s: number, p_max: number) {
 
     console.log('initialized feedback object')
 
-    /* const dirty_tuples: number[] = [] as number[]
-    for (const i in data) {
-        const row = Object.keys(data[i]).reduce((filtered: any, key: string) => {
-            if (key !== 'id') {
-                if (typeof (data[i][key]) === 'number') filtered[key] = data[i][key].toString();
-                else filtered[key] = data[i][key]
-            }
-            return filtered;
-        }, {})
-        if (JSON.stringify(row) !== JSON.stringify(master_data[data[i].id])) {
-            dirty_tuples.push(data[i].id)
-        }
-    } */
-
     let iter: number = 0
     while (msg !== '[DONE]') {
         iter++
         console.log('iter: '.concat(iter.toString()))
         const feedbackMap = buildFeedbackMap(data, feedback, header);
-
-        let numMarkedTuples: number = 0;
-        let numMarkedCells: number = 0;
 
         /* Oracle behavior */
         for (const i in data) {
@@ -354,37 +212,6 @@ async function run(s: number, p_max: number) {
                     }
                 }
             }
-            /* if (fd_metadata.find((el) => el.curr_p >= (p_max / target_fds.length)) === undefined) {
-                const uninformed_p: number = 0.5
-                const col: string = header[Math.floor(Math.random() * header.length)]
-                const decider: number = Math.random()
-                if (decider >= uninformed_p) {
-                    // numMarkedCells++
-                    feedbackMap[i][col] = true
-                }
-            }
-            else {
-                let chosen_fd: FD | null
-                do {
-                    let cumul = 1
-                    const random = Math.random()
-                    chosen_fd = pickFD(fd_metadata, (p_max / target_fds.length))
-                    if (chosen_fd === null) {
-                        console.log('null')
-                        return
-                    }
-                } while (chosen_fd.curr_p <= (p_max / target_fds.length))
-                if (chosen_fd.vios.includes(data[i].id)) {
-                    header.forEach((col) => {
-                        if (chosen_fd !== null && chosen_fd.rhs.includes(col)) {
-                            feedbackMap[i][col] = true
-                        }
-                        else {
-                            feedbackMap[i][col] = false
-                        }
-                    })
-                }
-            } */
         }
 
         feedback = {};
@@ -419,7 +246,6 @@ async function run(s: number, p_max: number) {
                 data = Object.values(JSON.parse(sample));
 
                 for (const i in data) {
-                    // console.log(data[i])
                     const row: any = data[i]
                     for (const j in row) {
                         if (j === 'id') break;
@@ -433,70 +259,12 @@ async function run(s: number, p_max: number) {
                         }
                     }
                 }
-
-                /* Reinforce FDs */
-                fd_metadata.forEach((fd) => {
-                    // console.log(fd.fd)
-                    /* Calculate p(X | fd) by checking the violating tuples to see if they're actually dirty tuples
-                    If they all are, p(X | fd) = prod(1/fd.support.length for each x in X), else p(X | h) = 0 */
-                    let p_X_given_h: number = 1
-                    let counter: number = 0
-                    for (const i in data) {
-                        const sample_row = Object.keys(data[i]).reduce((filtered: any, key: string) => {
-                            if (key !== 'id') {
-                                if (typeof (data[i][key]) === 'number') filtered[key] = data[i][key].toString();
-                                else filtered[key] = data[i][key]
-                            }
-                            return filtered;
-                        }, {})
-                        // console.log(JSON.stringify(sample_row))
-                        // console.log(JSON.stringify(master_data[data[i].id]))
-                        if (JSON.stringify(sample_row) !== JSON.stringify(master_data[data[i].id])) {
-                            // console.log(data[i].id)
-                            // console.log(fd.vios)
-                            counter++
-                            if (fd.vios.includes(data[i].id)) {
-                                p_X_given_h *= (1/fd.vios.length)
-                            } else {
-                                p_X_given_h = 0
-                                break
-                            }
-                        }
-                    }
-                    // let p_X: number = 1
-                    // console.log(counter)
-                    // for (let i = 0; i < counter; i++) {
-                    //    p_X *= 1/(num_dirty_tuples - i)
-                    // }
-                    /* console.log(fd.fd)
-                    console.log(fd.curr_p)
-                    console.log(p_X_given_h)
-                    console.log(p_X)
-                    console.log('\n') */
-                    // console.log('p_prev(h): '.concat(fd.curr_p.toString()))
-                    //console.log('p(X | h): '.concat(p_X_given_h.toString()))
-                    // console.log('p(X): '.concat(p_X.toString()))
-                    // const new_p: number = p_X_given_h === 0 ? 0 : (fd.curr_p * p_X_given_h) / p_X
-                    // console.log(new_p)
-                    // fd.curr_p = new_p
-                })
-
-                // NORMALIZE WEIGHTS
-                curr_p_sum = 0
-                fd_metadata.forEach((fd) => {
-                    curr_p_sum += fd.curr_p
-                })
-                fd_metadata.forEach((fd) => {
-                    fd.curr_p /= curr_p_sum
-                    console.log('p('.concat(fd.fd, '): ', fd.curr_p.toString()))
-                    fd.p_history.push(fd.curr_p)
-                })
             }
             else {
                 console.log('Results:')
-                fd_metadata.forEach((fd) => {
+                /* fd_metadata.forEach((fd) => {
                     console.log(fd.fd + ': ' + fd.p_history.join(', '))
-                })
+                }) */
             }
         } catch (err) {
             console.error(err);
@@ -506,5 +274,4 @@ async function run(s: number, p_max: number) {
 }
 
 const s: number = parseInt(process.argv[2])
-const p_max: number = parseInt(process.argv[3])
-run(s, p_max)
+run(s)
