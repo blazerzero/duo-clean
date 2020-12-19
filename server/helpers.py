@@ -11,8 +11,8 @@ import pickle
 import math
 import statistics
 from collections import Counter
-from scipy.stats import hmean
-from scipy.special import comb
+import scipy.special as sc
+from scipy.stats import beta as betaD
 import re
 
 class CellFeedback(object):
@@ -39,20 +39,39 @@ class StudyMetric(object):
         self.value = value
         self.elapsed_time = elapsed_time
 
+class FDMeta(object):
+    def __init__(self, fd, theta, p_theta, a, b, support, vios, vio_pairs):
+        self.lhs = fd.split(' => ')[0][1:-1].split(', ')
+        self.rhs = fd.split(' => ')[1].split(', ')
+        self.theta = theta
+        self.theta_history = [theta]
+        self.p_theta = p_theta
+        self.p_theta_history = [p_theta]
+        self.p_X_given_theta = None
+        self.p_X_given_theta_history = []
+        self.alpha = a
+        self.alpha_history = [a]
+        self.beta = b
+        self.beta_history = [b]
+        self.support = support
+        self.vios = vios
+        self.vio_pairs = vio_pairs
+
 # RECORD USER FEEDBACK
 def recordFeedback():
     pass
 
 # INTERPRET USER FEEDBACK AND UPDATE PROBABILITIES
-def interpretFeedback():
+def interpretFeedback(s_in, X, sample_X):
     # TODO: calculate P(X | \theta_h) for each FD
-    # TODO: calculate P(\theta_h | X) for each FD using previous p(\theta_h) and p(X) (calculated in previous iteration's buildSample run)
+    # TODO: calculate P(\theta_h | X) for each FD using previous p(\theta_h) and p(X)
+    p_sample_X = (math.factorial(len(sample_X)) * math.factorial(len(X) - len(sample_X))) / math.factorial(len(X))
     pass
 
 # BUILD SAMPLE
 def buildSample(data, X, sample_size, project_id, current_iter, current_time):
     fd_metadata = pickle.load( open('./store/' + project_id + '/fd_metadata.p', 'rb') )
-    modeling_metadata = pickle.load( open('./store/' + project_id + '/modeling_metadata.p', 'rb') )
+    # modeling_metadata = pickle.load( open('./store/' + project_id + '/modeling_metadata.p', 'rb') )
     start_time = pickle.load( open('./store/' + project_id + '/start_time.p', 'rb') )
 
     elapsed_time = current_time - start_time
@@ -60,14 +79,14 @@ def buildSample(data, X, sample_size, project_id, current_iter, current_time):
     s_index, sample_X = returnTuples(X, sample_size)
     s_out = data.loc[s_index, :]
 
-    p_sample_X = (math.factorial(len(sample_X)) * math.factorial(len(X) - len(sample_X))) / math.factorial(len(X))
+    # p_sample_X = (math.factorial(len(sample_X)) * math.factorial(len(X) - len(sample_X))) / math.factorial(len(X))
 
-    modeling_metadata['X'].append(StudyMetric(iter_num=current_iter, value=sample_X, elapsed_time=elapsed_time))
-    modeling_metadata['p_X'].append(StudyMetric(iter_num=current_iter, value=p_sample_X, elapsed_time=elapsed_time))
+    # modeling_metadata['X'].append(StudyMetric(iter_num=current_iter, value=sample_X, elapsed_time=elapsed_time))
+    # modeling_metadata['p_X'].append(StudyMetric(iter_num=current_iter, value=p_sample_X, elapsed_time=elapsed_time))
 
     print('IDs of tuples in next sample:', s_out.index)
 
-    pickle.dump( modeling_metadata, open('./store/' + project_id + '/modeling_metadata.p', 'wb') )
+    # pickle.dump( modeling_metadata, open('./store/' + project_id + '/modeling_metadata.p', 'wb') )
     
     return s_out, sample_X
 
@@ -312,3 +331,6 @@ def buildCompositionSpace(fds, h_space, dirty_data, clean_data, min_conf, max_an
                 })
 
     return composition_space
+
+def pTheta(theta, a, b):
+    return (math.pow(theta, (a-1)) * math.pow((1-theta), (b-1))) / sc.beta(a, b)

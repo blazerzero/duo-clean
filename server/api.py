@@ -98,28 +98,47 @@ class Import(Resource):
         h_space = scenario['hypothesis_space']
         X = set()
         for h in h_space:
-            fd_metadata[h['cfd']] = dict()
-            fd_metadata[h['cfd']]['conf'] = h['conf']
+            h['vio_pairs'] = set(tuple(vp) for vp in h['vio_pairs'])
+            mu = h['conf']
+            a = 1
+            b = a * (a - mu) / mu
+            theta = h['conf']
+            
+            p_theta = helpers.pTheta(theta, a, b)
+            fd_m = helpers.FDMeta(
+                fd=h['cfd'],
+                theta=theta,
+                p_theta=p_theta,
+                a=a,
+                b=b,
+                support=h['support'],
+                vios=h['vios'],
+                vio_pairs=h['vio_pairs']
+            )
+            fd_metadata[h['cfd']] = fd_m
+            X |= h['vio_pairs']
+            # fd_metadata[h['cfd']] = dict()
+            # fd_metadata[h['cfd']]['conf'] = h['conf']
             # TODO: Initialize weight
 
-            fd_metadata[h['cfd']]['support'] = h['support']
-            fd_metadata[h['cfd']]['vios'] = h['vios']
-            fd_metadata[h['cfd']]['vio_pairs'] = h['vio_pairs']
+            # fd_metadata[h['cfd']]['support'] = h['support']
+            # fd_metadata[h['cfd']]['vios'] = h['vios']
+            # fd_metadata[h['cfd']]['vio_pairs'] = h['vio_pairs']
 
-            for vp in h['vio_pairs']:
-                X.add(tuple(vp))
+            # for vp in h['vio_pairs']:
+            #     X.add(tuple(vp))
 
         # TODO: Initialize weight history
 
-        modeling_metadata = dict()
+        # modeling_metadata = dict()
         #TODO: Finish initializing modeling metadata
-        modeling_metadata['X'] = list()
-        modeling_metadata['p_X'] = list()
+        # modeling_metadata['X'] = list()
+        # modeling_metadata['p_X'] = list()
 
         pickle.dump( cell_metadata, open(new_project_dir + '/cell_metadata.p', 'wb') )
         pickle.dump( fd_metadata, open(new_project_dir + '/fd_metadata.p', 'wb') )
         pickle.dump( current_iter, open(new_project_dir + '/current_iter.p', 'wb') )
-        pickle.dump( modeling_metadata, open(new_project_dir + '/modeling_metadata.p', 'wb') )
+        # pickle.dump( modeling_metadata, open(new_project_dir + '/modeling_metadata.p', 'wb') )
         pickle.dump( X, open(new_project_dir + '/X.p', 'wb') )
 
         print('*** Metadata and objects initialized and saved ***')
@@ -316,10 +335,10 @@ class Clean(Resource):
         print('*** Extracted sample from dataset ***')
         if is_new_feedback == 1 and refresh == 0:
             # helpers.explainFeedback(data, s_in, project_id, current_iter, current_time, 0)
-            helpers.interpretFeedback()
+            helpers.interpretFeedback(s_in, X, curr_sample_X)
         else:
             # helpers.explainFeedback(data, s_in, project_id, current_iter, current_time, 1)
-            helpers.interpretFeedback()
+            helpers.interpretFeedback(s_in, X, curr_sample_X)
         print('*** Mining completed and FD weights updated ***')
 
         current_iter += 1
