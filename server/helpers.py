@@ -39,6 +39,14 @@ class StudyMetric(object):
         self.value = value
         self.elapsed_time = elapsed_time
 
+# RECORD USER FEEDBACK
+def recordFeedback():
+    pass
+
+# INTERPRET USER FEEDBACK AND UPDATE PROBABILITIES
+def explainFeedback():
+    pass
+
 # BUILD SAMPLE
 def buildSample(data, X, sample_size, project_id, current_iter, current_time):
     fd_metadata = pickle.load( open('./store/' + project_id + '/fd_metadata.p', 'rb') )
