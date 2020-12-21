@@ -57,16 +57,65 @@ class FDMeta(object):
         self.vios = vios
         self.vio_pairs = vio_pairs
 
-# RECORD USER FEEDBACK
+# RECORD USER FEEDBACK (FOR TRUE POS AND FALSE POS)
 def recordFeedback():
     pass
 
 # INTERPRET USER FEEDBACK AND UPDATE PROBABILITIES
-def interpretFeedback(s_in, X, sample_X):
-    # TODO: calculate P(X | \theta_h) for each FD
-    # TODO: calculate P(\theta_h | X) for each FD using previous p(\theta_h) and p(X)
-    p_sample_X = (math.factorial(len(sample_X)) * math.factorial(len(X) - len(sample_X))) / math.factorial(len(X))
-    pass
+def interpretFeedback(s_in, feedback, X, sample_X, project_id, target_fd=None):
+    fd_metadata = pickle.load( open('./store/' + project_id + '/fd_metadata.p', 'rb') )
+    # start_time = pickle.load( open('./store/' + project_id + '/start_time.p', 'rb') )
+
+    # Remove marked cells from consideration
+    print(feedback)
+    pruned_rows = list()
+    for idx in feedback.index:
+        for col in feedback.columns:
+            if feedback.at[idx, col] is True:
+                pruned_rows.append(idx)
+                break
+
+    pruned_sample_X = sample_X
+    for row in pruned_rows:
+        pruned_sample_X = filter(lambda x: row not in x, pruned_sample_X)
+
+    print(len(X))
+    print(len(pruned_sample_X))
+
+    # p_sample_X = (math.factorial(len(pruned_sample_X)) * math.factorial(len(X) - len(pruned_sample_X))) / math.factorial(len(X))
+    p_sample_X = math.factorial(len(pruned_sample_X))
+    for i in range(0, len(pruned_sample_X)):
+        p_sample_X /= (len(X) - i)
+
+    # Calculate P(X | \theta_h) for each FD
+    for fd, fd_m in fd_metadata.items():
+        if fd != target_fd:
+            continue
+        p_X_given_theta = 1
+        successes_X = set()
+        failures_X = set()
+        for x in pruned_sample_X:
+            if x not in fd_m.vio_pairs:
+                p_X_given_theta *= fd_m.theta
+                successes_X.add(x)
+            else:
+                p_X_given_theta *= (1 - fd_m.theta)
+                failures_X.add(x)
+        
+        # Calculate P(\theta_h | X) for each FD using previous p(\theta_h) and p(X)
+        print(p_X_given_theta)
+        print(fd_m.p_theta)
+        print(p_sample_X)
+        fd_m.p_theta = (p_X_given_theta * fd_m.p_theta) / p_sample_X
+        fd_m.p_theta_history.append(fd_m.p_theta)
+        fd_m.alpha += len(successes_X)
+        fd_m.alpha_history.append(fd_m.alpha)
+        fd_m.beta += len(failures_X)
+        fd_m.beta_history.append(fd_m.beta)
+        fd_m.theta = fd_m.alpha / (fd_m.alpha + fd_m.beta)
+        fd_m.theta_history.append(fd_m.theta)
+
+    pickle.dump( fd_metadata, open('./store/' + project_id + '/fd_metadata.p', 'wb') )
 
 # BUILD SAMPLE
 def buildSample(data, X, sample_size, project_id, current_iter, current_time):
@@ -76,7 +125,7 @@ def buildSample(data, X, sample_size, project_id, current_iter, current_time):
 
     elapsed_time = current_time - start_time
 
-    s_index, sample_X = returnTuples(X, sample_size)
+    s_index, sample_X = returnTuples(data, X, sample_size)
     s_out = data.loc[s_index, :]
 
     # p_sample_X = (math.factorial(len(sample_X)) * math.factorial(len(X) - len(sample_X))) / math.factorial(len(X))
@@ -92,29 +141,14 @@ def buildSample(data, X, sample_size, project_id, current_iter, current_time):
 
 
 # RETURN TUPLES AND VIOS FOR SAMPLE
-def returnTuples(X, sample_size):
-    s_out = list()
-    sample_X = list()
-    while len(s_out) < sample_size:
-        t1, t2 = random.choice(list(X))
-        if t1 in s_out or t2 in s_out:
-            continue
-        sample_X.append((t1, t2))
-        for i in s_out:
-            if (t1, i) in X or (i, t1) in X:
-                if t1 < i:
-                    sample_X.append((t1, i))
-                else:
-                    sample_X.append((i, t1))
-            if (t2, i) in X or (i, t2) in X:
-                if t2 < i:
-                    sample_X.append((t2, i))
-                else:
-                    sample_X.append((i, t2))
-        s_out.append(t1)
-        s_out.append(t2)
-        if len(s_out) >= sample_size:
-            break
+def returnTuples(data, X, sample_size):
+    s_out = random.sample(population=list(data.index), k=sample_size)
+    sample_X = set()
+    for i1 in s_out:
+        for i2 in s_out:
+            tup = (i1, i2) if i1 < i2 else (i2, i1)
+            if tup in X:
+                sample_X.add(tup)
     return s_out, sample_X
 
 

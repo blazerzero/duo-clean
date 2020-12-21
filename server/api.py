@@ -93,10 +93,11 @@ class Import(Resource):
             for col in header:
                 cell_metadata[idx][col] = dict()
                 cell_metadata[idx][col]['feedback_history'] = list()
+
+        X = set()
         
         fd_metadata = dict()
         h_space = scenario['hypothesis_space']
-        X = set()
         for h in h_space:
             h['vio_pairs'] = set(tuple(vp) for vp in h['vio_pairs'])
             mu = h['conf']
@@ -115,30 +116,30 @@ class Import(Resource):
                 vios=h['vios'],
                 vio_pairs=h['vio_pairs']
             )
+
+            for i in data.index:
+                for j in data.index:
+                    if i == j:
+                        continue
+                    match = True
+                    for lh in fd_m.lhs:
+                        if data.at[i, lh] != data.at[j, lh]:
+                            match = False
+                            break
+
+                    if match is True and ((i, j) not in X and (j, i) not in X):
+                        if i < j:
+                            X.add((i, j))
+                        else:
+                            X.add((j, i)) 
+
             fd_metadata[h['cfd']] = fd_m
-            X |= h['vio_pairs']
-            # fd_metadata[h['cfd']] = dict()
-            # fd_metadata[h['cfd']]['conf'] = h['conf']
-            # TODO: Initialize weight
 
-            # fd_metadata[h['cfd']]['support'] = h['support']
-            # fd_metadata[h['cfd']]['vios'] = h['vios']
-            # fd_metadata[h['cfd']]['vio_pairs'] = h['vio_pairs']
-
-            # for vp in h['vio_pairs']:
-            #     X.add(tuple(vp))
-
-        # TODO: Initialize weight history
-
-        # modeling_metadata = dict()
-        #TODO: Finish initializing modeling metadata
-        # modeling_metadata['X'] = list()
-        # modeling_metadata['p_X'] = list()
+        print(len(X))
 
         pickle.dump( cell_metadata, open(new_project_dir + '/cell_metadata.p', 'wb') )
         pickle.dump( fd_metadata, open(new_project_dir + '/fd_metadata.p', 'wb') )
         pickle.dump( current_iter, open(new_project_dir + '/current_iter.p', 'wb') )
-        # pickle.dump( modeling_metadata, open(new_project_dir + '/modeling_metadata.p', 'wb') )
         pickle.dump( X, open(new_project_dir + '/X.p', 'wb') )
 
         print('*** Metadata and objects initialized and saved ***')
@@ -193,8 +194,10 @@ class Sample(Resource):
                 })
 
         print('*** Feedback object created ***')
+        print(len(sample_X))
         
         s_out.insert(0, 'id', s_out.index, True)
+        print(s_out.index)
 
         # Return information to the user
         returned_data = {
@@ -290,15 +293,10 @@ class Clean(Resource):
             print(req)
             project_id = req['project_id']
             feedback = req['feedback']
-            is_new_feedback = req['is_new_feedback']
-            refresh = req['refresh']
         else:
             feedback = json.loads(request.form.get('feedback'))
-            is_new_feedback = int(request.form.get('is_new_feedback'))
-            refresh = int(request.form.get('refresh'))
 
         print(project_id)
-        print(is_new_feedback)
         print(feedback)
 
         feedback = pd.DataFrame.from_dict(feedback, orient='index')
@@ -307,7 +305,7 @@ class Clean(Resource):
         print('*** Necessary objects loaded ***')
 
         current_iter = pickle.load( open('./store/' + project_id + '/current_iter.p', 'rb') )
-
+        print(current_iter)
         # current_time = pickle.load( open('./store/' + project_id + '/current_time.p', 'rb') )
         current_time = time.time()
 
@@ -325,21 +323,11 @@ class Clean(Resource):
 
         print('*** Loaded dirty dataset ***')
 
-        # Save noise feedback
-        if is_new_feedback == 1 and refresh == 0:
-            print('*** NEW FEEDBACK! ***')
-            # helpers.saveNoiseFeedback(data, feedback, project_id, current_iter, current_time)
-            helpers.recordFeedback()
-        print('*** Feedback saved ***')
         s_in = data.iloc[feedback.index]
         print('*** Extracted sample from dataset ***')
-        if is_new_feedback == 1 and refresh == 0:
-            # helpers.explainFeedback(data, s_in, project_id, current_iter, current_time, 0)
-            helpers.interpretFeedback(s_in, X, curr_sample_X)
-        else:
-            # helpers.explainFeedback(data, s_in, project_id, current_iter, current_time, 1)
-            helpers.interpretFeedback(s_in, X, curr_sample_X)
-        print('*** Mining completed and FD weights updated ***')
+        target_fd = project_info['scenario']['target_fd']# NOTE: For current sims only
+        helpers.interpretFeedback(s_in, feedback, X, curr_sample_X, project_id, target_fd)
+        print('*** FD weights updated ***')
 
         current_iter += 1
         s_out, new_sample_X = helpers.buildSample(data, X, sample_size, project_id, current_iter, current_time)
@@ -373,7 +361,7 @@ class Clean(Resource):
         # conf_threshold = (0.85 / len(project_info['scenario']['cfds']))
 
         # if refresh == 0 and (current_iter >= 25 or (top_fd_conf >= conf_threshold and variance_delta is not None and variance_delta < 0.01)):
-        if refresh == 0 and current_iter >= 25:
+        if current_iter > 25:
             msg = '[DONE]'
             # top_fd = max(cfd_metadata, key=lambda x: cfd_metadata[x]['weight'])
             # concerned_fd_conf = next(h for h in clean_h_space if h['cfd'] == top_fd)['conf'] if top_fd in [k['cfd'] for k in clean_h_space] else None
@@ -382,6 +370,7 @@ class Clean(Resource):
             msg = '[SUCCESS]: Saved feedback and built new sample.'
 
         s_out.insert(0, 'id', s_out.index, True)
+        print(s_out.index)
 
         pickle.dump( current_iter, open('./store/' + project_id + '/current_iter.p', 'wb') )
         # pickle.dump( current_time, open('./store/' + project_id + '/current_time.p', 'wb') )

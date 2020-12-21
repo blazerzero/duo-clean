@@ -1,94 +1,62 @@
 {
     "0": {
-        "cfds": [
-            "(areacode) => state"
-        ],
+        "target_fd": "(areacode) => state",
         "description": "Identify errors in staff directory data.",
         "dirty_dataset": "./data/dirty_toy.csv",
         "clean_dataset": "./data/toy.csv",
         "difficulty": 1
     },
     "1": {
-        "cfds": [
-            "(manager) => owner"
-        ],
+        "target_fd": "(manager) => owner",
         "description": "Identify errors in data about airfields in Alaska.",
         "dirty_dataset": "./data/dirty_airport_1.csv",
         "clean_dataset": "./data/airport_1.csv",
         "difficulty": 4
     },
     "2": {
-        "cfds": [
-            "(type, facilityname) => region",
-            "(type, facilityname) => owner",
-            "(type, facilityname) => manager"
-        ],
+        "target_fd": "(facilityname, type) => owner, manager, region",
         "description": "Identify errors in data about airfields in Alaska.",
         "dirty_dataset": "./data/dirty_airport_2.csv",
         "clean_dataset": "./data/airport_2.csv",
         "difficulty": 3
     },
     "3": {
-        "cfds": [
-            "(title) => year",
-            "(title) => rating",
-            "(director) => year",
-            "(director) => rating"
-        ],
+        "target_fd": "(title, director) => rating, year",
         "description": "Identify errors in data about English-language movies and TV shows.",
         "dirty_dataset": "./data/dirty_omdb_3.csv",
         "clean_dataset": "./data/omdb_3.csv",
         "difficulty": 2
     },
     "4": {
-        "cfds": [
-            "(listingnumber) => title",
-            "(listingnumber) => year",
-            "(listingnumber) => director"
-        ],
+        "target_fd": "(listingnumber) => title, director, year",
         "description": "Identify errors in data about English-language movies and TV shows.",
         "dirty_dataset": "./data/dirty_omdb_4.csv",
         "clean_dataset": "./data/omdb_4.csv",
         "difficulty": 1
     },
     "5": {
-        "cfds": [
-            "(manager) => owner"
-        ],
+        "target_fd": "(manager) => owner",
         "description": "Identify errors in data about airfields in Alaska.",
         "dirty_dataset": "./data/dirty_airport_1.csv",
         "clean_dataset": "./data/airport_1.csv",
         "difficulty": 4
     },
     "6": {
-        "cfds": [
-            "(type, facilityname) => region",
-            "(type, facilityname) => owner",
-            "(type, facilityname) => manager"
-        ],
+        "target_fd": "(facilityname, type) => owner, manager, region",
         "description": "Identify errors in data about airfields in Alaska.",
         "dirty_dataset": "./data/dirty_airport_2.csv",
         "clean_dataset": "./data/airport_2.csv",
         "difficulty": 3
     },
     "7": {
-        "cfds": [
-            "(title) => year",
-            "(title) => rating",
-            "(director) => year",
-            "(director) => rating"
-        ],
+        "target_fd": "(title, director) => rating, year",
         "description": "Identify errors in data about English-language movies and TV shows.",
         "dirty_dataset": "./data/dirty_omdb_3.csv",
         "clean_dataset": "./data/omdb_3.csv",
         "difficulty": 2
     },
     "8": {
-        "cfds": [
-            "(listingnumber) => title",
-            "(listingnumber) => year",
-            "(listingnumber) => director"
-        ],
+        "target_fd": "(listingnumber) => title, director, year",
         "description": "Identify errors in data about English-language movies and TV shows.",
         "dirty_dataset": "./data/dirty_omdb_4.csv",
         "clean_dataset": "./data/omdb_4.csv",
