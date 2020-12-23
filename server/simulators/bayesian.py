@@ -54,7 +54,10 @@ def shuffleFDs(fds):
     return random.shuffle(fds)
 
 def pTheta(theta, a, b):
-    return (math.pow(theta, (a-1)) * math.pow((1-theta), (b-1))) / sc.beta(a, b)
+    if a == 1 and b == 1:
+        return 0.5
+    else:
+        return ((a - 1) / (a + b - 2))
 
 def run(s, b_type, decision_type):
     p_max = 0.9 if b_type == 'informed' else 0.5
@@ -84,10 +87,13 @@ def run(s, b_type, decision_type):
 
     fd_metadata = dict()
     X = set()
+    X_per_FD = dict()
     
     for h in h_space:
+        X_per_FD[h['cfd']] = set()
         h['vio_pairs'] = set(tuple(vp) for vp in h['vio_pairs'])
         if b_type == 'informed':
+            # TODO: Change to deriving a and b from mode instead of mean
             mu = h['conf']
             a = 1
             b = a * (a - mu) / mu
@@ -97,6 +103,8 @@ def run(s, b_type, decision_type):
             b = 1
             theta = 0.5
         
+        # NOTE: This is a CONTINUOUS distribution, not discrete, so this is not right.
+        # TODO: Talk to Arash about this.
         p_theta = pTheta(theta, a, b)
         fd_m = FDMeta(
             fd=h['cfd'],
@@ -121,8 +129,10 @@ def run(s, b_type, decision_type):
                 if match is True and ((i, j) not in X and (j, i) not in X):
                     if i < j:
                         X.add((i, j))
+                        X_per_FD[h['cfd']].add((i, j))
                     else:
-                        X.add((j, i)) 
+                        X.add((j, i))
+                        X_per_FD[h['cfd']].add((j, i))
         fd_metadata[h['cfd']] = fd_m
 
     header = None
@@ -141,7 +151,6 @@ def run(s, b_type, decision_type):
     data = None
     feedback = None
     sample_X = list()
-    p_X = None
 
     try:
         print('before sample')
@@ -165,10 +174,6 @@ def run(s, b_type, decision_type):
                 elif type(data[row][j]) != 'str':
                     data[row][j] = str(data[row][j])
         
-        # p_X = (math.factorial(len(sample_X)) * math.factorial(len(X) - len(sample_X))) / math.factorial(len(X))
-        p_X = math.factorial(len(sample_X))
-        for i in range(0, len(sample_X)):
-            p_X /= (len(X) - i)
         print('prepped data')
     except Exception as e:
         print(e)
@@ -177,11 +182,17 @@ def run(s, b_type, decision_type):
     msg = ''
     iter_num = 0
 
-    pruned_rows_per_FD = dict()
+    pruned_rows = set()
+    pruned_pairs_per_FD = dict()
+    for fd in fd_metadata.keys():
+        pruned_pairs_per_FD[fd] = set()
+
     while msg != '[DONE]':
         iter_num += 1
         print('iter:', iter_num)
         feedbackMap = buildFeedbackMap(data, feedback, header)
+
+        p_X = 0
 
         # Bayesian behavior
         for fd, fd_m in fd_metadata.items():
@@ -191,7 +202,6 @@ def run(s, b_type, decision_type):
             successes_X = set()
             failures_X = set()
 
-            # NOTE: Conditions for adding to successes/failures needs verifying
             for x in sample_X:
                 if x not in fd_m.vio_pairs:
                     p_X_given_theta *= fd_m.theta
@@ -199,9 +209,22 @@ def run(s, b_type, decision_type):
                 else:
                     p_X_given_theta *= (1 - fd_m.theta)
                     failures_X.add(x)
-            print(p_X_given_theta)
-            print(fd_m.p_theta)
-            print(p_X)
+
+            print('successes:', len(successes_X))
+            print('failures:', len(failures_X))
+
+            p_X_given_theta_comp = 1
+            for x in sample_X:
+                if x in fd_m.vio_pairs:
+                    p_X_given_theta_comp *= fd_m.theta
+                else:
+                    p_X_given_theta_comp *= (1 - fd_m.theta)
+
+            p_X = (p_X_given_theta * fd_m.p_theta) + (p_X_given_theta_comp * (1 - fd_m.p_theta))
+
+            print('p(X | theta):', p_X_given_theta)
+            print('p(theta):', fd_m.p_theta)
+            print('p(X):', p_X)
             fd_m.p_theta = (p_X_given_theta * fd_m.p_theta) / p_X
             fd_m.p_theta_history.append(fd_m.p_theta)
             fd_m.alpha += len(successes_X)
@@ -211,26 +234,58 @@ def run(s, b_type, decision_type):
             fd_m.theta = fd_m.alpha / (fd_m.alpha + fd_m.beta)
             fd_m.theta_history.append(fd_m.theta)
 
-            # Step 2: mark errors according to new beliefs
-            for row in data.keys():
-                p_t_in_C_given_theta = 1
-                for x in sample_X:
-                    if row in x:
-                        p_t_in_C_given_theta *= fd_m.theta
-                    else:
-                        p_t_in_C_given_theta *= (1 - fd_m.theta)
-                # print(p_t_in_C_given_theta)
-                if decision_type == 'coin-flip':    # weighted coin flip-based decisions
-                    decision = np.random.binomial(1, p_t_in_C_given_theta)
-                else:   # threshold-based decisions
-                    decision = 1 if p_t_in_C_given_theta >= p_max else 0
-                if decision == 0:   # user thinks tuple is NOT clean
-                    if fd not in pruned_rows_per_FD.keys() or row not in pruned_rows_per_FD[fd]:
-                        for rh in fd_m.rhs:
-                            feedbackMap[row][rh] = True
-                else:   # user thinks tuple IS clean
-                    for rh in fd_m.rhs:
-                        feedbackMap[row][rh] = False
+        # Step 2: mark errors according to new beliefs
+        all_p_thetas_sum = sum([fd_m.p_theta for fd_m in fd_metadata.values()])
+        print('sum over all p(theta)\'s:', all_p_thetas_sum)
+        for row in data.keys():
+            p_t_in_C_given_X = 0
+            # for fd, fd_m in fd_metadata.items():      # NOTE: comment out temporarily
+            fd_m = fd_metadata[target_fd]
+
+            # for row in data.keys():
+                # print(sample_X)
+                # print(row)
+                # if len([x for x in sample_X if int(row) in x]) > 0:
+                    # print('in a pair')
+                    # p_t_in_C_given_theta = 1
+                    # for x in sample_X:
+                    #     if int(row) in x:
+                    #         p_t_in_C_given_theta *= fd_m.theta
+                    #     else:
+                    #         p_t_in_C_given_theta *= (1 - fd_m.theta)
+                    # p_t_in_C_given_theta = 
+                    # print(p_t_in_C_given_theta)
+                # p_t_in_C_given_theta = 1 if len([x for x in sample_X if x in X_per_FD[fd] and int(row) in x]) > 0 else 0
+                # p_t_in_C_given_X += p_t_in_C_given_theta * fd_m.p_theta
+
+            print([x for x in sample_X if x in X_per_FD[target_fd] and int(row) in x])
+            p_t_in_C_given_theta = fd_m.p_theta if len([x for x in sample_X if x in X_per_FD[target_fd] and int(row) in x]) else (1 - fd_m.p_theta)
+            p_t_in_C_given_X = p_t_in_C_given_theta * (fd_m.p_theta / all_p_thetas_sum)
+            
+            print('p(t in C | X):', p_t_in_C_given_X)
+            
+            if decision_type == 'coin-flip':    # weighted coin flip-based decisions
+                decision = np.random.binomial(1, p_t_in_C_given_X)
+            else:   # threshold-based decisions
+                decision = 1 if p_t_in_C_given_X >= p_max else 0
+
+            # TODO: Talk to Arash about this part           
+            if decision == 0:   # user thinks tuple is NOT clean
+                if row not in pruned_rows and len([x for x in pruned_pairs_per_FD[target_fd] if row in x]) == 0:
+                    for rh in feedbackMap[row].keys():
+                        feedbackMap[row][rh] = True
+                    pruned_rows.add(row)
+                    for i in [x for x in X_per_FD[target_fd] if row in x]:
+                        pruned_pairs_per_FD[target_fd].add(i)
+                    
+            else:   # user thinks tuple IS clean
+                for rh in feedbackMap[row].keys():
+                    feedbackMap[row][rh] = False
+                if row in pruned_rows:
+                    pruned_rows.remove(row)
+                    for i in [x for x in X_per_FD[target_fd] if row in x]:
+                        pruned_pairs_per_FD[target_fd].remove(i)
+
 
         feedback = dict()
         for f in feedbackMap.keys():

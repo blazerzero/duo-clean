@@ -161,7 +161,7 @@ class Sample(Resource):
     def post(self):
         project_id = request.form.get('project_id')
         if project_id is None:
-            print(request.data)
+            # print(request.data)
             project_id = json.loads(request.data)['project_id']
         sample_size = 10
         with open('./store/' + project_id + '/project_info.json') as f:
@@ -290,14 +290,14 @@ class Clean(Resource):
         project_id = request.form.get('project_id')
         if project_id is None:
             req = json.loads(request.data)
-            print(req)
+            # print(req)
             project_id = req['project_id']
             feedback = req['feedback']
         else:
             feedback = json.loads(request.form.get('feedback'))
 
         print(project_id)
-        print(feedback)
+        # print(feedback)
 
         feedback = pd.DataFrame.from_dict(feedback, orient='index')
         sample_size = 10

@@ -68,24 +68,21 @@ def interpretFeedback(s_in, feedback, X, sample_X, project_id, target_fd=None):
 
     # Remove marked cells from consideration
     print(feedback)
+    print('about to check')
     pruned_rows = list()
     for idx in feedback.index:
         for col in feedback.columns:
-            if feedback.at[idx, col] is True:
+            if bool(feedback.at[idx, col]) is True:
                 pruned_rows.append(idx)
                 break
 
-    pruned_sample_X = sample_X
+    print(sample_X)
     for row in pruned_rows:
-        pruned_sample_X = filter(lambda x: row not in x, pruned_sample_X)
+        sample_X = {x for x in sample_X if int(row) not in x}
+        print(sample_X)
 
     print(len(X))
-    print(len(pruned_sample_X))
-
-    # p_sample_X = (math.factorial(len(pruned_sample_X)) * math.factorial(len(X) - len(pruned_sample_X))) / math.factorial(len(X))
-    p_sample_X = math.factorial(len(pruned_sample_X))
-    for i in range(0, len(pruned_sample_X)):
-        p_sample_X /= (len(X) - i)
+    print(len(sample_X))
 
     # Calculate P(X | \theta_h) for each FD
     for fd, fd_m in fd_metadata.items():
@@ -94,13 +91,25 @@ def interpretFeedback(s_in, feedback, X, sample_X, project_id, target_fd=None):
         p_X_given_theta = 1
         successes_X = set()
         failures_X = set()
-        for x in pruned_sample_X:
+        for x in sample_X:
             if x not in fd_m.vio_pairs:
                 p_X_given_theta *= fd_m.theta
                 successes_X.add(x)
             else:
                 p_X_given_theta *= (1 - fd_m.theta)
                 failures_X.add(x)
+
+        print('successes:', len(successes_X))
+        print('failures:', len(failures_X))
+
+        p_X_given_theta_comp = 1
+        for x in sample_X:
+            if x in fd_m.vio_pairs:
+                p_X_given_theta_comp *= fd_m.theta
+            else:
+                p_X_given_theta_comp *= (1 - fd_m.theta)
+        
+        p_sample_X = (p_X_given_theta * fd_m.p_theta) + (p_X_given_theta_comp * (1 - fd_m.p_theta))
         
         # Calculate P(\theta_h | X) for each FD using previous p(\theta_h) and p(X)
         print(p_X_given_theta)
@@ -120,7 +129,6 @@ def interpretFeedback(s_in, feedback, X, sample_X, project_id, target_fd=None):
 # BUILD SAMPLE
 def buildSample(data, X, sample_size, project_id, current_iter, current_time):
     fd_metadata = pickle.load( open('./store/' + project_id + '/fd_metadata.p', 'rb') )
-    # modeling_metadata = pickle.load( open('./store/' + project_id + '/modeling_metadata.p', 'rb') )
     start_time = pickle.load( open('./store/' + project_id + '/start_time.p', 'rb') )
 
     elapsed_time = current_time - start_time
@@ -128,14 +136,7 @@ def buildSample(data, X, sample_size, project_id, current_iter, current_time):
     s_index, sample_X = returnTuples(data, X, sample_size)
     s_out = data.loc[s_index, :]
 
-    # p_sample_X = (math.factorial(len(sample_X)) * math.factorial(len(X) - len(sample_X))) / math.factorial(len(X))
-
-    # modeling_metadata['X'].append(StudyMetric(iter_num=current_iter, value=sample_X, elapsed_time=elapsed_time))
-    # modeling_metadata['p_X'].append(StudyMetric(iter_num=current_iter, value=p_sample_X, elapsed_time=elapsed_time))
-
     print('IDs of tuples in next sample:', s_out.index)
-
-    # pickle.dump( modeling_metadata, open('./store/' + project_id + '/modeling_metadata.p', 'wb') )
     
     return s_out, sample_X
 
