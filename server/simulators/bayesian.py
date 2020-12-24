@@ -213,10 +213,11 @@ def run(s, b_type, decision_type):
         # Step 2: mark errors according to new beliefs
         # q_t = fd_m.alpha / (fd_m.alpha + fd_m.beta)
         # TODO: Upgrade q_t for consider multiple FDs
+        fd_m = fd_metadata[target_fd]
+        q_t = fd_m.alpha / (fd_m.alpha + fd_m.beta)
+        print('theta:', q_t)
         for row in data.keys():
             # for fd, fd_m in fd_metadata.items():      # NOTE: comment out temporarily
-            fd_m = fd_metadata[target_fd]
-            q_t = fd_m.alpha / (fd_m.alpha + fd_m.beta)
 
             if len([x for x in pruned_X if int(row) in x]) > 0:
                 continue

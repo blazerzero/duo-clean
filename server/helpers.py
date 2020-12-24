@@ -171,6 +171,7 @@ def interpretFeedback(s_in, feedback, X, sample_X, project_id, target_fd=None):
         fd_m.beta_history.append(fd_m.beta)
         print('alpha:', fd_m.alpha)
         print('beta:', fd_m.beta)
+        print('theta:', fd_m.alpha / (fd_m.alpha + fd_m.beta))
 
     pickle.dump( fd_metadata, open('./store/' + project_id + '/fd_metadata.p', 'wb') )
 
