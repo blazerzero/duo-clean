@@ -97,21 +97,21 @@ class Import(Resource):
         X = set()
         
         fd_metadata = dict()
+        target_fd = scenario['target_fd']
         h_space = scenario['hypothesis_space']
         for h in h_space:
+            if h['cfd'] != target_fd:
+                continue
+
             h['vio_pairs'] = set(tuple(vp) for vp in h['vio_pairs'])
             mu = h['conf']
-            a = 1
-            b = a * (a - mu) / mu
-            theta = h['conf']
+            variance = 0.01
             
-            p_theta = helpers.pTheta(theta, a, b)
+            alpha, beta = helpers.initialPrior(mu, variance)
             fd_m = helpers.FDMeta(
                 fd=h['cfd'],
-                theta=theta,
-                p_theta=p_theta,
-                a=a,
-                b=b,
+                a=alpha,
+                b=beta,
                 support=h['support'],
                 vios=h['vios'],
                 vio_pairs=h['vio_pairs']
@@ -136,6 +136,12 @@ class Import(Resource):
             fd_metadata[h['cfd']] = fd_m
 
         print(len(X))
+
+        study_metrics = dict()
+        study_metrics['precision'] = list()
+        study_metrics['recall'] = list()
+        study_metrics['f1'] = list()
+        pickle.dump( study_metrics, open(new_project_dir + '/study_metrics.p', 'wb') )
 
         pickle.dump( cell_metadata, open(new_project_dir + '/cell_metadata.p', 'wb') )
         pickle.dump( fd_metadata, open(new_project_dir + '/fd_metadata.p', 'wb') )
@@ -325,7 +331,8 @@ class Clean(Resource):
 
         s_in = data.iloc[feedback.index]
         print('*** Extracted sample from dataset ***')
-        target_fd = project_info['scenario']['target_fd']# NOTE: For current sims only
+        helpers.recordFeedback(data, feedback, project_id, current_iter, current_time)
+        target_fd = project_info['scenario']['target_fd'] # NOTE: For current sims only
         helpers.interpretFeedback(s_in, feedback, X, curr_sample_X, project_id, target_fd)
         print('*** FD weights updated ***')
 

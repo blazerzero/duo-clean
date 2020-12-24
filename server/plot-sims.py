@@ -55,11 +55,6 @@ def plot_sims(project_id, x_axis):
             print(system_fd_metadata[fd].alpha_history[i])
             print(system_fd_metadata[fd].beta_history[i], '\n')
             for step in np.arange(0, 1.0, 0.05):
-                # print(step)
-                # print(user_fd_metadata[fd].alpha_history[i])
-                # print(user_fd_metadata[fd].beta_history[i])
-                # print(system_fd_metadata[fd].alpha_history[i])
-                # print(system_fd_metadata[fd].beta_history[i])
                 user_distr.append(pTheta(step, user_fd_metadata[fd].alpha_history[i], user_fd_metadata[fd].beta_history[i]))
                 system_distr.append(pTheta(step, system_fd_metadata[fd].alpha_history[i], system_fd_metadata[fd].beta_history[i]))
             fd_kL.append(st.entropy(pk=user_distr, qk=system_distr))

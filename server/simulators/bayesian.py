@@ -21,15 +21,9 @@ import re
 #         self.vio_pairs = vio_pairs
 
 class FDMeta(object):
-    def __init__(self, fd, theta, p_theta, a, b, support, vios, vio_pairs):
+    def __init__(self, fd, a, b, support, vios, vio_pairs):
         self.lhs = fd.split(' => ')[0][1:-1].split(', ')
         self.rhs = fd.split(' => ')[1].split(', ')
-        self.theta = theta
-        self.theta_history = [theta]
-        self.p_theta = p_theta
-        self.p_theta_history = [p_theta]
-        self.p_X_given_theta = None
-        self.p_X_given_theta_history = []
         self.alpha = a
         self.alpha_history = [a]
         self.beta = b
@@ -37,6 +31,11 @@ class FDMeta(object):
         self.support = support
         self.vios = vios
         self.vio_pairs = vio_pairs
+
+def initialPrior(mu, variance):
+    beta = (1 - mu) * ((mu * (1 - mu) / variance) - 1)
+    alpha = (mu * beta) / (1 - mu)
+    return alpha, beta
 
 def buildFeedbackMap(data, feedback, header):
     feedbackMap = dict()
@@ -52,12 +51,6 @@ def buildFeedbackMap(data, feedback, header):
 
 def shuffleFDs(fds):
     return random.shuffle(fds)
-
-def pTheta(theta, a, b):
-    if a == 1 and b == 1:
-        return 0.5
-    else:
-        return ((a - 1) / (a + b - 2))
 
 def run(s, b_type, decision_type):
     p_max = 0.9 if b_type == 'informed' else 0.5
@@ -83,35 +76,33 @@ def run(s, b_type, decision_type):
     scenario = scenarios[s]
     # h_space = scenario['hypothesis_space']
     target_fd = scenario['target_fd']
-    h_space = [s for s in scenario['hypothesis_space'] if s['cfd'] == target_fd]    # NOTE: for one-FD step only
+    h_space = [s for s in scenario['hypothesis_space']]    # NOTE: for one-FD step only
 
     fd_metadata = dict()
     X = set()
     X_per_FD = dict()
     
     for h in h_space:
+        if h['cfd'] != target_fd:
+            continue
+        
         X_per_FD[h['cfd']] = set()
         h['vio_pairs'] = set(tuple(vp) for vp in h['vio_pairs'])
         if b_type == 'informed':
             # TODO: Change to deriving a and b from mode instead of mean
             mu = h['conf']
-            a = 1
-            b = a * (a - mu) / mu
-            theta = h['conf']
+            variance = 0.01
+            alpha, beta = initialPrior(mu, variance)
         else:
-            a = 1
-            b = 1
-            theta = 0.5
+            alpha = 1
+            beta = 1
         
         # NOTE: This is a CONTINUOUS distribution, not discrete, so this is not right.
         # TODO: Talk to Arash about this.
-        p_theta = pTheta(theta, a, b)
         fd_m = FDMeta(
             fd=h['cfd'],
-            theta=theta,
-            p_theta=p_theta,
-            a=a,
-            b=b,
+            a=alpha,
+            b=beta,
             support=h['support'],
             vios=h['vios'],
             vio_pairs=h['vio_pairs']
@@ -182,10 +173,7 @@ def run(s, b_type, decision_type):
     msg = ''
     iter_num = 0
 
-    pruned_rows = set()
-    pruned_pairs_per_FD = dict()
-    for fd in fd_metadata.keys():
-        pruned_pairs_per_FD[fd] = set()
+    pruned_X = set()
 
     while msg != '[DONE]':
         iter_num += 1
@@ -196,95 +184,55 @@ def run(s, b_type, decision_type):
 
         # Bayesian behavior
         for fd, fd_m in fd_metadata.items():
+            if fd != target_fd:
+                continue
 
             # Step 1: update hyperparameters
-            p_X_given_theta = 1
             successes_X = set()
             failures_X = set()
 
             for x in sample_X:
                 if x not in fd_m.vio_pairs:
-                    p_X_given_theta *= fd_m.theta
                     successes_X.add(x)
                 else:
-                    p_X_given_theta *= (1 - fd_m.theta)
                     failures_X.add(x)
 
             print('successes:', len(successes_X))
             print('failures:', len(failures_X))
 
-            p_X_given_theta_comp = 1
-            for x in sample_X:
-                if x in fd_m.vio_pairs:
-                    p_X_given_theta_comp *= fd_m.theta
-                else:
-                    p_X_given_theta_comp *= (1 - fd_m.theta)
-
-            p_X = (p_X_given_theta * fd_m.p_theta) + (p_X_given_theta_comp * (1 - fd_m.p_theta))
-
-            print('p(X | theta):', p_X_given_theta)
-            print('p(theta):', fd_m.p_theta)
-            print('p(X):', p_X)
-            fd_m.p_theta = (p_X_given_theta * fd_m.p_theta) / p_X
-            fd_m.p_theta_history.append(fd_m.p_theta)
             fd_m.alpha += len(successes_X)
             fd_m.alpha_history.append(fd_m.alpha)
             fd_m.beta += len(failures_X)
             fd_m.beta_history.append(fd_m.beta)
-            fd_m.theta = fd_m.alpha / (fd_m.alpha + fd_m.beta)
-            fd_m.theta_history.append(fd_m.theta)
+            print('alpha:', fd_m.alpha)
+            print('beta:', fd_m.beta)
 
         # Step 2: mark errors according to new beliefs
-        all_p_thetas_sum = sum([fd_m.p_theta for fd_m in fd_metadata.values()])
-        print('sum over all p(theta)\'s:', all_p_thetas_sum)
+        q_t = fd_m.alpha / (fd_m.alpha + fd_m.beta)
+        # TODO: Upgrade q_t for consider multiple FDs
         for row in data.keys():
-            p_t_in_C_given_X = 0
             # for fd, fd_m in fd_metadata.items():      # NOTE: comment out temporarily
             fd_m = fd_metadata[target_fd]
 
-            # for row in data.keys():
-                # print(sample_X)
-                # print(row)
-                # if len([x for x in sample_X if int(row) in x]) > 0:
-                    # print('in a pair')
-                    # p_t_in_C_given_theta = 1
-                    # for x in sample_X:
-                    #     if int(row) in x:
-                    #         p_t_in_C_given_theta *= fd_m.theta
-                    #     else:
-                    #         p_t_in_C_given_theta *= (1 - fd_m.theta)
-                    # p_t_in_C_given_theta = 
-                    # print(p_t_in_C_given_theta)
-                # p_t_in_C_given_theta = 1 if len([x for x in sample_X if x in X_per_FD[fd] and int(row) in x]) > 0 else 0
-                # p_t_in_C_given_X += p_t_in_C_given_theta * fd_m.p_theta
+            if len([x for x in pruned_X if int(row) in x]) > 0:
+                continue
 
-            print([x for x in sample_X if x in X_per_FD[target_fd] and int(row) in x])
-            p_t_in_C_given_theta = fd_m.p_theta if len([x for x in sample_X if x in X_per_FD[target_fd] and int(row) in x]) else (1 - fd_m.p_theta)
-            p_t_in_C_given_X = p_t_in_C_given_theta * (fd_m.p_theta / all_p_thetas_sum)
-            
-            print('p(t in C | X):', p_t_in_C_given_X)
-            
-            if decision_type == 'coin-flip':    # weighted coin flip-based decisions
-                decision = np.random.binomial(1, p_t_in_C_given_X)
-            else:   # threshold-based decisions
-                decision = 1 if p_t_in_C_given_X >= p_max else 0
-
-            # TODO: Talk to Arash about this part           
-            if decision == 0:   # user thinks tuple is NOT clean
-                if row not in pruned_rows and len([x for x in pruned_pairs_per_FD[target_fd] if row in x]) == 0:
-                    for rh in feedbackMap[row].keys():
-                        feedbackMap[row][rh] = True
-                    pruned_rows.add(row)
-                    for i in [x for x in X_per_FD[target_fd] if row in x]:
-                        pruned_pairs_per_FD[target_fd].add(i)
-                    
-            else:   # user thinks tuple IS clean
-                for rh in feedbackMap[row].keys():
-                    feedbackMap[row][rh] = False
-                if row in pruned_rows:
-                    pruned_rows.remove(row)
-                    for i in [x for x in X_per_FD[target_fd] if row in x]:
-                        pruned_pairs_per_FD[target_fd].remove(i)
+            if len([x for x in sample_X if int(row) in x]) > 0 and len([x for x in fd_m.vio_pairs if int(row) in x]) > 0:
+                if decision_type == 'coin-flip':
+                    decision = np.random.binomial(1, q_t)
+                else:
+                    decision = 1 if q_t >= p_max else 0
+                if decision == 1:
+                    for col in feedbackMap[row].keys():
+                        feedbackMap[row][col] = True
+                    for x in [i for i in sample_X if row in i]:
+                        pruned_X.add(x)
+                else:
+                    for col in feedbackMap[row].keys():
+                        feedbackMap[row][col] = False
+                    X_to_unprune = [x for x in pruned_X if row in x]
+                    for x in X_to_unprune:
+                        pruned_X.remove(x)
 
 
         feedback = dict()
@@ -300,7 +248,7 @@ def run(s, b_type, decision_type):
             if is_new_feedback is True:
                 break
         
-        print('built new feedback map')
+        # print('built new feedback map')
 
         formData = {
             'project_id': project_id,

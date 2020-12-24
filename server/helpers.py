@@ -40,15 +40,9 @@ class StudyMetric(object):
         self.elapsed_time = elapsed_time
 
 class FDMeta(object):
-    def __init__(self, fd, theta, p_theta, a, b, support, vios, vio_pairs):
+    def __init__(self, fd, a, b, support, vios, vio_pairs):
         self.lhs = fd.split(' => ')[0][1:-1].split(', ')
         self.rhs = fd.split(' => ')[1].split(', ')
-        self.theta = theta
-        self.theta_history = [theta]
-        self.p_theta = p_theta
-        self.p_theta_history = [p_theta]
-        self.p_X_given_theta = None
-        self.p_X_given_theta_history = []
         self.alpha = a
         self.alpha_history = [a]
         self.beta = b
@@ -58,8 +52,76 @@ class FDMeta(object):
         self.vio_pairs = vio_pairs
 
 # RECORD USER FEEDBACK (FOR TRUE POS AND FALSE POS)
-def recordFeedback():
-    pass
+def recordFeedback(data, feedback, project_id, current_iter, current_time):
+    cell_metadata = pickle.load( open('./store/' + project_id + '/cell_metadata.p', 'rb') )
+    study_metrics = pickle.load( open('./store/' + project_id + '/study_metrics.p', 'rb') )
+    start_time = pickle.load( open('./store/' + project_id + '/start_time.p', 'rb') )
+
+    elapsed_time = current_time - start_time
+
+    for idx in feedback.index:
+        for col in feedback.columns:
+            cell_metadata[int(idx)][col]['feedback_history'].append(CellFeedback(iter_num=current_iter, marked=bool(feedback.at[idx, col]), elapsed_time=elapsed_time))
+    print('*** Latest feedback saved ***')
+            
+    # scoring function: score based on number of true errors correctly identified
+    with open('./store/' + project_id + '/project_info.json', 'r') as f:
+        project_info = json.load(f)
+        clean_dataset = pd.read_csv(project_info['scenario']['clean_dataset'], keep_default_na=False)
+    
+    all_errors_found = 0
+    all_errors_total = 0
+    all_errors_marked = 0
+    iter_errors_found = 0
+    iter_errors_total = 0
+    iter_errors_marked = 0
+
+    for idx in data.index:
+        for col in data.columns:
+            if data.at[idx, col] != clean_dataset.at[idx, col]:
+                all_errors_total += 1
+                if str(idx) in feedback.index:
+                    iter_errors_total += 1
+                    if bool(feedback.at[str(idx), col]) is True:
+                        iter_errors_found += 1
+                if len(cell_metadata[idx][col]['feedback_history']) > 0 and cell_metadata[idx][col]['feedback_history'][-1].marked is True:
+                    all_errors_found += 1
+            if len(cell_metadata[idx][col]['feedback_history']) > 0 and cell_metadata[idx][col]['feedback_history'][-1].marked is True:
+                all_errors_marked += 1
+                if str(idx) in feedback.index:
+                    iter_errors_marked += 1
+
+    print('*** Score updated ***')
+
+    project_info['true_pos'] = all_errors_found
+    project_info['false_pos'] = all_errors_marked - all_errors_found
+    with open('./store/' + project_id + '/project_info.json', 'w') as f:
+        json.dump(project_info, f)
+    print('*** Score saved ***')
+
+    pickle.dump( cell_metadata, open('./store/' + project_id + '/cell_metadata.p', 'wb') )
+    print('*** Cell metadata updates saved ***')
+
+    if iter_errors_marked > 0:
+        precision = iter_errors_found / iter_errors_marked
+    else:
+        precision = 0
+    
+    if iter_errors_total > 0:
+        recall = iter_errors_found / iter_errors_total
+    else:
+        recall = 0
+
+    if precision > 0 and recall > 0:
+        f1 = 2 * (precision * recall) / (precision + recall)
+    else:
+        f1 = 0
+
+    study_metrics['precision'].append(StudyMetric(iter_num=current_iter, value=precision, elapsed_time=elapsed_time))
+    study_metrics['recall'].append(StudyMetric(iter_num=current_iter, value=recall, elapsed_time=elapsed_time))
+    study_metrics['f1'].append(StudyMetric(iter_num=current_iter, value=f1, elapsed_time=elapsed_time))
+
+    pickle.dump( study_metrics, open('./store/' + project_id + '/study_metrics.p', 'wb') )
 
 # INTERPRET USER FEEDBACK AND UPDATE PROBABILITIES
 def interpretFeedback(s_in, feedback, X, sample_X, project_id, target_fd=None):
@@ -76,53 +138,39 @@ def interpretFeedback(s_in, feedback, X, sample_X, project_id, target_fd=None):
                 pruned_rows.append(idx)
                 break
 
-    print(sample_X)
+    # print(sample_X)
     for row in pruned_rows:
         sample_X = {x for x in sample_X if int(row) not in x}
-        print(sample_X)
+        # print(sample_X)
 
-    print(len(X))
-    print(len(sample_X))
+    # print(len(X))
+    # print(len(sample_X))
 
     # Calculate P(X | \theta_h) for each FD
     for fd, fd_m in fd_metadata.items():
         if fd != target_fd:
             continue
-        p_X_given_theta = 1
+        
         successes_X = set()
         failures_X = set()
+        
+        print(fd_m.vio_pairs)
         for x in sample_X:
+            print(x)
             if x not in fd_m.vio_pairs:
-                p_X_given_theta *= fd_m.theta
                 successes_X.add(x)
             else:
-                p_X_given_theta *= (1 - fd_m.theta)
                 failures_X.add(x)
 
         print('successes:', len(successes_X))
         print('failures:', len(failures_X))
-
-        p_X_given_theta_comp = 1
-        for x in sample_X:
-            if x in fd_m.vio_pairs:
-                p_X_given_theta_comp *= fd_m.theta
-            else:
-                p_X_given_theta_comp *= (1 - fd_m.theta)
-        
-        p_sample_X = (p_X_given_theta * fd_m.p_theta) + (p_X_given_theta_comp * (1 - fd_m.p_theta))
-        
-        # Calculate P(\theta_h | X) for each FD using previous p(\theta_h) and p(X)
-        print(p_X_given_theta)
-        print(fd_m.p_theta)
-        print(p_sample_X)
-        fd_m.p_theta = (p_X_given_theta * fd_m.p_theta) / p_sample_X
-        fd_m.p_theta_history.append(fd_m.p_theta)
+                
         fd_m.alpha += len(successes_X)
         fd_m.alpha_history.append(fd_m.alpha)
         fd_m.beta += len(failures_X)
         fd_m.beta_history.append(fd_m.beta)
-        fd_m.theta = fd_m.alpha / (fd_m.alpha + fd_m.beta)
-        fd_m.theta_history.append(fd_m.theta)
+        print('alpha:', fd_m.alpha)
+        print('beta:', fd_m.beta)
 
     pickle.dump( fd_metadata, open('./store/' + project_id + '/fd_metadata.p', 'wb') )
 
@@ -367,5 +415,7 @@ def buildCompositionSpace(fds, h_space, dirty_data, clean_data, min_conf, max_an
 
     return composition_space
 
-def pTheta(theta, a, b):
-    return (math.pow(theta, (a-1)) * math.pow((1-theta), (b-1))) / sc.beta(a, b)
+def initialPrior(mu, variance):
+    beta = (1 - mu) * ((mu * (1 - mu) / variance) - 1)
+    alpha = (mu * beta) / (1 - mu)
+    return alpha, beta
