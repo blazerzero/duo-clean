@@ -191,11 +191,14 @@ def run(s, b_type, decision_type):
             successes_X = set()
             failures_X = set()
 
-            for x in sample_X:
-                if x not in fd_m.vio_pairs:
-                    successes_X.add(x)
+            for (i, j) in sample_X:
+                print((i, j))
+                if (i, j) not in fd_m.vio_pairs:
+                    successes_X.add((i, j))
+                elif (i, j) in fd_m.vio_pairs and (True in feedbackMap[str(i)].values() or True in feedbackMap[str(j)].values()):
+                    successes_X.add((i, j))
                 else:
-                    failures_X.add(x)
+                    failures_X.add((i, j))
 
             print('successes:', len(successes_X))
             print('failures:', len(failures_X))
@@ -208,11 +211,12 @@ def run(s, b_type, decision_type):
             print('beta:', fd_m.beta)
 
         # Step 2: mark errors according to new beliefs
-        q_t = fd_m.alpha / (fd_m.alpha + fd_m.beta)
+        # q_t = fd_m.alpha / (fd_m.alpha + fd_m.beta)
         # TODO: Upgrade q_t for consider multiple FDs
         for row in data.keys():
             # for fd, fd_m in fd_metadata.items():      # NOTE: comment out temporarily
             fd_m = fd_metadata[target_fd]
+            q_t = fd_m.alpha / (fd_m.alpha + fd_m.beta)
 
             if len([x for x in pruned_X if int(row) in x]) > 0:
                 continue

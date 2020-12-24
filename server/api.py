@@ -383,6 +383,9 @@ class Clean(Resource):
         # pickle.dump( current_time, open('./store/' + project_id + '/current_time.p', 'wb') )
         with open('./store/' + project_id + '/project_info.json', 'w') as f:
             json.dump(project_info, f)
+
+        print(X)
+        print(new_sample_X)
         
         # Return information to the user
         returned_data = {

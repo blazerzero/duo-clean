@@ -42,7 +42,7 @@ def dataDiff(dirty_df, clean_df):
 if __name__ == '__main__':
     with open('scenarios-master.json', 'r') as f:
         scenarios = json.load(f)
-    
+
     all_scenarios_duo = dict()
     all_scenarios_random = dict()
     for s_id, scenario in tqdm(scenarios.items()):
@@ -90,6 +90,8 @@ if __name__ == '__main__':
                 h['vio_pairs'] = vio_pairs
                 h_space.append(h)
 
+        # print(h_space)
+
         clean_h_space = list()
         for fd in clean_fds:
             h = dict()
@@ -103,6 +105,7 @@ if __name__ == '__main__':
         scenario['max_ant'] = max_ant
         scenario['hypothesis_space'] = h_space
         scenario['clean_hypothesis_space'] = clean_h_space
+        scenario['target_fd'] = next(f['cfd'] for f in scenario['hypothesis_space'] if set(f['cfd'].split(' => ')[0][1:-1].split(', ')) == set(scenario['target_fd'].split(' => ')[0][1:-1].split(', ')) and set(f['cfd'].split(' => ')[1].split(', ')) == set(scenario['target_fd'].split(' => ')[1].split(', ')))
 
         clean_data = pd.read_csv(scenario['clean_dataset'], keep_default_na=False)
 
