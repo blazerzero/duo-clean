@@ -159,8 +159,10 @@ def interpretFeedback(s_in, feedback, X, sample_X, project_id, target_fd=None):
             print(x)
             if x not in fd_m.vio_pairs:
                 successes_X.add(x)
+                print('success!')
             else:
                 failures_X.add(x)
+                print('failure!')
 
         print('successes:', len(successes_X))
         print('failures:', len(failures_X))

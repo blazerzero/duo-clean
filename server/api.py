@@ -105,7 +105,7 @@ class Import(Resource):
 
             h['vio_pairs'] = set(tuple(vp) for vp in h['vio_pairs'])
             mu = h['conf']
-            variance = 0.01
+            variance = 0.0025
             
             alpha, beta = helpers.initialPrior(mu, variance)
             fd_m = helpers.FDMeta(
@@ -121,11 +121,16 @@ class Import(Resource):
                 for j in data.index:
                     if i == j:
                         continue
-                    match = True
-                    for lh in fd_m.lhs:
-                        if data.at[i, lh] != data.at[j, lh]:
-                            match = False
-                            break
+
+                    X |= h['vio_pairs']
+                    
+                    match = True if i not in h['vios'] and j not in h['vios'] else False
+
+                    # match = True
+                    # for lh in fd_m.lhs:
+                    #     if data.at[i, lh] != data.at[j, lh]:
+                    #         match = False
+                    #         break
 
                     if match is True and ((i, j) not in X and (j, i) not in X):
                         if i < j:
@@ -368,7 +373,8 @@ class Clean(Resource):
         # conf_threshold = (0.85 / len(project_info['scenario']['cfds']))
 
         # if refresh == 0 and (current_iter >= 25 or (top_fd_conf >= conf_threshold and variance_delta is not None and variance_delta < 0.01)):
-        if current_iter > 25:
+        # if current_iter > 25:
+        if current_iter > 100:
             msg = '[DONE]'
             # top_fd = max(cfd_metadata, key=lambda x: cfd_metadata[x]['weight'])
             # concerned_fd_conf = next(h for h in clean_h_space if h['cfd'] == top_fd)['conf'] if top_fd in [k['cfd'] for k in clean_h_space] else None

@@ -70,7 +70,7 @@ def run(s, b_type, decision_type):
         full_dirty_data_fp = '../data/dirty_toy.csv'
         s = '0'
 
-    full_dirty_data = pd.read_csv(full_dirty_data_fp, keep_default_na=False)
+    # full_dirty_data = pd.read_csv(full_dirty_data_fp, keep_default_na=False)
     with open('../scenarios.json', 'r') as f:
         scenarios = json.load(f)
     scenario = scenarios[s]
@@ -79,26 +79,27 @@ def run(s, b_type, decision_type):
     h_space = [s for s in scenario['hypothesis_space']]    # NOTE: for one-FD step only
 
     fd_metadata = dict()
-    X = set()
-    X_per_FD = dict()
+    # X = set()
+    # X_per_FD = dict()
     
     for h in h_space:
         if h['cfd'] != target_fd:
             continue
         
-        X_per_FD[h['cfd']] = set()
+        # X_per_FD[h['cfd']] = set()
         h['vio_pairs'] = set(tuple(vp) for vp in h['vio_pairs'])
         if b_type == 'informed':
-            # TODO: Change to deriving a and b from mode instead of mean
             mu = h['conf']
+            variance = 0.0025
+            alpha, beta = initialPrior(mu, variance)
+        elif b_type == 'near-informed':
+            mu = 0.9 * h['conf']
             variance = 0.01
             alpha, beta = initialPrior(mu, variance)
         else:
             alpha = 1
             beta = 1
         
-        # NOTE: This is a CONTINUOUS distribution, not discrete, so this is not right.
-        # TODO: Talk to Arash about this.
         fd_m = FDMeta(
             fd=h['cfd'],
             a=alpha,
@@ -107,23 +108,23 @@ def run(s, b_type, decision_type):
             vios=h['vios'],
             vio_pairs=h['vio_pairs']
         )
-        for i in full_dirty_data.index:
-            for j in full_dirty_data.index:
-                if i == j:
-                    continue
-                match = True
-                for lh in fd_m.lhs:
-                    if full_dirty_data.at[i, lh] != full_dirty_data.at[j, lh]:
-                        match = False
-                        break
+        # for i in full_dirty_data.index:
+        #     for j in full_dirty_data.index:
+        #         if i == j:
+        #             continue
+        #         match = True
+        #         for lh in fd_m.lhs:
+        #             if full_dirty_data.at[i, lh] != full_dirty_data.at[j, lh]:
+        #                 match = False
+        #                 break
 
-                if match is True and ((i, j) not in X and (j, i) not in X):
-                    if i < j:
-                        X.add((i, j))
-                        X_per_FD[h['cfd']].add((i, j))
-                    else:
-                        X.add((j, i))
-                        X_per_FD[h['cfd']].add((j, i))
+        #         if match is True and ((i, j) not in X and (j, i) not in X):
+        #             if i < j:
+        #                 X.add((i, j))
+        #                 X_per_FD[h['cfd']].add((i, j))
+        #             else:
+        #                 X.add((j, i))
+        #                 X_per_FD[h['cfd']].add((j, i))
         fd_metadata[h['cfd']] = fd_m
 
     header = None
@@ -180,7 +181,7 @@ def run(s, b_type, decision_type):
         print('iter:', iter_num)
         feedbackMap = buildFeedbackMap(data, feedback, header)
 
-        p_X = 0
+        # p_X = 0
 
         # Bayesian behavior
         for fd, fd_m in fd_metadata.items():
@@ -191,14 +192,15 @@ def run(s, b_type, decision_type):
             successes_X = set()
             failures_X = set()
 
+            print(fd_m.vio_pairs)
             for (i, j) in sample_X:
                 print((i, j))
                 if (i, j) not in fd_m.vio_pairs:
                     successes_X.add((i, j))
-                elif (i, j) in fd_m.vio_pairs and (True in feedbackMap[str(i)].values() or True in feedbackMap[str(j)].values()):
-                    successes_X.add((i, j))
+                    print('success!')
                 else:
                     failures_X.add((i, j))
+                    print('failure!')
 
             print('successes:', len(successes_X))
             print('failures:', len(failures_X))
@@ -283,9 +285,9 @@ def run(s, b_type, decision_type):
                             data[row][j] = str(data[row][j])
                 
                 # p_X = (math.factorial(len(sample_X)) * math.factorial(len(X) - len(sample_X))) / math.factorial(len(X))
-                p_X = math.factorial(len(sample_X))
-                for i in range(0, len(sample_X)):
-                    p_X /= (len(X) - i)
+                # p_X = math.factorial(len(sample_X))
+                # for i in range(0, len(sample_X)):
+                #     p_X /= (len(X) - i)
 
         except Exception as e:
             print(e)
@@ -297,4 +299,6 @@ if __name__ == '__main__':
     s = sys.argv[1]
     b_type = sys.argv[2]
     decision_type = sys.argv[3]
-    run(s, b_type, decision_type)
+    num_runs = int(sys.argv[4])
+    for i in range(0, num_runs):
+        run(s, b_type, decision_type)
