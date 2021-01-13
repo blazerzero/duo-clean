@@ -14,6 +14,7 @@ from collections import Counter
 import scipy.special as sc
 from scipy.stats import beta as betaD
 import re
+from itertools import combinations
 
 class CellFeedback(object):
     def __init__(self, iter_num, marked, elapsed_time):
@@ -129,8 +130,8 @@ def interpretFeedback(s_in, feedback, X, sample_X, project_id, target_fd=None):
     # start_time = pickle.load( open('./store/' + project_id + '/start_time.p', 'rb') )
 
     # Remove marked cells from consideration
-    print(feedback)
-    print('about to check')
+    # print(feedback)
+    print('*** about to interpret feedback ***')
     pruned_rows = list()
     for idx in feedback.index:
         for col in feedback.columns:
@@ -139,6 +140,7 @@ def interpretFeedback(s_in, feedback, X, sample_X, project_id, target_fd=None):
                 break
 
     # print(sample_X)
+    pruned_s_in = s_in.drop([int(i) for i in pruned_rows])
     for row in pruned_rows:
         sample_X = {x for x in sample_X if int(row) not in x}
         # print(sample_X)
@@ -153,23 +155,27 @@ def interpretFeedback(s_in, feedback, X, sample_X, project_id, target_fd=None):
         
         successes_X = set()
         failures_X = set()
-        
-        print(fd_m.vio_pairs)
-        for x in sample_X:
-            print(x)
-            if x not in fd_m.vio_pairs:
-                successes_X.add(x)
-                print('success!')
+
+        # print(fd_m.vio_pairs)
+        for (i, j) in sample_X:
+            # print(x)
+            if (i, j) not in fd_m.vio_pairs:
+                successes_X.add((i, j))
+                # print('success!')
             else:
-                failures_X.add(x)
-                print('failure!')
+                failures_X.add((i, j))
+                # print('failure!')
 
         print('successes:', len(successes_X))
         print('failures:', len(failures_X))
+        # print('successes:', successes)
+        # print('failures:', failures)
                 
         fd_m.alpha += len(successes_X)
+        # fd_m.alpha += successes
         fd_m.alpha_history.append(fd_m.alpha)
         fd_m.beta += len(failures_X)
+        # fd_m.beta += failures
         fd_m.beta_history.append(fd_m.beta)
         print('alpha:', fd_m.alpha)
         print('beta:', fd_m.beta)
@@ -399,21 +405,21 @@ def buildCompositionSpace(fds, h_space, dirty_data, clean_data, min_conf, max_an
 
             composed_combos.add((fd1, fd2))
 
-    composition_space = [{ 'cfd': h['cfd'], 'conf': h['conf'] } for h in h_space] if h_space is not None else list()
+    composition_space = [{ 'cfd': h['cfd'] } for h in h_space] if h_space is not None else list()
     for composed_fd in further_composed_fds:
         if clean_data is not None:
             support, vios = getSupportAndVios(dirty_data, clean_data, composed_fd)
             conf = (len(support) - len(vios)) / len(support)
+            # print(conf)
             if conf >= min_conf and len(composed_fd.split(' => ')[0][1:-1].split(', ')) <= max_ant:
+                # print('here')
                 composition_space.append({
-                    'cfd': composed_fd,
-                    'conf': conf
+                    'cfd': composed_fd
                 })
         else:
             if len(composed_fd.split(' => ')[0][1:-1].split(', ')) <= max_ant:
                 composition_space.append({
-                    'cfd': composed_fd,
-                    'conf': None
+                    'cfd': composed_fd
                 })
 
     return composition_space
@@ -422,3 +428,48 @@ def initialPrior(mu, variance):
     beta = (1 - mu) * ((mu * (1 - mu) / variance) - 1)
     alpha = (mu * beta) / (1 - mu)
     return alpha, beta
+
+def getPairs(data, support, vios, fd):
+    vio_pairs = set()
+    all_pairs = set()
+    lhs = fd.split(' => ')[0][1:-1].split(', ')
+    rhs = fd.split(' => ')[1].split(', ')
+    for idx1 in support:
+        for idx2 in support:
+            if idx1 == idx2:
+                continue
+            pair = (idx1, idx2) if idx2 > idx1 else (idx2, idx1)
+            all_pairs.add(pair)
+            match = True
+            for lh in lhs:
+                if data.at[idx1, lh] != data.at[idx2, lh]:
+                    match = False
+                    break
+            if match is True:
+                for rh in rhs:
+                    if data.at[idx1, rh] != data.at[idx2, rh]:
+                        vio_pairs.add(pair)
+                        break
+    return list(all_pairs), list(vio_pairs)         
+
+    # for v in vios:
+    #     for idx in support:
+    #         if idx == v:
+    #             continue
+    #         match = True
+    #         for lh in lhs:
+    #             if data.at[idx, lh] != data.at[v, lh]:
+    #                 match = False   # idx and v do not have the same LHS
+    #                 break
+    #         if match is True:   # if idx and v have the same LHS
+    #             pair = (idx, v) if v > idx else (v, idx)
+    #             all_pairs.append(pair)
+    #             vio_pair = None
+    #             for rh in rhs:
+    #                 if data.at[idx, rh] != data.at[v, rh]:
+    #                     vio_pair = (idx, v) if v > idx else (v, idx)
+    #                     break
+    #             if vio_pair is not None and vio_pair not in vio_pairs:
+    #                 vio_pairs.append(vio_pair)
+
+    # return all_pairs, vio_pairs

@@ -10,28 +10,6 @@ from tqdm import tqdm
 import analyze
 import helpers
 
-def makeVios(data, support, vios, fd):
-    vio_pairs = list()
-    lhs = fd.split(' => ')[0][1:-1].split(', ')
-    rhs = fd.split(' => ')[1].split(', ')
-    for v in vios:
-        for idx1 in [i for i in support if i not in vios]:
-            match = True
-            for lh in lhs:
-                if data.at[idx1, lh] != data.at[v, lh]:
-                    match = False   # idx and v do not have the same LHS
-                    break
-            if match is True:   # if idx and v have the same LHS
-                vio_pair = None
-                for rh in rhs:
-                    if data.at[idx1, rh] != data.at[v, rh]:
-                        vio_pair = (idx1, v) if v > idx1 else (v, idx1)
-                        break
-                if vio_pair is not None and vio_pair not in vio_pairs:
-                    vio_pairs.append(vio_pair)
-
-    return vio_pairs
-
 def dataDiff(dirty_df, clean_df):
     diff = pd.DataFrame(columns=clean_df.columns)
     for row in clean_df.index:
@@ -65,6 +43,7 @@ if __name__ == '__main__':
         if process.returncode == 0:
             output = res[0].decode('latin_1').replace(',]', ']').replace('\r', '').replace('\t', '').replace('\n', '')
             fds = [c['cfd'] for c in json.loads(output, strict=False)['cfds'] if '=' not in c['cfd'].split(' => ')[0] and '=' not in c['cfd'].split(' => ')[1] and c['cfd'].split(' => ')[0] != '()']
+            
             fds = helpers.buildCompositionSpace(fds, None, data, clean_data, min_conf, max_ant)
         else:
             fds = list()
@@ -76,28 +55,46 @@ if __name__ == '__main__':
         else:
             clean_fds = list()
 
+        intersecting_fds = list(set([f['cfd'] for f in fds]).intersection(set([c['cfd'] for c in clean_fds])))
+
+        # print([f['cfd'] for f in fds])
+        # print(intersecting_fds)
+
         h_space = list()
         for fd in fds:
+            if fd['cfd'] not in intersecting_fds:
+                continue
+            # print('here')
             h = dict()
             h['cfd'] = fd['cfd']
             h['score'] = 1
             support, vios = helpers.getSupportAndVios(data, clean_data, h['cfd'])
+            all_pairs, vio_pairs = helpers.getPairs(data, support, vios, h['cfd'])
+            # print(h['cfd'])
+            # print(len(all_pairs))
+            # print(len(vio_pairs))
+            # h['conf'] = (len(all_pairs) - len(vio_pairs)) / len(all_pairs)
             h['conf'] = (len(support) - len(vios)) / len(support)
+            # print(h['conf'])
             if h['conf'] <= 0.95:
-                vio_pairs = makeVios(data, support, vios, h['cfd'])
                 h['support'] = support
                 h['vios'] = vios
+                # h['all_pairs'] = all_pairs
                 h['vio_pairs'] = vio_pairs
-                h_space.append(h)
+            h_space.append(h)
 
         # print(h_space)
 
         clean_h_space = list()
         for fd in clean_fds:
+            if fd['cfd'] not in intersecting_fds:
+                continue
             h = dict()
             h['cfd'] = fd['cfd']
             h['score'] = 1
-            support, vios = helpers.getSupportAndVios(clean_data, clean_data, h['cfd'])
+            support, vios = helpers.getSupportAndVios(clean_data, None, h['cfd'])
+            # all_pairs, vio_pairs = helpers.getPairs(clean_data, support, vios, h['cfd'])
+            # h['conf'] = (len(all_pairs) - len(vio_pairs)) / len(all_pairs)
             h['conf'] = (len(support) - len(vios)) / len(support)
             clean_h_space.append(h)
         
@@ -105,6 +102,7 @@ if __name__ == '__main__':
         scenario['max_ant'] = max_ant
         scenario['hypothesis_space'] = h_space
         scenario['clean_hypothesis_space'] = clean_h_space
+        # print([h['cfd'] for h in scenario['hypothesis_space']])
         scenario['target_fd'] = next(f['cfd'] for f in scenario['hypothesis_space'] if set(f['cfd'].split(' => ')[0][1:-1].split(', ')) == set(scenario['target_fd'].split(' => ')[0][1:-1].split(', ')) and set(f['cfd'].split(' => ')[1].split(', ')) == set(scenario['target_fd'].split(' => ')[1].split(', ')))
 
         clean_data = pd.read_csv(scenario['clean_dataset'], keep_default_na=False)

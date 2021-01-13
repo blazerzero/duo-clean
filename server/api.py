@@ -98,6 +98,7 @@ class Import(Resource):
         
         fd_metadata = dict()
         target_fd = scenario['target_fd']
+        # target_fd = '(owner, ownertype) => type, manager'
         h_space = scenario['hypothesis_space']
         for h in h_space:
             if h['cfd'] != target_fd:
@@ -116,6 +117,10 @@ class Import(Resource):
                 vios=h['vios'],
                 vio_pairs=h['vio_pairs']
             )
+
+            print('iter: 0'),
+            print('alpha:', fd_m.alpha)
+            print('beta:', fd_m.beta)
 
             for i in data.index:
                 for j in data.index:
@@ -141,6 +146,7 @@ class Import(Resource):
             fd_metadata[h['cfd']] = fd_m
 
         print(len(X))
+        current_iter += 1
 
         study_metrics = dict()
         study_metrics['precision'] = list()
@@ -233,7 +239,6 @@ class Resume(Resource):
             returned_data = {
                 'msg': '[INVALID PROJECT ID]'
             }
-            pprint(returned_data)
             response = json.dumps(returned_data)
             return response, 200, {'Access-Control-Allow-Origin': '*'}
             
@@ -338,6 +343,7 @@ class Clean(Resource):
         print('*** Extracted sample from dataset ***')
         helpers.recordFeedback(data, feedback, project_id, current_iter, current_time)
         target_fd = project_info['scenario']['target_fd'] # NOTE: For current sims only
+        # target_fd = '(owner, ownertype) => type, manager'
         helpers.interpretFeedback(s_in, feedback, X, curr_sample_X, project_id, target_fd)
         print('*** FD weights updated ***')
 
@@ -390,7 +396,7 @@ class Clean(Resource):
         with open('./store/' + project_id + '/project_info.json', 'w') as f:
             json.dump(project_info, f)
 
-        print(X)
+        # print(X)
         print(new_sample_X)
         
         # Return information to the user

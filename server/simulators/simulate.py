@@ -53,21 +53,28 @@ def shuffleFDs(fds):
     return random.shuffle(fds)
 
 def run(s, b_type, decision_type):
-    p_max = 0.9 if b_type == 'informed' else 0.5
-
-    if int(s) == 0:
-        full_dirty_data_fp = '../data/dirty_toy.csv'
-    elif int(s) % 4 == 1:
-        full_dirty_data_fp = '../data/dirty_airport_1.csv'
-    elif int(s) % 4 == 2:
-        full_dirty_data_fp = '../data/dirty_airport_2.csv'
-    elif int(s) % 4 == 3:
-        full_dirty_data_fp = '../data/dirty_omdb_3.csv'
-    elif int(s) % 4 == 0:
-        full_dirty_data_fp = '../data/dirty_omdb_4.csv'
+    if b_type == 'oracle':
+        p_max = 0.9
+    elif b_type == 'informed':
+        p_max = 0.9
     else:
-        print('there was a problem determining the master data filepath. defaulting to example scenario')
-        full_dirty_data_fp = '../data/dirty_toy.csv'
+        p_max = 0.5
+
+    # if int(s) == 0:
+    #     full_dirty_data_fp = '../data/dirty_toy.csv'
+    # elif int(s) % 4 == 1:
+    #     full_dirty_data_fp = '../data/dirty_airport_1.csv'
+    # elif int(s) % 4 == 2:
+    #     full_dirty_data_fp = '../data/dirty_airport_2.csv'
+    # elif int(s) % 4 == 3:
+    #     full_dirty_data_fp = '../data/dirty_omdb_3.csv'
+    # elif int(s) % 4 == 0:
+    #     full_dirty_data_fp = '../data/dirty_omdb_4.csv'
+    # else:
+    #     print('there was a problem determining the master data filepath. defaulting to example scenario')
+    #     full_dirty_data_fp = '../data/dirty_toy.csv'
+    #     s = '0'
+    if s is None:
         s = '0'
 
     # full_dirty_data = pd.read_csv(full_dirty_data_fp, keep_default_na=False)
@@ -76,11 +83,14 @@ def run(s, b_type, decision_type):
     scenario = scenarios[s]
     # h_space = scenario['hypothesis_space']
     target_fd = scenario['target_fd']
+    # target_fd = '(owner, ownertype) => type, manager'
     h_space = [s for s in scenario['hypothesis_space']]    # NOTE: for one-FD step only
 
     fd_metadata = dict()
     # X = set()
     # X_per_FD = dict()
+
+    iter_num = 0
     
     for h in h_space:
         if h['cfd'] != target_fd:
@@ -88,12 +98,27 @@ def run(s, b_type, decision_type):
         
         # X_per_FD[h['cfd']] = set()
         h['vio_pairs'] = set(tuple(vp) for vp in h['vio_pairs'])
+        # if b_type == 'informed':
+        #     mu = h['conf']
+        #     variance = 0.0025
+        #     alpha, beta = initialPrior(mu, variance)
+        # elif b_type == 'near-informed':
+        #     mu = 0.9 * h['conf']
+        #     variance = 0.01
+        #     alpha, beta = initialPrior(mu, variance)
+        # else:
+        #     alpha = 1
+        #     beta = 1
+        conf = 0
+        if b_type == 'oracle':
+            conf = next(i for i in scenario['clean_hypothesis_space'] if i['cfd'] == h['cfd'])['conf']
+            # mu = next(i for i in scenario['clean_hypothesis_space'] if i['cfd'] == h['cfd'])['conf']
+            # variance = 0.00000001
+            # alpha, beta = initialPrior(mu, variance)
+            # alpha = 1
+            # beta = 1
         if b_type == 'informed':
             mu = h['conf']
-            variance = 0.0025
-            alpha, beta = initialPrior(mu, variance)
-        elif b_type == 'near-informed':
-            mu = 0.9 * h['conf']
             variance = 0.01
             alpha, beta = initialPrior(mu, variance)
         else:
@@ -108,6 +133,9 @@ def run(s, b_type, decision_type):
             vios=h['vios'],
             vio_pairs=h['vio_pairs']
         )
+        print('iter:', iter_num)
+        print('alpha:', fd_m.alpha)
+        print('beta:', fd_m.beta)
         # for i in full_dirty_data.index:
         #     for j in full_dirty_data.index:
         #         if i == j:
@@ -175,6 +203,7 @@ def run(s, b_type, decision_type):
     iter_num = 0
 
     pruned_X = set()
+    marked_rows = set()
 
     while msg != '[DONE]':
         iter_num += 1
@@ -189,34 +218,30 @@ def run(s, b_type, decision_type):
                 continue
 
             # Step 1: update hyperparameters
-            successes_X = set()
-            failures_X = set()
+            if b_type != 'oracle':
+                successes_X = set()
+                failures_X = set()
 
-            print(fd_m.vio_pairs)
-            for (i, j) in sample_X:
-                print((i, j))
-                if (i, j) not in fd_m.vio_pairs:
-                    successes_X.add((i, j))
-                    print('success!')
-                else:
-                    failures_X.add((i, j))
-                    print('failure!')
+                for (i, j) in sample_X:
+                    if (i, j) not in fd_m.vio_pairs:
+                        successes_X.add((i, j))
+                    else:
+                        failures_X.add((i, j))
 
-            print('successes:', len(successes_X))
-            print('failures:', len(failures_X))
+                print('successes:', len(successes_X))
+                print('failures:', len(failures_X))
 
-            fd_m.alpha += len(successes_X)
-            fd_m.alpha_history.append(fd_m.alpha)
-            fd_m.beta += len(failures_X)
-            fd_m.beta_history.append(fd_m.beta)
-            print('alpha:', fd_m.alpha)
-            print('beta:', fd_m.beta)
+                fd_m.alpha += len(successes_X)
+                fd_m.alpha_history.append(fd_m.alpha)
+                fd_m.beta += len(failures_X)
+                fd_m.beta_history.append(fd_m.beta)
+                print('alpha:', fd_m.alpha)
+                print('beta:', fd_m.beta)
 
         # Step 2: mark errors according to new beliefs
-        # q_t = fd_m.alpha / (fd_m.alpha + fd_m.beta)
         # TODO: Upgrade q_t for consider multiple FDs
         fd_m = fd_metadata[target_fd]
-        q_t = fd_m.alpha / (fd_m.alpha + fd_m.beta)
+        q_t = fd_m.alpha / (fd_m.alpha + fd_m.beta) if b_type != 'oracle' else conf
         print('theta:', q_t)
         for row in data.keys():
             # for fd, fd_m in fd_metadata.items():      # NOTE: comment out temporarily
@@ -229,19 +254,25 @@ def run(s, b_type, decision_type):
                     decision = np.random.binomial(1, q_t)
                 else:
                     decision = 1 if q_t >= p_max else 0
+                
+                print(decision)
                 if decision == 1:
                     for col in feedbackMap[row].keys():
                         feedbackMap[row][col] = True
-                    for x in [i for i in sample_X if row in i]:
+                        marked_rows.add(int(row))
+                    for x in [i for i in sample_X if int(row) in i]:
                         pruned_X.add(x)
                 else:
                     for col in feedbackMap[row].keys():
                         feedbackMap[row][col] = False
-                    X_to_unprune = [x for x in pruned_X if row in x]
+                        if int(row) in marked_rows:
+                            marked_rows.remove(int(row))
+                    X_to_unprune = [x for x in pruned_X if int(row) in x]
                     for x in X_to_unprune:
                         pruned_X.remove(x)
+        print(marked_rows)
 
-
+        # print(feedbackMap)
         feedback = dict()
         for f in feedbackMap.keys():
             feedback[data[f]['id']] = feedbackMap[f]
@@ -255,8 +286,6 @@ def run(s, b_type, decision_type):
             if is_new_feedback is True:
                 break
         
-        # print('built new feedback map')
-
         formData = {
             'project_id': project_id,
             'feedback': json.dumps(feedback),
@@ -283,11 +312,6 @@ def run(s, b_type, decision_type):
                             data[row][j] = ''
                         elif type(data[row][j]) != 'str':
                             data[row][j] = str(data[row][j])
-                
-                # p_X = (math.factorial(len(sample_X)) * math.factorial(len(X) - len(sample_X))) / math.factorial(len(X))
-                # p_X = math.factorial(len(sample_X))
-                # for i in range(0, len(sample_X)):
-                #     p_X /= (len(X) - i)
 
         except Exception as e:
             print(e)
