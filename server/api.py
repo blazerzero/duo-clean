@@ -87,12 +87,14 @@ class Import(Resource):
         current_iter = 0
 
         # Initialize metadata objects
-        cell_metadata = dict()
+        interaction_metadata = dict()
+        interaction_metadata['feedback_history'] = dict()
+        interaction_metadata['sample_history'] = list()
         for idx in data.index:
-            cell_metadata[idx] = dict()
+            interaction_metadata['feedback_history'][int(idx)] = dict()
             for col in header:
-                cell_metadata[idx][col] = dict()
-                cell_metadata[idx][col]['feedback_history'] = list()
+                # interaction_metadata[idx][col] = dict()
+                interaction_metadata['feedback_history'][int(idx)][col] = list()
 
         X = set()
         
@@ -154,7 +156,7 @@ class Import(Resource):
         study_metrics['f1'] = list()
         pickle.dump( study_metrics, open(new_project_dir + '/study_metrics.p', 'wb') )
 
-        pickle.dump( cell_metadata, open(new_project_dir + '/cell_metadata.p', 'wb') )
+        pickle.dump( interaction_metadata, open(new_project_dir + '/interaction_metadata.p', 'wb') )
         pickle.dump( fd_metadata, open(new_project_dir + '/fd_metadata.p', 'wb') )
         pickle.dump( current_iter, open(new_project_dir + '/current_iter.p', 'wb') )
         pickle.dump( X, open(new_project_dir + '/X.p', 'wb') )
@@ -252,13 +254,13 @@ class Resume(Resource):
         s_out = data.loc[s_index, :]
 
         feedback = list()
-        cell_metadata = pickle.load( open('./store/' + project_id + '/cell_metadata.p', 'rb') )
+        interaction_metadata = pickle.load( open('./store/' + project_id + '/interaction_metadata.p', 'rb') )
         for idx in s_out.index:
             for col in s_out.columns:
                 feedback.append({
                     'row': idx,
                     'col': col,
-                    'marked': bool(cell_metadata[int(idx)][col]['feedback_history'][-1].marked) if len(cell_metadata[int(idx)][col]['feedback_history']) > 0 else False
+                    'marked': bool(interaction_metadata['feedback_history'][int(idx)][col][-1].marked) if len(interaction_metadata['feedback_history'][int(idx)][col]) > 0 else False
                 })
 
         print('*** Feedback object created ***')
@@ -355,13 +357,13 @@ class Clean(Resource):
 
         # Build feedback map for front-end
         feedback = list()
-        cell_metadata = pickle.load( open('./store/' + project_id + '/cell_metadata.p', 'rb') )
+        interaction_metadata = pickle.load( open('./store/' + project_id + '/interaction_metadata.p', 'rb') )
         for idx in s_out.index:
             for col in s_out.columns:
                 feedback.append({
                     'row': idx,
                     'col': col,
-                    'marked': bool(cell_metadata[int(idx)][col]['feedback_history'][-1].marked) if len(cell_metadata[int(idx)][col]['feedback_history']) > 0 else False
+                    'marked': bool(interaction_metadata['feedback_history'][int(idx)][col][-1].marked) if len(interaction_metadata['feedback_history'][int(idx)][col]) > 0 else False
                 })
 
         print('*** Feedback object created ***')

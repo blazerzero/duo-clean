@@ -54,15 +54,24 @@ class FDMeta(object):
 
 # RECORD USER FEEDBACK (FOR TRUE POS AND FALSE POS)
 def recordFeedback(data, feedback, project_id, current_iter, current_time):
-    cell_metadata = pickle.load( open('./store/' + project_id + '/cell_metadata.p', 'rb') )
+    interaction_metadata = pickle.load( open('./store/' + project_id + '/interaction_metadata.p', 'rb') )
     study_metrics = pickle.load( open('./store/' + project_id + '/study_metrics.p', 'rb') )
     start_time = pickle.load( open('./store/' + project_id + '/start_time.p', 'rb') )
 
     elapsed_time = current_time - start_time
 
-    for idx in feedback.index:
-        for col in feedback.columns:
-            cell_metadata[int(idx)][col]['feedback_history'].append(CellFeedback(iter_num=current_iter, marked=bool(feedback.at[idx, col]), elapsed_time=elapsed_time))
+    # for idx in feedback.index:
+    #     for col in feedback.columns:
+    for idx in data.index:
+        if str(idx) in feedback.index:
+            for col in data.columns:
+                interaction_metadata['feedback_history'][idx][col].append(CellFeedback(iter_num=current_iter, marked=bool(feedback.at[str(idx), col]), elapsed_time=elapsed_time))
+        else:
+            for col in data.columns:
+                interaction_metadata['feedback_history'][idx][col].append(CellFeedback(iter_num=current_iter, marked=interaction_metadata['feedback_history'][idx][col][-1].marked if current_iter > 1 else False, elapsed_time=elapsed_time))
+            
+
+    interaction_metadata['sample_history'].append(StudyMetric(iter_num=current_iter, value=[int(idx) for idx in feedback.index], elapsed_time=elapsed_time))
     print('*** Latest feedback saved ***')
             
     # scoring function: score based on number of true errors correctly identified
@@ -85,9 +94,9 @@ def recordFeedback(data, feedback, project_id, current_iter, current_time):
                     iter_errors_total += 1
                     if bool(feedback.at[str(idx), col]) is True:
                         iter_errors_found += 1
-                if len(cell_metadata[idx][col]['feedback_history']) > 0 and cell_metadata[idx][col]['feedback_history'][-1].marked is True:
+                if len(interaction_metadata['feedback_history'][int(idx)][col]) > 0 and interaction_metadata['feedback_history'][int(idx)][col][-1].marked is True:
                     all_errors_found += 1
-            if len(cell_metadata[idx][col]['feedback_history']) > 0 and cell_metadata[idx][col]['feedback_history'][-1].marked is True:
+            if len(interaction_metadata['feedback_history'][int(idx)][col]) > 0 and interaction_metadata['feedback_history'][int(idx)][col][-1].marked is True:
                 all_errors_marked += 1
                 if str(idx) in feedback.index:
                     iter_errors_marked += 1
@@ -100,8 +109,8 @@ def recordFeedback(data, feedback, project_id, current_iter, current_time):
         json.dump(project_info, f)
     print('*** Score saved ***')
 
-    pickle.dump( cell_metadata, open('./store/' + project_id + '/cell_metadata.p', 'wb') )
-    print('*** Cell metadata updates saved ***')
+    pickle.dump( interaction_metadata, open('./store/' + project_id + '/interaction_metadata.p', 'wb') )
+    print('*** Interaction metadata updates saved ***')
 
     if iter_errors_marked > 0:
         precision = iter_errors_found / iter_errors_marked
