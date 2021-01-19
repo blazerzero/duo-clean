@@ -219,21 +219,23 @@ def run(s, b_type, decision_type):
 
             # Step 1: update hyperparameters
             if b_type != 'oracle':
-                successes_X = set()
-                failures_X = set()
+                # successes_X = set()
+                # failures_X = set()
+                successes = 0
+                failures = 0
 
-                for (i, j) in sample_X:
-                    if (i, j) not in fd_m.vio_pairs:
-                        successes_X.add((i, j))
+                for i in sample.index:
+                    if i not in fd_m.vios:
+                        successes += 1
                     else:
-                        failures_X.add((i, j))
+                        failures += 1
 
-                print('successes:', len(successes_X))
-                print('failures:', len(failures_X))
+                print('successes:', successes)
+                print('failures:', failures)
 
-                fd_m.alpha += len(successes_X)
+                fd_m.alpha += successes
                 fd_m.alpha_history.append(fd_m.alpha)
-                fd_m.beta += len(failures_X)
+                fd_m.beta += failures
                 fd_m.beta_history.append(fd_m.beta)
                 print('alpha:', fd_m.alpha)
                 print('beta:', fd_m.beta)

@@ -99,12 +99,12 @@ class Import(Resource):
         X = set()
         
         fd_metadata = dict()
-        target_fd = scenario['target_fd']
+        # target_fd = scenario['target_fd']
         # target_fd = '(owner, ownertype) => type, manager'
         h_space = scenario['hypothesis_space']
         for h in h_space:
-            if h['cfd'] != target_fd:
-                continue
+            # if h['cfd'] != target_fd:
+            #     continue
 
             h['vio_pairs'] = set(tuple(vp) for vp in h['vio_pairs'])
             mu = h['conf']
@@ -117,7 +117,7 @@ class Import(Resource):
                 b=beta,
                 support=h['support'],
                 vios=h['vios'],
-                vio_pairs=h['vio_pairs']
+                vio_pairs=h['vio_pairs'],
             )
 
             print('iter: 0'),
@@ -151,9 +151,12 @@ class Import(Resource):
         current_iter += 1
 
         study_metrics = dict()
-        study_metrics['precision'] = list()
-        study_metrics['recall'] = list()
-        study_metrics['f1'] = list()
+        study_metrics['vio_precision'] = list()
+        study_metrics['vio_recall'] = list()
+        study_metrics['vio_f1'] = list()
+        study_metrics['err_precision'] = list()
+        study_metrics['err_recall'] = list()
+        study_metrics['err_f1'] = list()
         pickle.dump( study_metrics, open(new_project_dir + '/study_metrics.p', 'wb') )
 
         pickle.dump( interaction_metadata, open(new_project_dir + '/interaction_metadata.p', 'wb') )
@@ -310,14 +313,14 @@ class Clean(Resource):
             req = json.loads(request.data)
             # print(req)
             project_id = req['project_id']
-            feedback = req['feedback']
+            feedback_dict = req['feedback']
         else:
-            feedback = json.loads(request.form.get('feedback'))
+            feedback_dict = json.loads(request.form.get('feedback'))
 
         print(project_id)
         # print(feedback)
 
-        feedback = pd.DataFrame.from_dict(feedback, orient='index')
+        feedback = pd.DataFrame.from_dict(feedback_dict, orient='index')
         sample_size = 10
 
         print('*** Necessary objects loaded ***')
@@ -343,7 +346,7 @@ class Clean(Resource):
 
         s_in = data.iloc[feedback.index]
         print('*** Extracted sample from dataset ***')
-        helpers.recordFeedback(data, feedback, project_id, current_iter, current_time)
+        helpers.recordFeedback(data, feedback_dict, curr_sample_X, project_id, current_iter, current_time)
         target_fd = project_info['scenario']['target_fd'] # NOTE: For current sims only
         # target_fd = '(owner, ownertype) => type, manager'
         helpers.interpretFeedback(s_in, feedback, X, curr_sample_X, project_id, target_fd)

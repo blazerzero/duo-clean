@@ -51,33 +51,45 @@ class FDMeta(object):
         self.support = support
         self.vios = vios
         self.vio_pairs = vio_pairs
+        # self.alpha_err = alpha
+        # self.alpha_err_history = [alpha]
+        # self.beta_err = beta
+        # self.beta_err_history = [beta]
 
 # RECORD USER FEEDBACK (FOR TRUE POS AND FALSE POS)
-def recordFeedback(data, feedback, project_id, current_iter, current_time):
+def recordFeedback(data, feedback, vio_pairs, project_id, current_iter, current_time):
     interaction_metadata = pickle.load( open('./store/' + project_id + '/interaction_metadata.p', 'rb') )
     study_metrics = pickle.load( open('./store/' + project_id + '/study_metrics.p', 'rb') )
     start_time = pickle.load( open('./store/' + project_id + '/start_time.p', 'rb') )
+    fd_metadata = pickle.load( open('./store/' + project_id + '/fd_metadata.p', 'rb') )
 
     elapsed_time = current_time - start_time
 
     # for idx in feedback.index:
     #     for col in feedback.columns:
     for idx in data.index:
-        if str(idx) in feedback.index:
+        if str(idx) in feedback.keys():
             for col in data.columns:
-                interaction_metadata['feedback_history'][idx][col].append(CellFeedback(iter_num=current_iter, marked=bool(feedback.at[str(idx), col]), elapsed_time=elapsed_time))
+                interaction_metadata['feedback_history'][idx][col].append(CellFeedback(iter_num=current_iter, marked=bool(feedback[str(idx)][col]), elapsed_time=elapsed_time))
         else:
             for col in data.columns:
                 interaction_metadata['feedback_history'][idx][col].append(CellFeedback(iter_num=current_iter, marked=interaction_metadata['feedback_history'][idx][col][-1].marked if current_iter > 1 else False, elapsed_time=elapsed_time))
             
 
-    interaction_metadata['sample_history'].append(StudyMetric(iter_num=current_iter, value=[int(idx) for idx in feedback.index], elapsed_time=elapsed_time))
+    interaction_metadata['sample_history'].append(StudyMetric(iter_num=current_iter, value=[int(idx) for idx in feedback.keys()], elapsed_time=elapsed_time))
     print('*** Latest feedback saved ***')
             
     # scoring function: score based on number of true errors correctly identified
     with open('./store/' + project_id + '/project_info.json', 'r') as f:
         project_info = json.load(f)
         clean_dataset = pd.read_csv(project_info['scenario']['clean_dataset'], keep_default_na=False)
+    
+    all_vios_found = 0
+    all_vios_total = 0
+    # all_vios_marked = 0
+    iter_vios_found = 0
+    iter_vios_total = 0
+    iter_vios_marked = 0
     
     all_errors_found = 0
     all_errors_total = 0
@@ -86,19 +98,39 @@ def recordFeedback(data, feedback, project_id, current_iter, current_time):
     iter_errors_total = 0
     iter_errors_marked = 0
 
+    # TODO: Track vios caught in each iteration
+    for fd, fd_m in fd_metadata.items():
+        all_vios_total = len(fd_m.vio_pairs)
+        iter_vios_total = len([x for x in fd_m.vio_pairs if x in vio_pairs])
+        for (i, j) in vio_pairs:
+            if str(i) in feedback.keys() and str(j) in feedback.keys():
+                caught = True
+                for rh in fd_m.rhs:
+                    if feedback[str(i)][rh] is False and feedback[str(j)][rh] is False:
+                        caught = False
+                if caught is True:
+                    iter_vios_found += 1
+            caught = True
+            for rh in fd_m.rhs:
+                if interaction_metadata['feedback_history'][int(i)][rh][-1].marked is False and interaction_metadata['feedback_history'][int(j)][rh][-1].marked is True:
+                    caught = False
+            if caught is True:
+                all_vios_found += 1
+
+    # Track errors caught in each iteration
     for idx in data.index:
         for col in data.columns:
             if data.at[idx, col] != clean_dataset.at[idx, col]:
                 all_errors_total += 1
-                if str(idx) in feedback.index:
+                if str(idx) in feedback.keys():
                     iter_errors_total += 1
-                    if bool(feedback.at[str(idx), col]) is True:
+                    if bool(feedback[str(idx)][col]) is True:
                         iter_errors_found += 1
-                if len(interaction_metadata['feedback_history'][int(idx)][col]) > 0 and interaction_metadata['feedback_history'][int(idx)][col][-1].marked is True:
+                if interaction_metadata['feedback_history'][int(idx)][col][-1].marked is True:
                     all_errors_found += 1
-            if len(interaction_metadata['feedback_history'][int(idx)][col]) > 0 and interaction_metadata['feedback_history'][int(idx)][col][-1].marked is True:
+            if interaction_metadata['feedback_history'][int(idx)][col][-1].marked is True:
                 all_errors_marked += 1
-                if str(idx) in feedback.index:
+                if str(idx) in feedback.keys():
                     iter_errors_marked += 1
 
     print('*** Score updated ***')
@@ -112,24 +144,45 @@ def recordFeedback(data, feedback, project_id, current_iter, current_time):
     pickle.dump( interaction_metadata, open('./store/' + project_id + '/interaction_metadata.p', 'wb') )
     print('*** Interaction metadata updates saved ***')
 
-    if iter_errors_marked > 0:
-        precision = iter_errors_found / iter_errors_marked
+    # VIOLATIONS
+    # if iter_vios_marked > 0:
+    #     vio_precision = iter_vios_found / iter_vios_marked
+    # else:
+    #     vio_precision = 0
+    
+    if iter_vios_total > 0:
+        vio_recall = iter_vios_found / iter_vios_total
     else:
-        precision = 0
+        vio_recall = 0
+
+    if vio_precision > 0 and vio_recall > 0:
+        vio_f1 = 2 * (vio_precision * vio_recall) / (vio_precision + vio_recall)
+    else:
+        vio_f1 = 0
+
+    # ERRORS
+    if iter_errors_marked > 0:
+        err_precision = iter_errors_found / iter_errors_marked
+    else:
+        err_precision = 0
     
     if iter_errors_total > 0:
-        recall = iter_errors_found / iter_errors_total
+        err_recall = iter_errors_found / iter_errors_total
     else:
-        recall = 0
+        err_recall = 0
 
-    if precision > 0 and recall > 0:
-        f1 = 2 * (precision * recall) / (precision + recall)
+    if err_precision > 0 and err_recall > 0:
+        err_f1 = 2 * (err_precision * err_recall) / (err_precision + err_recall)
     else:
-        f1 = 0
+        err_f1 = 0
 
-    study_metrics['precision'].append(StudyMetric(iter_num=current_iter, value=precision, elapsed_time=elapsed_time))
-    study_metrics['recall'].append(StudyMetric(iter_num=current_iter, value=recall, elapsed_time=elapsed_time))
-    study_metrics['f1'].append(StudyMetric(iter_num=current_iter, value=f1, elapsed_time=elapsed_time))
+    # study_metrics['vio_precision'].append(StudyMetric(iter_num=current_iter, value=vio_precision, elapsed_time=elapsed_time))
+    study_metrics['vio_recall'].append(StudyMetric(iter_num=current_iter, value=vio_recall, elapsed_time=elapsed_time))
+    study_metrics['vio_f1'].append(StudyMetric(iter_num=current_iter, value=vio_f1, elapsed_time=elapsed_time))
+
+    study_metrics['err_precision'].append(StudyMetric(iter_num=current_iter, value=err_precision, elapsed_time=elapsed_time))
+    study_metrics['err_recall'].append(StudyMetric(iter_num=current_iter, value=err_recall, elapsed_time=elapsed_time))
+    study_metrics['err_f1'].append(StudyMetric(iter_num=current_iter, value=err_f1, elapsed_time=elapsed_time))
 
     pickle.dump( study_metrics, open('./store/' + project_id + '/study_metrics.p', 'wb') )
 
@@ -150,8 +203,9 @@ def interpretFeedback(s_in, feedback, X, sample_X, project_id, target_fd=None):
 
     # print(sample_X)
     pruned_s_in = s_in.drop([int(i) for i in pruned_rows])
+    pruned_sample_X = sample_X
     for row in pruned_rows:
-        sample_X = {x for x in sample_X if int(row) not in x}
+        pruned_sample_X = {x for x in pruned_sample_X if int(row) not in x}
         # print(sample_X)
 
     # print(len(X))
@@ -159,32 +213,36 @@ def interpretFeedback(s_in, feedback, X, sample_X, project_id, target_fd=None):
 
     # Calculate P(X | \theta_h) for each FD
     for fd, fd_m in fd_metadata.items():
-        if fd != target_fd:
+        if target_fd is not None and fd != target_fd:
             continue
         
-        successes_X = set()
-        failures_X = set()
+        # successes_X = set()
+        # failures_X = set()
+        successes = 0
+        failures = 0
 
         # print(fd_m.vio_pairs)
-        for (i, j) in sample_X:
+        # for (i, j) in sample_X:
             # print(x)
-            if (i, j) not in fd_m.vio_pairs:
-                successes_X.add((i, j))
+            # if (i, j) not in fd_m.vio_pairs:
+                # successes_X.add((i, j))
                 # print('success!')
-            else:
-                failures_X.add((i, j))
+            # else:
+                # failures_X.add((i, j))
                 # print('failure!')
 
-        print('successes:', len(successes_X))
-        print('failures:', len(failures_X))
-        # print('successes:', successes)
-        # print('failures:', failures)
+        # TODO: Success/failures calculation
+
+        # print('successes:', len(successes_X))
+        # print('failures:', len(failures_X))
+        print('successes:', successes)
+        print('failures:', failures)
                 
-        fd_m.alpha += len(successes_X)
-        # fd_m.alpha += successes
+        # fd_m.alpha += len(successes_X)
+        fd_m.alpha += successes
         fd_m.alpha_history.append(fd_m.alpha)
-        fd_m.beta += len(failures_X)
-        # fd_m.beta += failures
+        # fd_m.beta += len(failures_X)
+        fd_m.beta += failures
         fd_m.beta_history.append(fd_m.beta)
         print('alpha:', fd_m.alpha)
         print('beta:', fd_m.beta)
