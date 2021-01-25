@@ -278,8 +278,8 @@ def interpretFeedback(s_in, feedback, X, sample_X, project_id, current_iter, cur
 
     # Calculate P(X | \theta_h) for each FD
     for fd, fd_m in fd_metadata.items():
-        if target_fd is not None and fd != target_fd:
-            continue
+        # if target_fd is not None and fd != target_fd:
+        #     continue
         
         # successes_X = set()
         # failures_X = set()

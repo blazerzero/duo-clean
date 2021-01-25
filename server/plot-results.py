@@ -10,6 +10,8 @@ import math
 import scipy.stats as st
 import scipy.special as sc
 
+import helpers
+
 def derive_stats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty_dataset, clean_dataset):
     feedback_history = interaction_metadata['feedback_history']
     study_metrics['iter_vio_recall'] = list()
@@ -20,6 +22,27 @@ def derive_stats(interaction_metadata, fd_metadata, h_space, study_metrics, dirt
     study_metrics['all_err_precision'] = list()
     study_metrics['all_err_recall'] = list()
     study_metrics['all_err_f1'] = list()
+
+    for h in h_space:
+        if h['cfd'] not in fd_metadata.keys():
+            continue
+        mu = h['conf']
+        variance = 0.0025
+        alpha, beta = helpers.initialPrior(mu, variance)
+            # fd_metadata[h['cfd']] = dict()
+            # fd_metadata[h['cfd']]['lhs'] = h['cfd'].split(' => ')[0][1:-1].split(', ')
+            # fd_metadata[h['cfd']]['rhs'] = h['cfd'].split(' => ')[1].split(', ')
+            # print(h)
+            # fd_metadata[h['cfd']]['support'] = h['support']
+            # fd_metadata[h['cfd']]['vios'] = h['vios']
+            # fd_metadata[h['cfd']]['vio_pairs'] = h['vio_pairs']
+        fd_metadata[h['cfd']]['alpha'] = alpha
+        fd_metadata[h['cfd']]['beta'] = beta
+        fd_metadata[h['cfd']]['alpha_history'] = [{ 'iter_num': 0, 'value': alpha, 'elapsed_time': 0 }]
+        fd_metadata[h['cfd']]['beta_history'] = [{ 'iter_num': 0, 'value': beta, 'elapsed_time': 0 }]
+        conf = alpha / (alpha + beta)
+        fd_metadata[h['cfd']]['conf'] = conf
+        fd_metadata[h['cfd']]['conf_history'] = [{ 'iter_num': 0, 'value': conf, 'elapsed_time': 0 }]
 
     iters = range(1, len(interaction_metadata['sample_history'])+1)
     for i in iters:
@@ -39,10 +62,13 @@ def derive_stats(interaction_metadata, fd_metadata, h_space, study_metrics, dirt
         elapsed_time = interaction_metadata['sample_history'][i-1]['elapsed_time']
 
         feedback = dict()
+        marked_rows = set()
         for x in feedback_history.keys():
             feedback[x] = dict()
             for y in feedback_history[x].keys():
                 feedback[x][y] = feedback_history[x][y][i-1]['marked']
+                if feedback[x][y] is True and x not in marked_rows:
+                    marked_rows.add(x)
 
         for idx in dirty_dataset.index:
             for col in dirty_dataset.columns:
@@ -58,10 +84,48 @@ def derive_stats(interaction_metadata, fd_metadata, h_space, study_metrics, dirt
                     all_errors_marked += 1
                     if idx in sample:
                         iter_errors_marked += 1
+
+        marked_rows = [r for r in marked_rows]
         
         for h in h_space:
+            successes = 0
+            failures = 0
+
             fd = h['cfd']
-            # fd_m = fd_metadata[fd]
+            if fd not in fd_metadata.keys():
+                continue
+            fd_m = fd_metadata[fd]
+
+            removed_pairs = set()
+            sample_X_in_fd = {(x, y) for (x, y) in fd_m['vio_pairs'] if x in sample and y in sample}
+            for x, y in sample_X_in_fd:
+                if x in marked_rows or y in marked_rows:
+                    removed_pairs.add((x, y))
+            
+            for ix in sample:
+                if ix in marked_rows:
+                    continue
+                if i not in fd_m['vios']:
+                    successes += 1
+                else:
+                    if len([x for x in removed_pairs if ix in x]) > 0:
+                        successes += 1
+                    else:
+                        failures += 1
+
+            fd_m['alpha'] += successes
+            fd_m['beta'] += failures
+
+            # print(fd_m['alpha'])
+            # print(fd_m['beta'])
+            
+            fd_m['alpha_history'].append({ 'iter_num': i, 'value': fd_m['alpha'], 'elapsed_time': elapsed_time })
+            fd_m['beta_history'].append({ 'iter_num': i, 'value': fd_m['beta'], 'elapsed_time': elapsed_time })
+
+            fd_m['conf'] = fd_m['alpha'] / (fd_m['alpha'] + fd_m['beta'])
+            print(fd_m['conf'])
+            fd_m['conf_history'].append({ 'iter_num': i, 'value': fd_m['conf'], 'elapsed_time': elapsed_time })
+
             # print(h)
             if 'vio_pairs' not in h.keys():
                 continue
@@ -131,24 +195,24 @@ def derive_stats(interaction_metadata, fd_metadata, h_space, study_metrics, dirt
         study_metrics['all_err_f1'].append({ 'iter_num': int(i), 'value': all_err_f1, 'elapsed_time': elapsed_time })
         study_metrics['iter_vio_recall'].append({ 'iter_num': int(i), 'value': iter_vio_recall, 'elapsed_time': elapsed_time })
         study_metrics['all_vio_recall'].append({ 'iter_num': int(i), 'value': all_vio_recall, 'elapsed_time': elapsed_time})
-    return study_metrics
+    return study_metrics, fd_metadata
 
-def derive_conf(fd_metadata, study_metrics):
-    for fd_m in fd_metadata.values():
-        fd_m['conf'] = fd_m['alpha'] / (fd_m['alpha'] + fd_m['beta'])
-        fd_m['conf_history'] = list()
-        for i in range(0, len(fd_m['alpha_history'])):
-            alpha = fd_m['alpha_history'][i]
-            beta = fd_m['beta_history'][i]
-            if i == 0:
-                iter_num = 0
-                elapsed_time = 0.0
-            else:
-                iter_num = study_metrics['iter_err_precision'][i-1]['iter_num']
-                elapsed_time = study_metrics['iter_err_precision'][i-1]['elapsed_time']
-            conf = alpha / (alpha + beta)
-            fd_m['conf_history'].append({ 'iter_num': iter_num, 'value': conf, 'elapsed_time': elapsed_time })
-    return fd_metadata
+# def derive_conf(fd_metadata, study_metrics):
+#     for fd_m in fd_metadata.values():
+#         fd_m['conf'] = fd_m['alpha'] / (fd_m['alpha'] + fd_m['beta'])
+#         fd_m['conf_history'] = list()
+#         for i in range(0, len(fd_m['alpha_history'])):
+#             alpha = fd_m['alpha_history'][i]
+#             beta = fd_m['beta_history'][i]
+#             if i == 0:
+#                 iter_num = 0
+#                 elapsed_time = 0.0
+#             else:
+#                 iter_num = study_metrics['iter_err_precision'][i-1]['iter_num']
+#                 elapsed_time = study_metrics['iter_err_precision'][i-1]['elapsed_time']
+#             conf = alpha / (alpha + beta)
+#             fd_m['conf_history'].append({ 'iter_num': iter_num, 'value': conf, 'elapsed_time': elapsed_time })
+#     return fd_metadata
 
 def calc_conf_distance(fd_metadata, h_space, study_metrics):
     conf_distance = dict()
@@ -157,6 +221,7 @@ def calc_conf_distance(fd_metadata, h_space, study_metrics):
         true_conf = next(f for f in h_space if f['cfd'] == fd)['conf']
         times = list()
         for conf_d in fd_m['conf_history']:
+            # print(conf_d)
             iter_num = conf_d['iter_num']
             elapsed_time = conf_d['elapsed_time']
             times.append(elapsed_time)
@@ -200,6 +265,9 @@ def plot_results(run_type, project_ids, x_axis):
     ax9.set_ylim([0, 1])
     ax10.set_ylim([0, 1])
 
+    # with open('./scenarios.json', 'r') as f:
+    #     scenarios = json.load(f)
+
     for project_id in project_ids:
         pathstart = './docker-out/' if run_type == 'real' else './store/'
 
@@ -217,7 +285,7 @@ def plot_results(run_type, project_ids, x_axis):
         h_space = project_info['scenario']['hypothesis_space']
         clean_h_space = project_info['scenario']['clean_hypothesis_space']
         if len([k for k in study_metrics.keys() if 'iter' in k]) == 0:
-            study_metrics = derive_stats(
+            study_metrics, fd_metadata = derive_stats(
                 interaction_metadata,
                 fd_metadata,
                 h_space,
@@ -228,8 +296,8 @@ def plot_results(run_type, project_ids, x_axis):
             study_metrics['iter_err_precision'] = study_metrics.pop('precision')
             study_metrics['iter_err_recall'] = study_metrics.pop('recall')
             study_metrics['iter_err_f1'] = study_metrics.pop('f1')
-        if 'iter_conf' not in fd_metadata.keys():
-            fd_metadata = derive_conf(fd_metadata, study_metrics)
+        # if 'iter_conf' not in fd_metadata.keys():
+        #     fd_metadata = derive_conf(fd_metadata, study_metrics)
 
         conf_distance, avg_conf_distance = calc_conf_distance(fd_metadata, clean_h_space, study_metrics)
 

@@ -351,7 +351,8 @@ class Clean(Resource):
         helpers.recordFeedback(data, feedback_dict, curr_sample_X, project_id, current_iter, current_time)
         target_fd = project_info['scenario']['target_fd'] # NOTE: For current sims only
         # target_fd = '(owner, ownertype) => type, manager'
-        helpers.interpretFeedback(s_in, feedback, X, curr_sample_X, project_id, current_iter, current_time, target_fd)
+        # helpers.interpretFeedback(s_in, feedback, X, curr_sample_X, project_id, current_iter, current_time, target_fd)
+        helpers.interpretFeedback(s_in, feedback, X, curr_sample_X, project_id, current_iter, current_time)
         print('*** FD weights updated ***')
 
         current_iter += 1
