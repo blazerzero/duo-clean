@@ -76,11 +76,11 @@ if __name__ == '__main__':
             # h['conf'] = (len(all_pairs) - len(vio_pairs)) / len(all_pairs)
             h['conf'] = (len(support) - len(vios)) / len(support)
             # print(h['conf'])
-            if h['conf'] <= 0.95:
-                h['support'] = support
-                h['vios'] = vios
-                # h['all_pairs'] = all_pairs
-                h['vio_pairs'] = vio_pairs
+            # if h['conf'] <= 0.95:
+            h['support'] = support
+            h['vios'] = vios
+            # h['all_pairs'] = all_pairs
+            h['vio_pairs'] = vio_pairs
             h_space.append(h)
 
         # print(h_space)

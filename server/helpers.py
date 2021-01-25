@@ -22,6 +22,13 @@ class CellFeedback(object):
         self.marked = marked            # whether or not the user marked the cell as noisy in this iteration
         self.elapsed_time = elapsed_time
 
+    def asdict(self):
+        return {
+            'iter_num': self.iter_num,
+            'marked': self.marked,
+            'elapsed_time': self.elapsed_time
+        }
+
 class CFDWeightHistory(object):
     def __init__(self, iter_num, weight, elapsed_time):
         self.iter_num = iter_num
@@ -40,21 +47,51 @@ class StudyMetric(object):
         self.value = value
         self.elapsed_time = elapsed_time
 
+    def asdict(self):
+        return {
+            'iter_num': self.iter_num,
+            'value': self.value,
+            'elapsed_time': self.elapsed_time
+        }
+
 class FDMeta(object):
     def __init__(self, fd, a, b, support, vios, vio_pairs):
         self.lhs = fd.split(' => ')[0][1:-1].split(', ')
         self.rhs = fd.split(' => ')[1].split(', ')
         self.alpha = a
-        self.alpha_history = [a]
+        self.alpha_history = [StudyMetric(iter_num=0, value=self.alpha, elapsed_time=0)]
         self.beta = b
-        self.beta_history = [b]
+        self.beta_history = [StudyMetric(iter_num=0, value=self.beta, elapsed_time=0)]
+        self.conf = (a / (a+b))
+        self.conf_history = [StudyMetric(iter_num=0, value=self.conf, elapsed_time=0)]
         self.support = support
         self.vios = vios
         self.vio_pairs = vio_pairs
+        # self.all_vios_found_history = []
+        # self.iter_vios_found_history = []
+        # self.iter_vios_total_history = []
         # self.alpha_err = alpha
         # self.alpha_err_history = [alpha]
         # self.beta_err = beta
         # self.beta_err_history = [beta]
+    
+    def asdict(self):
+        print([list(vp) for vp in self.vio_pairs])
+        return {
+            'lhs': self.lhs,
+            'rhs': self.rhs,
+            'alpha': self.alpha,
+            'alpha_history': self.alpha_history,
+            'beta': self.beta,
+            'beta_history': self.beta_history,
+            'support': self.support,
+            'vios': self.vios,
+            'vio_pairs': [list(vp) for vp in self.vio_pairs],
+            # 'all_vios_found_history': [a.asdict() for a in self.all_vios_found_history],
+            # 'iter_vios_found_history': [i.asdict() for i in self.iter_vios_found_history],
+            # 'iter_vios_total_history': [i.asdict() for i in self.iter_vios_total_history]
+        }
+
 
 # RECORD USER FEEDBACK (FOR TRUE POS AND FALSE POS)
 def recordFeedback(data, feedback, vio_pairs, project_id, current_iter, current_time):
@@ -84,12 +121,11 @@ def recordFeedback(data, feedback, vio_pairs, project_id, current_iter, current_
         project_info = json.load(f)
         clean_dataset = pd.read_csv(project_info['scenario']['clean_dataset'], keep_default_na=False)
     
-    all_vios_found = 0
-    all_vios_total = 0
+    all_vios_found = set()
+    all_vios_total = set()
     # all_vios_marked = 0
-    iter_vios_found = 0
-    iter_vios_total = 0
-    iter_vios_marked = 0
+    iter_vios_found = set()
+    iter_vios_total = set()
     
     all_errors_found = 0
     all_errors_total = 0
@@ -98,24 +134,28 @@ def recordFeedback(data, feedback, vio_pairs, project_id, current_iter, current_
     iter_errors_total = 0
     iter_errors_marked = 0
 
-    # TODO: Track vios caught in each iteration
-    for fd, fd_m in fd_metadata.items():
-        all_vios_total = len(fd_m.vio_pairs)
-        iter_vios_total = len([x for x in fd_m.vio_pairs if x in vio_pairs])
-        for (i, j) in vio_pairs:
+    # Track vios caught in each iteration
+    for fd_m in fd_metadata.values():
+        fd_m.all_vios_found_history.append(StudyMetric(iter_num=current_iter, value=0, elapsed_time=elapsed_time))
+        fd_m.iter_vios_found_history.append(StudyMetric(iter_num=current_iter, value=0, elapsed_time=elapsed_time))
+        fd_m.iter_vios_total_history.append(StudyMetric(iter_num=current_iter, value=0, elapsed_time=elapsed_time))
+        
+        all_vios_total |= fd_m.vio_pairs
+        for i, j in fd_m.vio_pairs:
             if str(i) in feedback.keys() and str(j) in feedback.keys():
-                caught = True
-                for rh in fd_m.rhs:
-                    if feedback[str(i)][rh] is False and feedback[str(j)][rh] is False:
-                        caught = False
-                if caught is True:
-                    iter_vios_found += 1
+                iter_vios_total.add((i, j))
+                fd_m.iter_vios_total_history[-1].value += 1
             caught = True
             for rh in fd_m.rhs:
-                if interaction_metadata['feedback_history'][int(i)][rh][-1].marked is False and interaction_metadata['feedback_history'][int(j)][rh][-1].marked is True:
+                if feedback[str(i)][rh] is False and feedback[str(j)][rh] is False:
                     caught = False
+                    break
             if caught is True:
-                all_vios_found += 1
+                all_vios_found.add((i, j))
+                fd_m.all_vios_found_history[-1].value += 1
+                if str(i) in feedback.keys() and str(j) in feedback.keys():
+                    iter_vios_found.add((i, j))
+                    fd_m.iter_vios_found_history[-1].value += 1
 
     # Track errors caught in each iteration
     for idx in data.index:
@@ -150,62 +190,87 @@ def recordFeedback(data, feedback, vio_pairs, project_id, current_iter, current_
     # else:
     #     vio_precision = 0
     
-    if iter_vios_total > 0:
-        vio_recall = iter_vios_found / iter_vios_total
+    if len(iter_vios_total) > 0:
+        iter_vio_recall = len(iter_vios_found) / len(iter_vios_total)
     else:
-        vio_recall = 0
+        iter_vio_recall = 0
 
-    if vio_precision > 0 and vio_recall > 0:
-        vio_f1 = 2 * (vio_precision * vio_recall) / (vio_precision + vio_recall)
+    if len(all_vios_total) > 0:
+        all_vio_recall = len(all_vios_found) / len(all_vios_total)
     else:
-        vio_f1 = 0
+        all_vio_recall = 0
+
+    # if vio_precision > 0 and vio_recall > 0:
+    #     vio_f1 = 2 * (vio_precision * vio_recall) / (vio_precision + vio_recall)
+    # else:
+    #     vio_f1 = 0
 
     # ERRORS
     if iter_errors_marked > 0:
-        err_precision = iter_errors_found / iter_errors_marked
+        iter_err_precision = iter_errors_found / iter_errors_marked
     else:
-        err_precision = 0
+        iter_err_precision = 0
     
     if iter_errors_total > 0:
-        err_recall = iter_errors_found / iter_errors_total
+        iter_err_recall = iter_errors_found / iter_errors_total
     else:
-        err_recall = 0
+        iter_err_recall = 0
 
-    if err_precision > 0 and err_recall > 0:
-        err_f1 = 2 * (err_precision * err_recall) / (err_precision + err_recall)
+    if iter_err_precision > 0 and iter_err_recall > 0:
+        iter_err_f1 = 2 * (iter_err_precision * iter_err_recall) / (iter_err_precision + iter_err_recall)
     else:
-        err_f1 = 0
+        iter_err_f1 = 0
+
+    if all_errors_marked > 0:
+        all_err_precision = all_errors_found / all_errors_marked
+    else:
+        all_err_precision = 0
+    
+    if all_errors_total > 0:
+        all_err_recall = all_errors_found / all_errors_total
+    else:
+        all_err_recall = 0
+
+    if all_err_precision > 0 and all_err_recall > 0:
+        all_err_f1 = 2 * (all_err_precision * all_err_recall) / (all_err_precision + all_err_recall)
+    else:
+        all_err_f1 = 0
 
     # study_metrics['vio_precision'].append(StudyMetric(iter_num=current_iter, value=vio_precision, elapsed_time=elapsed_time))
-    study_metrics['vio_recall'].append(StudyMetric(iter_num=current_iter, value=vio_recall, elapsed_time=elapsed_time))
-    study_metrics['vio_f1'].append(StudyMetric(iter_num=current_iter, value=vio_f1, elapsed_time=elapsed_time))
+    study_metrics['iter_vio_recall'].append(StudyMetric(iter_num=current_iter, value=iter_vio_recall, elapsed_time=elapsed_time))
+    study_metrics['all_vio_recall'].append(StudyMetric(iter_num=current_iter, value=all_vio_recall, elapsed_time=elapsed_time))
+    # study_metrics['vio_f1'].append(StudyMetric(iter_num=current_iter, value=vio_f1, elapsed_time=elapsed_time))
 
-    study_metrics['err_precision'].append(StudyMetric(iter_num=current_iter, value=err_precision, elapsed_time=elapsed_time))
-    study_metrics['err_recall'].append(StudyMetric(iter_num=current_iter, value=err_recall, elapsed_time=elapsed_time))
-    study_metrics['err_f1'].append(StudyMetric(iter_num=current_iter, value=err_f1, elapsed_time=elapsed_time))
+    study_metrics['iter_err_precision'].append(StudyMetric(iter_num=current_iter, value=iter_err_precision, elapsed_time=elapsed_time))
+    study_metrics['iter_err_recall'].append(StudyMetric(iter_num=current_iter, value=iter_err_recall, elapsed_time=elapsed_time))
+    study_metrics['iter_err_f1'].append(StudyMetric(iter_num=current_iter, value=iter_err_f1, elapsed_time=elapsed_time))
+    study_metrics['all_err_precision'].append(StudyMetric(iter_num=current_iter, value=all_err_precision, elapsed_time=elapsed_time))
+    study_metrics['all_err_recall'].append(StudyMetric(iter_num=current_iter, value=all_err_recall, elapsed_time=elapsed_time))
+    study_metrics['all_err_f1'].append(StudyMetric(iter_num=current_iter, value=all_err_f1, elapsed_time=elapsed_time))
 
     pickle.dump( study_metrics, open('./store/' + project_id + '/study_metrics.p', 'wb') )
 
 # INTERPRET USER FEEDBACK AND UPDATE PROBABILITIES
-def interpretFeedback(s_in, feedback, X, sample_X, project_id, target_fd=None):
+def interpretFeedback(s_in, feedback, X, sample_X, project_id, current_iter, current_time, target_fd=None):
     fd_metadata = pickle.load( open('./store/' + project_id + '/fd_metadata.p', 'rb') )
-    # start_time = pickle.load( open('./store/' + project_id + '/start_time.p', 'rb') )
+    start_time = pickle.load( open('./store/' + project_id + '/start_time.p', 'rb') )
 
+    elapsed_time = current_time - start_time
     # Remove marked cells from consideration
     # print(feedback)
     print('*** about to interpret feedback ***')
-    pruned_rows = list()
+    marked_rows = list()
     for idx in feedback.index:
         for col in feedback.columns:
             if bool(feedback.at[idx, col]) is True:
-                pruned_rows.append(idx)
+                marked_rows.append(int(idx))
                 break
 
     # print(sample_X)
-    pruned_s_in = s_in.drop([int(i) for i in pruned_rows])
-    pruned_sample_X = sample_X
-    for row in pruned_rows:
-        pruned_sample_X = {x for x in pruned_sample_X if int(row) not in x}
+    # pruned_s_in = s_in.drop([int(i) for i in pruned_rows])
+    # pruned_sample_X = sample_X
+    # for row in pruned_rows:
+    #     pruned_sample_X = {x for x in pruned_sample_X if int(row) not in x}
         # print(sample_X)
 
     # print(len(X))
@@ -221,17 +286,22 @@ def interpretFeedback(s_in, feedback, X, sample_X, project_id, target_fd=None):
         successes = 0
         failures = 0
 
-        # print(fd_m.vio_pairs)
-        # for (i, j) in sample_X:
-            # print(x)
-            # if (i, j) not in fd_m.vio_pairs:
-                # successes_X.add((i, j))
-                # print('success!')
-            # else:
-                # failures_X.add((i, j))
-                # print('failure!')
+        removed_pairs = set()
+        sample_X_in_fd = {x for x in sample_X if x in fd_m.vio_pairs}
+        for x, y in sample_X_in_fd:
+            if x in marked_rows or y in marked_rows:
+                removed_pairs.add((x, y))
 
-        # TODO: Success/failures calculation
+        for i in s_in.index:
+            if i in marked_rows:
+                continue
+            if i not in fd_m.vios:  # tuple is clean
+                successes += 1
+            else:
+                if len([x for x in removed_pairs if i in x]) > 0:   # tuple is dirty but it's part of a vio that the user caught (i.e. they marked the wrong tuple as the error but still found the vio)
+                    successes += 1
+                else:   # tuple is dirty and they missed the vio, or the vio isn't in a pair in the sample
+                    failures += 1
 
         # print('successes:', len(successes_X))
         # print('failures:', len(failures_X))
@@ -240,13 +310,15 @@ def interpretFeedback(s_in, feedback, X, sample_X, project_id, target_fd=None):
                 
         # fd_m.alpha += len(successes_X)
         fd_m.alpha += successes
-        fd_m.alpha_history.append(fd_m.alpha)
+        fd_m.alpha_history.append(StudyMetric(iter_num=current_iter, value=fd_m.alpha, elapsed_time=elapsed_time))
         # fd_m.beta += len(failures_X)
         fd_m.beta += failures
-        fd_m.beta_history.append(fd_m.beta)
+        fd_m.beta_history.append(StudyMetric(iter_num=current_iter, value=fd_m.beta, elapsed_time=elapsed_time))
         print('alpha:', fd_m.alpha)
         print('beta:', fd_m.beta)
-        print('theta:', fd_m.alpha / (fd_m.alpha + fd_m.beta))
+        fd_m.conf = fd_m.alpha / (fd_m.alpha + fd_m.beta)
+        fd_m.conf_history.append(StudyMetric(iter_num=current_iter, value=fd_m.conf, elapsed_time=elapsed_time))
+        print('conf:', fd_m.conf)
 
     pickle.dump( fd_metadata, open('./store/' + project_id + '/fd_metadata.p', 'wb') )
 

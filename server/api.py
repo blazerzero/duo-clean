@@ -151,12 +151,14 @@ class Import(Resource):
         current_iter += 1
 
         study_metrics = dict()
-        study_metrics['vio_precision'] = list()
-        study_metrics['vio_recall'] = list()
-        study_metrics['vio_f1'] = list()
-        study_metrics['err_precision'] = list()
-        study_metrics['err_recall'] = list()
-        study_metrics['err_f1'] = list()
+        study_metrics['iter_vio_recall'] = list()
+        study_metrics['all_vio_recall'] = list()
+        study_metrics['iter_err_precision'] = list()
+        study_metrics['iter_err_recall'] = list()
+        study_metrics['iter_err_f1'] = list()
+        study_metrics['all_err_precision'] = list()
+        study_metrics['all_err_recall'] = list()
+        study_metrics['all_err_f1'] = list()
         pickle.dump( study_metrics, open(new_project_dir + '/study_metrics.p', 'wb') )
 
         pickle.dump( interaction_metadata, open(new_project_dir + '/interaction_metadata.p', 'wb') )
@@ -349,7 +351,7 @@ class Clean(Resource):
         helpers.recordFeedback(data, feedback_dict, curr_sample_X, project_id, current_iter, current_time)
         target_fd = project_info['scenario']['target_fd'] # NOTE: For current sims only
         # target_fd = '(owner, ownertype) => type, manager'
-        helpers.interpretFeedback(s_in, feedback, X, curr_sample_X, project_id, target_fd)
+        helpers.interpretFeedback(s_in, feedback, X, curr_sample_X, project_id, current_iter, current_time, target_fd)
         print('*** FD weights updated ***')
 
         current_iter += 1
