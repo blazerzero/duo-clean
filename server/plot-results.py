@@ -48,8 +48,10 @@ def derive_stats(interaction_metadata, fd_metadata, h_space, study_metrics, dirt
     for i in iters:
         all_vios_found = set()
         all_vios_total = set()
+        all_vios_marked = set()
         iter_vios_found = set()
         iter_vios_total = set()
+        iter_vios_marked = set()
 
         all_errors_found = 0
         all_errors_total = 0
@@ -123,7 +125,7 @@ def derive_stats(interaction_metadata, fd_metadata, h_space, study_metrics, dirt
             fd_m['beta_history'].append({ 'iter_num': i, 'value': fd_m['beta'], 'elapsed_time': elapsed_time })
 
             fd_m['conf'] = fd_m['alpha'] / (fd_m['alpha'] + fd_m['beta'])
-            print(fd_m['conf'])
+            # print(fd_m['conf'])
             fd_m['conf_history'].append({ 'iter_num': i, 'value': fd_m['conf'], 'elapsed_time': elapsed_time })
 
             # print(h)
@@ -135,8 +137,9 @@ def derive_stats(interaction_metadata, fd_metadata, h_space, study_metrics, dirt
             
             all_vios_total |= set([tuple(vp) for vp in vio_pairs])
             for x, y in vio_pairs:
-                if x in sample and y in sample:
-                    iter_vios_total.add((x, y))
+                if x not in sample or y not in sample:
+                    continue
+                iter_vios_total.add((x, y))
                 caught = True
                 for rh in rhs:
                     if feedback[str(x)][rh] is False and feedback[str(y)][rh] is False:
@@ -144,9 +147,13 @@ def derive_stats(interaction_metadata, fd_metadata, h_space, study_metrics, dirt
                         break
                 if caught is True:
                     all_vios_found.add((x, y))
-                    if x in sample and y in sample:
-                        iter_vios_found.add((x, y))
+                    iter_vios_found.add((x, y))
 
+        print(iter_vios_total)
+        print(iter_vios_found)
+        print(all_vios_total)
+        print(all_vios_found, '\n')
+        
         if len(iter_vios_total) > 0:
             iter_vio_recall = len(iter_vios_found) / len(iter_vios_total)
         else:
@@ -186,6 +193,15 @@ def derive_stats(interaction_metadata, fd_metadata, h_space, study_metrics, dirt
             all_err_f1 = 2 * (all_err_precision * all_err_recall) / (all_err_precision + all_err_recall)
         else:
             all_err_f1 = 0
+
+        print(iter_err_precision)
+        print(iter_err_recall)
+        print(iter_err_f1)
+        print(all_err_precision)
+        print(all_err_recall)
+        print(all_err_f1)
+        print(iter_vio_recall)
+        print(all_vio_recall, '\n')
 
         study_metrics['iter_err_precision'].append({ 'iter_num': int(i), 'value': iter_err_precision, 'elapsed_time': elapsed_time })
         study_metrics['iter_err_recall'].append({ 'iter_num': int(i), 'value': iter_err_recall, 'elapsed_time': elapsed_time })

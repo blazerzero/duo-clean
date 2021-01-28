@@ -19,6 +19,7 @@ class Import extends Component {
       scenarioID: '',
       projectID: '',
       isProcessing: false,
+      name: ''
     }
   }
 
@@ -26,8 +27,9 @@ class Import extends Component {
     if (this.state.scenarioID.length > 0 && this.state.projectID.length === 0) {
       this.setState({ isProcessing: true });
       const formData = new FormData();
+      formData.append('name', this.state.name);
       formData.append('scenario_id', this.state.scenarioID);
-      axios.post('http://167.71.155.153:5000/duo/api/import', formData)
+      axios.post('http://localhost:5000/duo/api/import', formData)
         .then(response => {
           this.setState({ isProcessing: false });
           var { header, project_id, msg, scenario_desc } = JSON.parse(response.data);
@@ -51,7 +53,7 @@ class Import extends Component {
       this.setState({ isProcessing: true });
       const formData = new FormData();
       formData.append('project_id', this.state.projectID);
-      axios.post('http://167.71.155.153:5000/duo/api/resume', formData)
+      axios.post('http://localhost:5000/duo/api/resume', formData)
         .then(response => {
           this.setState({ isProcessing: false });
           var { header, msg, scenario_id, scenario_desc, sample, true_pos, false_pos, feedback } = JSON.parse(response.data);
@@ -81,6 +83,12 @@ class Import extends Component {
       alert('Please make sure you\'ve filled out the form correctly.');
     }
   };
+
+  _handleNameChange = (event) => {
+    console.log(event.target.value);
+    var name = event.target.value;
+    this.setState({ name });
+  }
 
   _handleScenarioIDChange = (event) => {
     console.log(event.target.value);
@@ -121,6 +129,18 @@ class Import extends Component {
                 <Row className='content-centered small'>
                   <InputGroup>
                     <InputGroup.Prepend>
+                      <InputGroup.Text>Name: </InputGroup.Text>
+                    </InputGroup.Prepend>
+                    <Form.Control
+                      type='text'
+                      aria-label='Enter your name here.'
+                      required
+                      feedback='You must enter your name.'
+                      onChange={this._handleNameChange}
+                      />
+                  </InputGroup>
+                  <InputGroup>
+                    <InputGroup.Prepend>
                       <InputGroup.Text>Scenario ID: </InputGroup.Text>
                     </InputGroup.Prepend>
                     <Form.Control
@@ -132,7 +152,6 @@ class Import extends Component {
                       />
                   </InputGroup>
                 </Row>
-                <br />
                 <Row className='content-centered'>
                   <div className='home-header box-blur'>
                     <span>OR, IF YOU'RE RETURNING TO AN INTERACTION</span>

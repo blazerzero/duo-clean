@@ -27,3 +27,6 @@ server/results/
 server/analysis-results/
 server/analyze-out-1.txt
 server/analyze-out.txt
+server/docker-out/
+server/plots/0*
+server/plots/cumulative*

@@ -67,9 +67,9 @@ class FDMeta(object):
         self.support = support
         self.vios = vios
         self.vio_pairs = vio_pairs
-        # self.all_vios_found_history = []
-        # self.iter_vios_found_history = []
-        # self.iter_vios_total_history = []
+        self.all_vios_found_history = []
+        self.iter_vios_found_history = []
+        self.iter_vios_total_history = []
         # self.alpha_err = alpha
         # self.alpha_err_history = [alpha]
         # self.beta_err = beta
@@ -134,6 +134,8 @@ def recordFeedback(data, feedback, vio_pairs, project_id, current_iter, current_
     iter_errors_total = 0
     iter_errors_marked = 0
 
+    print(feedback)
+
     # Track vios caught in each iteration
     for fd_m in fd_metadata.values():
         fd_m.all_vios_found_history.append(StudyMetric(iter_num=current_iter, value=0, elapsed_time=elapsed_time))
@@ -142,9 +144,10 @@ def recordFeedback(data, feedback, vio_pairs, project_id, current_iter, current_
         
         all_vios_total |= fd_m.vio_pairs
         for i, j in fd_m.vio_pairs:
-            if str(i) in feedback.keys() and str(j) in feedback.keys():
-                iter_vios_total.add((i, j))
-                fd_m.iter_vios_total_history[-1].value += 1
+            if str(i) not in feedback.keys() or str(j) not in feedback.keys():
+                continue
+            iter_vios_total.add((i, j))
+            fd_m.iter_vios_total_history[-1].value += 1
             caught = True
             for rh in fd_m.rhs:
                 if feedback[str(i)][rh] is False and feedback[str(j)][rh] is False:
@@ -564,6 +567,8 @@ def buildCompositionSpace(fds, h_space, dirty_data, clean_data, min_conf, max_an
     return composition_space
 
 def initialPrior(mu, variance):
+    if mu == 1:
+        mu = 0.9999
     beta = (1 - mu) * ((mu * (1 - mu) / variance) - 1)
     alpha = (mu * beta) / (1 - mu)
     return alpha, beta
