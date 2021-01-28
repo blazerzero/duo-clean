@@ -9,7 +9,7 @@
     "@types/chance": "^1.1.1",
     "@types/mathjs": "^6.0.9",
     "array-means": "^2.0.0",
-    "axios": "^0.21.0",
+    "axios": "^0.21.1",
     "chance": "^1.1.7",
     "csv-parser": "^2.3.4",
     "express": "^4.17.1",
