@@ -156,9 +156,8 @@ def recordFeedback(data, feedback, vio_pairs, project_id, current_iter, current_
             if caught is True:
                 all_vios_found.add((i, j))
                 fd_m.all_vios_found_history[-1].value += 1
-                if str(i) in feedback.keys() and str(j) in feedback.keys():
-                    iter_vios_found.add((i, j))
-                    fd_m.iter_vios_found_history[-1].value += 1
+                iter_vios_found.add((i, j))
+                fd_m.iter_vios_found_history[-1].value += 1
 
     # Track errors caught in each iteration
     for idx in data.index:
@@ -571,7 +570,7 @@ def initialPrior(mu, variance):
         mu = 0.9999
     beta = (1 - mu) * ((mu * (1 - mu) / variance) - 1)
     alpha = (mu * beta) / (1 - mu)
-    return alpha, beta
+    return abs(alpha), abs(beta)
 
 def getPairs(data, support, vios, fd):
     vio_pairs = set()

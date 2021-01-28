@@ -126,6 +126,7 @@ class Import(Resource):
             print('iter: 0'),
             print('alpha:', fd_m.alpha)
             print('beta:', fd_m.beta)
+            print('conf:', h['conf'])
 
             for i in data.index:
                 for j in data.index:
