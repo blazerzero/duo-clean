@@ -166,11 +166,13 @@ def recordFeedback(data, feedback, vio_pairs, project_id, current_iter, current_
     #             st_vios_found.add((i, j))
     #             fd_m.iter_vios_found_history[-1].value += 1
 
-    # Track errors caught in each iteration (short-term), mid-term, and cumulatively (long-term)
-    mt_sample = set([int(i) for i in feedback.keys()]) | set(interaction_metadata['sample_history'][-2].value)
+    # Track errors caught in each iteration (short-term), medium-term, and cumulatively (long-term)
+    mt_sample = set([int(i) for i in feedback.keys()])
+    if current_iter > 1:
+        mt_sample |= set(interaction_metadata['sample_history'][current_iter-2].value)
     lt_sample = set([int(i) for i in feedback.keys()])
-    for i in range(1, current_iter):
-        lt_sample |= set(interaction_metadata['sample_history'][i].value)
+    for i in range(2, current_iter+1):
+        lt_sample |= set(interaction_metadata['sample_history'][current_iter-i].value)
     for idx in data.index:
         for col in data.columns:
             if data.at[idx, col] != clean_dataset.at[idx, col]:
@@ -649,15 +651,15 @@ def vioStats(sample, feedback, vio_pairs, rhs, dirty_dataset, clean_dataset):
         if x not in sample or y not in sample:
             continue
         vios_total.add((x, y))
-        st_caught = True
+        caught = True
         for rh in rhs:
             if feedback[str(x)][rh] == feedback[str(y)][rh]:
                 if dirty_dataset.at[x, rh] != clean_dataset.at[x, rh]:
-                    st_caught = False
+                    caught = False
                     break
                 if feedback[str(x)][rh] is True and feedback[str(y)][rh] is True:
                     vios_marked.add((y, y))
-        if st_caught is True:
+        if caught is True:
             vios_found.add((x, y))
             vios_marked.add((x, y))
 

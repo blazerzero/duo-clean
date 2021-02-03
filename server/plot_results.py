@@ -9,10 +9,11 @@ import pickle
 import math
 import scipy.stats as st
 import scipy.special as sc
+import copy
 
 import helpers
 
-def derive_stats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty_dataset, clean_dataset):
+def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty_dataset, clean_dataset, target_fd):
     feedback_history = interaction_metadata['feedback_history']
     study_metrics['st_vio_precision'] = list()
     study_metrics['lt_vio_precision'] = list()
@@ -73,7 +74,9 @@ def derive_stats(interaction_metadata, fd_metadata, h_space, study_metrics, dirt
         lt_errors_marked = 0
 
         sample = interaction_metadata['sample_history'][i-1]['value']
-        mt_sample = set(sample) | set(interaction_metadata['sample_history'][i-2]['value'])
+        mt_sample = set(sample)
+        if i > 1:
+            mt_sample |= set(interaction_metadata['sample_history'][i-2]['value'])
         lt_sample = set(sample)
         for ix in range(2, i+1):
             lt_sample |= set(interaction_metadata['sample_history'][i-ix]['value'])
@@ -91,7 +94,6 @@ def derive_stats(interaction_metadata, fd_metadata, h_space, study_metrics, dirt
         for idx in dirty_dataset.index:
             for col in dirty_dataset.columns:
                 if dirty_dataset.at[idx, col] != clean_dataset.at[idx, col]:
-                    # lt_errors_total += 1
                     if idx in sample:
                         st_errors_total += 1
                         if feedback[str(idx)][col] is True:
@@ -104,10 +106,7 @@ def derive_stats(interaction_metadata, fd_metadata, h_space, study_metrics, dirt
                         lt_errors_total += 1
                         if feedback[str(idx)][col] is True:
                             lt_errors_found += 1
-                    # if feedback[str(idx)][col] is True:
-                        # lt_errors_found += 1
                 if feedback[str(idx)][col] is True:
-                    # lt_errors_marked += 1
                     if idx in sample:
                         st_errors_marked += 1
                     if idx in mt_sample:
@@ -151,7 +150,7 @@ def derive_stats(interaction_metadata, fd_metadata, h_space, study_metrics, dirt
             fd_m['beta_history'].append({ 'iter_num': i, 'value': fd_m['beta'], 'elapsed_time': elapsed_time })
             fd_m['conf_history'].append({ 'iter_num': i, 'value': fd_m['conf'], 'elapsed_time': elapsed_time })
 
-            if 'vio_pairs' not in h.keys():
+            if fd != target_fd:
                 continue
             vio_pairs = h['vio_pairs']
             rhs = fd.split(' => ')[1].split(', ')
@@ -162,14 +161,14 @@ def derive_stats(interaction_metadata, fd_metadata, h_space, study_metrics, dirt
             st_vios_found |= fd_st_vios_found
             st_vios_total |= fd_st_vios_total
 
-        # TODO: Mid-term memory violation calculations
-        mt_vios_marked = st_vios_marked
-        mt_vios_found = st_vios_found
-        mt_vios_total = st_vios_total
+        # Medium-term memory violation calculations
+        mt_vios_marked = copy.deepcopy(st_vios_marked)
+        mt_vios_found = copy.deepcopy(st_vios_found)
+        mt_vios_total = copy.deepcopy(st_vios_total)
         if i > 1:
             for h in h_space:
                 fd = h['cfd']
-                if 'vio_pairs' not in h.keys():
+                if fd != target_fd:
                     continue
                 vio_pairs = h['vio_pairs']
                 rhs = fd.split(' => ')[1].split(', ')
@@ -179,14 +178,14 @@ def derive_stats(interaction_metadata, fd_metadata, h_space, study_metrics, dirt
                 mt_vios_found |= fd_st_vios_found
                 mt_vios_total |= fd_st_vios_total
                 
-        # TODO: Long-term memory violation calculations
-        lt_vios_marked = st_vios_marked
-        lt_vios_found = st_vios_found
-        lt_vios_total = st_vios_total
+        # Long-term memory violation calculations
+        lt_vios_marked = copy.deepcopy(st_vios_marked)
+        lt_vios_found = copy.deepcopy(st_vios_found)
+        lt_vios_total = copy.deepcopy(st_vios_total)
         if i > 1:
             for h in h_space:
                 fd = h['cfd']
-                if 'vio_pairs' not in h.keys():
+                if fd != target_fd:
                     continue
                 vio_pairs = h['vio_pairs']
                 rhs = fd.split(' => ')[1].split(', ')
@@ -308,7 +307,7 @@ def derive_stats(interaction_metadata, fd_metadata, h_space, study_metrics, dirt
         study_metrics['lt_vio_f1'].append({ 'iter_num': int(i), 'value': lt_vio_f1, 'elapsed_time': elapsed_time})
     return study_metrics, fd_metadata
 
-def calc_conf_distance(fd_metadata, h_space, interaction_metadata):
+def calcConfDistance(fd_metadata, h_space, interaction_metadata):
     conf_distance = dict()
     for fd, fd_m in fd_metadata.items():
         conf_distance[fd] = list()
@@ -329,7 +328,7 @@ def calc_conf_distance(fd_metadata, h_space, interaction_metadata):
         avg_conf_distance.append({ 'iter_num': i+1, 'value': avg_conf_d, 'elapsed_time': times[i] })      
     return conf_distance, avg_conf_distance
 
-def plot_results(run_type, project_ids, x_axis):
+def plotResults(run_type, project_ids, x_axis):
     fig1, ax1 = plt.subplots()  # Error precision (iterative)
     fig2, ax2 = plt.subplots()  # Error recall (iterative)
     fig3, ax3 = plt.subplots()  # Error F1-score (iterative)
@@ -373,20 +372,27 @@ def plot_results(run_type, project_ids, x_axis):
             interaction_metadata = json.load(f)
         dirty_dataset = pd.read_csv(project_info['scenario']['dirty_dataset'], keep_default_na=False)
         clean_dataset = pd.read_csv(project_info['scenario']['clean_dataset'], keep_default_na=False)
+        target_fd = project_info['scenario']['target_fd']
 
         h_space = project_info['scenario']['hypothesis_space']
         clean_h_space = project_info['scenario']['clean_hypothesis_space']
         # if len([k for k in study_metrics.keys() if 'lt_vio' in k]) == 0:
-        study_metrics, fd_metadata = derive_stats(
+        study_metrics, fd_metadata = deriveStats(
             interaction_metadata,
             fd_metadata,
             h_space,
             study_metrics,
             dirty_dataset,
-            clean_dataset
+            clean_dataset,
+            target_fd
         )
 
-        conf_distance, avg_conf_distance = calc_conf_distance(fd_metadata, clean_h_space, interaction_metadata)
+        with open(pathstart + project_id + '/study_metrics.json', 'w') as f:
+            json.dump(study_metrics, f)
+        with open(pathstart + project_id + '/fd_metadata.json', 'w') as f:
+            json.load(fd_metadata, f)
+
+        conf_distance, avg_conf_distance = calcConfDistance(fd_metadata, clean_h_space, interaction_metadata)
 
         if x_axis == 'iter':
             ax1.plot([i['iter_num'] for i in study_metrics['st_err_precision']], [i['value'] for i in study_metrics['st_err_precision']])
@@ -477,4 +483,4 @@ def plot_results(run_type, project_ids, x_axis):
     plt.clf()
 
 if __name__ == '__main__':
-    plot_results(sys.argv[1], sys.argv[2:-1], sys.argv[-1])
+    plotResults(sys.argv[1], sys.argv[2:-1], sys.argv[-1])

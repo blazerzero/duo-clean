@@ -66,18 +66,25 @@ if __name__ == '__main__':
         interaction_metadata = json.load(f)
     dirty_dataset = pd.read_csv(project_info['scenario']['dirty_dataset'], keep_default_na=False)
     clean_dataset = pd.read_csv(project_info['scenario']['clean_dataset'], keep_default_na=False)
+    target_fd = project_info['scenario']['target_fd']
 
     h_space = project_info['scenario']['hypothesis_space']
     clean_h_space = project_info['scenario']['clean_hypothesis_space']
-    if len([k for k in study_metrics.keys() if 'iter' in k]) == 0:
-        study_metrics, fd_metadata = plot_results.derive_stats(
+    if 'lt_vio_precision' not in study_metrics.keys():
+        study_metrics, fd_metadata = plot_results.deriveStats(
             interaction_metadata,
             fd_metadata,
             h_space,
             study_metrics,
             dirty_dataset,
-            clean_dataset
+            clean_dataset,
+            target_fd
         )
+        
+        with open(pathstart + project_id + '/study_metrics.json', 'w') as f:
+            json.dump(study_metrics, f, indent=4)
+        with open(pathstart + project_id + '/fd_metadata.json', 'w') as f:
+            json.dump(fd_metadata, f, indent=4)
 
     data = pd.DataFrame(columns = ['iter_num', metric])
     if metric in study_metrics.keys():
@@ -88,7 +95,7 @@ if __name__ == '__main__':
             adf(data)
         elif test == 'pp':
             pp(data)
-        elif test == 'mannkendall':
+        elif test == 'mk':
             mannkendall(data[metric].to_list())
     elif metric in fd_metadata[project_info['scenario']['target_fd']].keys():
         for fd_m in fd_metadata.values():
