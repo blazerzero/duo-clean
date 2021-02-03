@@ -70,21 +70,20 @@ if __name__ == '__main__':
 
     h_space = project_info['scenario']['hypothesis_space']
     clean_h_space = project_info['scenario']['clean_hypothesis_space']
-    if 'lt_vio_precision' not in study_metrics.keys():
-        study_metrics, fd_metadata = plot_results.deriveStats(
-            interaction_metadata,
-            fd_metadata,
-            h_space,
-            study_metrics,
-            dirty_dataset,
-            clean_dataset,
-            target_fd
-        )
-        
-        with open(pathstart + project_id + '/study_metrics.json', 'w') as f:
-            json.dump(study_metrics, f, indent=4)
-        with open(pathstart + project_id + '/fd_metadata.json', 'w') as f:
-            json.dump(fd_metadata, f, indent=4)
+    study_metrics, fd_metadata = plot_results.deriveStats(
+        interaction_metadata,
+        fd_metadata,
+        h_space,
+        study_metrics,
+        dirty_dataset,
+        clean_dataset,
+        target_fd
+    )
+    
+    with open(pathstart + project_id + '/study_metrics.json', 'w') as f:
+        json.dump(study_metrics, f, indent=4)
+    with open(pathstart + project_id + '/fd_metadata.json', 'w') as f:
+        json.dump(fd_metadata, f, indent=4)
 
     data = pd.DataFrame(columns = ['iter_num', metric])
     if metric in study_metrics.keys():
