@@ -119,27 +119,25 @@ def recordFeedback(data, feedback, vio_pairs, project_id, current_iter, current_
     # scoring function: score based on number of true errors correctly identified
     with open('./store/' + project_id + '/project_info.json', 'r') as f:
         project_info = json.load(f)
-        clean_dataset = pd.read_csv(project_info['scenario']['clean_dataset'], keep_default_na=False)
+        clean_dataset = pd.read_csv(project_info['scenario']['clean_dataset'], keep_defauall_na=False)
     
-    # lt_vios_found = set()
-    # lt_vios_total = set()
-    # lt_vios_marked = set()
-    # st_vios_found = set()
-    # st_vios_total = set()
-    # st_vios_marked = set()
+    # all_vios_found = set()
+    # all_vios_total = set()
+    # all_vios_marked = set()
+    # iter_vios_found = set()
+    # iter_vios_total = set()
+    # iter_vios_marked = set()
     # mt_vios_found = set()
     # mt_vios_total = set()
     # mt_vios_marked = set()
     
-    st_errors_found = 0
-    st_errors_total = 0
-    st_errors_marked = 0
-    mt_errors_found = 0
-    mt_errors_total = 0
-    mt_errors_marked = 0
-    lt_errors_found = 0
-    lt_errors_total = 0
-    lt_errors_marked = 0
+    iter_errors_found = 0
+    iter_errors_total = 0
+    iter_errors_marked = 0
+
+    all_errors_found = 0
+    all_errors_total = 0
+    all_errors_marked = 0
 
     print(feedback)
 
@@ -149,11 +147,11 @@ def recordFeedback(data, feedback, vio_pairs, project_id, current_iter, current_
     #     fd_m.iter_vios_found_history.append(StudyMetric(iter_num=current_iter, value=0, elapsed_time=elapsed_time))
     #     fd_m.iter_vios_total_history.append(StudyMetric(iter_num=current_iter, value=0, elapsed_time=elapsed_time))
         
-    #     # lt_vios_total |= fd_m.vio_pairs
+    #     # all_vios_total |= fd_m.vio_pairs
     #     for i, j in fd_m.vio_pairs:
     #         if str(i) not in feedback.keys() or str(j) not in feedback.keys():
     #             continue
-    #         st_vios_total.add((i, j))
+    #         iter_vios_total.add((i, j))
     #         fd_m.iter_vios_total_history[-1].value += 1
     #         caught = True
     #         for rh in fd_m.rhs:
@@ -161,49 +159,43 @@ def recordFeedback(data, feedback, vio_pairs, project_id, current_iter, current_
     #                 caught = False
     #                 break
     #         if caught is True:
-    #             # lt_vios_found.add((i, j))
+    #             # all_vios_found.add((i, j))
     #             fd_m.all_vios_found_history[-1].value += 1
-    #             st_vios_found.add((i, j))
+    #             iter_vios_found.add((i, j))
     #             fd_m.iter_vios_found_history[-1].value += 1
 
     # Track errors caught in each iteration (short-term), medium-term, and cumulatively (long-term)
     mt_sample = set([int(i) for i in feedback.keys()])
     if current_iter > 1:
         mt_sample |= set(interaction_metadata['sample_history'][current_iter-2].value)
-    lt_sample = set([int(i) for i in feedback.keys()])
+    all_sample = set([int(i) for i in feedback.keys()])
     for i in range(2, current_iter+1):
-        lt_sample |= set(interaction_metadata['sample_history'][current_iter-i].value)
+        all_sample |= set(interaction_metadata['sample_history'][current_iter-i].value)
     for idx in data.index:
         for col in data.columns:
             if data.at[idx, col] != clean_dataset.at[idx, col]:
-                # lt_errors_total += 1
+                # all_errors_total += 1
                 if str(idx) in feedback.keys():
-                    st_errors_total += 1
+                    iter_errors_total += 1
                     if bool(feedback[str(idx)][col]) is True:
-                        st_errors_found += 1
-                if idx in lt_sample:
-                    lt_errors_total += 1
+                        iter_errors_found += 1
+                if idx in all_sample:
+                    all_errors_total += 1
                     if interaction_metadata['feedback_history'][int(idx)][col][-1].marked is True:
-                        lt_errors_found += 1
-                if idx in mt_sample:
-                    mt_errors_total += 1
-                    if interaction_metadata['feedback_history'][int(idx)][col][-1].marked is True:
-                        mt_errors_found += 1
+                        all_errors_found += 1
                 # if interaction_metadata['feedback_history'][int(idx)][col][-1].marked is True:
-                #     lt_errors_found += 1
+                #     all_errors_found += 1
             if interaction_metadata['feedback_history'][int(idx)][col][-1].marked is True:
-                # lt_errors_marked += 1
+                # all_errors_marked += 1
                 if str(idx) in feedback.keys():
-                    st_errors_marked += 1
-                if idx in lt_sample:
-                    lt_errors_marked += 1
-                if idx in mt_sample:
-                    mt_errors_marked += 1
+                    iter_errors_marked += 1
+                if idx in all_sample:
+                    all_errors_marked += 1
 
     print('*** Score updated ***')
 
-    project_info['true_pos'] = lt_errors_found
-    project_info['false_pos'] = lt_errors_marked - lt_errors_found
+    project_info['true_pos'] = all_errors_found
+    project_info['false_pos'] = all_errors_marked - all_errors_found
     with open('./store/' + project_id + '/project_info.json', 'w') as f:
         json.dump(project_info, f)
     print('*** Score saved ***')
@@ -217,15 +209,15 @@ def recordFeedback(data, feedback, vio_pairs, project_id, current_iter, current_
     # else:
     #     vio_precision = 0
     
-    # if len(st_vios_total) > 0:
-    #     st_vio_recall = len(st_vios_found) / len(st_vios_total)
+    # if len(iter_vios_total) > 0:
+    #     iter_vio_recall = len(iter_vios_found) / len(iter_vios_total)
     # else:
-    #     st_vio_recall = 0
+    #     iter_vio_recall = 0
 
-    # if len(lt_vios_total) > 0:
-    #     lt_vio_recall = len(lt_vios_found) / len(lt_vios_total)
+    # if len(all_vios_total) > 0:
+    #     all_vio_recall = len(all_vios_found) / len(all_vios_total)
     # else:
-    #     lt_vio_recall = 0
+    #     all_vio_recall = 0
 
     # if vio_precision > 0 and vio_recall > 0:
     #     vio_f1 = 2 * (vio_precision * vio_recall) / (vio_precision + vio_recall)
@@ -233,65 +225,48 @@ def recordFeedback(data, feedback, vio_pairs, project_id, current_iter, current_
     #     vio_f1 = 0
 
     # ERRORS
-    if st_errors_marked > 0:
-        st_err_precision = st_errors_found / st_errors_marked
+    if iter_errors_marked > 0:
+        iter_err_precision = iter_errors_found / iter_errors_marked
     else:
-        st_err_precision = 0
+        iter_err_precision = 0
     
-    if st_errors_total > 0:
-        st_err_recall = st_errors_found / st_errors_total
+    if iter_errors_total > 0:
+        iter_err_recall = iter_errors_found / iter_errors_total
     else:
-        st_err_recall = 0
+        iter_err_recall = 0
 
-    if st_err_precision > 0 and st_err_recall > 0:
-        st_err_f1 = 2 * (st_err_precision * st_err_recall) / (st_err_precision + st_err_recall)
+    if iter_err_precision > 0 and iter_err_recall > 0:
+        iter_err_f1 = 2 * (iter_err_precision * iter_err_recall) / (iter_err_precision + iter_err_recall)
     else:
-        st_err_f1 = 0
+        iter_err_f1 = 0
 
-    if mt_errors_marked > 0:
-        mt_err_precision = mt_errors_found / mt_errors_marked
+    if all_errors_marked > 0:
+        all_err_precision = all_errors_found / all_errors_marked
     else:
-        mt_err_precision = 0
+        all_err_precision = 0
     
-    if mt_errors_total > 0:
-        mt_err_recall = mt_errors_found / mt_errors_total
+    if all_errors_total > 0:
+        all_err_recall = all_errors_found / all_errors_total
     else:
-        mt_err_recall = 0
+        all_err_recall = 0
 
-    if mt_err_precision > 0 and mt_err_recall > 0:
-        mt_err_f1 = 2 * (mt_err_precision * mt_err_recall) / (mt_err_precision + mt_err_recall)
+    if all_err_precision > 0 and all_err_recall > 0:
+        all_err_f1 = 2 * (all_err_precision * all_err_recall) / (all_err_precision + all_err_recall)
     else:
-        mt_err_f1 = 0
-
-    if lt_errors_marked > 0:
-        lt_err_precision = lt_errors_found / lt_errors_marked
-    else:
-        lt_err_precision = 0
-    
-    if lt_errors_total > 0:
-        lt_err_recall = lt_errors_found / lt_errors_total
-    else:
-        lt_err_recall = 0
-
-    if lt_err_precision > 0 and lt_err_recall > 0:
-        lt_err_f1 = 2 * (lt_err_precision * lt_err_recall) / (lt_err_precision + lt_err_recall)
-    else:
-        lt_err_f1 = 0
+        all_err_f1 = 0
 
     # study_metrics['vio_precision'].append(StudyMetric(iter_num=current_iter, value=vio_precision, elapsed_time=elapsed_time))
-    # study_metrics['st_vio_recall'].append(StudyMetric(iter_num=current_iter, value=st_vio_recall, elapsed_time=elapsed_time))
-    # study_metrics['lt_vio_recall'].append(StudyMetric(iter_num=current_iter, value=lt_vio_recall, elapsed_time=elapsed_time))
+    # study_metrics['iter_vio_recall'].append(StudyMetric(iter_num=current_iter, value=iter_vio_recall, elapsed_time=elapsed_time))
+    # study_metrics['all_vio_recall'].append(StudyMetric(iter_num=current_iter, value=all_vio_recall, elapsed_time=elapsed_time))
     # study_metrics['vio_f1'].append(StudyMetric(iter_num=current_iter, value=vio_f1, elapsed_time=elapsed_time))
 
-    study_metrics['st_err_precision'].append(StudyMetric(iter_num=current_iter, value=st_err_precision, elapsed_time=elapsed_time))
-    study_metrics['st_err_recall'].append(StudyMetric(iter_num=current_iter, value=st_err_recall, elapsed_time=elapsed_time))
-    study_metrics['st_err_f1'].append(StudyMetric(iter_num=current_iter, value=st_err_f1, elapsed_time=elapsed_time))
-    study_metrics['mt_err_precision'].append(StudyMetric(iter_num=current_iter, value=mt_err_precision, elapsed_time=elapsed_time))
-    study_metrics['mt_err_recall'].append(StudyMetric(iter_num=current_iter, value=mt_err_recall, elapsed_time=elapsed_time))
-    study_metrics['mt_err_f1'].append(StudyMetric(iter_num=current_iter, value=mt_err_f1, elapsed_time=elapsed_time))
-    study_metrics['lt_err_precision'].append(StudyMetric(iter_num=current_iter, value=lt_err_precision, elapsed_time=elapsed_time))
-    study_metrics['lt_err_recall'].append(StudyMetric(iter_num=current_iter, value=lt_err_recall, elapsed_time=elapsed_time))
-    study_metrics['lt_err_f1'].append(StudyMetric(iter_num=current_iter, value=lt_err_f1, elapsed_time=elapsed_time))
+    study_metrics['iter_err_precision'].append(StudyMetric(iter_num=current_iter, value=iter_err_precision, elapsed_time=elapsed_time))
+    study_metrics['iter_err_recall'].append(StudyMetric(iter_num=current_iter, value=iter_err_recall, elapsed_time=elapsed_time))
+    study_metrics['iter_err_f1'].append(StudyMetric(iter_num=current_iter, value=iter_err_f1, elapsed_time=elapsed_time))
+
+    study_metrics['all_err_precision'].append(StudyMetric(iter_num=current_iter, value=all_err_precision, elapsed_time=elapsed_time))
+    study_metrics['all_err_recall'].append(StudyMetric(iter_num=current_iter, value=all_err_recall, elapsed_time=elapsed_time))
+    study_metrics['all_err_f1'].append(StudyMetric(iter_num=current_iter, value=all_err_f1, elapsed_time=elapsed_time))
 
     pickle.dump( study_metrics, open('./store/' + project_id + '/study_metrics.p', 'wb') )
 
@@ -638,19 +613,21 @@ def getPairs(data, support, vios, fd):
                         break
     return list(all_pairs), list(vio_pairs)   
 
-def vioStats(sample, feedback, vio_pairs, rhs, dirty_dataset, clean_dataset):
+def vioStats(curr_sample, t_sample, feedback, vio_pairs, rhs, dirty_dataset, clean_dataset):
     vios_marked = set()
     vios_total = set()
     vios_found = set()
-    for x in sample:
+    for x in curr_sample:
         if len([i for i in vio_pairs if x in i]) == 0:
             for rh in rhs:
                 if feedback[str(x)][rh] is True:
                     vios_marked.add((x, x))
     for x, y in vio_pairs:
-        if x not in sample or y not in sample:
+        if x not in t_sample or y not in t_sample:
             continue
         vios_total.add((x, y))
+        if x not in curr_sample and y not in curr_sample:
+            continue
         caught = True
         for rh in rhs:
             if feedback[str(x)][rh] == feedback[str(y)][rh]:

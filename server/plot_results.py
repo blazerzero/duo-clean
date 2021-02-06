@@ -24,15 +24,12 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
     study_metrics['st_vio_f1'] = list()
     study_metrics['lt_vio_f1'] = list()
     study_metrics['mt_vio_f1'] = list()
-    study_metrics['st_err_precision'] = list()
-    study_metrics['st_err_recall'] = list()
-    study_metrics['st_err_f1'] = list()
-    study_metrics['mt_err_precision'] = list()
-    study_metrics['mt_err_recall'] = list()
-    study_metrics['mt_err_f1'] = list()
-    study_metrics['lt_err_precision'] = list()
-    study_metrics['lt_err_recall'] = list()
-    study_metrics['lt_err_f1'] = list()
+    study_metrics['iter_err_precision'] = list()
+    study_metrics['iter_err_recall'] = list()
+    study_metrics['iter_err_f1'] = list()
+    study_metrics['all_err_precision'] = list()
+    study_metrics['all_err_recall'] = list()
+    study_metrics['all_err_f1'] = list()
 
     for h in h_space:
         if h['cfd'] not in fd_metadata.keys():
@@ -52,32 +49,29 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
         fd_metadata[h['cfd']]['conf_history'] = [{ 'iter_num': 0, 'value': conf, 'elapsed_time': 0 }]
 
     iters = range(1, len(interaction_metadata['sample_history'])+1)
-    # lt_vios_found = set()
-    # lt_vios_total = set()
-    # lt_vios_marked = set()
     for i in iters:
         st_vios_found = set()
         st_vios_total = set()
         st_vios_marked = set()
-        # mt_vios_found = set()
-        # mt_vios_total = set()
-        # mt_vios_marked = set()
+        mt_vios_found = set()
+        mt_vios_total = set()
+        mt_vios_marked = set()
+        lt_vios_found = set()
+        lt_vios_total = set()
+        lt_vios_marked = set()
 
-        st_errors_found = 0
-        st_errors_total = 0
-        st_errors_marked = 0
-        mt_errors_found = 0
-        mt_errors_total = 0
-        mt_errors_marked = 0
-        lt_errors_found = 0
-        lt_errors_total = 0
-        lt_errors_marked = 0
+        iter_errors_found = 0
+        iter_errors_total = 0
+        iter_errors_marked = 0
+        all_errors_found = 0
+        all_errors_total = 0
+        all_errors_marked = 0
 
-        sample = interaction_metadata['sample_history'][i-1]['value']
-        mt_sample = set(sample)
+        curr_sample = interaction_metadata['sample_history'][i-1]['value']
+        mt_sample = set(curr_sample)
         if i > 1:
             mt_sample |= set(interaction_metadata['sample_history'][i-2]['value'])
-        lt_sample = set(sample)
+        lt_sample = set(curr_sample)
         for ix in range(2, i+1):
             lt_sample |= set(interaction_metadata['sample_history'][i-ix]['value'])
         elapsed_time = interaction_metadata['sample_history'][i-1]['elapsed_time']
@@ -94,25 +88,19 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
         for idx in dirty_dataset.index:
             for col in dirty_dataset.columns:
                 if dirty_dataset.at[idx, col] != clean_dataset.at[idx, col]:
-                    if idx in sample:
-                        st_errors_total += 1
+                    if idx in curr_sample:
+                        iter_errors_total += 1
                         if feedback[str(idx)][col] is True:
-                            st_errors_found += 1
-                    if idx in mt_sample:
-                        mt_errors_total += 1
-                        if feedback[str(idx)][col] is True:
-                            mt_errors_found += 1
+                            iter_errors_found += 1
                     if idx in lt_sample:
-                        lt_errors_total += 1
+                        all_errors_total += 1
                         if feedback[str(idx)][col] is True:
-                            lt_errors_found += 1
+                            all_errors_found += 1
                 if feedback[str(idx)][col] is True:
-                    if idx in sample:
-                        st_errors_marked += 1
-                    if idx in mt_sample:
-                        mt_errors_marked += 1
+                    if idx in curr_sample:
+                        iter_errors_marked += 1
                     if idx in lt_sample:
-                        lt_errors_marked += 1
+                        all_errors_marked += 1
 
         marked_rows = [r for r in marked_rows]
         
@@ -126,12 +114,12 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
             fd_m = fd_metadata[fd]
 
             removed_pairs = set()
-            sample_X_in_fd = {(x, y) for (x, y) in fd_m['vio_pairs'] if x in sample and y in sample}
+            sample_X_in_fd = {(x, y) for (x, y) in fd_m['vio_pairs'] if x in curr_sample and y in curr_sample}
             for x, y in sample_X_in_fd:
                 if x in marked_rows or y in marked_rows:
                     removed_pairs.add((x, y))
             
-            for ix in sample:
+            for ix in curr_sample:
                 if ix in marked_rows:
                     continue
                 if i not in fd_m['vios']:
@@ -156,15 +144,12 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
             rhs = fd.split(' => ')[1].split(', ')
             
             # Check if the violation was caught for short-term memory
-            fd_st_vios_marked, fd_st_vios_found, fd_st_vios_total = helpers.vioStats(sample, feedback, vio_pairs, rhs, dirty_dataset, clean_dataset)
+            fd_st_vios_marked, fd_st_vios_found, fd_st_vios_total = helpers.vioStats(curr_sample, curr_sample, feedback, vio_pairs, rhs, dirty_dataset, clean_dataset)
             st_vios_marked |= fd_st_vios_marked
             st_vios_found |= fd_st_vios_found
             st_vios_total |= fd_st_vios_total
 
         # Medium-term memory violation calculations
-        mt_vios_marked = copy.deepcopy(st_vios_marked)
-        mt_vios_found = copy.deepcopy(st_vios_found)
-        mt_vios_total = copy.deepcopy(st_vios_total)
         if i > 1:
             for h in h_space:
                 fd = h['cfd']
@@ -173,15 +158,16 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
                 vio_pairs = h['vio_pairs']
                 rhs = fd.split(' => ')[1].split(', ')
                 
-                fd_st_vios_marked, fd_st_vios_found, fd_st_vios_total = helpers.vioStats(mt_sample, feedback, vio_pairs, rhs, dirty_dataset, clean_dataset)
+                fd_st_vios_marked, fd_st_vios_found, fd_st_vios_total = helpers.vioStats(curr_sample, mt_sample, feedback, vio_pairs, rhs, dirty_dataset, clean_dataset)
                 mt_vios_marked |= fd_st_vios_marked
                 mt_vios_found |= fd_st_vios_found
                 mt_vios_total |= fd_st_vios_total
+        else:
+            mt_vios_marked = copy.deepcopy(st_vios_marked)
+            mt_vios_found = copy.deepcopy(st_vios_found)
+            mt_vios_total = copy.deepcopy(st_vios_total)
                 
         # Long-term memory violation calculations
-        lt_vios_marked = copy.deepcopy(st_vios_marked)
-        lt_vios_found = copy.deepcopy(st_vios_found)
-        lt_vios_total = copy.deepcopy(st_vios_total)
         if i > 1:
             for h in h_space:
                 fd = h['cfd']
@@ -190,10 +176,14 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
                 vio_pairs = h['vio_pairs']
                 rhs = fd.split(' => ')[1].split(', ')
                 
-                fd_st_vios_marked, fd_st_vios_found, fd_st_vios_total = helpers.vioStats(lt_sample, feedback, vio_pairs, rhs, dirty_dataset, clean_dataset)
+                fd_st_vios_marked, fd_st_vios_found, fd_st_vios_total = helpers.vioStats(curr_sample, lt_sample, feedback, vio_pairs, rhs, dirty_dataset, clean_dataset)
                 lt_vios_marked |= fd_st_vios_marked
                 lt_vios_found |= fd_st_vios_found
                 lt_vios_total |= fd_st_vios_total
+        else:
+            lt_vios_marked = copy.deepcopy(st_vios_marked)
+            lt_vios_found = copy.deepcopy(st_vios_found)
+            lt_vios_total = copy.deepcopy(st_vios_total)
 
         # Short, mid, and long-term violation precision, recall, and F1
         if len(st_vios_total) > 0:
@@ -242,60 +232,42 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
             mt_vio_f1 = 0
 
         # Short and long-term error precision, recall, and F1
-        if st_errors_marked > 0:
-            st_err_precision = st_errors_found / st_errors_marked
+        if iter_errors_marked > 0:
+            iter_err_precision = iter_errors_found / iter_errors_marked
         else:
-            st_err_precision = 0
+            iter_err_precision = 0
         
-        if st_errors_total > 0:
-            st_err_recall = st_errors_found / st_errors_total
+        if iter_errors_total > 0:
+            iter_err_recall = iter_errors_found / iter_errors_total
         else:
-            st_err_recall = 0
+            iter_err_recall = 0
 
-        if st_err_precision > 0 and st_err_recall > 0:
-            st_err_f1 = 2 * (st_err_precision * st_err_recall) / (st_err_precision + st_err_recall)
+        if iter_err_precision > 0 and iter_err_recall > 0:
+            iter_err_f1 = 2 * (iter_err_precision * iter_err_recall) / (iter_err_precision + iter_err_recall)
         else:
-            st_err_f1 = 0
+            iter_err_f1 = 0
+
+        if all_errors_marked > 0:
+            all_err_precision = all_errors_found / all_errors_marked
+        else:
+            all_err_precision = 0
         
-        if mt_errors_marked > 0:
-            mt_err_precision = mt_errors_found / mt_errors_marked
+        if all_errors_total > 0:
+            all_err_recall = all_errors_found / all_errors_total
         else:
-            mt_err_precision = 0
-        
-        if mt_errors_total > 0:
-            mt_err_recall = mt_errors_found / mt_errors_total
-        else:
-            mt_err_recall = 0
+            all_err_recall = 0
 
-        if mt_err_precision > 0 and mt_err_recall > 0:
-            mt_err_f1 = 2 * (mt_err_precision * mt_err_recall) / (mt_err_precision + mt_err_recall)
+        if all_err_precision > 0 and all_err_recall > 0:
+            all_err_f1 = 2 * (all_err_precision * all_err_recall) / (all_err_precision + all_err_recall)
         else:
-            mt_err_f1 = 0
+            all_err_f1 = 0
 
-        if lt_errors_marked > 0:
-            lt_err_precision = lt_errors_found / lt_errors_marked
-        else:
-            lt_err_precision = 0
-        
-        if lt_errors_total > 0:
-            lt_err_recall = lt_errors_found / lt_errors_total
-        else:
-            lt_err_recall = 0
-
-        if lt_err_precision > 0 and lt_err_recall > 0:
-            lt_err_f1 = 2 * (lt_err_precision * lt_err_recall) / (lt_err_precision + lt_err_recall)
-        else:
-            lt_err_f1 = 0
-
-        study_metrics['st_err_precision'].append({ 'iter_num': int(i), 'value': st_err_precision, 'elapsed_time': elapsed_time })
-        study_metrics['st_err_recall'].append({ 'iter_num': int(i), 'value': st_err_recall, 'elapsed_time': elapsed_time })
-        study_metrics['st_err_f1'].append({ 'iter_num': int(i), 'value': st_err_f1, 'elapsed_time': elapsed_time })
-        study_metrics['mt_err_precision'].append({ 'iter_num': int(i), 'value': mt_err_precision, 'elapsed_time': elapsed_time })
-        study_metrics['mt_err_recall'].append({ 'iter_num': int(i), 'value': mt_err_recall, 'elapsed_time': elapsed_time })
-        study_metrics['mt_err_f1'].append({ 'iter_num': int(i), 'value': mt_err_f1, 'elapsed_time': elapsed_time })
-        study_metrics['lt_err_precision'].append({ 'iter_num': int(i), 'value': lt_err_precision, 'elapsed_time': elapsed_time })
-        study_metrics['lt_err_recall'].append({ 'iter_num': int(i), 'value': lt_err_recall, 'elapsed_time': elapsed_time })
-        study_metrics['lt_err_f1'].append({ 'iter_num': int(i), 'value': lt_err_f1, 'elapsed_time': elapsed_time })
+        study_metrics['iter_err_precision'].append({ 'iter_num': int(i), 'value': iter_err_precision, 'elapsed_time': elapsed_time })
+        study_metrics['iter_err_recall'].append({ 'iter_num': int(i), 'value': iter_err_recall, 'elapsed_time': elapsed_time })
+        study_metrics['iter_err_f1'].append({ 'iter_num': int(i), 'value': iter_err_f1, 'elapsed_time': elapsed_time })
+        study_metrics['all_err_precision'].append({ 'iter_num': int(i), 'value': all_err_precision, 'elapsed_time': elapsed_time })
+        study_metrics['all_err_recall'].append({ 'iter_num': int(i), 'value': all_err_recall, 'elapsed_time': elapsed_time })
+        study_metrics['all_err_f1'].append({ 'iter_num': int(i), 'value': all_err_f1, 'elapsed_time': elapsed_time })
         study_metrics['st_vio_recall'].append({ 'iter_num': int(i), 'value': st_vio_recall, 'elapsed_time': elapsed_time })
         study_metrics['mt_vio_recall'].append({ 'iter_num': int(i), 'value': mt_vio_recall, 'elapsed_time': elapsed_time})
         study_metrics['lt_vio_recall'].append({ 'iter_num': int(i), 'value': lt_vio_recall, 'elapsed_time': elapsed_time})
@@ -395,9 +367,9 @@ def plotResults(run_type, project_ids, x_axis):
         conf_distance, avg_conf_distance = calcConfDistance(fd_metadata, clean_h_space, interaction_metadata)
 
         if x_axis == 'iter':
-            ax1.plot([i['iter_num'] for i in study_metrics['st_err_precision']], [i['value'] for i in study_metrics['st_err_precision']])
-            ax2.plot([i['iter_num'] for i in study_metrics['st_err_recall']], [i['value'] for i in study_metrics['st_err_recall']])
-            ax3.plot([i['iter_num'] for i in study_metrics['st_err_f1']], [i['value'] for i in study_metrics['st_err_f1']])
+            ax1.plot([i['iter_num'] for i in study_metrics['iter_err_precision']], [i['value'] for i in study_metrics['iter_err_precision']])
+            ax2.plot([i['iter_num'] for i in study_metrics['iter_err_recall']], [i['value'] for i in study_metrics['iter_err_recall']])
+            ax3.plot([i['iter_num'] for i in study_metrics['iter_err_f1']], [i['value'] for i in study_metrics['iter_err_f1']])
             ax4.plot([i['iter_num'] for i in study_metrics['st_vio_recall']], [i['value'] for i in study_metrics['st_vio_recall']])
             ax5.plot([i['iter_num'] for i in study_metrics['lt_vio_recall']], [i['value'] for i in study_metrics['lt_vio_recall']])
             for fd, conf_d in conf_distance.items():
@@ -405,13 +377,13 @@ def plotResults(run_type, project_ids, x_axis):
                     continue
                 ax6.plot([i['iter_num'] for i in conf_d], [i['value'] for i in conf_d])
             ax7.plot([i['iter_num'] for i in avg_conf_distance], [i['value'] for i in avg_conf_distance])
-            ax8.plot([i['iter_num'] for i in study_metrics['lt_err_precision']], [i['value'] for i in study_metrics['lt_err_precision']])
-            ax9.plot([i['iter_num'] for i in study_metrics['lt_err_recall']], [i['value'] for i in study_metrics['lt_err_recall']])
-            ax10.plot([i['iter_num'] for i in study_metrics['lt_err_f1']], [i['value'] for i in study_metrics['lt_err_f1']])
+            ax8.plot([i['iter_num'] for i in study_metrics['all_err_precision']], [i['value'] for i in study_metrics['all_err_precision']])
+            ax9.plot([i['iter_num'] for i in study_metrics['all_err_recall']], [i['value'] for i in study_metrics['all_err_recall']])
+            ax10.plot([i['iter_num'] for i in study_metrics['all_err_f1']], [i['value'] for i in study_metrics['all_err_f1']])
         else:
-            ax1.plot([i['elapsed_time'] for i in study_metrics['st_err_precision']], [i['value'] for i in study_metrics['st_err_precision']])
-            ax2.plot([i['elapsed_time'] for i in study_metrics['st_err_recall']], [i['value'] for i in study_metrics['st_err_recall']])
-            ax3.plot([i['elapsed_time'] for i in study_metrics['st_err_f1']], [i['value'] for i in study_metrics['st_err_f1']])
+            ax1.plot([i['elapsed_time'] for i in study_metrics['iter_err_precision']], [i['value'] for i in study_metrics['iter_err_precision']])
+            ax2.plot([i['elapsed_time'] for i in study_metrics['iter_err_recall']], [i['value'] for i in study_metrics['iter_err_recall']])
+            ax3.plot([i['elapsed_time'] for i in study_metrics['iter_err_f1']], [i['value'] for i in study_metrics['iter_err_f1']])
             ax4.plot([i['elapsed_time'] for i in study_metrics['st_vio_recall']], [i['value'] for i in study_metrics['st_vio_recall']])
             ax5.plot([i['elapsed_time'] for i in study_metrics['lt_vio_recall']], [i['value'] for i in study_metrics['lt_vio_recall']])
             for fd, conf_d in conf_distance.items():
@@ -419,9 +391,9 @@ def plotResults(run_type, project_ids, x_axis):
                     continue
                 ax6.plot([i['elapsed_time'] for i in conf_d], [i['value'] for i in conf_d])
             ax7.plot([i['elapsed_time'] for i in avg_conf_distance], [i['value'] for i in avg_conf_distance])
-            ax8.plot([i['elapsed_time'] for i in study_metrics['lt_err_precision']], [i['value'] for i in study_metrics['lt_err_precision']])
-            ax9.plot([i['elapsed_time'] for i in study_metrics['lt_err_recall']], [i['value'] for i in study_metrics['lt_err_recall']])
-            ax10.plot([i['elapsed_time'] for i in study_metrics['lt_err_f1']], [i['value'] for i in study_metrics['lt_err_f1']])
+            ax8.plot([i['elapsed_time'] for i in study_metrics['all_err_precision']], [i['value'] for i in study_metrics['all_err_precision']])
+            ax9.plot([i['elapsed_time'] for i in study_metrics['all_err_recall']], [i['value'] for i in study_metrics['all_err_recall']])
+            ax10.plot([i['elapsed_time'] for i in study_metrics['all_err_f1']], [i['value'] for i in study_metrics['all_err_f1']])
     
     ax1.set_xlabel('Iteration #' if x_axis == 'iter' else 'Time Elapsed (seconds)')
     ax1.set_ylabel('Precision')
