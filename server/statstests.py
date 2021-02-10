@@ -90,6 +90,7 @@ if __name__ == '__main__':
         data['iter_num'] = [i['iter_num'] for i in study_metrics[metric]]
         data[metric] = [i['value'] for i in study_metrics[metric]]
         data = data.set_index('iter_num')
+        print(data[metric].to_list())
         if test == 'adf':
             adf(data)
         elif test == 'pp':

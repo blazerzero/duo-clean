@@ -1,16 +1,18 @@
 import json
 import pickle
 import os
-import helpers
+from helpers import FDMeta
+import sys
 
-def pkl2jsonRecursive():
-    project_ids = os.listdir('./docker-out/')
+def pkl2jsonRecursive(run_type):
+    path = './docker-out/' if run_type == 'real' else './store/'
+    project_ids = os.listdir(path)
     for project_id in project_ids:
-        files = os.listdir('./docker-out/' + project_id + '/')
+        files = os.listdir(path + project_id + '/')
         for f in files:
-            print('./docker-out/' + project_id + '/' + f)
+            print(path + project_id + '/' + f)
             if '.p' in f:
-                obj = pickle.load( open('./docker-out/' + project_id + '/' + f, 'rb') )
+                obj = pickle.load( open(path + project_id + '/' + f, 'rb') )
                 if type(obj) == dict:
                     if f == 'fd_metadata.p':
                         for k in obj.keys():
@@ -24,8 +26,8 @@ def pkl2jsonRecursive():
                         for idx in obj.keys():
                             obj[idx] = [i.asdict() for i in obj[idx]]
 
-                    with open('./docker-out/' + project_id + '/' + f.split('.')[0] + '.json', 'w') as fp:
+                    with open(path + project_id + '/' + f.split('.')[0] + '.json', 'w') as fp:
                         json.dump(obj, fp, ensure_ascii=False, indent=4)
 
 if __name__ == '__main__':
-    pkl2jsonRecursive()
+    pkl2jsonRecursive(sys.argv[1])

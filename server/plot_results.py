@@ -18,12 +18,18 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
     study_metrics['st_vio_precision'] = list()
     study_metrics['lt_vio_precision'] = list()
     study_metrics['mt_vio_precision'] = list()
+    study_metrics['mt_2_vio_precision'] = list()
+    study_metrics['mt_3_vio_precision'] = list()
     study_metrics['st_vio_recall'] = list()
     study_metrics['lt_vio_recall'] = list()
     study_metrics['mt_vio_recall'] = list()
+    study_metrics['mt_2_vio_recall'] = list()
+    study_metrics['mt_3_vio_recall'] = list()
     study_metrics['st_vio_f1'] = list()
     study_metrics['lt_vio_f1'] = list()
     study_metrics['mt_vio_f1'] = list()
+    study_metrics['mt_2_vio_f1'] = list()
+    study_metrics['mt_3_vio_f1'] = list()
     study_metrics['iter_err_precision'] = list()
     study_metrics['iter_err_recall'] = list()
     study_metrics['iter_err_f1'] = list()
@@ -56,6 +62,12 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
         mt_vios_found = set()
         mt_vios_total = set()
         mt_vios_marked = set()
+        mt_2_vios_found = set()
+        mt_2_vios_total = set()
+        mt_2_vios_marked = set()
+        mt_3_vios_found = set()
+        mt_3_vios_total = set()
+        mt_3_vios_marked = set()
         lt_vios_found = set()
         lt_vios_total = set()
         lt_vios_marked = set()
@@ -69,8 +81,17 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
 
         curr_sample = interaction_metadata['sample_history'][i-1]['value']
         mt_sample = set(curr_sample)
+        mt_2_sample = set(curr_sample)
+        mt_3_sample = set(curr_sample)
         if i > 1:
             mt_sample |= set(interaction_metadata['sample_history'][i-2]['value'])
+            mt_2_sample |= set(interaction_metadata['sample_history'][i-2]['value'])
+            mt_3_sample |= set(interaction_metadata['sample_history'][i-2]['value'])
+            if i > 2:
+                mt_2_sample |= set(interaction_metadata['sample_history'][i-3]['value'])
+                mt_3_sample |= set(interaction_metadata['sample_history'][i-3]['value'])
+                if i > 3:
+                    mt_3_sample |= set(interaction_metadata['sample_history'][i-4]['value'])
         lt_sample = set(curr_sample)
         for ix in range(2, i+1):
             lt_sample |= set(interaction_metadata['sample_history'][i-ix]['value'])
@@ -166,6 +187,40 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
             mt_vios_marked = copy.deepcopy(st_vios_marked)
             mt_vios_found = copy.deepcopy(st_vios_found)
             mt_vios_total = copy.deepcopy(st_vios_total)
+
+        if i > 2:
+            for h in h_space:
+                fd = h['cfd']
+                if fd != target_fd:
+                    continue
+                vio_pairs = h['vio_pairs']
+                rhs = fd.split(' => ')[1].split(', ')
+                
+                fd_st_vios_marked, fd_st_vios_found, fd_st_vios_total = helpers.vioStats(curr_sample, mt_2_sample, feedback, vio_pairs, rhs, dirty_dataset, clean_dataset)
+                mt_2_vios_marked |= fd_st_vios_marked
+                mt_2_vios_found |= fd_st_vios_found
+                mt_2_vios_total |= fd_st_vios_total
+        else:
+            mt_2_vios_marked = copy.deepcopy(mt_vios_marked)
+            mt_2_vios_found = copy.deepcopy(mt_vios_found)
+            mt_2_vios_total = copy.deepcopy(mt_vios_total)
+
+        if i > 3:
+            for h in h_space:
+                fd = h['cfd']
+                if fd != target_fd:
+                    continue
+                vio_pairs = h['vio_pairs']
+                rhs = fd.split(' => ')[1].split(', ')
+                
+                fd_st_vios_marked, fd_st_vios_found, fd_st_vios_total = helpers.vioStats(curr_sample, mt_3_sample, feedback, vio_pairs, rhs, dirty_dataset, clean_dataset)
+                mt_3_vios_marked |= fd_st_vios_marked
+                mt_3_vios_found |= fd_st_vios_found
+                mt_3_vios_total |= fd_st_vios_total
+        else:
+            mt_3_vios_marked = copy.deepcopy(mt_2_vios_marked)
+            mt_3_vios_found = copy.deepcopy(mt_2_vios_found)
+            mt_3_vios_total = copy.deepcopy(mt_2_vios_total)
                 
         # Long-term memory violation calculations
         if i > 1:
@@ -189,47 +244,77 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
         if len(st_vios_total) > 0:
             st_vio_recall = len(st_vios_found) / len(st_vios_total)
         else:
-            st_vio_recall = 0
+            st_vio_recall = 0 if i == 1 else study_metrics['st_vio_recall'][-1]['value']
 
         if len(lt_vios_total) > 0:
             lt_vio_recall = len(lt_vios_found) / len(lt_vios_total)
         else:
-            lt_vio_recall = 0
+            lt_vio_recall = 0 if i == 1 else study_metrics['lt_vio_recall'][-1]['value']
 
         if len(mt_vios_total) > 0:
             mt_vio_recall = len(mt_vios_found) / len(mt_vios_total)
         else:
-            mt_vio_recall = 0
+            mt_vio_recall = 0 if i == 1 else study_metrics['mt_vio_recall'][-1]['value']
+
+        if len(mt_2_vios_total) > 0:
+            mt_2_vio_recall = len(mt_2_vios_found) / len(mt_2_vios_total)
+        else:
+            mt_2_vio_recall = 0 if i == 1 else study_metrics['mt_2_vio_recall'][-1]['value']
+
+        if len(mt_3_vios_total) > 0:
+            mt_3_vio_recall = len(mt_3_vios_found) / len(mt_3_vios_total)
+        else:
+            mt_3_vio_recall = 0 if i == 1 else study_metrics['mt_3_vio_recall'][-1]['value']
 
         if len(st_vios_marked) > 0:
             st_vio_precision = len(st_vios_found) / len(st_vios_marked)
         else:
-            st_vio_precision = 0
+            st_vio_precision = 0 if i == 1 else study_metrics['st_vio_precision'][-1]['value']
 
         if len(lt_vios_marked) > 0:
             lt_vio_precision = len(lt_vios_found) / len(lt_vios_marked)
         else:
-            lt_vio_precision = 0
+            lt_vio_precision = 0 if i == 1 else study_metrics['lt_vio_precision'][-1]['value']
 
         if len(mt_vios_marked) > 0:
             mt_vio_precision = len(mt_vios_found) / len(mt_vios_marked)
         else:
-            mt_vio_precision = 0
+            mt_vio_precision = 0 if i == 1 else study_metrics['mt_vio_precision'][-1]['value']
 
-        if st_vio_precision > 0 and st_vio_recall > 0:
+        if len(mt_2_vios_marked) > 0:
+            mt_2_vio_precision = len(mt_2_vios_found) / len(mt_2_vios_marked)
+        else:
+            mt_2_vio_precision = 0 if i == 1 else study_metrics['mt_2_vio_precision'][-1]['value']
+
+        if len(mt_3_vios_marked) > 0:
+            mt_3_vio_precision = len(mt_3_vios_found) / len(mt_3_vios_marked)
+        else:
+            mt_3_vio_precision = 0 if i == 1 else study_metrics['mt_3_vio_precision'][-1]['value']
+
+        if st_vio_precision > 0 or st_vio_recall > 0:
             st_vio_f1 = 2 * (st_vio_precision * st_vio_recall) / (st_vio_precision + st_vio_recall)
         else:
-            st_vio_f1 = 0
+            st_vio_f1 = 0 if i == 1 else study_metrics['st_vio_f1'][-1]['value']
 
-        if lt_vio_precision > 0 and lt_vio_recall > 0:
+        if lt_vio_precision > 0 or lt_vio_recall > 0:
             lt_vio_f1 = 2 * (lt_vio_precision * lt_vio_recall) / (lt_vio_precision + lt_vio_recall)
         else:
-            lt_vio_f1 = 0
+            lt_vio_f1 = 0 if i == 1 else study_metrics['lt_vio_f1'][-1]['value']
 
-        if mt_vio_precision > 0 and mt_vio_recall > 0:
+        if mt_vio_precision > 0 or mt_vio_recall > 0:
             mt_vio_f1 = 2 * (mt_vio_precision * mt_vio_recall) / (mt_vio_precision + mt_vio_recall)
         else:
-            mt_vio_f1 = 0
+            mt_vio_f1 = 0 if i == 1 else study_metrics['mt_vio_f1'][-1]['value']
+
+        if mt_2_vio_precision > 0 or mt_2_vio_recall > 0:
+            mt_2_vio_f1 = 2 * (mt_2_vio_precision * mt_2_vio_recall) / (mt_2_vio_precision + mt_2_vio_recall)
+        else:
+            mt_2_vio_f1 = 0 if i == 1 else study_metrics['mt_2_vio_f1'][-1]['value']
+
+        if mt_3_vio_precision > 0 or mt_3_vio_recall > 0:
+            mt_3_vio_f1 = 2 * (mt_3_vio_precision * mt_3_vio_recall) / (mt_3_vio_precision + mt_3_vio_recall)
+        else:
+            mt_3_vio_f1 = 0 if i == 1 else study_metrics['mt_3_vio_f1'][-1]['value']
 
         # Short and long-term error precision, recall, and F1
         if iter_errors_marked > 0:
@@ -242,7 +327,7 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
         else:
             iter_err_recall = 0
 
-        if iter_err_precision > 0 and iter_err_recall > 0:
+        if iter_err_precision > 0 or iter_err_recall > 0:
             iter_err_f1 = 2 * (iter_err_precision * iter_err_recall) / (iter_err_precision + iter_err_recall)
         else:
             iter_err_f1 = 0
@@ -257,7 +342,7 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
         else:
             all_err_recall = 0
 
-        if all_err_precision > 0 and all_err_recall > 0:
+        if all_err_precision > 0 or all_err_recall > 0:
             all_err_f1 = 2 * (all_err_precision * all_err_recall) / (all_err_precision + all_err_recall)
         else:
             all_err_f1 = 0
@@ -269,14 +354,20 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
         study_metrics['all_err_recall'].append({ 'iter_num': int(i), 'value': all_err_recall, 'elapsed_time': elapsed_time })
         study_metrics['all_err_f1'].append({ 'iter_num': int(i), 'value': all_err_f1, 'elapsed_time': elapsed_time })
         study_metrics['st_vio_recall'].append({ 'iter_num': int(i), 'value': st_vio_recall, 'elapsed_time': elapsed_time })
-        study_metrics['mt_vio_recall'].append({ 'iter_num': int(i), 'value': mt_vio_recall, 'elapsed_time': elapsed_time})
-        study_metrics['lt_vio_recall'].append({ 'iter_num': int(i), 'value': lt_vio_recall, 'elapsed_time': elapsed_time})
+        study_metrics['mt_vio_recall'].append({ 'iter_num': int(i), 'value': mt_vio_recall, 'elapsed_time': elapsed_time })
+        study_metrics['mt_2_vio_recall'].append({ 'iter_num': int(i), 'value': mt_2_vio_recall, 'elapsed_time': elapsed_time })
+        study_metrics['mt_3_vio_recall'].append({ 'iter_num': int(i), 'value': mt_3_vio_recall, 'elapsed_time': elapsed_time })
+        study_metrics['lt_vio_recall'].append({ 'iter_num': int(i), 'value': lt_vio_recall, 'elapsed_time': elapsed_time })
         study_metrics['st_vio_precision'].append({ 'iter_num': int(i), 'value': st_vio_precision, 'elapsed_time': elapsed_time })
-        study_metrics['mt_vio_precision'].append({ 'iter_num': int(i), 'value': mt_vio_precision, 'elapsed_time': elapsed_time})
-        study_metrics['lt_vio_precision'].append({ 'iter_num': int(i), 'value': lt_vio_precision, 'elapsed_time': elapsed_time})
+        study_metrics['mt_vio_precision'].append({ 'iter_num': int(i), 'value': mt_vio_precision, 'elapsed_time': elapsed_time })
+        study_metrics['mt_2_vio_precision'].append({ 'iter_num': int(i), 'value': mt_2_vio_precision, 'elapsed_time': elapsed_time })
+        study_metrics['mt_3_vio_precision'].append({ 'iter_num': int(i), 'value': mt_3_vio_precision, 'elapsed_time': elapsed_time })
+        study_metrics['lt_vio_precision'].append({ 'iter_num': int(i), 'value': lt_vio_precision, 'elapsed_time': elapsed_time })
         study_metrics['st_vio_f1'].append({ 'iter_num': int(i), 'value': st_vio_f1, 'elapsed_time': elapsed_time })
-        study_metrics['mt_vio_f1'].append({ 'iter_num': int(i), 'value': mt_vio_f1, 'elapsed_time': elapsed_time})
-        study_metrics['lt_vio_f1'].append({ 'iter_num': int(i), 'value': lt_vio_f1, 'elapsed_time': elapsed_time})
+        study_metrics['mt_vio_f1'].append({ 'iter_num': int(i), 'value': mt_vio_f1, 'elapsed_time': elapsed_time })
+        study_metrics['mt_2_vio_f1'].append({ 'iter_num': int(i), 'value': mt_2_vio_f1, 'elapsed_time': elapsed_time })
+        study_metrics['mt_3_vio_f1'].append({ 'iter_num': int(i), 'value': mt_3_vio_f1, 'elapsed_time': elapsed_time })
+        study_metrics['lt_vio_f1'].append({ 'iter_num': int(i), 'value': lt_vio_f1, 'elapsed_time': elapsed_time })
     return study_metrics, fd_metadata
 
 def calcConfDistance(fd_metadata, h_space, interaction_metadata):

@@ -119,7 +119,7 @@ def recordFeedback(data, feedback, vio_pairs, project_id, current_iter, current_
     # scoring function: score based on number of true errors correctly identified
     with open('./store/' + project_id + '/project_info.json', 'r') as f:
         project_info = json.load(f)
-        clean_dataset = pd.read_csv(project_info['scenario']['clean_dataset'], keep_defauall_na=False)
+        clean_dataset = pd.read_csv(project_info['scenario']['clean_dataset'], keep_default_na=False)
     
     # all_vios_found = set()
     # all_vios_total = set()
@@ -623,22 +623,27 @@ def vioStats(curr_sample, t_sample, feedback, vio_pairs, rhs, dirty_dataset, cle
                 if feedback[str(x)][rh] is True:
                     vios_marked.add((x, x))
     for x, y in vio_pairs:
-        if x not in t_sample or y not in t_sample:
+        if x not in curr_sample and y not in curr_sample:
             continue
         vios_total.add((x, y))
-        if x not in curr_sample and y not in curr_sample:
+        if x not in t_sample or y not in t_sample:
             continue
         caught = True
         for rh in rhs:
-            if feedback[str(x)][rh] == feedback[str(y)][rh]:
-                if dirty_dataset.at[x, rh] != clean_dataset.at[x, rh]:
+            if dirty_dataset.at[x, rh] == clean_dataset.at[x, rh] and dirty_dataset.at[y, rh] == clean_dataset.at[y, rh]:
+                if feedback[str(x)][rh] != feedback[str(y)][rh]:
+                    vios_marked.add((x, y))
                     caught = False
                     break
-                if feedback[str(x)][rh] is True and feedback[str(y)][rh] is True:
-                    vios_marked.add((y, y))
+            else:
+                if feedback[str(x)][rh] == feedback[str(y)][rh]:
+                    if feedback[str(x)][rh] is True:
+                        vios_marked.add((x, x))
+                        vios_marked.add((y, y))
+                    caught = False
+                    break
         if caught is True:
             vios_found.add((x, y))
-            vios_marked.add((x, y))
 
     return vios_marked, vios_found, vios_total     
 
