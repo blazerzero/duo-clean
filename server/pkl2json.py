@@ -10,7 +10,7 @@ def pkl2jsonRecursive(run_type):
     for project_id in project_ids:
         files = os.listdir(path + project_id + '/')
         for f in files:
-            print(path + project_id + '/' + f)
+            # print(path + project_id + '/' + f)
             if '.p' in f:
                 obj = pickle.load( open(path + project_id + '/' + f, 'rb') )
                 if type(obj) == dict:

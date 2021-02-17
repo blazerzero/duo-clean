@@ -111,6 +111,8 @@ class Import(Resource):
 
             h['vio_pairs'] = set(tuple(vp) for vp in h['vio_pairs'])
             mu = h['conf']
+            if mu == 1:
+                mu = 0.99999
             variance = 0.0025
             
             alpha, beta = helpers.initialPrior(mu, variance)

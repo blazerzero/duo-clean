@@ -76,7 +76,7 @@ class FDMeta(object):
         # self.beta_err_history = [beta]
     
     def asdict(self):
-        print([list(vp) for vp in self.vio_pairs])
+        # print([list(vp) for vp in self.vio_pairs])
         return {
             'lhs': self.lhs,
             'rhs': self.rhs,
@@ -346,11 +346,20 @@ def interpretFeedback(s_in, feedback, X, sample_X, project_id, current_iter, cur
 def buildSample(data, X, sample_size, project_id, current_iter, current_time):
     fd_metadata = pickle.load( open('./store/' + project_id + '/fd_metadata.p', 'rb') )
     start_time = pickle.load( open('./store/' + project_id + '/start_time.p', 'rb') )
+    with open('./store/' + project_id + '/project_info.json', 'r') as f:
+        project_info = json.load(f)
+    target_fd = project_info['scenario']['target_fd']
+    tfd_m = fd_metadata[target_fd]
 
     elapsed_time = current_time - start_time
 
-    s_index, sample_X = returnTuples(data, X, sample_size)
-    s_out = data.loc[s_index, :]
+    sample_X = set()
+    s_out = None
+    tfd_in_sample_X = set()
+    while len(tfd_in_sample_X) == 0:    # if no vios relevant to the FD are in the sample
+        s_index, sample_X = returnTuples(data, X, sample_size)
+        s_out = data.loc[s_index, :]
+        tfd_in_sample_X = {x for x in sample_X if x in tfd_m.vio_pairs} # violations relevant to this FD
 
     print('IDs of tuples in next sample:', s_out.index)
     
@@ -617,54 +626,51 @@ def vioStats(curr_sample, t_sample, feedback, vio_pairs, rhs, dirty_dataset, cle
     vios_marked = set()
     vios_total = set()
     vios_found = set()
-    for x in curr_sample:
-        if len([i for i in vio_pairs if x in i]) == 0:
-            for rh in rhs:
-                if feedback[str(x)][rh] is True:
-                    vios_marked.add((x, x))
     for x, y in vio_pairs:
+        if x not in t_sample or y not in t_sample:
+            continue
         if x not in curr_sample and y not in curr_sample:
             continue
         vios_total.add((x, y))
-        if x not in t_sample or y not in t_sample:
-            continue
-        caught = True
+    
+    for x in curr_sample:
+        vios_w_i = {v for v in vios_total if x in v and v not in vios_marked}
+        marked = True
         for rh in rhs:
-            if dirty_dataset.at[x, rh] == clean_dataset.at[x, rh] and dirty_dataset.at[y, rh] == clean_dataset.at[y, rh]:
-                if feedback[str(x)][rh] != feedback[str(y)][rh]:
-                    vios_marked.add((x, y))
-                    caught = False
-                    break
+            if feedback[str(x)][rh] is False:
+                marked = False
+                break
+        if marked is True:
+            if len(vios_w_i) > 0:
+                vios_found |= vios_w_i
             else:
-                if feedback[str(x)][rh] == feedback[str(y)][rh]:
-                    if feedback[str(x)][rh] is True:
-                        vios_marked.add((x, x))
-                        vios_marked.add((y, y))
-                    caught = False
-                    break
-        if caught is True:
-            vios_found.add((x, y))
+                vios_marked.add((x, x))
+            vios_marked |= vios_w_i
+
+    # for x in curr_sample:
+    #     if len([i for i in vio_pairs if x in i]) == 0:
+    #         for rh in rhs:
+    #             if feedback[str(x)][rh] is True:
+    #                 vios_marked.add((x, x))
+    # for x, y in vio_pairs:
+    #     if x not in t_sample or y not in t_sample:
+    #         continue
+    #     if x not in curr_sample and y not in curr_sample:
+    #         continue
+    #     vios_total.add((x, y))
+    #     caught = True
+    #     for rh in rhs:
+    #         if dirty_dataset.at[x, rh] != clean_dataset.at[x, rh] or dirty_dataset.at[y, rh] != clean_dataset.at[y, rh]:
+    #             if feedback[str(x)][rh] is True or feedback[str(y)][rh] is True:
+    #                 vios_marked.add((x, y))
+    #             if feedback[str(x)][rh] == feedback[str(y)][rh]:
+    #                 caught = False
+    #                 break
+    #         else:
+    #             if feedback[str(x)][rh] is True or feedback[str(y)][rh] is True:
+    #                 caught = False
+    #                 break
+    #     if caught is True:
+    #         vios_found.add((x, y))
 
     return vios_marked, vios_found, vios_total     
-
-    # for v in vios:
-    #     for idx in support:
-    #         if idx == v:
-    #             continue
-    #         match = True
-    #         for lh in lhs:
-    #             if data.at[idx, lh] != data.at[v, lh]:
-    #                 match = False   # idx and v do not have the same LHS
-    #                 break
-    #         if match is True:   # if idx and v have the same LHS
-    #             pair = (idx, v) if v > idx else (v, idx)
-    #             all_pairs.append(pair)
-    #             vio_pair = None
-    #             for rh in rhs:
-    #                 if data.at[idx, rh] != data.at[v, rh]:
-    #                     vio_pair = (idx, v) if v > idx else (v, idx)
-    #                     break
-    #             if vio_pair is not None and vio_pair not in vio_pairs:
-    #                 vio_pairs.append(vio_pair)
-
-    # return all_pairs, vio_pairs

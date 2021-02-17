@@ -53,7 +53,24 @@ if __name__ == '__main__':
     run_type = sys.argv[1]
     project_id = sys.argv[2]
     test = sys.argv[3]
-    metric = sys.argv[4]
+    # metric = sys.argv[4]
+    metrics = [
+        'st_vio_precision',
+        'mt_vio_precision',
+        'mt_2_vio_precision',
+        'mt_3_vio_precision',
+        'lt_vio_precision',
+        'st_vio_recall',
+        'mt_vio_recall',
+        'mt_2_vio_recall',
+        'mt_3_vio_recall',
+        'lt_vio_recall',
+        'st_vio_f1',
+        'mt_vio_f1',
+        'mt_2_vio_f1',
+        'mt_3_vio_f1',
+        'lt_vio_f1'
+    ]
     pathstart = './docker-out/' if run_type == 'real' else './store/'
 
     with open(pathstart + project_id + '/study_metrics.json', 'r') as f:
@@ -85,28 +102,29 @@ if __name__ == '__main__':
     with open(pathstart + project_id + '/fd_metadata.json', 'w') as f:
         json.dump(fd_metadata, f, indent=4)
 
-    data = pd.DataFrame(columns = ['iter_num', metric])
-    if metric in study_metrics.keys():
-        data['iter_num'] = [i['iter_num'] for i in study_metrics[metric]]
-        data[metric] = [i['value'] for i in study_metrics[metric]]
-        data = data.set_index('iter_num')
-        print(data[metric].to_list())
-        if test == 'adf':
-            adf(data)
-        elif test == 'pp':
-            pp(data)
-        elif test == 'mk':
-            mannkendall(data[metric].to_list())
-    elif metric in fd_metadata[project_info['scenario']['target_fd']].keys():
-        for fd_m in fd_metadata.values():
-            data['iter_num'] = [i['iter_num'] for i in fd_m[metric]]
-            data[metric] = [i['iter_num'] for i in fd_m[metric]]
+    for metric in metrics:
+        data = pd.DataFrame(columns = ['iter_num', metric])
+        if metric in study_metrics.keys():
+            data['iter_num'] = [i['iter_num'] for i in study_metrics[metric]]
+            data[metric] = [i['value'] for i in study_metrics[metric]]
             data = data.set_index('iter_num')
+            print(data[metric].to_list())
             if test == 'adf':
                 adf(data)
             elif test == 'pp':
                 pp(data)
-            elif test == 'mannkendall':
+            elif test == 'mk':
                 mannkendall(data[metric].to_list())
+        elif metric in fd_metadata[project_info['scenario']['target_fd']].keys():
+            for fd_m in fd_metadata.values():
+                data['iter_num'] = [i['iter_num'] for i in fd_m[metric]]
+                data[metric] = [i['iter_num'] for i in fd_m[metric]]
+                data = data.set_index('iter_num')
+                if test == 'adf':
+                    adf(data)
+                elif test == 'pp':
+                    pp(data)
+                elif test == 'mannkendall':
+                    mannkendall(data[metric].to_list())
 
     

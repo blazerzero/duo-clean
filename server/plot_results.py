@@ -169,6 +169,9 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
             st_vios_marked |= fd_st_vios_marked
             st_vios_found |= fd_st_vios_found
             st_vios_total |= fd_st_vios_total
+            # print('vios found:', st_vios_found)
+            # print('vios marked:', st_vios_marked)
+            # print('vios total:', st_vios_total)
 
         # Medium-term memory violation calculations
         if i > 1:

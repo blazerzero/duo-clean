@@ -83,11 +83,13 @@ def run(s, b_type, decision_type, stat_calc):
         if b_type == 'oracle':
             # conf = next(i for i in scenario['clean_hypothesis_space'] if i['cfd'] == h['cfd'])['conf']
             mu = next(i for i in scenario['clean_hypothesis_space'] if i['cfd'] == h['cfd'])['conf']
+            if mu == 1:
+                mu = 0.99999
             variance = 0.00000001
             alpha, beta = initialPrior(mu, variance)
             # alpha = 1
             # beta = 1
-        if b_type == 'informed':
+        elif b_type == 'informed':
             mu = h['conf']
             variance = 0.01
             alpha, beta = initialPrior(mu, variance)
@@ -173,18 +175,17 @@ def run(s, b_type, decision_type, stat_calc):
     msg = ''
     iter_num = 0
 
-    pruned_X = set()
-    marked_rows = set()
-
     max_marked = 1
     mark_prob = 0.5
+
+    marked_rows = set()
+    vios_marked = set()
+    vios_found = set()
 
     while msg != '[DONE]':
         iter_num += 1
         print('iter:', iter_num)
         feedbackMap = buildFeedbackMap(data, feedback, header)
-
-        # p_X = 0
 
         # Bayesian behavior
         for fd, fd_m in fd_metadata.items():
@@ -193,13 +194,11 @@ def run(s, b_type, decision_type, stat_calc):
 
             # Step 1: update hyperparameters
             if b_type != 'oracle':
-                # successes_X = set()
-                # failures_X = set()
                 successes = 0
                 failures = 0
 
-                for i in sample.index:
-                    if i not in fd_m.vios:
+                for i in data.keys():
+                    if int(i) not in fd_m.vios:
                         successes += 1
                     else:
                         failures += 1
@@ -215,50 +214,91 @@ def run(s, b_type, decision_type, stat_calc):
                 print('beta:', fd_m.beta)
 
         # Step 2: mark errors according to new beliefs
-        # TODO: Upgrade q_t for consider multiple FDs
         fd_m = fd_metadata[target_fd]
         q_t = fd_m.alpha / (fd_m.alpha + fd_m.beta) if b_type != 'oracle' else fd_m.conf
-        print('theta:', q_t)
-        marked_vios = set()
+
+        iter_marked_rows = {i for i in marked_rows if str(i) in data.keys()}
+        iter_vios_marked = {(x,y) for (x,y) in vios_marked if (x != y and (x,y) in sample_X) or (x == y and str(x) in data.keys())}
+        iter_vios_found = {(x,y) for (x,y) in vios_found if (x != y and (x,y) in sample_X) or (x == y and str(x) in data.keys())}
+        iter_vios_total = {i for i in fd_m.vio_pairs if i in sample_X}
+
+        # print(sample)
+        print('q_t:', q_t)
+
         for row in data.keys():
-            # for fd, fd_m in fd_metadata.items():      # NOTE: comment out temporarily
+
+            # if int(row) in iter_marked_rows:
+            #     print(row)
+            #     continue
+
             if b_type == 'oracle':
                 if stat_calc == 'precision':
                     q_t = mark_prob
                 elif stat_calc == 'recall':
-                    if len(marked_vios) > max_marked:
+                    if len(iter_vios_marked) >= max_marked:
                         q_t = 0
                 else:
                     continue
+
+            vios_w_i = {v for v in iter_vios_total if int(row) in v and v not in iter_vios_marked}
+
+            if decision_type == 'coin-flip':
+                decision = np.random.binomial(1, q_t)
             else:
-                if len([x for x in pruned_X if int(row) in x]) > 0:
-                    continue
+                decision = 1 if q_t >= p_max else 0
+            print(row, decision)
 
-            if len([x for x in sample_X if int(row) in x]) > 0 and len([x for x in fd_m.vio_pairs if int(row) in x]) > 0:
-                if decision_type == 'coin-flip':
-                    decision = np.random.binomial(1, q_t)
-                else:
-                    decision = 1 if q_t >= p_max else 0
-                    
-                print(decision)
-                if decision == 1:
-                    for col in feedbackMap[row].keys():
-                        feedbackMap[row][col] = True
+            # if len({v for v in iter_vios_marked if int(row) in v}) > 0:
+            #     print('skipped')
+            #     continue
+
+            if decision == 1:
+                if len(vios_w_i) > 0:
+                    for rh in fd_m.rhs:
+                        feedbackMap[row][rh] = True
+                    vios_found |= vios_w_i
+                    iter_vios_found |= vios_w_i
+                    vios_marked |= vios_w_i
+                    iter_vios_marked |= vios_w_i
                     marked_rows.add(int(row))
-                    for x in [i for i in fd_m.vio_pairs if i in sample_X and row in i]:
-                        marked_vios.add(x)
-                    for x in [i for i in sample_X if int(row) in i]:
-                        pruned_X.add(x)
+                    iter_marked_rows.add(int(row))
+                    vios_marked.discard((int(row), int(row)))
+                    iter_vios_marked.discard((int(row), int(row)))
+                    
                 else:
-                    for col in feedbackMap[row].keys():
-                        feedbackMap[row][col] = False
-                    if int(row) in marked_rows:
-                        marked_rows.remove(int(row))
-                    pruned_X = {x for x in pruned_X if int(row) not in x}
-                    marked_vios = {(x, y) for (x, y) in marked_vios if x in sample.index and y in sample.index and int(row) not in (x, y)}
-        print(marked_rows)
-
-        # print(feedbackMap)
+                    for rh in fd_m.rhs:
+                        feedbackMap[row][rh] = False
+                    vios_marked.discard((int(row), int(row)))
+                    iter_vios_marked.discard((int(row), int(row)))
+                    marked_rows.discard(int(row))
+                    iter_marked_rows.discard(int(row))
+            else:
+                if len(vios_w_i) > 0:
+                    for rh in fd_m.rhs:
+                        feedbackMap[row][rh] = False
+                    vios_found -= vios_w_i
+                    iter_vios_found -= vios_w_i
+                    vios_marked -= vios_w_i
+                    iter_vios_marked -= vios_w_i
+                    marked_rows.discard(int(row))
+                    iter_marked_rows.discard(int(row))
+                else:
+                    for rh in fd_m.rhs:
+                        feedbackMap[row][rh] = True
+                    vios_marked.add((int(row), int(row)))
+                    iter_vios_marked.add((int(row), int(row)))
+                    marked_rows.add(int(row))
+                    iter_marked_rows.add(int(row))
+            
+        precision = len(iter_vios_found) / len(iter_vios_marked) if len(iter_vios_marked) > 0 else 0.5
+        recall = len(iter_vios_found) / len(iter_vios_total) if len(iter_vios_total) > 0 else 0.5
+        print('vios found:', iter_vios_found)
+        print('vios marked:', iter_vios_marked)
+        print('vios total:', iter_vios_total)
+        print('precision:', precision)
+        print('recall:', recall)
+                    
+        
         feedback = dict()
         for f in feedbackMap.keys():
             feedback[data[f]['id']] = feedbackMap[f]
@@ -298,10 +338,13 @@ def run(s, b_type, decision_type, stat_calc):
                             data[row][j] = ''
                         elif type(data[row][j]) != 'str':
                             data[row][j] = str(data[row][j])
-            if mark_prob < 0.9:
-                mark_prob += 0.1
-            elif mark_prob < 0.95:
-                mark_prob += 0.01
+                if mark_prob < 0.9:
+                    mark_prob += 0.05
+                elif mark_prob < 0.95:
+                    mark_prob += 0.01
+                print(iter_vios_marked)
+                if max_marked < 5:
+                    max_marked += 1
 
         except Exception as e:
             print(e)
