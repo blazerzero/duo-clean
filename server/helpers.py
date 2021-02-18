@@ -634,18 +634,18 @@ def vioStats(curr_sample, t_sample, feedback, vio_pairs, rhs, dirty_dataset, cle
         vios_total.add((x, y))
     
     for x in curr_sample:
-        vios_w_i = {v for v in vios_total if x in v and v not in vios_marked}
+        vios_w_x = {v for v in vios_total if x in v and v not in vios_marked}
         marked = True
         for rh in rhs:
             if feedback[str(x)][rh] is False:
                 marked = False
                 break
         if marked is True:
-            if len(vios_w_i) > 0:
-                vios_found |= vios_w_i
+            if len(vios_w_x) > 0:
+                vios_found |= vios_w_x
+                vios_marked |= vios_w_x
             else:
                 vios_marked.add((x, x))
-            vios_marked |= vios_w_i
 
     # for x in curr_sample:
     #     if len([i for i in vio_pairs if x in i]) == 0:
