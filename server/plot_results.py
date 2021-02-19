@@ -169,9 +169,9 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
             st_vios_marked |= fd_st_vios_marked
             st_vios_found |= fd_st_vios_found
             st_vios_total |= fd_st_vios_total
-            # print('vios found:', st_vios_found)
-            # print('vios marked:', st_vios_marked)
-            # print('vios total:', st_vios_total)
+            print('vios found:', st_vios_found)
+            print('vios marked:', st_vios_marked)
+            print('vios total:', st_vios_total)
 
         # Medium-term memory violation calculations
         if i > 1:
@@ -247,108 +247,110 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
         if len(st_vios_total) > 0:
             st_vio_recall = len(st_vios_found) / len(st_vios_total)
         else:
-            st_vio_recall = 0 if i == 1 else study_metrics['st_vio_recall'][-1]['value']
+            st_vio_recall = 1
 
         if len(lt_vios_total) > 0:
             lt_vio_recall = len(lt_vios_found) / len(lt_vios_total)
         else:
-            lt_vio_recall = 0 if i == 1 else study_metrics['lt_vio_recall'][-1]['value']
+            lt_vio_recall = 1
 
         if len(mt_vios_total) > 0:
             mt_vio_recall = len(mt_vios_found) / len(mt_vios_total)
         else:
-            mt_vio_recall = 0 if i == 1 else study_metrics['mt_vio_recall'][-1]['value']
+            mt_vio_recall = 1
 
         if len(mt_2_vios_total) > 0:
             mt_2_vio_recall = len(mt_2_vios_found) / len(mt_2_vios_total)
         else:
-            mt_2_vio_recall = 0 if i == 1 else study_metrics['mt_2_vio_recall'][-1]['value']
+            mt_2_vio_recall = 1
 
         if len(mt_3_vios_total) > 0:
             mt_3_vio_recall = len(mt_3_vios_found) / len(mt_3_vios_total)
         else:
-            mt_3_vio_recall = 0 if i == 1 else study_metrics['mt_3_vio_recall'][-1]['value']
+            mt_3_vio_recall = 1
 
         if len(st_vios_marked) > 0:
             st_vio_precision = len(st_vios_found) / len(st_vios_marked)
         else:
-            st_vio_precision = 0 if i == 1 else study_metrics['st_vio_precision'][-1]['value']
+            st_vio_precision = 1
+
+        print('precision:', st_vio_precision, '\n')
 
         if len(lt_vios_marked) > 0:
             lt_vio_precision = len(lt_vios_found) / len(lt_vios_marked)
         else:
-            lt_vio_precision = 0 if i == 1 else study_metrics['lt_vio_precision'][-1]['value']
+            lt_vio_precision = 1
 
         if len(mt_vios_marked) > 0:
             mt_vio_precision = len(mt_vios_found) / len(mt_vios_marked)
         else:
-            mt_vio_precision = 0 if i == 1 else study_metrics['mt_vio_precision'][-1]['value']
+            mt_vio_precision = 1
 
         if len(mt_2_vios_marked) > 0:
             mt_2_vio_precision = len(mt_2_vios_found) / len(mt_2_vios_marked)
         else:
-            mt_2_vio_precision = 0 if i == 1 else study_metrics['mt_2_vio_precision'][-1]['value']
+            mt_2_vio_precision = 1
 
         if len(mt_3_vios_marked) > 0:
             mt_3_vio_precision = len(mt_3_vios_found) / len(mt_3_vios_marked)
         else:
-            mt_3_vio_precision = 0 if i == 1 else study_metrics['mt_3_vio_precision'][-1]['value']
+            mt_3_vio_precision = 1
 
         if st_vio_precision > 0 or st_vio_recall > 0:
             st_vio_f1 = 2 * (st_vio_precision * st_vio_recall) / (st_vio_precision + st_vio_recall)
         else:
-            st_vio_f1 = 0 if i == 1 else study_metrics['st_vio_f1'][-1]['value']
+            st_vio_f1 = 1
 
         if lt_vio_precision > 0 or lt_vio_recall > 0:
             lt_vio_f1 = 2 * (lt_vio_precision * lt_vio_recall) / (lt_vio_precision + lt_vio_recall)
         else:
-            lt_vio_f1 = 0 if i == 1 else study_metrics['lt_vio_f1'][-1]['value']
+            lt_vio_f1 = 1
 
         if mt_vio_precision > 0 or mt_vio_recall > 0:
             mt_vio_f1 = 2 * (mt_vio_precision * mt_vio_recall) / (mt_vio_precision + mt_vio_recall)
         else:
-            mt_vio_f1 = 0 if i == 1 else study_metrics['mt_vio_f1'][-1]['value']
+            mt_vio_f1 = 1
 
         if mt_2_vio_precision > 0 or mt_2_vio_recall > 0:
             mt_2_vio_f1 = 2 * (mt_2_vio_precision * mt_2_vio_recall) / (mt_2_vio_precision + mt_2_vio_recall)
         else:
-            mt_2_vio_f1 = 0 if i == 1 else study_metrics['mt_2_vio_f1'][-1]['value']
+            mt_2_vio_f1 = 1
 
         if mt_3_vio_precision > 0 or mt_3_vio_recall > 0:
             mt_3_vio_f1 = 2 * (mt_3_vio_precision * mt_3_vio_recall) / (mt_3_vio_precision + mt_3_vio_recall)
         else:
-            mt_3_vio_f1 = 0 if i == 1 else study_metrics['mt_3_vio_f1'][-1]['value']
+            mt_3_vio_f1 = 1
 
         # Short and long-term error precision, recall, and F1
         if iter_errors_marked > 0:
             iter_err_precision = iter_errors_found / iter_errors_marked
         else:
-            iter_err_precision = 0
+            iter_err_precision = 1
         
         if iter_errors_total > 0:
             iter_err_recall = iter_errors_found / iter_errors_total
         else:
-            iter_err_recall = 0
+            iter_err_recall = 1
 
         if iter_err_precision > 0 or iter_err_recall > 0:
             iter_err_f1 = 2 * (iter_err_precision * iter_err_recall) / (iter_err_precision + iter_err_recall)
         else:
-            iter_err_f1 = 0
+            iter_err_f1 = 1
 
         if all_errors_marked > 0:
             all_err_precision = all_errors_found / all_errors_marked
         else:
-            all_err_precision = 0
+            all_err_precision = 1
         
         if all_errors_total > 0:
             all_err_recall = all_errors_found / all_errors_total
         else:
-            all_err_recall = 0
+            all_err_recall = 1
 
         if all_err_precision > 0 or all_err_recall > 0:
             all_err_f1 = 2 * (all_err_precision * all_err_recall) / (all_err_precision + all_err_recall)
         else:
-            all_err_f1 = 0
+            all_err_f1 = 1
 
         study_metrics['iter_err_precision'].append({ 'iter_num': int(i), 'value': iter_err_precision, 'elapsed_time': elapsed_time })
         study_metrics['iter_err_recall'].append({ 'iter_num': int(i), 'value': iter_err_recall, 'elapsed_time': elapsed_time })

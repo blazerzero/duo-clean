@@ -349,17 +349,20 @@ def buildSample(data, X, sample_size, project_id, current_iter, current_time):
     with open('./store/' + project_id + '/project_info.json', 'r') as f:
         project_info = json.load(f)
     target_fd = project_info['scenario']['target_fd']
+    tfd_conf = next(i for i in project_info['scenario']['hypothesis_space'] if i['cfd'] == target_fd)['conf']
     tfd_m = fd_metadata[target_fd]
 
     elapsed_time = current_time - start_time
 
     sample_X = set()
     s_out = None
-    tfd_in_sample_X = set()
-    while len(tfd_in_sample_X) == 0:    # if no vios relevant to the FD are in the sample
-        s_index, sample_X = returnTuples(data, X, sample_size)
-        s_out = data.loc[s_index, :]
-        tfd_in_sample_X = {x for x in sample_X if x in tfd_m.vio_pairs} # violations relevant to this FD
+    # tfd_in_sample_X = set()
+    # while len(tfd_in_sample_X) == 0:    # if no vios relevant to the FD are in the sample
+    tfd_X = [x for x in X if x in tfd_m.vio_pairs]
+    print(tfd_X)
+    s_index, sample_X = returnTuples(data, tfd_X, 1 - tfd_conf, sample_size)
+    s_out = data.loc[s_index, :]
+        # tfd_in_sample_X = {x for x in sample_X if x in tfd_m.vio_pairs} # violations relevant to this FD
 
     print('IDs of tuples in next sample:', s_out.index)
     
@@ -367,8 +370,21 @@ def buildSample(data, X, sample_size, project_id, current_iter, current_time):
 
 
 # RETURN TUPLES AND VIOS FOR SAMPLE
-def returnTuples(data, X, sample_size):
-    s_out = random.sample(population=list(data.index), k=sample_size)
+def returnTuples(data, X, vio_rate, sample_size):
+    vios_out = random.sample(population=X, k=math.ceil(vio_rate * sample_size))
+    s_out = list()
+    for (x, y) in vios_out:
+        if x not in s_out:
+            s_out.append(x)
+        if y not in s_out:
+            s_out.append(y)
+    other_tups_out = random.sample(population=list(data.index), k=sample_size)
+    for i in other_tups_out:
+        if i not in s_out:
+            s_out.append(i)
+        if len(s_out) >= sample_size:
+            break
+    random.shuffle(s_out)
     sample_X = set()
     for i1 in s_out:
         for i2 in s_out:
@@ -632,20 +648,47 @@ def vioStats(curr_sample, t_sample, feedback, vio_pairs, rhs, dirty_dataset, cle
         if x not in curr_sample and y not in curr_sample:
             continue
         vios_total.add((x, y))
-    
-    for x in curr_sample:
-        vios_w_x = {v for v in vios_total if x in v and v not in vios_marked}
-        marked = True
+
+    # for (x, y) in vio_pairs:
+        x_marked = True
         for rh in rhs:
             if feedback[str(x)][rh] is False:
-                marked = False
+                x_marked = False
                 break
-        if marked is True:
-            if len(vios_w_x) > 0:
-                vios_found |= vios_w_x
-                vios_marked |= vios_w_x
-            else:
-                vios_marked.add((x, x))
+        y_marked = True
+        for rh in rhs:
+            if feedback[str(y)][rh] is False:
+                y_marked = False
+                break
+        if x_marked == y_marked:
+            continue
+        vios_marked.add((x,y))
+        vios_found.add((x,y))
+    
+    for x in curr_sample:
+        vios_w_x = {i for i in vios_marked if x in i}
+        if len(vios_w_x) == 0:
+            marked = True
+            for rh in rhs:
+                if feedback[str(x)][rh] is False:
+                    marked = False
+                    break
+            if marked is True:
+                vios_marked.add((x,x))
+    
+    # for x in curr_sample:
+    #     vios_w_x = {v for v in vios_total if x in v and v not in vios_marked}
+    #     marked = True
+    #     for rh in rhs:
+    #         if feedback[str(x)][rh] is False:
+    #             marked = False
+    #             break
+    #     if marked is True:
+    #         if len(vios_w_x) > 0:
+    #             vios_found |= vios_w_x
+    #             vios_marked |= vios_w_x
+    #         else:
+    #             vios_marked.add((x, x))
 
     # for x in curr_sample:
     #     if len([i for i in vio_pairs if x in i]) == 0:

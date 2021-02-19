@@ -246,7 +246,7 @@ def run(s, b_type, decision_type, stat_calc):
                 decision = np.random.binomial(1, q_t)
             else:
                 decision = 1 if q_t >= p_max else 0
-            print(row, decision)
+            # print(row, decision)
 
             # if len({v for v in iter_vios_marked if int(row) in v}) > 0:
             #     print('skipped')
@@ -290,13 +290,13 @@ def run(s, b_type, decision_type, stat_calc):
                     marked_rows.add(int(row))
                     iter_marked_rows.add(int(row))
             
-        precision = len(iter_vios_found) / len(iter_vios_marked) if len(iter_vios_marked) > 0 else 0.5
-        recall = len(iter_vios_found) / len(iter_vios_total) if len(iter_vios_total) > 0 else 0.5
-        print('vios found:', iter_vios_found)
-        print('vios marked:', iter_vios_marked)
-        print('vios total:', iter_vios_total)
-        print('precision:', precision)
-        print('recall:', recall)
+        precision = len(iter_vios_found) / len(iter_vios_marked) if len(iter_vios_marked) > 0 else 1
+        recall = len(iter_vios_found) / len(iter_vios_total) if len(iter_vios_total) > 0 else 1
+        # print('vios found:', iter_vios_found)
+        # print('vios marked:', iter_vios_marked)
+        # print('vios total:', iter_vios_total)
+        # print('precision:', precision)
+        # print('recall:', recall)
                     
         
         feedback = dict()
@@ -342,7 +342,7 @@ def run(s, b_type, decision_type, stat_calc):
                     mark_prob += 0.05
                 elif mark_prob < 0.95:
                     mark_prob += 0.01
-                print(iter_vios_marked)
+                # print(iter_vios_marked)
                 if max_marked < 5:
                     max_marked += 1
 
