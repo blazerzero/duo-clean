@@ -24,7 +24,7 @@ class Import extends Component {
   }
 
   _handleSubmit = async(history) => {
-    if (this.state.scenarioID.length > 0 && this.state.projectID.length === 0) {
+    if ((this.state.scenarioID.length > 0 && this.state.name.length > 0) && this.state.projectID.length === 0) {
       this.setState({ isProcessing: true });
       const formData = new FormData();
       formData.append('name', this.state.name);
@@ -49,7 +49,7 @@ class Import extends Component {
           });
         })
         .catch(error => console.log(error));
-    } else if (this.state.projectID.length > 0 && this.state.scenarioID.length === 0) {
+    } else if (this.state.projectID.length > 0 && (this.state.scenarioID.length === 0 && this.state.name.length === 0)) {
       this.setState({ isProcessing: true });
       const formData = new FormData();
       formData.append('project_id', this.state.projectID);
