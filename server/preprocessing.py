@@ -21,22 +21,17 @@ if __name__ == '__main__':
     with open('scenarios-master.json', 'r') as f:
         scenarios = json.load(f)
 
-    all_scenarios_duo = dict()
-    all_scenarios_random = dict()
+    all_scenarios = dict()
+    # all_scenarios_random = dict()
     for s_id, scenario in tqdm(scenarios.items()):
         data = pd.read_csv(scenario['dirty_dataset'], keep_default_na=False)
         clean_data = pd.read_csv(scenario['clean_dataset'], keep_default_na=False)
-        if int(s_id) <= 4:
-            # Restrict hypothesis space to the minimum requirement for still including the FDs of concern in the hypothesis space
-            min_conf = 0.75
-            max_ant = 2
-        else:
-            # Loosen parameters of hypothesis space for a bigger hypothesis space
-            min_conf = 0.7
-            max_ant = 3
+        min_conf = 0.75
+        clean_min_conf = 0.95
+        max_ant = 2
 
         process = sp.Popen(['./data/cfddiscovery/CFDD', scenario['dirty_dataset'], str(len(data.index)), str(min_conf), str(max_ant)], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})     # CFDD
-        clean_process = sp.Popen(['./data/cfddiscovery/CFDD', scenario['clean_dataset'], str(len(data.index)), str(min_conf), str(max_ant)], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})   # CFDD for clean h space
+        clean_process = sp.Popen(['./data/cfddiscovery/CFDD', scenario['clean_dataset'], str(len(data.index)), str(clean_min_conf), str(max_ant)], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})   # CFDD for clean h space
 
         res = process.communicate()
         clean_res = clean_process.communicate()
@@ -54,8 +49,11 @@ if __name__ == '__main__':
             clean_fds = helpers.buildCompositionSpace(clean_fds, None, clean_data, None, min_conf, max_ant)
         else:
             clean_fds = list()
-
+        
         intersecting_fds = list(set([f['cfd'] for f in fds]).intersection(set([c['cfd'] for c in clean_fds])))
+        intersecting_fds = [fd for fd in intersecting_fds if len(fd.split(' => ')[1].split(', ')) == 1]
+
+        # intersecting_fds = list(set(fds).intersection(set(clean_fds)))
 
         # print([f['cfd'] for f in fds])
         # print(intersecting_fds)
@@ -83,7 +81,7 @@ if __name__ == '__main__':
             h['vio_pairs'] = vio_pairs
             h_space.append(h)
 
-        # print(h_space)
+        print('scenario', s_id, 'h space size:', len([h['cfd'] for h in h_space]))
 
         clean_h_space = list()
         for fd in clean_fds:
@@ -111,27 +109,29 @@ if __name__ == '__main__':
         diff = json.loads(diff_df.to_json(orient='index'))
         scenario['diff'] = diff
 
-        all_scenarios_duo[s_id] = scenario
-        s_id_plus_8 = str(int(s_id) + 8)
-        if s_id == '0':
-            continue
-        all_scenarios_random[s_id_plus_8] = scenario.copy()
+        all_scenarios[s_id] = scenario
+        all_scenarios[s_id]['sampling_method'] = 'DUO'
+        all_scenarios[s_id]['update_method'] = 'BAYESIAN'
+        # s_id_plus_8 = str(int(s_id) + 8)
+        # if s_id == '0':
+        #     continue
+        # all_scenarios_random[s_id_plus_8] = scenario.copy()
 
-    all_scenarios = {**all_scenarios_duo, **all_scenarios_random}
+    # all_scenarios = {**all_scenarios_duo, **all_scenarios_random}
 
-    for s_id in all_scenarios.keys():
-        if int(s_id) == 0 or (int(s_id) >= 1 and int(s_id) <= 8):
-            # all_scenarios[s_id]['sampling_method'] = 'DUO'
-            all_scenarios[s_id]['update_method'] = 'BAYESIAN'
-        else:
-            # all_scenarios[s_id]['sampling_method'] = 'RANDOM-PURE'
-            all_scenarios[s_id]['update_method'] = 'REINFORCEMENT'
+    # for s_id in all_scenarios.keys():
+    #     if int(s_id) == 0 or (int(s_id) >= 1 and int(s_id) <= 8):
+    #         # all_scenarios[s_id]['sampling_method'] = 'DUO'
+    #         all_scenarios[s_id]['update_method'] = 'BAYESIAN'
+    #     else:
+    #         # all_scenarios[s_id]['sampling_method'] = 'RANDOM-PURE'
+    #         all_scenarios[s_id]['update_method'] = 'REINFORCEMENT'
 
     with open('scenarios.json', 'w') as f:
         json.dump(all_scenarios, f)
 
-    typescripted_scenarios = list()
-    for s in all_scenarios.values():
-        typescripted_scenarios.append(s)
-    with open('./simulators/scenarios.json', 'w') as f:
-        json.dump(typescripted_scenarios, f)
+    # typescripted_scenarios = list()
+    # for s in all_scenarios.values():
+    #     typescripted_scenarios.append(s)
+    # with open('./simulators/scenarios.json', 'w') as f:
+    #     json.dump(typescripted_scenarios, f)

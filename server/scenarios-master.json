@@ -14,52 +14,45 @@
         "difficulty": 4
     },
     "2": {
-        "target_fd": "(type, facilityname) => manager, region, owner",
+        "target_fd": "(facilityname) => owner",
         "description": "Identify errors in data about airfields in Alaska.",
         "dirty_dataset": "./data/dirty_airport_2.csv",
         "clean_dataset": "./data/airport_2.csv",
         "difficulty": 3
     },
     "3": {
-        "target_fd": "(title, director) => rating, year",
+        "target_fd": "(title, director) => rating",
         "description": "Identify errors in data about English-language movies and TV shows.",
         "dirty_dataset": "./data/dirty_omdb_3.csv",
         "clean_dataset": "./data/omdb_3.csv",
         "difficulty": 2
     },
     "4": {
-        "target_fd": "(listingnumber) => year, title, director",
-        "description": "Identify errors in data about English-language movies and TV shows.",
+        "target_fd": "(listingnumber) => title",
+        "description": "Find the key in data about English-language movies and TV shows, and find errors in the data accordingly.",
         "dirty_dataset": "./data/dirty_omdb_4.csv",
         "clean_dataset": "./data/omdb_4.csv",
         "difficulty": 1
     },
     "5": {
-        "target_fd": "(manager) => owner",
-        "description": "Identify errors in data about airfields in Alaska.",
-        "dirty_dataset": "./data/dirty_airport_1.csv",
-        "clean_dataset": "./data/airport_1.csv",
-        "difficulty": 4
-    },
-    "6": {
-        "target_fd": "(type, facilityname) => manager, region, owner",
-        "description": "Identify errors in data about airfields in Alaska.",
-        "dirty_dataset": "./data/dirty_airport_2.csv",
-        "clean_dataset": "./data/airport_2.csv",
-        "difficulty": 3
-    },
-    "7": {
-        "target_fd": "(title, director) => rating, year",
+        "target_fd": "(title) => director",
         "description": "Identify errors in data about English-language movies and TV shows.",
-        "dirty_dataset": "./data/dirty_omdb_3.csv",
-        "clean_dataset": "./data/omdb_3.csv",
+        "dirty_dataset": "./data/dirty_omdb_5.csv",
+        "clean_dataset": "./data/omdb_5.csv",
         "difficulty": 2
     },
-    "8": {
-        "target_fd": "(listingnumber) => year, title, director",
-        "description": "Identify errors in data about English-language movies and TV shows.",
-        "dirty_dataset": "./data/dirty_omdb_4.csv",
-        "clean_dataset": "./data/omdb_4.csv",
-        "difficulty": 1
+    "6": {
+        "target_fd": "(rating) => type",
+        "description": "Identify errors in data about English-language movies.",
+        "dirty_dataset": "./data/dirty_omdb_6.csv",
+        "clean_dataset": "./data/omdb_6.csv",
+        "difficulty": 2
+    },
+    "7": {
+        "target_fd": "(title, director) => genre",
+        "description": "Find the key in data about English-language movies and TV shows, and find errors in the data accordingly.",
+        "dirty_dataset": "./data/dirty_omdb_7.csv",
+        "clean_dataset": "./data/omdb_7.csv",
+        "difficulty": 2
     }
 }

@@ -77,13 +77,21 @@ class FDMeta(object):
     
     def asdict(self):
         # print([list(vp) for vp in self.vio_pairs])
+        alpha_history = list()
+        for a in self.alpha_history:
+            alpha_history.append(a.asdict())
+
+        beta_history = list()
+        for b in self.beta_history:
+            beta_history.append(b.asdict())
+
         return {
             'lhs': self.lhs,
             'rhs': self.rhs,
             'alpha': self.alpha,
-            'alpha_history': self.alpha_history,
+            'alpha_history': alpha_history,
             'beta': self.beta,
-            'beta_history': self.beta_history,
+            'beta_history': beta_history,
             'support': self.support,
             'vios': self.vios,
             'vio_pairs': [list(vp) for vp in self.vio_pairs],

@@ -24,8 +24,8 @@
 <![CDATA[
 DCs:
 // FD: manager -> owner
-e1: airport_1(type: $t1, region: $r1, facilityname: $fn1, owner: $o1, ownertype: $ot1, manager: $m1), 
-airport_1(type: $t2, region: $r2, facilityname: $fn2, owner: $o2, ownertype: $ot2, manager: $m2), 
+e1: airport_1(type: $t1, facilityname: $fn1, owner: $o1, manager: $m1), 
+airport_1(type: $t2,facilityname: $fn2, owner: $o2, manager: $m2), 
     $m1 == $m2, $o1 != $o2 -> #fail.
 ]]>
     </dependencies>

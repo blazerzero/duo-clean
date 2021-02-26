@@ -7,13 +7,13 @@
         <type>DBMS</type>
         <access-configuration>
             <driver>org.postgresql.Driver</driver>
-            <uri>jdbc:postgresql:duo_o4</uri>
+            <uri>jdbc:postgresql:duo_o6</uri>
             <schema>target</schema>
             <login>postgres</login>
             <password>BlazersPass</password>
         </access-configuration>
         <import>
-            <input type="csv" separator="," table="omdb_4">omdb_4.csv</input>
+            <input type="csv" separator="," table="omdb_6">omdb_6.csv</input>
         </import>
     </target>
 
@@ -23,10 +23,10 @@
     <dependencies>
 <![CDATA[
 DCs:
-// FD1: (listingnumber) -> title
-e1: omdb_4(listingnumber: $ln1, title: $t1, year: $y1), 
-omdb_4(listingnumber: $ln2, title: $t2, year: $y2), 
-    $ln1 == $ln2, $t1 != $t2 -> #fail.
+// FD1: (rating) => type
+e1: omdb_6(title: $t1, rating: $r1, year: $y1, type: $ty1), 
+omdb_6(title: $t2, rating: $r2, year: $y2, type: $ty2), 
+    $r1 == $r2, $ty1 != $ty2 -> #fail.
 ]]>
     </dependencies>
 
@@ -54,7 +54,7 @@ omdb_4(listingnumber: $ln2, title: $t2, year: $y2),
 
         <!-- To export the changes -->
         <exportCellChanges>true</exportCellChanges>
-        <exportCellChangesPath>changes/omdb_4.csv</exportCellChangesPath>
+        <exportCellChangesPath>changes/omdb_6.csv</exportCellChangesPath>
 
         <!-- To compute an estimate of the reparability (default = false) -->
         <estimateRepairability>true</estimateRepairability>
@@ -80,11 +80,11 @@ omdb_4(listingnumber: $ln2, title: $t2, year: $y2),
             <defaultPercentage>0.0</defaultPercentage>
             <vioGenQueries>
                 <vioGenQuery id="e1">
-                    <comparison>(ln1 == ln2)</comparison>
+                    <comparison>(r1 == r2)</comparison>
                     <percentage>0.0</percentage> 
                 </vioGenQuery>
                 <vioGenQuery id="e1">
-                    <comparison>(t1 != t2)</comparison>
+                    <comparison>(ty1 != ty2)</comparison>
                     <percentage>20.0</percentage> 
                 </vioGenQuery>
             </vioGenQueries>
@@ -96,7 +96,7 @@ omdb_4(listingnumber: $ln2, title: $t2, year: $y2),
                 <strategy charsToSwitch="3">TypoSwitchValue</strategy>
             </defaultStrategy> 
             <attributeStrategy>
-                <attribute table="omdb_4" name="title">
+                <attribute table="omdb_6" name="type">
                     <strategy>TypoActiveDomain</strategy>
                 </attribute>
             </attributeStrategy>

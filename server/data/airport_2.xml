@@ -23,18 +23,10 @@
     <dependencies>
 <![CDATA[
 DCs:
-// FD1: (facilityname, type) -> region
-e1: airport_2(facilityname: $fn1, type: $t1, region: $r1, owner: $o1, manager: $m1), 
-airport_2(facilityname: $fn2, type: $t2, region: $r2, owner: $o2, manager: $m2), 
-    $fn1 == $fn2, $t1 == $t2, $r1 != $r2 -> #fail.
-// FD2: (facilityname, type) -> owner
-e2: airport_2(facilityname: $fn1, type: $t1, region: $r1, owner: $o1, manager: $m1), 
-airport_2(facilityname: $fn2, type: $t2, region: $r2, owner: $o2, manager: $m2), 
-    $fn1 == $fn2, $t1 == $t2, $o1 != $o2 -> #fail.
-// FD3: (facilityname, type) -> manager
-e3: airport_2(facilityname: $fn1, type: $t1, region: $r1, owner: $o1, manager: $m1), 
-airport_2(facilityname: $fn2, type: $t2, region: $r2, owner: $o2, manager: $m2), 
-    $fn1 == $fn2, $t1 == $t2, $m1 != $m2 -> #fail.
+// FD1: (facilityname) -> owner
+e1: airport_2(facilityname: $fn1, type: $t1, owner: $o1), 
+airport_2(facilityname: $fn2, type: $t2, owner: $o2), 
+    $fn1 == $fn2, $o1 != $o2 -> #fail.
 ]]>
     </dependencies>
 
@@ -92,36 +84,8 @@ airport_2(facilityname: $fn2, type: $t2, region: $r2, owner: $o2, manager: $m2),
                     <percentage>0.0</percentage> 
                 </vioGenQuery>
                 <vioGenQuery id="e1">
-                    <comparison>(t1 == t2)</comparison>
-                    <percentage>0.0</percentage> 
-                </vioGenQuery>
-                <vioGenQuery id="e1">
-                    <comparison>(r1 != r2)</comparison>
-                    <percentage>10.0</percentage> 
-                </vioGenQuery>
-                <vioGenQuery id="e2">
-                    <comparison>(fn1 == fn2)</comparison>
-                    <percentage>0.0</percentage> 
-                </vioGenQuery>
-                <vioGenQuery id="e2">
-                    <comparison>(t1 == t2)</comparison>
-                    <percentage>0.0</percentage> 
-                </vioGenQuery>
-                <vioGenQuery id="e2">
                     <comparison>(o1 != o2)</comparison>
-                    <percentage>10.0</percentage> 
-                </vioGenQuery>
-                <vioGenQuery id="e3">
-                    <comparison>(fn1 == fn2)</comparison>
-                    <percentage>0.0</percentage> 
-                </vioGenQuery>
-                <vioGenQuery id="e3">
-                    <comparison>(t1 == t2)</comparison>
-                    <percentage>0.0</percentage> 
-                </vioGenQuery>
-                <vioGenQuery id="e3">
-                    <comparison>(m1 != m2)</comparison>
-                    <percentage>10.0</percentage> 
+                    <percentage>20.0</percentage> 
                 </vioGenQuery>
             </vioGenQueries>
         </errorPercentages>
@@ -132,13 +96,7 @@ airport_2(facilityname: $fn2, type: $t2, region: $r2, owner: $o2, manager: $m2),
                 <strategy charsToSwitch="3">TypoSwitchValue</strategy>
             </defaultStrategy> 
             <attributeStrategy>
-                <attribute table="airport_2" name="region">
-                    <strategy>TypoActiveDomain</strategy>
-                </attribute>
                 <attribute table="airport_2" name="owner">
-                    <strategy>TypoActiveDomain</strategy>
-                </attribute>
-                <attribute table="airport_2" name="manager">
                     <strategy>TypoActiveDomain</strategy>
                 </attribute>
             </attributeStrategy>

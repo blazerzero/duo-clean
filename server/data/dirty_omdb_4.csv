@@ -1,101 +1,101 @@
-listingnumber,title,year,director
-1,Get with the Program,2013,Rob Hardy
-2,Walking on a Dream,2013,Rob Hardy
-3,Carbon Copy,2013,Rob Hardy
-4,The Walking Dead,2013,Rob Hardy
-5,What Happens in Mecklinburg...,2014,Rob Hardy
-6,Dead in Tombstone,2013,Roel Reine
-7,12 Rounds 2: Reloaded,2013,Roel Reine
-8,Seal Team Eight: Behind Enemy Lines,2014,Roel Reine
-48,Temptation: Confessions of a Marriage Counselor,2013,Tyler Perry
-10,Off to the Races,2013,Gail Mancuso
-11,The New Office,2013,Gail Mancuso
-12,Woman on Top,2013,Gail Mancuso
-17,The Order of the Dragon,2013,Deran Sarafian
-14,ClosetCon '13,2013,Fred Savage
-20,The Back Nine,2013,Chris Koch
-15,The Intern,2013,Fred Goss
-44,A Space in the Time,2013,Scott Shaw
-24,September Fools,2013,Chris Koch
-18,The Crucible,2013,Deran Sarafian
-19,Children of the Night,2013,Deran Sarafian
-20,Emily,2014,Chris Koch
-21,Camping,2013,Chris Koch
-22,It Has Begun...,2013,Chris Koch
-20,The Back Nine,2013,Fred Goss
-24,September Fools,2013,Brian A Miller
-87,The CSI Effect,2014,Alec Smight
-26,Bad Trouble Here,2013,Anthony Mastanduno
-27,Back to the Hustle,2013,Anthony Mastanduno
-28,Seth in Charge,2013,Anthony Mastanduno
-48,Temptation: Confessions of a Marriage Counselor,2013,Tyler Perry
-30,Computer Crash,2013,Anthony Mastanduno
-31,All-American Jewelry and Loan,2013,Anthony Mastanduno
-32,Breakdown at Tiffany's,2013,Anthony Mastanduno
-33,Gold Crash,2013,Anthony Mastanduno
-34,Harold's Gamble,2013,Anthony Mastanduno
-35,A Typical Night,2014,Keith Munden
-36,Safe Place,2014,Keith Munden
-37,Reaper's Revenge: Fear the Reaper,2014,Keith Munden
-38,Tick Tock,2014,Keith Munden
-39,Unknown Journeys,2014,Keith Munden
-36,The Devil and D.B. Russell,2014,Keith Munden
-7,12 Rounds 2: Reloaded,2013,Peter Sullivan
-7,12 Rounds 2: Reloaded,2014,Roel Reine
-42,Dear Secret Santa,2013,Peter Sullivan
-43,High School Possession,2014,Peter Sullivan
-44,Sacrifice,2014,Scott Shaw
-45,The Drive II: 395 Miles from L.A.,2013,Scott Shaw
-20,Patient Zero,2014,Chris Koch
-47,Donald G. Jackson: Confessions,2014,Scott Shaw
-48,Temptation: Confessions of a Marriage Counselor,2013,Tyler Perry
-49,The Single Moms Club,2014,Tyler Perry
-50,Tyler Perry's A Madea Christmas,2013,Tyler Perry
-51,Emily,2013,Chris Hollo
-52,It's Your Legacy,2013,Chris Hollo
-5,What Happens in Mecklinburg...,2014,Rob Hardy
-54,Have We Met Before?,2013,Chris Hollo
-5,Seth in Charge,2013,Adam Davidson
-38,Tick Tock,2014,Roel Reine
-57,In the Clouds,2013,David Von Ancken
-69,Batman: The Dark Knight Returns Part 2,2013,Jay Oliva
-59,Half Deaf Is Better Than All Dead,2013,Greg Yaitanes
-60,Twerk,2013,Greg Yaitanes
-61,Little Fish,2014,Greg Yaitanes
-61,Little Fish,2014,Greg Yaitanes
-63,Homecoming,2014,Greg Yaitanes
-15,The Devil and D.B. Russell,2013,Fred Goss
-63,What Happens in Mecklinburg...,2013,David Von Ancken
-65,Jarhead 2: Field of Fire,2014,Don Michael Paul
-66,Sniper: Legacy,2014,Don Michael Paul
-67,Robosapien: Rebooted,2013,Sean McNamara
-68,Space Warriors,2013,Sean McNamara
-69,Batman: The Dark Knight Returns Part 2,2013,Greg Yaitanes
-70,Justice League: The Flashpoint Paradox,2013,Jay Oliva
-71,Justice League: War,2014,Jay Oliva
-72,The Prince,2014,Brian A Miller
-73,Officer Down,2013,Brian A Miller
-74,Prince Avalanche,2013,David Gordon Green
-75,Joe,2013,David Gordon Green
-1,Get with the Program,2013,Tyler Perry
-44,A Space in the Time,2013,Scott Shaw
-78,Force of Execution,2013,Keoni Waxman
-79,A Good Man,2014,Keoni Waxman
-80,Pilot,2013,Adam Bernstein
-75,Joe,2014,David Gordon Green
-82,Patient Zero,2014,Adam Davidson
-83,Sacrifice,2014,Adam Davidson
-78,Force of Execution,2013,Gail Mancuso
-85,The Devil and D.B. Russell,2013,Alec Smight
-86,Frame by Frame,2013,Alec Smight
-87,The CSI Effect,2014,Alec Smight
-88,Strange Brew,2013,Bethany Rooney
-89,A Portrait of the Artist as a Young Call Girl,2013,Bethany Rooney
-90,Final Shot,2013,Bethany Rooney
-90,Unknown Journeys,2014,Bethany Rooney
-90,Force of Execution,2014,Keoni Waxman
-92,Aftermath,2013,Brad Turner
-28,Seth in Charge,2013,Anthony Mastanduno
-6,The Prince,2014,Roel Reine
-95,House of the Rising Son,2013,Brad Turner
-96,The Haunting,2014,Brad Turner
+listingnumber,title,year
+1,Get with the Program,2013
+2,Walking on a Dream,2013
+3,Carbon Copy,2013
+4,The Walking Dead,2013
+5,What Happens in Mecklinburg...,2014
+6,Dead in Tombstone,2013
+7,12 Rounds 2: Reloaded,2013
+8,Seal Team Eight: Behind Enemy Lines,2014
+48,Temptation: Confessions of a Marriage Counselor,2013
+10,Off to the Races,2013
+11,The New Office,2013
+12,Woman on Top,2013
+17,The Order of the Dragon,2013
+14,ClosetCon '13,2013
+20,The Back Nine,2013
+15,The Intern,2013
+44,A Space in the Time,2013
+24,September Fools,2013
+18,The Crucible,2013
+19,Children of the Night,2013
+20,Half Deaf Is Better Than All Dead,2013
+21,Camping,2013
+22,It Has Begun...,2013
+20,Final Shot,2013
+24,Half Deaf Is Better Than All Dead,2013
+87,The CSI Effect,2014
+26,Bad Trouble Here,2013
+27,Back to the Hustle,2013
+28,Seth in Charge,2013
+48,Computer Crash,2013
+30,Computer Crash,2013
+31,All-American Jewelry and Loan,2013
+32,Breakdown at Tiffany's,2013
+33,Gold Crash,2013
+34,Harold's Gamble,2013
+35,A Typical Night,2014
+36,Safe Place,2014
+37,Reaper's Revenge: Fear the Reaper,2014
+38,Tick Tock,2014
+39,Unknown Journeys,2014
+36,Final Shot,2014
+7,12 Rounds 2: Reloaded,2013
+7,The Back Nine,2013
+42,Dear Secret Santa,2013
+43,High School Possession,2014
+44,Temptation: Confessions of a Marriage Counselor,2013
+45,The Drive II: 395 Miles from L.A.,2013
+20,Little Fish,2013
+47,Donald G. Jackson: Confessions,2014
+48,Robosapien: Rebooted,2013
+49,The Single Moms Club,2014
+50,Tyler Perry's A Madea Christmas,2013
+51,Emily,2013
+52,It's Your Legacy,2013
+5,Joe,2014
+54,Have We Met Before?,2013
+5,ClosetCon '13,2014
+38,Tick Tock,2014
+57,In the Clouds,2013
+69,Batman: The Dark Knight Returns Part 2,2013
+59,Half Deaf Is Better Than All Dead,2013
+60,Twerk,2013
+61,Little Fish,2014
+61,Little Fish,2014
+63,Homecoming,2014
+15,Robosapien: Rebooted,2013
+63,Carbon Copy,2014
+65,Jarhead 2: Field of Fire,2014
+66,Sniper: Legacy,2014
+67,Robosapien: Rebooted,2013
+68,Space Warriors,2013
+69,A Typical Night,2013
+70,Justice League: The Flashpoint Paradox,2013
+71,Justice League: War,2014
+72,The Prince,2014
+73,Officer Down,2013
+74,Prince Avalanche,2013
+75,Joe,2013
+1,Woman on Top,2013
+44,Walking on a Dream,2013
+78,Force of Execution,2013
+79,A Good Man,2014
+80,Pilot,2013
+75,Joe,2013
+82,Patient Zero,2014
+83,Sacrifice,2014
+78,Force of Execution,2013
+85,The Devil and D.B. Russell,2013
+86,Frame by Frame,2013
+87,Woman on Top,2014
+88,Strange Brew,2013
+89,A Portrait of the Artist as a Young Call Girl,2013
+90,Final Shot,2013
+90,House of the Rising Son,2013
+90,It's Your Legacy,2013
+92,Aftermath,2013
+28,In the Clouds,2013
+6,Dead in Tombstone,2013
+95,House of the Rising Son,2013
+96,The Haunting,2014
