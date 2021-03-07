@@ -357,8 +357,15 @@ def buildSample(data, X, sample_size, project_id, current_iter, current_time):
     with open('./store/' + project_id + '/project_info.json', 'r') as f:
         project_info = json.load(f)
     target_fd = project_info['scenario']['target_fd']
+    alt_h_list = project_info['scenario']['alt_h']
     tfd_conf = next(i for i in project_info['scenario']['hypothesis_space'] if i['cfd'] == target_fd)['conf']
     tfd_m = fd_metadata[target_fd]
+    alt_fd_m = dict()
+    for h in alt_h_list:
+        alt_fd_m[h] = fd_metadata[h]
+    alt_h_vio_pairs = set()
+    for _, h in alt_fd_m.items():
+        alt_h_vio_pairs |= h.vio_pairs
 
     elapsed_time = current_time - start_time
 
@@ -368,7 +375,7 @@ def buildSample(data, X, sample_size, project_id, current_iter, current_time):
     # while len(tfd_in_sample_X) == 0:    # if no vios relevant to the FD are in the sample
     tfd_X = [x for x in X if x in tfd_m.vio_pairs]
     print(tfd_X)
-    s_index, sample_X = returnTuples(data, tfd_X, 1 - tfd_conf, sample_size)
+    s_index, sample_X = returnTuples(data, tfd_X, 1 - tfd_conf, sample_size, alt_h_vio_pairs, current_iter)
     s_out = data.loc[s_index, :]
         # tfd_in_sample_X = {x for x in sample_X if x in tfd_m.vio_pairs} # violations relevant to this FD
 
@@ -378,8 +385,15 @@ def buildSample(data, X, sample_size, project_id, current_iter, current_time):
 
 
 # RETURN TUPLES AND VIOS FOR SAMPLE
-def returnTuples(data, X, vio_rate, sample_size):
-    vios_out = random.sample(population=X, k=math.ceil(vio_rate * sample_size))
+def returnTuples(data, X, vio_rate, sample_size, alt_h_vio_pairs, current_iter):
+    if current_iter <= 3:
+        eligible_pop = [x for x in X if x not in alt_h_vio_pairs]
+        if len(eligible_pop) > 0:
+            vios_out = random.sample(population=[x for x in X if x not in alt_h_vio_pairs], k=math.ceil(vio_rate * sample_size))
+        else:
+            vios_out = []
+    else:
+        vios_out = random.sample(population=X, k=math.ceil(vio_rate * sample_size))
     s_out = list()
     for (x, y) in vios_out:
         if x not in s_out:

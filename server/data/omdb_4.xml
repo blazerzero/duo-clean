@@ -27,6 +27,10 @@ DCs:
 e1: omdb_4(listingnumber: $ln1, title: $t1, year: $y1), 
 omdb_4(listingnumber: $ln2, title: $t2, year: $y2), 
     $ln1 == $ln2, $t1 != $t2 -> #fail.
+// FD2: (listingnumber) -> year
+e2: omdb_4(listingnumber: $ln1, title: $t1, year: $y1), 
+omdb_4(listingnumber: $ln2, title: $t2, year: $y2), 
+    $ln1 == $ln2, $y1 != $y2 -> #fail.
 ]]>
     </dependencies>
 
@@ -85,7 +89,15 @@ omdb_4(listingnumber: $ln2, title: $t2, year: $y2),
                 </vioGenQuery>
                 <vioGenQuery id="e1">
                     <comparison>(t1 != t2)</comparison>
-                    <percentage>20.0</percentage> 
+                    <percentage>10.0</percentage> 
+                </vioGenQuery>
+                <vioGenQuery id="e2">
+                    <comparison>(ln1 == ln2)</comparison>
+                    <percentage>0.0</percentage> 
+                </vioGenQuery>
+                <vioGenQuery id="e2">
+                    <comparison>(y1 != y2)</comparison>
+                    <percentage>10.0</percentage> 
                 </vioGenQuery>
             </vioGenQueries>
         </errorPercentages>
@@ -97,6 +109,9 @@ omdb_4(listingnumber: $ln2, title: $t2, year: $y2),
             </defaultStrategy> 
             <attributeStrategy>
                 <attribute table="omdb_4" name="title">
+                    <strategy>TypoActiveDomain</strategy>
+                </attribute>
+                <attribute table="omdb_4" name="year">
                     <strategy>TypoActiveDomain</strategy>
                 </attribute>
             </attributeStrategy>

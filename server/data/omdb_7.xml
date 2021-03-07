@@ -24,8 +24,8 @@
 <![CDATA[
 DCs:
 // FD1: (title, director) => genre
-e1: omdb_7(title: $t1, genre: $g1, director: $d1, rating: $r1), 
-omdb_7(title: $t2, genre: $g2, director: $d2, rating: $r2), 
+e1: omdb_7(title: $t1, genre: $g1, director: $d1), 
+omdb_7(title: $t2, genre: $g2, director: $d2), 
     $t1 == $t2, $d1 == $d2, $g1 != $g2 -> #fail.
 ]]>
     </dependencies>

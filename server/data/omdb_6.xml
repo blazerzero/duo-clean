@@ -24,8 +24,8 @@
 <![CDATA[
 DCs:
 // FD1: (rating) => type
-e1: omdb_6(title: $t1, rating: $r1, year: $y1, type: $ty1), 
-omdb_6(title: $t2, rating: $r2, year: $y2, type: $ty2), 
+e1: omdb_6(title: $t1, rating: $r1, type: $ty1), 
+omdb_6(title: $t2, rating: $r2, type: $ty2), 
     $r1 == $r2, $ty1 != $ty2 -> #fail.
 ]]>
     </dependencies>

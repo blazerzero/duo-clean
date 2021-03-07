@@ -7,13 +7,13 @@
         <type>DBMS</type>
         <access-configuration>
             <driver>org.postgresql.Driver</driver>
-            <uri>jdbc:postgresql:duo_o3</uri>
+            <uri>jdbc:postgresql:duo_o8</uri>
             <schema>target</schema>
             <login>postgres</login>
             <password>BlazersPass</password>
         </access-configuration>
         <import>
-            <input type="csv" separator="," table="omdb_3">omdb_3.csv</input>
+            <input type="csv" separator="," table="omdb_8">omdb_8.csv</input>
         </import>
     </target>
 
@@ -23,16 +23,15 @@
     <dependencies>
 <![CDATA[
 DCs:
-// FD1: (title, director) -> rating
-e1: omdb_3(title: $t1, director: $d1, rating: $r1, year: $y1), 
-omdb_3(title: $t2, director: $d2, rating: $r2, year: $y2), 
-    $t1 == $t2, $d1 == $d2, $r1 != $r2 -> #fail.
-// FD2: (title, director) -> year
-e2: omdb_3(title: $t1, director: $d1, rating: $r1, year: $y1), 
-omdb_3(title: $t2, director: $d2, rating: $r2, year: $y2), 
-    $t1 == $t2, $d1 == $d2, $y1 != $y2 -> #fail.
+// FD1: (title, year) => director
+e1: omdb_8(title: $t1, year: $y1, director: $d1, rating: $r1), 
+omdb_8(title: $t2, year: $y2, director: $d2, rating: $r2), 
+    $t1 == $t2, $y1 == $y2, $d1 != $d2 -> #fail.
+// FD2: (title, year) => rating
+e2: omdb_8(title: $t1, year: $y1, director: $d1, rating: $r1), 
+omdb_8(title: $t2, year: $y2, director: $d2, rating: $r2), 
+    $t1 == $t2, $y1 == $y2, $r1 != $r2 -> #fail.
 ]]>
-
     </dependencies>
 
     <!-- ****************************************************
@@ -59,7 +58,7 @@ omdb_3(title: $t2, director: $d2, rating: $r2, year: $y2),
 
         <!-- To export the changes -->
         <exportCellChanges>true</exportCellChanges>
-        <exportCellChangesPath>changes/omdb_3.csv</exportCellChangesPath>
+        <exportCellChangesPath>changes/omdb_8.csv</exportCellChangesPath>
 
         <!-- To compute an estimate of the reparability (default = false) -->
         <estimateRepairability>true</estimateRepairability>
@@ -89,11 +88,11 @@ omdb_3(title: $t2, director: $d2, rating: $r2, year: $y2),
                     <percentage>0.0</percentage> 
                 </vioGenQuery>
                 <vioGenQuery id="e1">
-                    <comparison>(d1 == d2)</comparison>
+                    <comparison>(y1 == y2)</comparison>
                     <percentage>0.0</percentage> 
                 </vioGenQuery>
                 <vioGenQuery id="e1">
-                    <comparison>(r1 != r2)</comparison>
+                    <comparison>(d1 != d2)</comparison>
                     <percentage>10.0</percentage> 
                 </vioGenQuery>
                 <vioGenQuery id="e2">
@@ -101,11 +100,11 @@ omdb_3(title: $t2, director: $d2, rating: $r2, year: $y2),
                     <percentage>0.0</percentage> 
                 </vioGenQuery>
                 <vioGenQuery id="e2">
-                    <comparison>(d1 == d2)</comparison>
+                    <comparison>(y1 == y2)</comparison>
                     <percentage>0.0</percentage> 
                 </vioGenQuery>
                 <vioGenQuery id="e2">
-                    <comparison>(y1 != y2)</comparison>
+                    <comparison>(r1 != r2)</comparison>
                     <percentage>10.0</percentage> 
                 </vioGenQuery>
             </vioGenQueries>
@@ -117,10 +116,10 @@ omdb_3(title: $t2, director: $d2, rating: $r2, year: $y2),
                 <strategy charsToSwitch="3">TypoSwitchValue</strategy>
             </defaultStrategy> 
             <attributeStrategy>
-                <attribute table="omdb_3" name="rating">
+                <attribute table="omdb_8" name="director">
                     <strategy>TypoActiveDomain</strategy>
                 </attribute>
-                <attribute table="omdb_3" name="year">
+                <attribute table="omdb_8" name="rating">
                     <strategy>TypoActiveDomain</strategy>
                 </attribute>
             </attributeStrategy>

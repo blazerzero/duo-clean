@@ -9,6 +9,9 @@ import string
 from tqdm import tqdm
 import analyze
 import helpers
+from rich.console import Console
+
+console = Console()
 
 def dataDiff(dirty_df, clean_df):
     diff = pd.DataFrame(columns=clean_df.columns)
@@ -27,7 +30,7 @@ if __name__ == '__main__':
         data = pd.read_csv(scenario['dirty_dataset'], keep_default_na=False)
         clean_data = pd.read_csv(scenario['clean_dataset'], keep_default_na=False)
         min_conf = 0.75
-        clean_min_conf = 0.95
+        clean_min_conf = 0.9
         max_ant = 2
 
         process = sp.Popen(['./data/cfddiscovery/CFDD', scenario['dirty_dataset'], str(len(data.index)), str(min_conf), str(max_ant)], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})     # CFDD
@@ -51,7 +54,7 @@ if __name__ == '__main__':
             clean_fds = list()
         
         intersecting_fds = list(set([f['cfd'] for f in fds]).intersection(set([c['cfd'] for c in clean_fds])))
-        intersecting_fds = [fd for fd in intersecting_fds if len(fd.split(' => ')[1].split(', ')) == 1]
+        # intersecting_fds = [fd for fd in intersecting_fds if len(fd.split(' => ')[1].split(', ')) == 1]
 
         # intersecting_fds = list(set(fds).intersection(set(clean_fds)))
 
@@ -81,7 +84,7 @@ if __name__ == '__main__':
             h['vio_pairs'] = vio_pairs
             h_space.append(h)
 
-        print('scenario', s_id, 'h space size:', len([h['cfd'] for h in h_space]))
+        console.print('scenario', s_id, 'h space size:', len([h['cfd'] for h in h_space]))
 
         clean_h_space = list()
         for fd in clean_fds:
@@ -100,8 +103,13 @@ if __name__ == '__main__':
         scenario['max_ant'] = max_ant
         scenario['hypothesis_space'] = h_space
         scenario['clean_hypothesis_space'] = clean_h_space
-        # print([h['cfd'] for h in scenario['hypothesis_space']])
+        console.log([h['cfd'] for h in scenario['hypothesis_space']])
         scenario['target_fd'] = next(f['cfd'] for f in scenario['hypothesis_space'] if set(f['cfd'].split(' => ')[0][1:-1].split(', ')) == set(scenario['target_fd'].split(' => ')[0][1:-1].split(', ')) and set(f['cfd'].split(' => ')[1].split(', ')) == set(scenario['target_fd'].split(' => ')[1].split(', ')))
+        formatted_alt_h = list()
+        for alt_fd in scenario['alt_h']:
+            fd = next(f['cfd'] for f in scenario['hypothesis_space'] if set(f['cfd'].split(' => ')[0][1:-1].split(', ')) == set(alt_fd.split(' => ')[0][1:-1].split(', ')) and set(f['cfd'].split(' => ')[1].split(', ')) == set(alt_fd.split(' => ')[1].split(', ')))
+            formatted_alt_h.append(fd)
+        scenario['alt_h'] = formatted_alt_h
 
         clean_data = pd.read_csv(scenario['clean_dataset'], keep_default_na=False)
 

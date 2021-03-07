@@ -7,13 +7,13 @@
         <type>DBMS</type>
         <access-configuration>
             <driver>org.postgresql.Driver</driver>
-            <uri>jdbc:postgresql:duo_o3</uri>
+            <uri>jdbc:postgresql:duo_o10</uri>
             <schema>target</schema>
             <login>postgres</login>
             <password>BlazersPass</password>
         </access-configuration>
         <import>
-            <input type="csv" separator="," table="omdb_3">omdb_3.csv</input>
+            <input type="csv" separator="," table="omdb_10">omdb_10.csv</input>
         </import>
     </target>
 
@@ -23,16 +23,19 @@
     <dependencies>
 <![CDATA[
 DCs:
-// FD1: (title, director) -> rating
-e1: omdb_3(title: $t1, director: $d1, rating: $r1, year: $y1), 
-omdb_3(title: $t2, director: $d2, rating: $r2, year: $y2), 
-    $t1 == $t2, $d1 == $d2, $r1 != $r2 -> #fail.
-// FD2: (title, director) -> year
-e2: omdb_3(title: $t1, director: $d1, rating: $r1, year: $y1), 
-omdb_3(title: $t2, director: $d2, rating: $r2, year: $y2), 
-    $t1 == $t2, $d1 == $d2, $y1 != $y2 -> #fail.
+// FD1: (title) => year
+e1: omdb_10(title: $t1, year: $y1, genre: $g1, type: $ty1), 
+omdb_10(title: $t2, year: $y2, genre: $g2, type: $ty2), 
+    $t1 == $t2, $y1 != $y2 -> #fail.
+// FD2: (title) => genre
+e2: omdb_10(title: $t1, year: $y1, genre: $g1, type: $ty1), 
+omdb_10(title: $t2, year: $y2, genre: $g2, type: $ty2), 
+    $t1 == $t2, $g1 != $g2 -> #fail.
+// FD3: (title) => type
+e3: omdb_10(title: $t1, year: $y1, genre: $g1, type: $ty1), 
+omdb_10(title: $t2, year: $y2, genre: $g2, type: $ty2), 
+    $t1 == $t2, $ty1 != $ty2 -> #fail.
 ]]>
-
     </dependencies>
 
     <!-- ****************************************************
@@ -59,7 +62,7 @@ omdb_3(title: $t2, director: $d2, rating: $r2, year: $y2),
 
         <!-- To export the changes -->
         <exportCellChanges>true</exportCellChanges>
-        <exportCellChangesPath>changes/omdb_3.csv</exportCellChangesPath>
+        <exportCellChangesPath>changes/omdb_10.csv</exportCellChangesPath>
 
         <!-- To compute an estimate of the reparability (default = false) -->
         <estimateRepairability>true</estimateRepairability>
@@ -89,11 +92,7 @@ omdb_3(title: $t2, director: $d2, rating: $r2, year: $y2),
                     <percentage>0.0</percentage> 
                 </vioGenQuery>
                 <vioGenQuery id="e1">
-                    <comparison>(d1 == d2)</comparison>
-                    <percentage>0.0</percentage> 
-                </vioGenQuery>
-                <vioGenQuery id="e1">
-                    <comparison>(r1 != r2)</comparison>
+                    <comparison>(y1 != y2)</comparison>
                     <percentage>10.0</percentage> 
                 </vioGenQuery>
                 <vioGenQuery id="e2">
@@ -101,11 +100,15 @@ omdb_3(title: $t2, director: $d2, rating: $r2, year: $y2),
                     <percentage>0.0</percentage> 
                 </vioGenQuery>
                 <vioGenQuery id="e2">
-                    <comparison>(d1 == d2)</comparison>
+                    <comparison>(g1 != g2)</comparison>
+                    <percentage>10.0</percentage> 
+                </vioGenQuery>
+                <vioGenQuery id="e3">
+                    <comparison>(t1 == t2)</comparison>
                     <percentage>0.0</percentage> 
                 </vioGenQuery>
-                <vioGenQuery id="e2">
-                    <comparison>(y1 != y2)</comparison>
+                <vioGenQuery id="e3">
+                    <comparison>(ty1 != ty2)</comparison>
                     <percentage>10.0</percentage> 
                 </vioGenQuery>
             </vioGenQueries>
@@ -117,10 +120,13 @@ omdb_3(title: $t2, director: $d2, rating: $r2, year: $y2),
                 <strategy charsToSwitch="3">TypoSwitchValue</strategy>
             </defaultStrategy> 
             <attributeStrategy>
-                <attribute table="omdb_3" name="rating">
+                <attribute table="omdb_10" name="year">
                     <strategy>TypoActiveDomain</strategy>
                 </attribute>
-                <attribute table="omdb_3" name="year">
+                <attribute table="omdb_10" name="genre">
+                    <strategy>TypoActiveDomain</strategy>
+                </attribute>
+                <attribute table="omdb_10" name="type">
                     <strategy>TypoActiveDomain</strategy>
                 </attribute>
             </attributeStrategy>
