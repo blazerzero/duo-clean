@@ -29,12 +29,11 @@ if __name__ == '__main__':
     for s_id, scenario in tqdm(scenarios.items()):
         data = pd.read_csv(scenario['dirty_dataset'], keep_default_na=False)
         clean_data = pd.read_csv(scenario['clean_dataset'], keep_default_na=False)
-        min_conf = 0.75
-        clean_min_conf = 0.9
-        max_ant = 2
+        min_conf = 0.6
+        max_ant = 3
 
         process = sp.Popen(['./data/cfddiscovery/CFDD', scenario['dirty_dataset'], str(len(data.index)), str(min_conf), str(max_ant)], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})     # CFDD
-        clean_process = sp.Popen(['./data/cfddiscovery/CFDD', scenario['clean_dataset'], str(len(data.index)), str(clean_min_conf), str(max_ant)], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})   # CFDD for clean h space
+        clean_process = sp.Popen(['./data/cfddiscovery/CFDD', scenario['clean_dataset'], str(len(data.index)), str(min_conf), str(max_ant)], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})   # CFDD for clean h space
 
         res = process.communicate()
         clean_res = clean_process.communicate()
@@ -84,7 +83,7 @@ if __name__ == '__main__':
             h['vio_pairs'] = vio_pairs
             h_space.append(h)
 
-        console.print('scenario', s_id, 'h space size:', len([h['cfd'] for h in h_space]))
+        #console.print('scenario', s_id, 'h space size:', len([h['cfd'] for h in h_space]))
 
         clean_h_space = list()
         for fd in clean_fds:
@@ -103,7 +102,8 @@ if __name__ == '__main__':
         scenario['max_ant'] = max_ant
         scenario['hypothesis_space'] = h_space
         scenario['clean_hypothesis_space'] = clean_h_space
-        console.log([h['cfd'] for h in scenario['hypothesis_space']])
+        console.log([(h['cfd'], h['conf']) for h in scenario['hypothesis_space']])
+        console.log([(h['cfd'], h['conf']) for h in scenario['clean_hypothesis_space']])
         scenario['target_fd'] = next(f['cfd'] for f in scenario['hypothesis_space'] if set(f['cfd'].split(' => ')[0][1:-1].split(', ')) == set(scenario['target_fd'].split(' => ')[0][1:-1].split(', ')) and set(f['cfd'].split(' => ')[1].split(', ')) == set(scenario['target_fd'].split(' => ')[1].split(', ')))
         formatted_alt_h = list()
         for alt_fd in scenario['alt_h']:

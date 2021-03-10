@@ -5,7 +5,9 @@
         "dirty_dataset": "./data/dirty_toy.csv",
         "clean_dataset": "./data/toy.csv",
         "difficulty": 1,
-        "alt_h": []
+        "alt_h": [],
+        "target_h_sample_ratio": 0.4,
+        "alt_h_sample_ratio": 0.4
     },
     "1": {
         "target_fd": "(manager) => owner",
@@ -16,7 +18,9 @@
         "alt_h": [
             "(facilityname, type) => owner",
             "(facilityname) => type, manager, owner"
-        ]
+        ],
+        "target_h_sample_ratio": 0.5,
+        "alt_h_sample_ratio": 0.3
     },
     "2": {
         "target_fd": "(facilityname) => owner",
@@ -26,7 +30,9 @@
         "difficulty": 2,
         "alt_h": [
             "(facilityname) => type, owner"
-        ]
+        ],
+        "target_h_sample_ratio": 0.2,
+        "alt_h_sample_ratio": 0.6
     },
     "3": {
         "target_fd": "(title, director) => rating, year",
@@ -36,7 +42,9 @@
         "difficulty": 3,
         "alt_h": [
             "(title) => director, year, rating"
-        ]
+        ],
+        "target_h_sample_ratio": 0.4,
+        "alt_h_sample_ratio": 0.4
     },
     "4": {
         "target_fd": "(listingnumber) => title, year",
@@ -47,7 +55,9 @@
         "alt_h": [
             "(title) => listingnumber, year",
             "(title, year) => listingnumber"
-        ]
+        ],
+        "target_h_sample_ratio": 0.2,
+        "alt_h_sample_ratio": 0.6
     },
     "5": {
         "target_fd": "(title) => director",
@@ -55,7 +65,9 @@
         "dirty_dataset": "./data/dirty_omdb_5.csv",
         "clean_dataset": "./data/omdb_5.csv",
         "difficulty": 2,
-        "alt_h": []
+        "alt_h": [],
+        "target_h_sample_ratio": 0.4,
+        "alt_h_sample_ratio": 0.4
     },
     "6": {
         "target_fd": "(rating) => type",
@@ -65,7 +77,9 @@
         "difficulty": 3,
         "alt_h": [
             "(title) => rating, type"
-        ]
+        ],
+        "target_h_sample_ratio": 0.5,
+        "alt_h_sample_ratio": 0.3
     },
     "7": {
         "target_fd": "(title, director) => genre",
@@ -75,7 +89,9 @@
         "difficulty": 2,
         "alt_h": [
             "(title) => director, genre"
-        ]
+        ],
+        "target_h_sample_ratio": 0.3,
+        "alt_h_sample_ratio": 0.5
     },
     "9": {
         "target_fd": "(rating) => type",
@@ -83,16 +99,22 @@
         "dirty_dataset": "./data/dirty_omdb_9.csv",
         "clean_dataset": "./data/omdb_9.csv",
         "difficulty": 4,
-        "alt_h": []
+        "alt_h": [
+            "(title) => year, rating, type"
+        ],
+        "target_h_sample_ratio": 0.5,
+        "alt_h_sample_ratio": 0.3
     },
     "10": {
-        "target_fd": "(title) => year, genre, type",
+        "target_fd": "(title, year) => genre, type",
         "description": "Identify errors in data about English-language movies.",
         "dirty_dataset": "./data/dirty_omdb_10.csv",
         "clean_dataset": "./data/omdb_10.csv",
         "difficulty": 2,
         "alt_h": [
-            "(title, year) => genre, type"
-        ]
+            "(title) => year, genre, type"
+        ],
+        "target_h_sample_ratio": 0.3,
+        "alt_h_sample_ratio": 0.5
     }
 }

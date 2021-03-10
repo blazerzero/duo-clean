@@ -23,18 +23,14 @@
     <dependencies>
 <![CDATA[
 DCs:
-// FD1: (title) => year
+// FD2: (title, year) => genre
 e1: omdb_10(title: $t1, year: $y1, genre: $g1, type: $ty1), 
 omdb_10(title: $t2, year: $y2, genre: $g2, type: $ty2), 
-    $t1 == $t2, $y1 != $y2 -> #fail.
-// FD2: (title) => genre
+    $t1 == $t2, $y1 == $y2, $g1 != $g2 -> #fail.
+// FD3: (title, year) => type
 e2: omdb_10(title: $t1, year: $y1, genre: $g1, type: $ty1), 
 omdb_10(title: $t2, year: $y2, genre: $g2, type: $ty2), 
-    $t1 == $t2, $g1 != $g2 -> #fail.
-// FD3: (title) => type
-e3: omdb_10(title: $t1, year: $y1, genre: $g1, type: $ty1), 
-omdb_10(title: $t2, year: $y2, genre: $g2, type: $ty2), 
-    $t1 == $t2, $ty1 != $ty2 -> #fail.
+    $t1 == $t2, $y1 == $y2, $ty1 != $ty2 -> #fail.
 ]]>
     </dependencies>
 
@@ -92,22 +88,22 @@ omdb_10(title: $t2, year: $y2, genre: $g2, type: $ty2),
                     <percentage>0.0</percentage> 
                 </vioGenQuery>
                 <vioGenQuery id="e1">
-                    <comparison>(y1 != y2)</comparison>
-                    <percentage>10.0</percentage> 
-                </vioGenQuery>
-                <vioGenQuery id="e2">
-                    <comparison>(t1 == t2)</comparison>
+                    <comparison>(y1 == y2)</comparison>
                     <percentage>0.0</percentage> 
                 </vioGenQuery>
-                <vioGenQuery id="e2">
+                <vioGenQuery id="e1">
                     <comparison>(g1 != g2)</comparison>
                     <percentage>10.0</percentage> 
                 </vioGenQuery>
-                <vioGenQuery id="e3">
+                <vioGenQuery id="e2">
                     <comparison>(t1 == t2)</comparison>
                     <percentage>0.0</percentage> 
                 </vioGenQuery>
-                <vioGenQuery id="e3">
+                <vioGenQuery id="e2">
+                    <comparison>(y1 == y2)</comparison>
+                    <percentage>0.0</percentage> 
+                </vioGenQuery>
+                <vioGenQuery id="e2">
                     <comparison>(ty1 != ty2)</comparison>
                     <percentage>10.0</percentage> 
                 </vioGenQuery>
@@ -120,9 +116,6 @@ omdb_10(title: $t2, year: $y2, genre: $g2, type: $ty2),
                 <strategy charsToSwitch="3">TypoSwitchValue</strategy>
             </defaultStrategy> 
             <attributeStrategy>
-                <attribute table="omdb_10" name="year">
-                    <strategy>TypoActiveDomain</strategy>
-                </attribute>
                 <attribute table="omdb_10" name="genre">
                     <strategy>TypoActiveDomain</strategy>
                 </attribute>

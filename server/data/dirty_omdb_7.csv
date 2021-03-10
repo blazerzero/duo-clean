@@ -1,10 +1,15 @@
 title,genre,director
-Die Die Delta Pi,Fantasy,Sean Donohue
+Die Die Delta Pi,Horror,Sean Donohue
 Pilot,Comedy,Paul McGuigan
 Dark Hollow,Adventure,Guy Ferland
 In the Clouds,Comedy,David Von Ancken
 The Fabulous Faker Boy,Animation,Bob Anderson
+Endgame,Action,Russo Brothers
+Endgame,Action,Russo Brothers
+Endgame,Action,Russo Brothers
 Endgame,Comedy,David Paymer
+Endgame,Comedy,David Paymer
+Endgame,Animation,David Paymer
 Rom-Com Tom,Short,Mike Ladue
 Gambler's End,Short,Eric Loubert
 Black Nativity,Drama,Kasi Lemmons
@@ -22,6 +27,10 @@ Til Death Do Us Part,Action,Eagle Egilsson
 Trou Normand,Crime,Guillermo Navarro
 Kumail Nanjiani: Beta Male,Comedy,Marcus Raboy
 Fallout,Crime,Diana Valentine
+Fallout,Crime,Diana Valentine
+Fallout,Action,Christopher McQuarrie
+Fallout,Action,Christopher McQuarrie
+Fallout,Short,Christopher McQuarrie
 The Good Mother,Drama,Richard Gabai
 Seal Our Fate,Drama,Rob Corn
 Once Upon a Time in Brooklyn,Action,Paul Borghese
@@ -31,7 +40,7 @@ Monique Marvez: Not Skinny Not Blonde,Comedy,Scott L. Montoya
 Five Thirteen,Drama,Kader Ayd
 Rosie's Diner,Short,Wes Williams II
 Richard The Lionheart,Action,Stefano Milla
-Richard The Lionheart,Documentary,Stefano Milla
+Richard The Lionheart,Action,Stefano Milla
 Hours,Drama,Eric Heisserer
 Liberty,Action,Chris Fisher
 Love Story,Action,Helen Shaver
@@ -39,7 +48,7 @@ Atlanta to New York,Comedy,Terence V. Steele
 Steve Rannazzisi: Manchild,Comedy,Ryan Polito
 Rock and a Hard Place,Comedy,David Von Ancken
 Potage,Crime,David Slade
-Engagement,Drama,John Terlesky
+Engagement,Short,John Terlesky
 The Freelancer,Crime,Jace Alexander
 Episode #21.75,Comedy,Liz Plonka
 Dear Daddy,Short,Sandra Capra
@@ -50,52 +59,57 @@ Planes,Animation,Klay Hall
 Dog Dean Afternoon,Drama,Tim Andrew
 Red: Part One,Crime,Tony Wharmby
 Potage,Crime,David Slade
-Potage,Documentary,David Slade
-Richard The Lionheart,Documentary,Stefano Milla
+Potage,Crime,David Slade
+Richard The Lionheart,Action,Stefano Milla
 Norcen,Documentary,Jeffrey Jennings
-Norcen,Fantasy,Jeffrey Jennings
+Norcen,Documentary,Jeffrey Jennings
 On All Fours,Comedy,Lena Dunham
 On All Fours,Comedy,Lena Dunham
-Touchy Feely,Action,Lynn Shelton
-Gambler's End,Adventure,Eric Loubert
+Touchy Feely,Drama,Lynn Shelton
+Gambler's End,Crime,Eric Loubert
 Gambler's End,Short,Eric Loubert
+Til Death Do Us Part,Crime,Eagle Egilsson
 Til Death Do Us Part,Action,Eagle Egilsson
-Til Death Do Us Part,Comedy,Eagle Egilsson
+Til Death Do Us Part,Thriller,Christopher Stokes
+Til Death Do Us Part,Adventure,Christopher Stokes
 The Nominations,Drama,Michael Morris
 The Nominations,Drama,Michael Morris
-The Nominations,Adventure,Michael Morris
-Dark Hollow,Adventure,Guy Ferland
-Dark Hollow,Crime,Guy Ferland
+The Nominations,Drama,Michael Morris
+Dark Hollow,Fantasy,Guy Ferland
+Dark Hollow,Drama,Guy Ferland
+Whensday,Crime,Tomas Herrera
 Whensday,Comedy,Tomas Herrera
-Whensday,Fantasy,Tomas Herrera
 The Good Mother,Drama,Richard Gabai
 Rock and a Hard Place,Comedy,David Von Ancken
 The Battle Within,Short,Andy Santos
-Witch Graveyard,Fantasy,Bruno Renat
-In the Clouds,Action,David Von Ancken
-Endgame,Comedy,David Paymer
+Witch Graveyard,Action,Bruno Renat
+In the Clouds,Comedy,David Von Ancken
+Endgame,Animation,David Paymer
+Die Die Delta Pi,Animation,Sean Donohue
 Die Die Delta Pi,Horror,Sean Donohue
-Die Die Delta Pi,Short,Sean Donohue
+Redemption,Fantasy,Steven Knight
 Redemption,Action,Steven Knight
-Redemption,Drama,Steven Knight
 Episode #21.75,Comedy,Liz Plonka
-Episode #21.75,Adventure,Liz Plonka
-Atlanta to New York,Comedy,Terence V. Steele
-Atlanta to New York,Crime,Terence V. Steele
+Episode #21.75,Short,Liz Plonka
+Atlanta to New York,Drama,Terence V. Steele
+Atlanta to New York,Adventure,Terence V. Steele
 Engagement,Drama,John Terlesky
-Engagement,Horror,John Terlesky
-Witch Graveyard,Comedy,Bruno Renat
+Engagement,Documentary,John Terlesky
 Witch Graveyard,Fantasy,Bruno Renat
+Witch Graveyard,Animation,Bruno Renat
 Broken,Crime,Larry Teng
 Broken,Crime,Larry Teng
 The Battle Within,Short,Andy Santos
 The Battle Within,Short,Andy Santos
 Black Nativity,Drama,Kasi Lemmons
-Black Nativity,Action,Kasi Lemmons
+Black Nativity,Drama,Kasi Lemmons
 Kumail Nanjiani: Beta Male,Comedy,Marcus Raboy
 Kumail Nanjiani: Beta Male,Comedy,Marcus Raboy
-The Fabulous Faker Boy,Animation,Bob Anderson
-The Fabulous Faker Boy,Animation,Bob Anderson
-Pilot,Action,Paul McGuigan
+The Fabulous Faker Boy,Action,Bob Anderson
+The Fabulous Faker Boy,Crime,Bob Anderson
+Pilot,Animation,Paul McGuigan
 Pilot,Comedy,Paul McGuigan
-All In,Action,Tricia Brock
+Pilot,Comedy,James Burrows
+Pilot,Comedy,James Burrows
+Pilot,Comedy,James Burrows
+All In,Thriller,Tricia Brock

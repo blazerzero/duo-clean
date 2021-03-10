@@ -374,8 +374,9 @@ def buildSample(data, X, sample_size, project_id, current_iter, current_time):
     # tfd_in_sample_X = set()
     # while len(tfd_in_sample_X) == 0:    # if no vios relevant to the FD are in the sample
     tfd_X = [x for x in X if x in tfd_m.vio_pairs]
-    print(tfd_X)
-    s_index, sample_X = returnTuples(data, tfd_X, 1 - tfd_conf, sample_size, alt_h_vio_pairs, current_iter)
+    target_h_sample_ratio = project_info['scenario']['target_h_sample_ratio']
+    alt_h_sample_ratio = project_info['scenario']['alt_h_sample_ratio']
+    s_index, sample_X = returnTuples(data, tfd_X, sample_size, list(alt_h_vio_pairs), target_h_sample_ratio, alt_h_sample_ratio, current_iter)
     s_out = data.loc[s_index, :]
         # tfd_in_sample_X = {x for x in sample_X if x in tfd_m.vio_pairs} # violations relevant to this FD
 
@@ -385,27 +386,30 @@ def buildSample(data, X, sample_size, project_id, current_iter, current_time):
 
 
 # RETURN TUPLES AND VIOS FOR SAMPLE
-def returnTuples(data, X, vio_rate, sample_size, alt_h_vio_pairs, current_iter):
-    if current_iter <= 3:
-        eligible_pop = [x for x in X if x not in alt_h_vio_pairs]
-        if len(eligible_pop) > 0:
-            vios_out = random.sample(population=[x for x in X if x not in alt_h_vio_pairs], k=math.ceil(vio_rate * sample_size))
-        else:
-            vios_out = []
-    else:
-        vios_out = random.sample(population=X, k=math.ceil(vio_rate * sample_size))
+def returnTuples(data, X, sample_size, alt_h_vio_pairs, target_h_sample_ratio, alt_h_sample_ratio, current_iter):
     s_out = list()
-    for (x, y) in vios_out:
+    if len(alt_h_vio_pairs) > 0:
+        alt_vios_out = random.sample(population=alt_h_vio_pairs, k=math.ceil(alt_h_sample_ratio * sample_size))
+        for (x, y) in alt_vios_out:
+            if x not in s_out:
+                s_out.append(x)
+            if y not in s_out:
+                s_out.append(y)
+    target_vios_out = random.sample(population=X, k=math.ceil(target_h_sample_ratio * sample_size))
+    for (x, y) in target_vios_out:
         if x not in s_out:
             s_out.append(x)
         if y not in s_out:
             s_out.append(y)
-    other_tups_out = random.sample(population=list(data.index), k=sample_size)
-    for i in other_tups_out:
-        if i not in s_out:
-            s_out.append(i)
         if len(s_out) >= sample_size:
             break
+    other_tups_out = random.sample(population=list(data.index), k=sample_size)
+    if len(s_out) < sample_size:
+        for i in other_tups_out:
+            if i not in s_out:
+                s_out.append(i)
+            if len(s_out) >= sample_size:
+                break
     random.shuffle(s_out)
     sample_X = set()
     for i1 in s_out:
