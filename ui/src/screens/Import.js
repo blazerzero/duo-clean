@@ -29,7 +29,7 @@ class Import extends Component {
       const formData = new FormData();
       formData.append('name', this.state.name);
       formData.append('scenario_id', this.state.scenarioID);
-      axios.post('http://localhost:5000/duo/api/import', formData)
+      axios.post('http://167.71.155.153:5000/duo/api/import', formData)
         .then(response => {
           this.setState({ isProcessing: false });
           var { header, project_id, msg, scenario_desc } = JSON.parse(response.data);
@@ -53,7 +53,7 @@ class Import extends Component {
       this.setState({ isProcessing: true });
       const formData = new FormData();
       formData.append('project_id', this.state.projectID);
-      axios.post('http://localhost:5000/duo/api/resume', formData)
+      axios.post('http://167.71.155.153:5000/duo/api/resume', formData)
         .then(response => {
           this.setState({ isProcessing: false });
           var { header, msg, scenario_id, scenario_desc, sample, true_pos, false_pos, feedback } = JSON.parse(response.data);
