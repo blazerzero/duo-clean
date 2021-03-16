@@ -19,8 +19,8 @@
             "(facilityname, type) => owner",
             "(facilityname) => type, manager, owner"
         ],
-        "target_h_sample_ratio": 0.5,
-        "alt_h_sample_ratio": 0.3
+        "target_h_sample_ratio": 0.6,
+        "alt_h_sample_ratio": 0.2
     },
     "2": {
         "target_fd": "(facilityname) => owner",
@@ -66,8 +66,8 @@
         "clean_dataset": "./data/omdb_5.csv",
         "difficulty": 2,
         "alt_h": [],
-        "target_h_sample_ratio": 0.4,
-        "alt_h_sample_ratio": 0.4
+        "target_h_sample_ratio": 0.2,
+        "alt_h_sample_ratio": 0.6
     },
     "6": {
         "target_fd": "(rating) => type",
@@ -78,8 +78,8 @@
         "alt_h": [
             "(title) => rating, type"
         ],
-        "target_h_sample_ratio": 0.5,
-        "alt_h_sample_ratio": 0.3
+        "target_h_sample_ratio": 0.6,
+        "alt_h_sample_ratio": 0.2
     },
     "7": {
         "target_fd": "(title, director) => genre",
@@ -90,8 +90,8 @@
         "alt_h": [
             "(title) => director, genre"
         ],
-        "target_h_sample_ratio": 0.3,
-        "alt_h_sample_ratio": 0.5
+        "target_h_sample_ratio": 0.2,
+        "alt_h_sample_ratio": 0.6
     },
     "9": {
         "target_fd": "(rating) => type",
@@ -102,8 +102,8 @@
         "alt_h": [
             "(title) => year, rating, type"
         ],
-        "target_h_sample_ratio": 0.5,
-        "alt_h_sample_ratio": 0.3
+        "target_h_sample_ratio": 0.6,
+        "alt_h_sample_ratio": 0.2
     },
     "10": {
         "target_fd": "(title, year) => genre, type",
@@ -114,7 +114,7 @@
         "alt_h": [
             "(title) => year, genre, type"
         ],
-        "target_h_sample_ratio": 0.3,
-        "alt_h_sample_ratio": 0.5
+        "target_h_sample_ratio": 0.2,
+        "alt_h_sample_ratio": 0.6
     }
 }

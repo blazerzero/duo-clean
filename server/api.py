@@ -295,7 +295,7 @@ class Resume(Resource):
         # conf_threshold = (0.85 / len(project_info['scenario']['cfds']))
         
         # if current_iter >= 25 or (top_fd_conf >= conf_threshold and variance_delta is not None and variance_delta < 0.01):
-        if current_iter >= 25:
+        if current_iter >= 15:
             msg = '[DONE]'
         else:
             msg = '[SUCCESS]: Saved feedback and built new sample.'
@@ -400,7 +400,13 @@ class Clean(Resource):
         # conf_threshold = (0.85 / len(project_info['scenario']['cfds']))
 
         # if refresh == 0 and (current_iter >= 25 or (top_fd_conf >= conf_threshold and variance_delta is not None and variance_delta < 0.01)):
-        if current_iter > 25:
+        target_fd = project_info['scenario']['target_fd']
+        alt_fds = project_info['scenario']['alt_h']
+        if current_iter < 3:
+            terminate = False
+        else:
+            terminate = helpers.checkForTermination(project_id, current_iter)
+        if current_iter > 15 or terminate is True:
         #if current_iter > 100:
             msg = '[DONE]'
             # top_fd = max(cfd_metadata, key=lambda x: cfd_metadata[x]['weight'])

@@ -1,4 +1,5 @@
 # Loading the packages
+import copy
 import pandas as pd
 import numpy as np
 import scipy as sp
@@ -6,8 +7,11 @@ import statsmodels.tsa.stattools as sm
 import pmdarima
 import sys
 import pymannkendall as mk
-import plot_results
+import helpers
 import json
+from rich.console import Console
+
+console = Console()
 
 def adf(data):
 
@@ -19,7 +23,7 @@ def adf(data):
     for key, value in result[4].items():
         output['Critical Value (%s)'%key] = value
     
-    print(output)
+    console.print(output)
 
     # Apply transformation to make data stationary:
     # log_data = np.log(data) # Taking the log
@@ -35,18 +39,18 @@ def adf(data):
     # for key,value in st_test[4].items():
     #     output['Critical Value (%s)'%key] = value
     
-    # print(output)
+    # console.print(output)
 
 def pp(data):
 
     # Conducting PP test:
     test = pmdarima.arima.PPTest() # You can choose alpha here, default = 0.05
     result = test.should_diff(data)
-    print(result)
+    console.print(result)
 
 def mannkendall(data):
     result = mk.original_test(data)
-    print(result)
+    console.print(result)
 
 if __name__ == '__main__':
     data = None
@@ -87,10 +91,11 @@ if __name__ == '__main__':
     dirty_dataset = pd.read_csv(project_info['scenario']['dirty_dataset'], keep_default_na=False)
     clean_dataset = pd.read_csv(project_info['scenario']['clean_dataset'], keep_default_na=False)
     target_fd = project_info['scenario']['target_fd']
+    alt_fds = project_info['scenario']['alt_h']
 
     h_space = project_info['scenario']['hypothesis_space']
     clean_h_space = project_info['scenario']['clean_hypothesis_space']
-    study_metrics, fd_metadata = plot_results.deriveStats(
+    study_metrics, fd_metadata = helpers.deriveStats(
         interaction_metadata,
         fd_metadata,
         h_space,
@@ -105,29 +110,107 @@ if __name__ == '__main__':
     with open(pathstart + project_id + '/fd_metadata.json', 'w') as f:
         json.dump(fd_metadata, f, indent=4)
 
+    console.print('\n*** Target Hypothesis ***\n')
     for metric in metrics:
+        console.print(metric)
         data = pd.DataFrame(columns = ['iter_num', metric])
         if metric in study_metrics.keys():
             data['iter_num'] = [i['iter_num'] for i in study_metrics[metric]]
             data[metric] = [i['value'] for i in study_metrics[metric]]
-            data = data.set_index('iter_num')
-            print(data[metric].to_list())
+            data = data.set_index('iter_num')[:-1]
             if test == 'adf':
                 adf(data)
             elif test == 'pp':
                 pp(data)
             elif test == 'mk':
-                mannkendall(data[metric].to_list())
+                norm_data = list()
+                formatted_data = data[metric].to_list()
+                for i in range(0, len(formatted_data)):
+                    if i == 0:
+                        norm_data.append(formatted_data[i])
+                    elif i == 1:
+                        norm_data.append(np.mean([formatted_data[i], formatted_data[i-1]]))
+                    else:
+                        norm_data.append(np.mean([formatted_data[i], formatted_data[i-1], formatted_data[i-2]]))
+                # console.print(norm_data)
+                mannkendall(norm_data)
         elif metric in fd_metadata[project_info['scenario']['target_fd']].keys():
             for fd_m in fd_metadata.values():
                 data['iter_num'] = [i['iter_num'] for i in fd_m[metric]]
                 data[metric] = [i['iter_num'] for i in fd_m[metric]]
-                data = data.set_index('iter_num')
+                data = data.set_index('iter_num')[:-1]
                 if test == 'adf':
                     adf(data)
                 elif test == 'pp':
                     pp(data)
                 elif test == 'mannkendall':
-                    mannkendall(data[metric].to_list())
+                    norm_data = list()
+                    formatted_data = data[metric].to_list()
+                    for i in range(0, len(formatted_data)):
+                        if i == 0:
+                            norm_data.append(formatted_data[i])
+                        elif i == 1:
+                            norm_data.append(np.mean([formatted_data[i], formatted_data[i-1]]))
+                        else:
+                            norm_data.append(np.mean([formatted_data[i], formatted_data[i-1], formatted_data[i-2]]))
+                    console.print(norm_data)
+                    mannkendall(norm_data)
+        console.print()
 
-    
+    for h in alt_fds:
+        study_metrics, fd_metadata = helpers.deriveStats(
+            interaction_metadata,
+            fd_metadata,
+            h_space,
+            study_metrics,
+            dirty_dataset,
+            clean_dataset,
+            h
+        )
+        console.print('\n*** Alternative Hypothesis:', h, '***\n')
+        for metric in metrics:
+            console.print(metric)
+            data = pd.DataFrame(columns = ['iter_num', metric])
+            if metric in study_metrics.keys():
+                data['iter_num'] = [i['iter_num'] for i in study_metrics[metric]]
+                data[metric] = [i['value'] for i in study_metrics[metric]]
+                data = data.set_index('iter_num')[:-1]
+                if test == 'adf':
+                    adf(data)
+                elif test == 'pp':
+                    pp(data)
+                elif test == 'mk':
+                    norm_data = list()
+                    formatted_data = data[metric].to_list()
+                    for i in range(0, len(formatted_data)):
+                        if i == 0:
+                            norm_data.append(formatted_data[i])
+                        elif i == 1:
+                            norm_data.append(np.mean([formatted_data[i], formatted_data[i-1]]))
+                        else:
+                            norm_data.append(np.mean([formatted_data[i], formatted_data[i-1], formatted_data[i-2]]))
+                    # console.print(norm_data)
+                    mannkendall(norm_data)
+            elif metric in fd_metadata[project_info['scenario']['target_fd']].keys():
+                for fd_m in fd_metadata.values():
+                    data['iter_num'] = [i['iter_num'] for i in fd_m[metric]]
+                    data[metric] = [i['iter_num'] for i in fd_m[metric]]
+                    data = data.set_index('iter_num')[:-1]
+                    if test == 'adf':
+                        adf(data)
+                    elif test == 'pp':
+                        pp(data)
+                    elif test == 'mannkendall':
+                        norm_data = list()
+                        formatted_data = data[metric].to_list()
+                        for i in range(0, len(formatted_data)):
+                            if i == 0:
+                                norm_data.append(formatted_data[i])
+                            elif i == 1:
+                                norm_data.append(np.mean([formatted_data[i], formatted_data[i-1]]))
+                            else:
+                                norm_data.append(np.mean([formatted_data[i], formatted_data[i-1], formatted_data[i-2]]))
+                        console.print(norm_data)
+                        mannkendall(norm_data)
+            console.print()
+
