@@ -93,6 +93,18 @@
         "target_h_sample_ratio": 0.2,
         "alt_h_sample_ratio": 0.6
     },
+    "8": {
+        "target_fd": "(facilityname, type) => manager",
+        "description": "Find the key in data about airfields in the U.S. state of Alaska, and find errors in the data accordingly.",
+        "dirty_dataset": "./data/dirty_airport_8.csv",
+        "clean_dataset": "./data/airport_8.csv",
+        "difficulty": 3,
+        "alt_h": [
+            "(facilityname) => type, manager"
+        ],
+        "target_h_sample_ratio": 0.6,
+        "alt_h_sample_ratio": 0.2
+    },
     "9": {
         "target_fd": "(rating) => type",
         "description": "Identify errors in data about English-language movies.",
@@ -113,6 +125,18 @@
         "difficulty": 2,
         "alt_h": [
             "(title) => year, genre, type"
+        ],
+        "target_h_sample_ratio": 0.2,
+        "alt_h_sample_ratio": 0.6
+    },
+    "11": {
+        "target_fd": "(sitenumber) => facilityname, type",
+        "description": "Find the key in data about airfields in the U.S. state of Alaska, and find errors in the data accordingly.",
+        "dirty_dataset": "./data/dirty_airport_11.csv",
+        "clean_dataset": "./data/airport_11.csv",
+        "difficulty": 1,
+        "alt_h": [
+            "(facilityname) => sitenumber, type"
         ],
         "target_h_sample_ratio": 0.2,
         "alt_h_sample_ratio": 0.6
