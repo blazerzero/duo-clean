@@ -677,15 +677,15 @@ def vioStats(curr_sample, t_sample, feedback, vio_pairs, rhs, dirty_dataset, cle
         vios_total.add((x, y))
 
     # for (x, y) in vio_pairs:
-        x_marked = True
+        x_marked = False
         for rh in rhs:
-            if feedback[str(x)][rh] is False:
-                x_marked = False
+            if feedback[str(x)][rh] is True:
+                x_marked = True
                 break
-        y_marked = True
+        y_marked = False
         for rh in rhs:
-            if feedback[str(y)][rh] is False:
-                y_marked = False
+            if feedback[str(y)][rh] is True:
+                y_marked = True
                 break
         if x_marked == y_marked and x_marked is False:
             continue
@@ -797,11 +797,16 @@ def checkForTermination(project_id):
         json.dump(study_metrics, f, indent=4)
     with open('./store/' + project_id + '/fd_metadata.json', 'w') as f:
         json.dump(fd_metadata, f, indent=4)
+
+    if (len(study_metrics['st_vios_marked'][-1]['value']) == 0):
+        return False
     
     st_vio_precision = [i['value'] for i in study_metrics['st_vio_precision']]
     st_vio_recall = [i['value'] for i in study_metrics['st_vio_recall']]
-    if (st_vio_precision[-1] >= 0.9 and abs(st_vio_precision[-1] - st_vio_precision[-2]) <= 0.1 and abs(st_vio_precision[-2] - st_vio_precision[-3]) <= 0.1):
-        if (st_vio_precision[-1] >= 0.6 and abs(st_vio_precision[-1] - st_vio_precision[-2]) <= 0.05 and abs(st_vio_precision[-2] - st_vio_precision[-3]) <= 0.05):
+    if (st_vio_precision[-1] >= 0.8 and abs(st_vio_precision[-1] - st_vio_precision[-2]) <= 0.1 and abs(st_vio_precision[-2] - st_vio_precision[-3]) <= 0.1):
+        if (st_vio_recall[-1] >= 0.6 and (abs(st_vio_recall[-1] - st_vio_recall[-2]) <= 0.1 and abs(st_vio_precision[-2] - st_vio_precision[-3]) <= 0.1)):
+            return True
+        elif (st_vio_recall[-1] >= 0.5 and (abs(st_vio_recall[-1] - st_vio_recall[-2]) <= 0.05 and abs(st_vio_precision[-2] - st_vio_precision[-3]) <= 0.05)):
             return True
         else:
             return False
@@ -831,6 +836,29 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
     study_metrics['all_err_precision'] = list()
     study_metrics['all_err_recall'] = list()
     study_metrics['all_err_f1'] = list()
+
+    study_metrics['st_vios_marked'] = list()
+    study_metrics['mt_vios_marked'] = list()
+    study_metrics['mt_2_vios_marked'] = list()
+    study_metrics['mt_3_vios_marked'] = list()
+    study_metrics['lt_vios_marked'] = list()
+    study_metrics['st_vios_found'] = list()
+    study_metrics['mt_vios_found'] = list()
+    study_metrics['mt_2_vios_found'] = list()
+    study_metrics['mt_3_vios_found'] = list()
+    study_metrics['lt_vios_found'] = list()
+    study_metrics['st_vios_total'] = list()
+    study_metrics['mt_vios_total'] = list()
+    study_metrics['mt_2_vios_total'] = list()
+    study_metrics['mt_3_vios_total'] = list()
+    study_metrics['lt_vios_total'] = list()
+
+    study_metrics['iter_errors_marked'] = list()
+    study_metrics['iter_errors_found'] = list()
+    study_metrics['iter_errors_total'] = list()
+    study_metrics['all_errors_marked'] = list()
+    study_metrics['all_errors_found'] = list()
+    study_metrics['all_errors_total'] = list()
 
     for h in h_space:
         if h['cfd'] not in fd_metadata.keys():
@@ -1172,4 +1200,27 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
         study_metrics['mt_2_vio_f1'].append({ 'iter_num': int(i), 'value': mt_2_vio_f1, 'elapsed_time': elapsed_time })
         study_metrics['mt_3_vio_f1'].append({ 'iter_num': int(i), 'value': mt_3_vio_f1, 'elapsed_time': elapsed_time })
         study_metrics['lt_vio_f1'].append({ 'iter_num': int(i), 'value': lt_vio_f1, 'elapsed_time': elapsed_time })
+
+        study_metrics['st_vios_marked'].append({ 'iter_num': int(i), 'value': list(st_vios_marked), 'elapsed_time': elapsed_time })
+        study_metrics['mt_vios_marked'].append({ 'iter_num': int(i), 'value': list(mt_vios_marked), 'elapsed_time': elapsed_time })
+        study_metrics['mt_2_vios_marked'].append({ 'iter_num': int(i), 'value': list(mt_2_vios_marked), 'elapsed_time': elapsed_time })
+        study_metrics['mt_3_vios_marked'].append({ 'iter_num': int(i), 'value': list(mt_3_vios_marked), 'elapsed_time': elapsed_time })
+        study_metrics['lt_vios_marked'].append({ 'iter_num': int(i), 'value': list(lt_vios_marked), 'elapsed_time': elapsed_time })
+        study_metrics['st_vios_found'].append({ 'iter_num': int(i), 'value': list(st_vios_found), 'elapsed_time': elapsed_time })
+        study_metrics['mt_vios_found'].append({ 'iter_num': int(i), 'value': list(mt_vios_found), 'elapsed_time': elapsed_time })
+        study_metrics['mt_2_vios_found'].append({ 'iter_num': int(i), 'value': list(mt_2_vios_found), 'elapsed_time': elapsed_time })
+        study_metrics['mt_3_vios_found'].append({ 'iter_num': int(i), 'value': list(mt_3_vios_found), 'elapsed_time': elapsed_time })
+        study_metrics['lt_vios_found'].append({ 'iter_num': int(i), 'value': list(lt_vios_found), 'elapsed_time': elapsed_time })
+        study_metrics['st_vios_total'].append({ 'iter_num': int(i), 'value': list(st_vios_total), 'elapsed_time': elapsed_time })
+        study_metrics['mt_vios_total'].append({ 'iter_num': int(i), 'value': list(mt_vios_total), 'elapsed_time': elapsed_time })
+        study_metrics['mt_2_vios_total'].append({ 'iter_num': int(i), 'value': list(mt_2_vios_total), 'elapsed_time': elapsed_time })
+        study_metrics['mt_3_vios_total'].append({ 'iter_num': int(i), 'value': list(mt_3_vios_total), 'elapsed_time': elapsed_time })
+        study_metrics['lt_vios_total'].append({ 'iter_num': int(i), 'value': list(lt_vios_total), 'elapsed_time': elapsed_time })
+
+        study_metrics['iter_errors_marked'].append({ 'iter_num': int(i), 'value': iter_errors_marked, 'elapsed_time': elapsed_time })
+        study_metrics['iter_errors_found'].append({ 'iter_num': int(i), 'value': iter_errors_found, 'elapsed_time': elapsed_time })
+        study_metrics['iter_errors_total'].append({ 'iter_num': int(i), 'value': iter_errors_total, 'elapsed_time': elapsed_time })
+        study_metrics['all_errors_marked'].append({ 'iter_num': int(i), 'value': all_errors_marked, 'elapsed_time': elapsed_time })
+        study_metrics['all_errors_found'].append({ 'iter_num': int(i), 'value': all_errors_found, 'elapsed_time': elapsed_time })
+        study_metrics['all_errors_total'].append({ 'iter_num': int(i), 'value': all_errors_total, 'elapsed_time': elapsed_time })
     return study_metrics, fd_metadata

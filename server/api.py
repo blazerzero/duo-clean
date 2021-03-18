@@ -402,10 +402,10 @@ class Clean(Resource):
         # if refresh == 0 and (current_iter >= 25 or (top_fd_conf >= conf_threshold and variance_delta is not None and variance_delta < 0.01)):
         target_fd = project_info['scenario']['target_fd']
         alt_fds = project_info['scenario']['alt_h']
-        if current_iter < 3:
+        if current_iter <= 3:
             terminate = False
         else:
-            terminate = helpers.checkForTermination(project_id, current_iter)
+            terminate = helpers.checkForTermination(project_id)
         if current_iter > 15 or terminate is True:
         #if current_iter > 100:
             msg = '[DONE]'
