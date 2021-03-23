@@ -1,120 +1,120 @@
-title,rating,type
-Criminal Hatred,TV-14,episode
-Criminal Hatred,TV-14,episode
-Criminal Hatred,TV-14,episode
-Pilot,TV-14,movie
-Pilot,TV-14,movie
-Pilot,TV-14,episode
-Patient Zero,TV-14,movie
-Patient Zero,TV-14,movie
-Sacrifice,TV-14,episode
-Sacrifice,TV-14,episode
-Dead of the Class,TV-14,episode
-Dead of the Class,TV-14,movie
-Frame by Frame,TV-14,movie
-Frame by Frame,TV-14,movie
-The CSI Effect,TV-14,episode
-The CSI Effect,TV-14,episode
-Back in Action,TV-14,movie
-Bad Trouble Here,TV-14,movie
-Bad Trouble Here,TV-14,episode
-Bad Trouble Here,TV-14,movie
-Breakdown at Tiffany's,TV-14,episode
-Computer Crash,TV-14,movie
-Computer Crash,TV-14,episode
-Gold Crash,TV-14,episode
-Harold's Gamble,TV-14,episode
-Seth in Charge,TV-14,episode
-Seth in Charge,TV-14,episode
-Seth Snaps,TV-14,movie
-Seth Snaps,TV-14,episode
-Seth Snaps,TV-14,episode
-Seth Snaps,TV-14,movie
-A Portrait of the Artist as a Young Call Girl,TV-14,movie
-Final Shot,TV-14,episode
-Final Shot,TV-14,movie
-State vs Queen,TV-14,movie
-Strange Brew,TV-14,movie
-Strange Brew,TV-14,movie
-A View to a Kill,TV-14,episode
-Aftermath,TV-14,movie
-Aftermath,PG-13,movie
-Aftermath,R,movie
-House of the Rising Son,TV-14,episode
-House of the Rising Son,TV-14,episode
-The Haunting,TV-14,episode
-The Haunting,TV-14,episode
-The Haunting,Not Rated,movie
-The Haunting,Not Rated,movie
-Emily,Not Rated,movie
-Have We Met Before?,Not Rated,movie
-Here We Go,Not Rated,movie
-It's Your Legacy,Not Rated,movie
-Trust Is Complicated,Not Rated,movie
-Trust Is Complicated,Not Rated,movie
-Camping,TV-PG,episode
-Family Conference,TV-PG,episode
-September Fools,TV-PG,episode
-September Fools,TV-PG,episode
-Prince Avalanche,R,movie
-Prince Avalanche,R,movie
-Hell Bent for Leather,TV-MA,episode
-In the Clouds,TV-MA,episode
-Rock and a Hard Place,TV-MA,episode
-Rock and a Hard Place,TV-MA,episode
-Children of the Night,TV-MA,episode
-The Crucible,TV-MA,episode
-The Crucible,TV-MA,episode
-The Crucible,TV-MA,episode
-The Order of the Dragon,TV-MA,episode
-Jarhead 2: Field of Fire,R,movie
-Sniper: Legacy,R,movie
-Sniper: Legacy,R,movie
-The Gift,TV-14,episode
-The Gift,TV-14,movie
-The Gift,PG,movie
-The Gift,PG,movie
-The New Office,TV-14,episode
-Woman on Top,TV-14,episode
-Woman on Top,TV-14,episode
-Bullets and Tears,TV-MA,episode
-Bullets and Tears,TV-MA,episode
-Half Deaf Is Better Than All Dead,TV-MA,episode
-Homecoming,TV-MA,episode
-Homecoming,TV-MA,episode
-Homecoming,TV-MA,episode
-Homecoming,PG,movie
-Homecoming,PG,movie
-Little Fish,TV-MA,episode
-Little Fish,TV-MA,episode
-The Thunder Man,TV-MA,episode
-The Thunder Man,TV-MA,episode
-A Typical Night,Not Rated,movie
-Reaper's Revenge: Fear the Reaper,Not Rated,movie
-Safe Place,Not Rated,movie
-Tick Tock,Not Rated,movie
-A Good Man,R,movie
-A Good Man,R,movie
-Force of Execution,R,movie
-Hidden Away,TV-14,movie
-High School Possession,R,movie
-High School Possession,R,movie
-Carbon Copy,TV-14,episode
-Carbon Copy,TV-14,movie
-What Happens in Mecklinburg...,TV-14,movie
-What Happens in Mecklinburg...,TV-14,episode
-12 Rounds 2: Reloaded,R,movie
-12 Rounds 2: Reloaded,R,movie
-Dead in Tombstone,R,movie
-Dead in Tombstone,R,movie
-A Space in the Time,Not Rated,movie
-A Space in the Time,Not Rated,movie
-The Drive II: 395 Miles from L.A.,Not Rated,movie
-The Drive III,Not Rated,movie
-Space Warriors,PG,movie
-Space Warriors,PG,movie
-Temptation: Confessions of a Marriage Counselor,PG-13,movie
-Temptation: Confessions of a Marriage Counselor,PG-13,movie
-Temptation: Confessions of a Marriage Counselor,PG-13,movie
-The Single Moms Club,PG-13,movie
-Tyler Perry's A Madea Christmas,PG-13,movie
+title,type,rating
+Criminal Hatred,episode,TV-14
+Criminal Hatred,episode,TV-14
+Criminal Hatred,episode,TV-14
+Pilot,movie,TV-14
+Pilot,movie,TV-14
+Pilot,episode,TV-14
+Patient Zero,movie,TV-14
+Patient Zero,movie,TV-14
+Sacrifice,episode,TV-14
+Sacrifice,episode,TV-14
+Dead of the Class,episode,TV-14
+Dead of the Class,movie,TV-14
+Frame by Frame,movie,TV-14
+Frame by Frame,movie,TV-14
+The CSI Effect,episode,TV-14
+The CSI Effect,episode,TV-14
+Back in Action,movie,TV-14
+Bad Trouble Here,movie,TV-14
+Bad Trouble Here,episode,TV-14
+Bad Trouble Here,movie,TV-14
+Breakdown at Tiffany's,episode,TV-14
+Computer Crash,movie,TV-14
+Computer Crash,episode,TV-14
+Gold Crash,episode,TV-14
+Harold's Gamble,episode,TV-14
+Seth in Charge,episode,TV-14
+Seth in Charge,episode,TV-14
+Seth Snaps,movie,TV-14
+Seth Snaps,episode,TV-14
+Seth Snaps,episode,TV-14
+Seth Snaps,movie,TV-14
+A Portrait of the Artist as a Young Call Girl,movie,TV-14
+Final Shot,episode,TV-14
+Final Shot,movie,TV-14
+State vs Queen,movie,TV-14
+Strange Brew,movie,TV-14
+Strange Brew,movie,TV-14
+A View to a Kill,episode,TV-14
+Aftermath,movie,TV-14
+Aftermath,movie,PG-13
+Aftermath,movie,R
+House of the Rising Son,episode,TV-14
+House of the Rising Son,episode,TV-14
+The Haunting,episode,TV-14
+The Haunting,episode,TV-14
+The Haunting,movie,Not Rated
+The Haunting,movie,Not Rated
+Emily,movie,Not Rated
+Have We Met Before?,movie,Not Rated
+Here We Go,movie,Not Rated
+It's Your Legacy,movie,Not Rated
+Trust Is Complicated,movie,Not Rated
+Trust Is Complicated,movie,Not Rated
+Camping,episode,TV-PG
+Family Conference,episode,TV-PG
+September Fools,episode,TV-PG
+September Fools,episode,TV-PG
+Prince Avalanche,movie,R
+Prince Avalanche,movie,R
+Hell Bent for Leather,episode,TV-MA
+In the Clouds,episode,TV-MA
+Rock and a Hard Place,episode,TV-MA
+Rock and a Hard Place,episode,TV-MA
+Children of the Night,episode,TV-MA
+The Crucible,episode,TV-MA
+The Crucible,episode,TV-MA
+The Crucible,episode,TV-MA
+The Order of the Dragon,episode,TV-MA
+Jarhead 2: Field of Fire,movie,R
+Sniper: Legacy,movie,R
+Sniper: Legacy,movie,R
+The Gift,episode,TV-14
+The Gift,movie,TV-14
+The Gift,movie,PG
+The Gift,movie,PG
+The New Office,episode,TV-14
+Woman on Top,episode,TV-14
+Woman on Top,episode,TV-14
+Bullets and Tears,episode,TV-MA
+Bullets and Tears,episode,TV-MA
+Half Deaf Is Better Than All Dead,episode,TV-MA
+Homecoming,episode,TV-MA
+Homecoming,episode,TV-MA
+Homecoming,episode,TV-MA
+Homecoming,movie,PG
+Homecoming,movie,PG
+Little Fish,episode,TV-MA
+Little Fish,episode,TV-MA
+The Thunder Man,episode,TV-MA
+The Thunder Man,episode,TV-MA
+A Typical Night,movie,Not Rated
+Reaper's Revenge: Fear the Reaper,movie,Not Rated
+Safe Place,movie,Not Rated
+Tick Tock,movie,Not Rated
+A Good Man,movie,R
+A Good Man,movie,R
+Force of Execution,movie,R
+Hidden Away,movie,TV-14
+High School Possession,movie,R
+High School Possession,movie,R
+Carbon Copy,episode,TV-14
+Carbon Copy,movie,TV-14
+What Happens in Mecklinburg...,movie,TV-14
+What Happens in Mecklinburg...,episode,TV-14
+12 Rounds 2: Reloaded,movie,R
+12 Rounds 2: Reloaded,movie,R
+Dead in Tombstone,movie,R
+Dead in Tombstone,movie,R
+A Space in the Time,movie,Not Rated
+A Space in the Time,movie,Not Rated
+The Drive II: 395 Miles from L.A.,movie,Not Rated
+The Drive III,movie,Not Rated
+Space Warriors,movie,PG
+Space Warriors,movie,PG
+Temptation: Confessions of a Marriage Counselor,movie,PG-13
+Temptation: Confessions of a Marriage Counselor,movie,PG-13
+Temptation: Confessions of a Marriage Counselor,movie,PG-13
+The Single Moms Club,movie,PG-13
+Tyler Perry's A Madea Christmas,movie,PG-13

@@ -19,8 +19,8 @@
             "(facilityname, type) => owner",
             "(facilityname) => type, manager, owner"
         ],
-        "target_h_sample_ratio": 0.6,
-        "alt_h_sample_ratio": 0.2
+        "target_h_sample_ratio": 0.5,
+        "alt_h_sample_ratio": 0.3
     },
     "2": {
         "target_fd": "(facilityname) => owner",
@@ -43,8 +43,8 @@
         "alt_h": [
             "(title) => director, year, rating"
         ],
-        "target_h_sample_ratio": 0.4,
-        "alt_h_sample_ratio": 0.4
+        "target_h_sample_ratio": 0.5,
+        "alt_h_sample_ratio": 0.3
     },
     "4": {
         "target_fd": "(listingnumber) => title, year",
@@ -78,8 +78,8 @@
         "alt_h": [
             "(title) => rating, type"
         ],
-        "target_h_sample_ratio": 0.6,
-        "alt_h_sample_ratio": 0.2
+        "target_h_sample_ratio": 0.5,
+        "alt_h_sample_ratio": 0.3
     },
     "7": {
         "target_fd": "(title, director) => genre",
@@ -102,8 +102,8 @@
         "alt_h": [
             "(facilityname) => type, manager"
         ],
-        "target_h_sample_ratio": 0.6,
-        "alt_h_sample_ratio": 0.2
+        "target_h_sample_ratio": 0.5,
+        "alt_h_sample_ratio": 0.3
     },
     "9": {
         "target_fd": "(rating) => type",
@@ -114,8 +114,8 @@
         "alt_h": [
             "(title) => year, rating, type"
         ],
-        "target_h_sample_ratio": 0.6,
-        "alt_h_sample_ratio": 0.2
+        "target_h_sample_ratio": 0.5,
+        "alt_h_sample_ratio": 0.3
     },
     "10": {
         "target_fd": "(title, year) => genre, type",
@@ -130,15 +130,27 @@
         "alt_h_sample_ratio": 0.6
     },
     "11": {
-        "target_fd": "(sitenumber) => facilityname, type",
+        "target_fd": "(sitenumber) => facilityname, owner, manager",
         "description": "Find the key in data about airfields in the U.S. state of Alaska, and find errors in the data accordingly.",
         "dirty_dataset": "./data/dirty_airport_11.csv",
         "clean_dataset": "./data/airport_11.csv",
         "difficulty": 2,
         "alt_h": [
-            "(facilityname) => sitenumber, type"
+            "(facilityname) => sitenumber, owner, manager"
         ],
-        "target_h_sample_ratio": 0.4,
-        "alt_h_sample_ratio": 0.4
+        "target_h_sample_ratio": 0.5,
+        "alt_h_sample_ratio": 0.3
+    },
+    "12": {
+        "target_fd": "(rating) => type",
+        "description": "Identify errors in data about English-language movies.",
+        "dirty_dataset": "./data/dirty_omdb_6.csv",
+        "clean_dataset": "./data/omdb_6.csv",
+        "difficulty": 3,
+        "alt_h": [
+            "(title) => rating, type"
+        ],
+        "target_h_sample_ratio": 0.2,
+        "alt_h_sample_ratio": 0.6
     }
 }

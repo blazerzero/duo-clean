@@ -24,13 +24,17 @@
 <![CDATA[
 DCs:
 // FD1: (sitenumber) => facilityname
-e1: airport_11(sitenumber: $s1, facilityname: $fn1, type: $t1), 
-airport_11(sitenumber: $s2, facilityname: $fn2, type: $t2), 
+e1: airport_11(sitenumber: $s1, facilityname: $fn1, owner: $o1, manager: $m1), 
+airport_11(sitenumber: $s2, facilityname: $fn2, owner: $o2, manager: $m2), 
     $s1 == $s2, $fn1 != $fn2 -> #fail.
-// FD2: (sitenumber) => type
-e2: airport_11(sitenumber: $s1, facilityname: $fn1, type: $t1), 
-airport_11(sitenumber: $s2, facilityname: $fn2, type: $t2), 
-    $s1 == $s2, $t1 != $t2 -> #fail.
+// FD2: (sitenumber) => owner
+e2: airport_11(sitenumber: $s1, facilityname: $fn1, owner: $o1, manager: $m1), 
+airport_11(sitenumber: $s2, facilityname: $fn2, owner: $o2, manager: $m2), 
+    $s1 == $s2, $o1 != $o2 -> #fail.
+// FD3: (sitenumber) => manager
+e3: airport_11(sitenumber: $s1, facilityname: $fn1, owner: $o1, manager: $m1), 
+airport_11(sitenumber: $s2, facilityname: $fn2, owner: $o2, manager: $m2), 
+    $s1 == $s2, $m1 != $m2 -> #fail.
 ]]>
     </dependencies>
 
@@ -96,7 +100,15 @@ airport_11(sitenumber: $s2, facilityname: $fn2, type: $t2),
                     <percentage>00.0</percentage> 
                 </vioGenQuery>
                 <vioGenQuery id="e2">
-                    <comparison>(t1 != t2)</comparison>
+                    <comparison>(o1 != o2)</comparison>
+                    <percentage>10.0</percentage> 
+                </vioGenQuery>
+                <vioGenQuery id="e3">
+                    <comparison>(s1 == s2)</comparison>
+                    <percentage>00.0</percentage> 
+                </vioGenQuery>
+                <vioGenQuery id="e3">
+                    <comparison>(m1 != m2)</comparison>
                     <percentage>10.0</percentage> 
                 </vioGenQuery>
             </vioGenQueries>
@@ -111,7 +123,10 @@ airport_11(sitenumber: $s2, facilityname: $fn2, type: $t2),
                 <attribute table="airport_11" name="facilityname">
                     <strategy>TypoActiveDomain</strategy>
                 </attribute>
-                <attribute table="airport_11" name="type">
+                <attribute table="airport_11" name="owner">
+                    <strategy>TypoActiveDomain</strategy>
+                </attribute>
+                <attribute table="airport_11" name="manager">
                     <strategy>TypoActiveDomain</strategy>
                 </attribute>
             </attributeStrategy>

@@ -132,7 +132,7 @@ if __name__ == '__main__':
                         norm_data.append(np.mean([formatted_data[i], formatted_data[i-1]]))
                     else:
                         norm_data.append(np.mean([formatted_data[i], formatted_data[i-1], formatted_data[i-2]]))
-                console.print(norm_data)
+                # console.print(norm_data)
                 mannkendall(norm_data)
         elif metric in fd_metadata[project_info['scenario']['target_fd']].keys():
             for fd_m in fd_metadata.values():
@@ -153,7 +153,7 @@ if __name__ == '__main__':
                             norm_data.append(np.mean([formatted_data[i], formatted_data[i-1]]))
                         else:
                             norm_data.append(np.mean([formatted_data[i], formatted_data[i-1], formatted_data[i-2]]))
-                    console.print(norm_data)
+                    # console.print(norm_data)
                     mannkendall(norm_data)
         console.print()
 
@@ -189,7 +189,7 @@ if __name__ == '__main__':
                             norm_data.append(np.mean([formatted_data[i], formatted_data[i-1]]))
                         else:
                             norm_data.append(np.mean([formatted_data[i], formatted_data[i-1], formatted_data[i-2]]))
-                    console.print(norm_data)
+                    # console.print(norm_data)
                     mannkendall(norm_data)
             elif metric in fd_metadata[project_info['scenario']['target_fd']].keys():
                 for fd_m in fd_metadata.values():
@@ -210,7 +210,7 @@ if __name__ == '__main__':
                                 norm_data.append(np.mean([formatted_data[i], formatted_data[i-1]]))
                             else:
                                 norm_data.append(np.mean([formatted_data[i], formatted_data[i-1], formatted_data[i-2]]))
-                        console.print(norm_data)
+                        # console.print(norm_data)
                         mannkendall(norm_data)
             console.print()
 
