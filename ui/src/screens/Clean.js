@@ -39,7 +39,7 @@ class Clean extends Component {
     formData.append('feedback', JSON.stringify(feedback));
     formData.append('refresh', (this.state.refresh === true ? 1 : 0));
     formData.append('is_new_feedback', (is_new_feedback === true ? 1 : 0));
-    axios.post('http://localhost:5000/duo/api/clean', formData)
+    axios.post('http://167.71.155.153:5000/duo/api/clean', formData)
         .then(async(response) => {
           console.log(response.data);
           var res = JSON.parse(response.data);
