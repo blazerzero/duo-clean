@@ -121,7 +121,7 @@ class Clean extends Component {
     const formData = new FormData();
     formData.append('project_id', project_id);
     console.log(formData.get('project_id'));
-    axios.post('http://localhost:5000/duo/api/sample', formData)
+    axios.post('http://167.71.155.153:5000/duo/api/sample', formData)
         .then(async(response) => {
           var res = JSON.parse(response.data);
           var { sample, feedback, msg, true_pos, false_pos } = pick(res, ['sample', 'feedback', 'msg', 'true_pos', 'false_pos'])
