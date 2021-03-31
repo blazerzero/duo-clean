@@ -1,4 +1,5 @@
 import copy
+import itertools
 import random
 from pprint import pprint
 import os
@@ -130,16 +131,6 @@ def recordFeedback(data, feedback, vio_pairs, project_id, current_iter, current_
         project_info = json.load(f)
         clean_dataset = pd.read_csv(project_info['scenario']['clean_dataset'], keep_default_na=False)
     
-    # all_vios_found = set()
-    # all_vios_total = set()
-    # all_vios_marked = set()
-    # iter_vios_found = set()
-    # iter_vios_total = set()
-    # iter_vios_marked = set()
-    # mt_vios_found = set()
-    # mt_vios_total = set()
-    # mt_vios_marked = set()
-    
     iter_errors_found = 0
     iter_errors_total = 0
     iter_errors_marked = 0
@@ -149,29 +140,6 @@ def recordFeedback(data, feedback, vio_pairs, project_id, current_iter, current_
     all_errors_marked = 0
 
     print(feedback)
-
-    # Track vios caught in each iteration
-    # for fd_m in fd_metadata.values():
-    #     fd_m.all_vios_found_history.append(StudyMetric(iter_num=current_iter, value=0, elapsed_time=elapsed_time))
-    #     fd_m.iter_vios_found_history.append(StudyMetric(iter_num=current_iter, value=0, elapsed_time=elapsed_time))
-    #     fd_m.iter_vios_total_history.append(StudyMetric(iter_num=current_iter, value=0, elapsed_time=elapsed_time))
-        
-    #     # all_vios_total |= fd_m.vio_pairs
-    #     for i, j in fd_m.vio_pairs:
-    #         if str(i) not in feedback.keys() or str(j) not in feedback.keys():
-    #             continue
-    #         iter_vios_total.add((i, j))
-    #         fd_m.iter_vios_total_history[-1].value += 1
-    #         caught = True
-    #         for rh in fd_m.rhs:
-    #             if feedback[str(i)][rh] is False and feedback[str(j)][rh] is False:
-    #                 caught = False
-    #                 break
-    #         if caught is True:
-    #             # all_vios_found.add((i, j))
-    #             fd_m.all_vios_found_history[-1].value += 1
-    #             iter_vios_found.add((i, j))
-    #             fd_m.iter_vios_found_history[-1].value += 1
 
     # Track errors caught in each iteration (short-term), medium-term, and cumulatively (long-term)
     mt_sample = set([int(i) for i in feedback.keys()])
@@ -183,7 +151,6 @@ def recordFeedback(data, feedback, vio_pairs, project_id, current_iter, current_
     for idx in data.index:
         for col in data.columns:
             if data.at[idx, col] != clean_dataset.at[idx, col]:
-                # all_errors_total += 1
                 if str(idx) in feedback.keys():
                     iter_errors_total += 1
                     if bool(feedback[str(idx)][col]) is True:
@@ -192,10 +159,7 @@ def recordFeedback(data, feedback, vio_pairs, project_id, current_iter, current_
                     all_errors_total += 1
                     if interaction_metadata['feedback_history'][int(idx)][col][-1].marked is True:
                         all_errors_found += 1
-                # if interaction_metadata['feedback_history'][int(idx)][col][-1].marked is True:
-                #     all_errors_found += 1
             if interaction_metadata['feedback_history'][int(idx)][col][-1].marked is True:
-                # all_errors_marked += 1
                 if str(idx) in feedback.keys():
                     iter_errors_marked += 1
                 if idx in all_sample:
@@ -211,27 +175,6 @@ def recordFeedback(data, feedback, vio_pairs, project_id, current_iter, current_
 
     pickle.dump( interaction_metadata, open('./store/' + project_id + '/interaction_metadata.p', 'wb') )
     print('*** Interaction metadata updates saved ***')
-
-    # VIOLATIONS
-    # if iter_vios_marked > 0:
-    #     vio_precision = iter_vios_found / iter_vios_marked
-    # else:
-    #     vio_precision = 0
-    
-    # if len(iter_vios_total) > 0:
-    #     iter_vio_recall = len(iter_vios_found) / len(iter_vios_total)
-    # else:
-    #     iter_vio_recall = 0
-
-    # if len(all_vios_total) > 0:
-    #     all_vio_recall = len(all_vios_found) / len(all_vios_total)
-    # else:
-    #     all_vio_recall = 0
-
-    # if vio_precision > 0 and vio_recall > 0:
-    #     vio_f1 = 2 * (vio_precision * vio_recall) / (vio_precision + vio_recall)
-    # else:
-    #     vio_f1 = 0
 
     # ERRORS
     if iter_errors_marked > 0:
@@ -264,11 +207,6 @@ def recordFeedback(data, feedback, vio_pairs, project_id, current_iter, current_
     else:
         all_err_f1 = 0
 
-    # study_metrics['vio_precision'].append(StudyMetric(iter_num=current_iter, value=vio_precision, elapsed_time=elapsed_time))
-    # study_metrics['iter_vio_recall'].append(StudyMetric(iter_num=current_iter, value=iter_vio_recall, elapsed_time=elapsed_time))
-    # study_metrics['all_vio_recall'].append(StudyMetric(iter_num=current_iter, value=all_vio_recall, elapsed_time=elapsed_time))
-    # study_metrics['vio_f1'].append(StudyMetric(iter_num=current_iter, value=vio_f1, elapsed_time=elapsed_time))
-
     study_metrics['iter_err_precision'].append(StudyMetric(iter_num=current_iter, value=iter_err_precision, elapsed_time=elapsed_time))
     study_metrics['iter_err_recall'].append(StudyMetric(iter_num=current_iter, value=iter_err_recall, elapsed_time=elapsed_time))
     study_metrics['iter_err_f1'].append(StudyMetric(iter_num=current_iter, value=iter_err_f1, elapsed_time=elapsed_time))
@@ -286,7 +224,6 @@ def interpretFeedback(s_in, feedback, X, sample_X, project_id, current_iter, cur
 
     elapsed_time = current_time - start_time
     # Remove marked cells from consideration
-    # print(feedback)
     print('*** about to interpret feedback ***')
     marked_rows = list()
     for idx in feedback.index:
@@ -295,23 +232,8 @@ def interpretFeedback(s_in, feedback, X, sample_X, project_id, current_iter, cur
                 marked_rows.append(int(idx))
                 break
 
-    # print(sample_X)
-    # pruned_s_in = s_in.drop([int(i) for i in pruned_rows])
-    # pruned_sample_X = sample_X
-    # for row in pruned_rows:
-    #     pruned_sample_X = {x for x in pruned_sample_X if int(row) not in x}
-        # print(sample_X)
-
-    # print(len(X))
-    # print(len(sample_X))
-
     # Calculate P(X | \theta_h) for each FD
     for fd, fd_m in fd_metadata.items():
-        # if target_fd is not None and fd != target_fd:
-        #     continue
-        
-        # successes_X = set()
-        # failures_X = set()
         successes = 0
         failures = 0
 
@@ -332,15 +254,11 @@ def interpretFeedback(s_in, feedback, X, sample_X, project_id, current_iter, cur
                 else:   # tuple is dirty and they missed the vio, or the vio isn't in a pair in the sample
                     failures += 1
 
-        # print('successes:', len(successes_X))
-        # print('failures:', len(failures_X))
         print('successes:', successes)
         print('failures:', failures)
                 
-        # fd_m.alpha += len(successes_X)
         fd_m.alpha += successes
         fd_m.alpha_history.append(StudyMetric(iter_num=current_iter, value=fd_m.alpha, elapsed_time=elapsed_time))
-        # fd_m.beta += len(failures_X)
         fd_m.beta += failures
         fd_m.beta_history.append(StudyMetric(iter_num=current_iter, value=fd_m.beta, elapsed_time=elapsed_time))
         print('alpha:', fd_m.alpha)
@@ -372,14 +290,11 @@ def buildSample(data, X, sample_size, project_id, current_iter, current_time):
 
     sample_X = set()
     s_out = None
-    # tfd_in_sample_X = set()
-    # while len(tfd_in_sample_X) == 0:    # if no vios relevant to the FD are in the sample
     tfd_X = [x for x in X if x in tfd_m.vio_pairs]
     target_h_sample_ratio = project_info['scenario']['target_h_sample_ratio']
     alt_h_sample_ratio = project_info['scenario']['alt_h_sample_ratio']
     s_index, sample_X = returnTuples(data, tfd_X, sample_size, list(alt_h_vio_pairs), target_h_sample_ratio, alt_h_sample_ratio, current_iter)
     s_out = data.loc[s_index, :]
-        # tfd_in_sample_X = {x for x in sample_X if x in tfd_m.vio_pairs} # violations relevant to this FD
 
     print('IDs of tuples in next sample:', s_out.index)
     
@@ -389,28 +304,43 @@ def buildSample(data, X, sample_size, project_id, current_iter, current_time):
 # RETURN TUPLES AND VIOS FOR SAMPLE
 def returnTuples(data, X, sample_size, alt_h_vio_pairs, target_h_sample_ratio, alt_h_sample_ratio, current_iter):
     s_out = list()
-    if len(alt_h_vio_pairs) > 0:
-        alt_vios_out = random.sample(population=alt_h_vio_pairs, k=math.ceil(alt_h_sample_ratio * sample_size))
-        for (x, y) in alt_vios_out:
-            if x not in s_out:
-                s_out.append(x)
-            if y not in s_out:
-                s_out.append(y)
-    target_vios_out = random.sample(population=X, k=math.ceil(target_h_sample_ratio * sample_size))
+    X_tups = list(itertools.chain(*X))
+    alt_X_tups = list(itertools.chain(*alt_h_vio_pairs))
+    viable_X = [(x, y) for (x, y) in X if x not in alt_X_tups and y not in alt_X_tups]
+    viable_alt_X = [(x, y) for (x, y) in alt_h_vio_pairs if x not in X_tups and y not in X_tups]
+    viable_rem = [x for x in data.index if x not in X_tups and x not in alt_X_tups]
+    if len(viable_alt_X) > math.ceil(alt_h_sample_ratio * sample_size):
+        alt_vios_out = random.sample(population=viable_alt_X, k=math.ceil(alt_h_sample_ratio * sample_size))
+    else:
+        alt_vios_out = viable_alt_X
+    for (x, y) in alt_vios_out:
+        if x not in s_out:
+            s_out.append(x)
+        if y not in s_out:
+            s_out.append(y)
+    if len(viable_X) > math.ceil(target_h_sample_ratio * sample_size):
+        target_vios_out = random.sample(population=viable_X, k=math.ceil(target_h_sample_ratio * sample_size))
+    else:
+        target_vios_out = viable_X
     for (x, y) in target_vios_out:
         if x not in s_out:
             s_out.append(x)
         if y not in s_out:
             s_out.append(y)
-        if len(s_out) >= sample_size:
-            break
-    other_tups_out = random.sample(population=list(data.index), k=sample_size)
-    if len(s_out) < sample_size:
-        for i in other_tups_out:
-            if i not in s_out:
-                s_out.append(i)
-            if len(s_out) >= sample_size:
-                break
+        # if len(s_out) >= sample_size:
+        #     break
+    for i in range(0, math.ceil((1-target_h_sample_ratio-alt_h_sample_ratio)*sample_size)):
+        other_tups = random.sample(population=viable_rem, k=2)
+        if other_tups[0] not in s_out and other_tups[1] not in s_out:
+            s_out.append(other_tups[0])
+            s_out.append(other_tups[1])
+    # other_tups_out = random.sample(population=viable_rem, k=2)
+    # if len(s_out) < sample_size:
+        # for i in other_tups_out:
+            # if i not in s_out:
+                # s_out.append(i)
+            # if len(s_out) >= sample_size:
+            #     break
     random.shuffle(s_out)
     sample_X = set()
     for i1 in s_out:
@@ -455,7 +385,7 @@ def getSupportAndVios(dirty_data, clean_data, fd):
                 random_idx = random.randint(0, len(dirty_patterns[l])-1)
                 dirty_patterns[l] = dirty_patterns[l][random_idx]
         
-    # CODE TO BUILD COVER AND VIOLATION LIST
+    # BUILD COVER AND VIOLATION LIST
     support = list()
     violations = list()
     for idx in dirty_data.index:
@@ -621,9 +551,7 @@ def buildCompositionSpace(fds, h_space, dirty_data, clean_data, min_conf, max_an
         if clean_data is not None:
             support, vios = getSupportAndVios(dirty_data, clean_data, composed_fd)
             conf = (len(support) - len(vios)) / len(support)
-            # print(conf)
             if conf >= min_conf and len(composed_fd.split(' => ')[0][1:-1].split(', ')) <= max_ant:
-                # print('here')
                 composition_space.append({
                     'cfd': composed_fd
                 })
@@ -676,7 +604,6 @@ def vioStats(curr_sample, t_sample, feedback, vio_pairs, rhs, dirty_dataset, cle
             continue
         vios_total.add((x, y))
 
-    # for (x, y) in vio_pairs:
         x_marked = False
         for rh in rhs:
             if feedback[str(x)][rh] is True:
@@ -702,46 +629,6 @@ def vioStats(curr_sample, t_sample, feedback, vio_pairs, rhs, dirty_dataset, cle
                     break
             if marked is True:
                 vios_marked.add((x,x))
-    
-    # for x in curr_sample:
-    #     vios_w_x = {v for v in vios_total if x in v and v not in vios_marked}
-    #     marked = True
-    #     for rh in rhs:
-    #         if feedback[str(x)][rh] is False:
-    #             marked = False
-    #             break
-    #     if marked is True:
-    #         if len(vios_w_x) > 0:
-    #             vios_found |= vios_w_x
-    #             vios_marked |= vios_w_x
-    #         else:
-    #             vios_marked.add((x, x))
-
-    # for x in curr_sample:
-    #     if len([i for i in vio_pairs if x in i]) == 0:
-    #         for rh in rhs:
-    #             if feedback[str(x)][rh] is True:
-    #                 vios_marked.add((x, x))
-    # for x, y in vio_pairs:
-    #     if x not in t_sample or y not in t_sample:
-    #         continue
-    #     if x not in curr_sample and y not in curr_sample:
-    #         continue
-    #     vios_total.add((x, y))
-    #     caught = True
-    #     for rh in rhs:
-    #         if dirty_dataset.at[x, rh] != clean_dataset.at[x, rh] or dirty_dataset.at[y, rh] != clean_dataset.at[y, rh]:
-    #             if feedback[str(x)][rh] is True or feedback[str(y)][rh] is True:
-    #                 vios_marked.add((x, y))
-    #             if feedback[str(x)][rh] == feedback[str(y)][rh]:
-    #                 caught = False
-    #                 break
-    #         else:
-    #             if feedback[str(x)][rh] is True or feedback[str(y)][rh] is True:
-    #                 caught = False
-    #                 break
-    #     if caught is True:
-    #         vios_found.add((x, y))
 
     return vios_marked, vios_found, vios_total
 
