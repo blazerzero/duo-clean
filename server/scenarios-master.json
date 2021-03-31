@@ -138,8 +138,8 @@
         "alt_h": [
             "(facilityname) => sitenumber, owner, manager"
         ],
-        "target_h_sample_ratio": 0.5,
-        "alt_h_sample_ratio": 0.3
+        "target_h_sample_ratio": 0.2,
+        "alt_h_sample_ratio": 0.6
     },
     "12": {
         "target_fd": "(rating) => type",
