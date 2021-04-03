@@ -1,22 +1,8 @@
-import copy
-import itertools
-import random
+import copy, random, os, json, pickle, math, itertools
 from pprint import pprint
-import os
-import json
-import subprocess as sp
+from collections import Counter
 import pandas as pd
 import numpy as np
-import sys
-import csv
-import pickle
-import math
-import statistics
-from collections import Counter
-import scipy.special as sc
-from scipy.stats import beta as betaD
-import re
-from itertools import combinations
 
 class CellFeedback(object):
     def __init__(self, iter_num, marked, elapsed_time):
@@ -30,18 +16,6 @@ class CellFeedback(object):
             'marked': self.marked,
             'elapsed_time': self.elapsed_time
         }
-
-class CFDWeightHistory(object):
-    def __init__(self, iter_num, weight, elapsed_time):
-        self.iter_num = iter_num
-        self.weight = weight
-        self.elapsed_time = elapsed_time
-
-class CFDScore(object):
-    def __init__(self, iter_num, score, elapsed_time):
-        self.iter_num = iter_num
-        self.score = score
-        self.elapsed_time = elapsed_time
 
 class StudyMetric(object):
     def __init__(self, iter_num, value, elapsed_time):
@@ -72,13 +46,8 @@ class FDMeta(object):
         self.all_vios_found_history = []
         self.iter_vios_found_history = []
         self.iter_vios_total_history = []
-        # self.alpha_err = alpha
-        # self.alpha_err_history = [alpha]
-        # self.beta_err = beta
-        # self.beta_err_history = [beta]
     
     def asdict(self):
-        # print([list(vp) for vp in self.vio_pairs])
         alpha_history = list()
         for a in self.alpha_history:
             alpha_history.append(a.asdict())
@@ -96,24 +65,19 @@ class FDMeta(object):
             'beta_history': beta_history,
             'support': self.support,
             'vios': self.vios,
-            'vio_pairs': [list(vp) for vp in self.vio_pairs],
-            # 'all_vios_found_history': [a.asdict() for a in self.all_vios_found_history],
-            # 'iter_vios_found_history': [i.asdict() for i in self.iter_vios_found_history],
-            # 'iter_vios_total_history': [i.asdict() for i in self.iter_vios_total_history]
+            'vio_pairs': [list(vp) for vp in self.vio_pairs]
         }
 
-
-# RECORD USER FEEDBACK (FOR TRUE POS AND FALSE POS)
+# Record user feedback
 def recordFeedback(data, feedback, vio_pairs, project_id, current_iter, current_time):
     interaction_metadata = pickle.load( open('./store/' + project_id + '/interaction_metadata.p', 'rb') )
     study_metrics = pickle.load( open('./store/' + project_id + '/study_metrics.p', 'rb') )
     start_time = pickle.load( open('./store/' + project_id + '/start_time.p', 'rb') )
-    fd_metadata = pickle.load( open('./store/' + project_id + '/fd_metadata.p', 'rb') )
 
+    # Calculate elapsed time
     elapsed_time = current_time - start_time
 
-    # for idx in feedback.index:
-    #     for col in feedback.columns:
+    # Store user feedback
     for idx in data.index:
         if str(idx) in feedback.keys():
             for col in data.columns:
@@ -121,12 +85,12 @@ def recordFeedback(data, feedback, vio_pairs, project_id, current_iter, current_
         else:
             for col in data.columns:
                 interaction_metadata['feedback_history'][idx][col].append(CellFeedback(iter_num=current_iter, marked=interaction_metadata['feedback_history'][idx][col][-1].marked if current_iter > 1 else False, elapsed_time=elapsed_time))
-            
 
+    # Store latest sample in sample history
     interaction_metadata['sample_history'].append(StudyMetric(iter_num=current_iter, value=[int(idx) for idx in feedback.keys()], elapsed_time=elapsed_time))
     print('*** Latest feedback saved ***')
             
-    # scoring function: score based on number of true errors correctly identified
+    # Scoring function: score based on number of true errors correctly identified
     with open('./store/' + project_id + '/project_info.json', 'r') as f:
         project_info = json.load(f)
         clean_dataset = pd.read_csv(project_info['scenario']['clean_dataset'], keep_default_na=False)
@@ -167,8 +131,6 @@ def recordFeedback(data, feedback, vio_pairs, project_id, current_iter, current_
 
     print('*** Score updated ***')
 
-    project_info['true_pos'] = all_errors_found
-    project_info['false_pos'] = all_errors_marked - all_errors_found
     with open('./store/' + project_id + '/project_info.json', 'w') as f:
         json.dump(project_info, f)
     print('*** Score saved ***')
@@ -176,7 +138,7 @@ def recordFeedback(data, feedback, vio_pairs, project_id, current_iter, current_
     pickle.dump( interaction_metadata, open('./store/' + project_id + '/interaction_metadata.p', 'wb') )
     print('*** Interaction metadata updates saved ***')
 
-    # ERRORS
+    # Calculate metrics related to errors
     if iter_errors_marked > 0:
         iter_err_precision = iter_errors_found / iter_errors_marked
     else:
@@ -217,7 +179,7 @@ def recordFeedback(data, feedback, vio_pairs, project_id, current_iter, current_
 
     pickle.dump( study_metrics, open('./store/' + project_id + '/study_metrics.p', 'wb') )
 
-# INTERPRET USER FEEDBACK AND UPDATE PROBABILITIES
+# Interpret user feedback and update alphas and betas for each FD in the hypothesis space
 def interpretFeedback(s_in, feedback, X, sample_X, project_id, current_iter, current_time, target_fd=None):
     fd_metadata = pickle.load( open('./store/' + project_id + '/fd_metadata.p', 'rb') )
     start_time = pickle.load( open('./store/' + project_id + '/start_time.p', 'rb') )
@@ -233,16 +195,18 @@ def interpretFeedback(s_in, feedback, X, sample_X, project_id, current_iter, cur
                 break
 
     # Calculate P(X | \theta_h) for each FD
-    for fd, fd_m in fd_metadata.items():
+    for fd_m in fd_metadata.values():
         successes = 0
         failures = 0
 
+        # Calculate which pairs have been marked and remove them from calculation
         removed_pairs = set()
         sample_X_in_fd = {x for x in sample_X if x in fd_m.vio_pairs}
         for x, y in sample_X_in_fd:
             if x in marked_rows or y in marked_rows:
                 removed_pairs.add((x, y))
 
+        # Calculate successes and failures (to use for updating alpha and beta)
         for i in s_in.index:
             if i in marked_rows:
                 continue
@@ -257,6 +221,7 @@ def interpretFeedback(s_in, feedback, X, sample_X, project_id, current_iter, cur
         print('successes:', successes)
         print('failures:', failures)
                 
+        # Update alpha and beta
         fd_m.alpha += successes
         fd_m.alpha_history.append(StudyMetric(iter_num=current_iter, value=fd_m.alpha, elapsed_time=elapsed_time))
         fd_m.beta += failures
@@ -267,48 +232,62 @@ def interpretFeedback(s_in, feedback, X, sample_X, project_id, current_iter, cur
         fd_m.conf_history.append(StudyMetric(iter_num=current_iter, value=fd_m.conf, elapsed_time=elapsed_time))
         print('conf:', fd_m.conf)
 
+    # Save updated alpha/beta metrics
     pickle.dump( fd_metadata, open('./store/' + project_id + '/fd_metadata.p', 'wb') )
 
-# BUILD SAMPLE
+# Build a sample
 def buildSample(data, X, sample_size, project_id, current_iter, current_time):
+    # Load data
     fd_metadata = pickle.load( open('./store/' + project_id + '/fd_metadata.p', 'rb') )
-    start_time = pickle.load( open('./store/' + project_id + '/start_time.p', 'rb') )
     with open('./store/' + project_id + '/project_info.json', 'r') as f:
         project_info = json.load(f)
     target_fd = project_info['scenario']['target_fd']
     alt_h_list = project_info['scenario']['alt_h']
-    tfd_conf = next(i for i in project_info['scenario']['hypothesis_space'] if i['cfd'] == target_fd)['conf']
+    
+    # Get target FD metadata
     tfd_m = fd_metadata[target_fd]
+    
+    # Build alternative FD metadata dictionary
     alt_fd_m = dict()
     for h in alt_h_list:
         alt_fd_m[h] = fd_metadata[h]
+    
+    # Build set of alternative hypothesis violation pairs
     alt_h_vio_pairs = set()
     for _, h in alt_fd_m.items():
         alt_h_vio_pairs |= h.vio_pairs
 
-    elapsed_time = current_time - start_time
-
     sample_X = set()
     s_out = None
-    tfd_X = [x for x in X if x in tfd_m.vio_pairs]
+    
+    # Get sampling ratios for each hypothesis
     target_h_sample_ratio = project_info['scenario']['target_h_sample_ratio']
     alt_h_sample_ratio = project_info['scenario']['alt_h_sample_ratio']
-    s_index, sample_X = returnTuples(data, tfd_X, sample_size, list(alt_h_vio_pairs), target_h_sample_ratio, alt_h_sample_ratio, current_iter)
+
+    # Get the sample
+    s_index, sample_X = returnTuples(data, tfd_m.vio_pairs, sample_size, list(alt_h_vio_pairs), target_h_sample_ratio, alt_h_sample_ratio, current_iter)
     s_out = data.loc[s_index, :]
 
     print('IDs of tuples in next sample:', s_out.index)
     
     return s_out, sample_X
 
-
-# RETURN TUPLES AND VIOS FOR SAMPLE
+# Return the tuples and violations for the sample
 def returnTuples(data, X, sample_size, alt_h_vio_pairs, target_h_sample_ratio, alt_h_sample_ratio, current_iter):
     s_out = list()
+
+    # Extract all tuples in target and alternative FD vio pairs
     X_tups = list(itertools.chain(*X))
     alt_X_tups = list(itertools.chain(*alt_h_vio_pairs))
+
+    # Build sets of viable vio pairs (pairs that satisfy target and violate alt and vice versa)
     viable_X = [(x, y) for (x, y) in X if x not in alt_X_tups and y not in alt_X_tups]
     viable_alt_X = [(x, y) for (x, y) in alt_h_vio_pairs if x not in X_tups and y not in X_tups]
+    
+    # Build set of vio pairs that violate neither the target nor alternative hypotheses
     viable_rem = [x for x in data.index if x not in X_tups and x not in alt_X_tups]
+    
+    # Add vios to the sample that violate the alt but not the target
     if len(viable_alt_X) > math.ceil(alt_h_sample_ratio * sample_size):
         alt_vios_out = random.sample(population=viable_alt_X, k=math.ceil(alt_h_sample_ratio * sample_size))
     else:
@@ -318,6 +297,8 @@ def returnTuples(data, X, sample_size, alt_h_vio_pairs, target_h_sample_ratio, a
             s_out.append(x)
         if y not in s_out:
             s_out.append(y)
+    
+    # Add vios to the sample that violate the target but not the alt
     if len(viable_X) > math.ceil(target_h_sample_ratio * sample_size):
         target_vios_out = random.sample(population=viable_X, k=math.ceil(target_h_sample_ratio * sample_size))
     else:
@@ -327,20 +308,15 @@ def returnTuples(data, X, sample_size, alt_h_vio_pairs, target_h_sample_ratio, a
             s_out.append(x)
         if y not in s_out:
             s_out.append(y)
-        # if len(s_out) >= sample_size:
-        #     break
+    
+    # Add tuples to the sample that violate neither the target nor the alt
     for i in range(0, math.ceil((1-target_h_sample_ratio-alt_h_sample_ratio)*sample_size)):
         other_tups = random.sample(population=viable_rem, k=2)
         if other_tups[0] not in s_out and other_tups[1] not in s_out:
             s_out.append(other_tups[0])
             s_out.append(other_tups[1])
-    # other_tups_out = random.sample(population=viable_rem, k=2)
-    # if len(s_out) < sample_size:
-        # for i in other_tups_out:
-            # if i not in s_out:
-                # s_out.append(i)
-            # if len(s_out) >= sample_size:
-            #     break
+    
+    # Shuffle the sample
     random.shuffle(s_out)
     sample_X = set()
     for i1 in s_out:
@@ -348,33 +324,38 @@ def returnTuples(data, X, sample_size, alt_h_vio_pairs, target_h_sample_ratio, a
             tup = (i1, i2) if i1 < i2 else (i2, i1)
             if tup in X:
                 sample_X.add(tup)
+
     return s_out, sample_X
 
 
-# GET THE USER'S TRUE POSITIVE AND FALSE POSITIVE COUNTS
-def getUserScores(project_id):
-    with open('./store/' + project_id + '/project_info.json') as f:
-        project_info = json.load(f)
-    return project_info['true_pos'], project_info['false_pos']
 
 
-# GET FD SUPPORT AND VIOLATIONS
+# # # # # # # # # # # # # #
+# # # # # # # # # # # # # #
+# OTHER HELPER FUNCTIONS  #
+# # # # # # # # # # # # # #
+# # # # # # # # # # # # # #
+
+
+
+
+# Get FD support and violations
 def getSupportAndVios(dirty_data, clean_data, fd):
-    lhs = fd.split(' => ')[0][1:-1]
-    rhs = fd.split(' => ')[1]
+    lhs = fd.split(' => ')[0][1:-1] # lhs of the FD
+    rhs = fd.split(' => ')[1]       # rhs of the FD
     clean_patterns = None
     if clean_data is not None:
-        clean_patterns = fd2cfd(clean_data, lhs, rhs)
-        # ENFORCE ONE LHS TO RHS FOR CLEAN PATTERNS
+        clean_patterns = fd2cfd(clean_data, lhs, rhs)   # Used to help find violations
+        # Enforce one RHS to each LHS for clean patterns
         for l in clean_patterns.keys():
             if len(clean_patterns[l]) == 1:
                 clean_patterns[l] = clean_patterns[l].pop()
             else:
                 random_idx = random.randint(0, len(clean_patterns[l])-1)
                 clean_patterns[l] = clean_patterns[l][random_idx]
-    dirty_patterns = fd2cfd(dirty_data, lhs, rhs)
+    dirty_patterns = fd2cfd(dirty_data, lhs, rhs)   # Used to help find violations
 
-    # IF DIRTY PATTERNS HAS >1 RHS TO 1 LHS, PICK CLEAN RHS
+    # If dirty pattern has >1 rhs, pick the clean rhs
     for l in dirty_patterns.keys():
         if len(dirty_patterns[l]) == 1:
             dirty_patterns[l] = dirty_patterns[l].pop()
@@ -385,19 +366,21 @@ def getSupportAndVios(dirty_data, clean_data, fd):
                 random_idx = random.randint(0, len(dirty_patterns[l])-1)
                 dirty_patterns[l] = dirty_patterns[l][random_idx]
         
-    # BUILD COVER AND VIOLATION LIST
+    # Build support and violation list for the FD
     support = list()
     violations = list()
     for idx in dirty_data.index:
-        support.append(idx)
+        support.append(idx) # Since it's an FD, all tuples are part of the support
         applicable_lhs = ''
         for lh in lhs.split(', '):
             applicable_lhs += lh + '=' + str(dirty_data.at[idx, lh]) + ', '
         applicable_lhs = applicable_lhs[:-2]
         applicable_rhs = dirty_patterns[applicable_lhs]
         is_vio = False
+        # Check if there's a violation of the FD in this tuple
         for rhs_piece in applicable_rhs.split(', '):
             rh = rhs_piece.split('=')
+            # If there's a value mismatch, it's a vio
             if str(dirty_data.at[idx, rh[0]]) != str(rh[1]):
                 is_vio = True
                 break
@@ -407,7 +390,7 @@ def getSupportAndVios(dirty_data, clean_data, fd):
     return support, violations
 
 
-# CONVERT FD OR PARTIAL CFD TO FULL CFD
+# Convert FD to partial or full CFD
 def fd2cfd(data, lhs, rhs):
     patterns = dict()
     mappings = dict()
@@ -416,20 +399,24 @@ def fd2cfd(data, lhs, rhs):
     for idx in data.index:
         lhspattern = ''
         rhspattern = ''
+
+        # Build LHS pattern
         for clause in lhs.split(', '):
             if '=' in clause:
                 lhspattern += clause + ', '
             else:
                 lhspattern += clause + '=' + str(data.at[idx, clause]) + ', '
-        lhspattern = lhspattern[:-2]
+        lhspattern = lhspattern[:-2]    # Cut off trailing ', '
 
+        # Build RHS pattern
         for clause in rhs.split(', '):
             if '=' in clause:
                 rhspattern += clause + ', '
             else:
                 rhspattern += clause + '=' + str(data.at[idx, clause]) + ', '
-        rhspattern = rhspattern[:-2]
+        rhspattern = rhspattern[:-2]    # Cut off trailing ', '
 
+        # Add the tuple to the relevant LHS/RHS mapping (used to determine best pattern for the LHS)
         if lhspattern in patterns.keys():
             patterns[lhspattern].append(rhspattern)
             if (lhspattern, rhspattern) in mappings.keys():
@@ -440,7 +427,7 @@ def fd2cfd(data, lhs, rhs):
             patterns[lhspattern] = [rhspattern]
             mappings[(lhspattern, rhspattern)] = [idx]
 
-    # Pick RHS patterns for each LHS from these candidates
+    # Pick best RHS pattern for each LHS from these candidates
     for key in patterns.keys():
         counts = Counter(patterns[key])
         get_mode = dict(counts)
@@ -448,6 +435,7 @@ def fd2cfd(data, lhs, rhs):
 
     return patterns
 
+# Build composition space of hypotheses (i.e. FDs with RHS >1 tuple)
 def buildCompositionSpace(fds, h_space, dirty_data, clean_data, min_conf, max_ant):
     composed_fds = set(fds)
     composed_combos = set()
@@ -460,9 +448,11 @@ def buildCompositionSpace(fds, h_space, dirty_data, clean_data, min_conf, max_an
             fd2_lhs = set(fd2.split(' => ')[0][1:-1].split(', '))
             fd2_rhs = set(fd2.split(' => ')[1].split(', '))
 
+            # Skip this FD combination if there is overlap between LHS and RHS between the two
             if not fd1_rhs.isdisjoint(fd2_lhs) or not fd2_rhs.isdisjoint(fd1_lhs):
                 continue
 
+            # Skip this FD combination if the combined LHS is too complex
             composed_fd_lhs_set = fd1_lhs | fd2_lhs
             if len(composed_fd_lhs_set) > max_ant:
                 continue
@@ -498,6 +488,7 @@ def buildCompositionSpace(fds, h_space, dirty_data, clean_data, min_conf, max_an
 
             composed_combos.add((fd1, fd2))
 
+    # Go one level further
     further_composed_fds = set(composed_fds)
     for fd1 in composed_fds:
         for fd2 in composed_fds:
@@ -508,9 +499,11 @@ def buildCompositionSpace(fds, h_space, dirty_data, clean_data, min_conf, max_an
             fd2_lhs = set(fd2.split(' => ')[0][1:-1].split(', '))
             fd2_rhs = set(fd2.split(' => ')[1].split(', '))
 
+            # Skip this FD combination if there is overlap between LHS and RHS between the two
             if not fd1_rhs.isdisjoint(fd2_lhs) or not fd2_rhs.isdisjoint(fd1_lhs):
                 continue
 
+            # Skip this FD combination if the combined LHS is too complex
             composed_fd_lhs_set = fd1_lhs | fd2_lhs
             if len(composed_fd_lhs_set) > max_ant:
                 continue
@@ -563,6 +556,7 @@ def buildCompositionSpace(fds, h_space, dirty_data, clean_data, min_conf, max_an
 
     return composition_space
 
+# Calculate the initial prior (alpha/beta) for an FD
 def initialPrior(mu, variance):
     if mu == 1:
         mu = 0.9999
@@ -570,9 +564,9 @@ def initialPrior(mu, variance):
     alpha = (mu * beta) / (1 - mu)
     return abs(alpha), abs(beta)
 
-def getPairs(data, support, vios, fd):
+# Get violation pairs for an FD
+def getPairs(data, support, fd):
     vio_pairs = set()
-    all_pairs = set()
     lhs = fd.split(' => ')[0][1:-1].split(', ')
     rhs = fd.split(' => ')[1].split(', ')
     for idx1 in support:
@@ -580,7 +574,6 @@ def getPairs(data, support, vios, fd):
             if idx1 == idx2:
                 continue
             pair = (idx1, idx2) if idx2 > idx1 else (idx2, idx1)
-            all_pairs.add(pair)
             match = True
             for lh in lhs:
                 if data.at[idx1, lh] != data.at[idx2, lh]:
@@ -591,7 +584,7 @@ def getPairs(data, support, vios, fd):
                     if data.at[idx1, rh] != data.at[idx2, rh]:
                         vio_pairs.add(pair)
                         break
-    return list(all_pairs), list(vio_pairs)   
+    return list(vio_pairs)   
 
 def vioStats(curr_sample, t_sample, feedback, vio_pairs, rhs, dirty_dataset, clean_dataset):
     vios_marked = set()

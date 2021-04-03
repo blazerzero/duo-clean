@@ -1,38 +1,96 @@
+import json, os, time, pickle, math, logging
+from pprint import pprint
+from random import shuffle
+from datetime import datetime
+
 from flask import Flask, request, send_file, jsonify
 from flask_restful import Resource, Api, reqparse, abort
 from flask_cors import CORS, cross_origin
 from flask_csv import send_csv
 
-import random
-import json
-import os
-import time
 import pandas as pd
 import numpy as np
-import pickle
-import math
-import shutil
-import logging
-import csv
-from scipy.stats import hmean
-from pprint import pprint
+from rich.console import Console
 
-import helpers
-import analyze
+import helpers, analyze
 
+console = Console()
+
+# Flask configs
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
 api = Api(app)
-
 logging.getLogger('flask_cors').level = logging.DEBUG
 
+class User(object):
+    def __init__(self):
+        with open('scenarios-for-study.json', 'r') as f:
+            data = json.load(f)
+        self.scenarios = data['scenarios']
+        shuffle(self.scenarios)
+        self.start_time = datetime.now()
+        self.done = list()
+        self.pre_survey = dict()
+        self.post_questionnaire = dict()
+        console.log(self.scenarios)
+    
+    def asdict(self):
+        return {
+            'scenarios': self.scenarios,
+            'start_time': self.start_time,
+            'done': self.done,
+            'post_questionnaire': self.post_questionnaire
+        }
+
+# Test endpoint to check if the server is live
 class Test(Resource):
     def get(self):
-        return {'msg': '[SUCCESS] The server is live!'}
+        return {'msg': '[SUCCESS] /duo/api is live!'}
+
+# Start/resume the study for a particular user
+# If the specified email is already associated with a run, resume study
+# If the specified email is new, begin a new run
+class Start(Resource):
+    def get(self):
+        return {'msg': '[SUCCESS] /duo/api/start is live!'}
+    
+    def post(self):
+        # Get the provided email
+        email = request.form.get('email')
+        if email is None:
+            email = json.loads(request.data)['email']
+        print('Email:', email)
+        
+        # Load the users list
+        try:
+            users = pickle.load( open('./study-utils/users.p', 'rb') )
+        except:
+            users = dict()
+        
+        if email in users.keys():   # Get the already existing user
+            user = users[email]
+            console.log(user.scenarios)
+            scenarios_left = [s for s in user.scenarios if s not in user.done]
+            status_code = 200
+            response = {
+                'scenarios': scenarios_left
+            }
+        else:   # Store the user in the users list
+            user = User()
+            users[email] = user
+            status_code = 201
+            response = {
+                'scenarios': user.scenarios
+            }
+        
+        pickle.dump( users, open('./study-utils/users.p', 'wb') )
+        
+        # Return
+        return response, status_code, {'Access-Control-Allow-Origin': '*'}
 
 class Import(Resource):
     def get(self):
-        return {'msg': '[SUCCESS] This endpoint is live!'}
+        return {'msg': '[SUCCESS] /duo/api/import is live!'}
 
     def post(self):
         # Initialize a new project
@@ -43,6 +101,8 @@ class Import(Resource):
             project_ids = [int(d, 0) for d in projects]
             new_project_id = '{:08x}'.format(max(project_ids) + 1)
         new_project_dir = './store/' + new_project_id
+        
+        # Save the new project
         try:
             os.mkdir(new_project_dir)
         except OSError:
@@ -57,32 +117,46 @@ class Import(Resource):
 
         # Read the scenario number and initialize the scenario accordingly
         scenario_id = request.form.get('scenario_id')
-        name = request.form.get('name')
-        if scenario_id is None:
+        email = request.form.get('email')
+        answers = request.form.get('answers')
+        if scenario_id is None or email is None or answers is None:
             scenario_id = json.loads(request.data)['scenario_id']
-            name = json.loads(request.data)['name']
+            email = json.loads(request.data)['email']
+            answers = json.loads(request.data)['answers']
         print(scenario_id)
         with open('scenarios.json', 'r') as f:
             scenarios_list = json.load(f)
         scenario = scenarios_list[scenario_id]
+        target_fd = scenario['target_fd']
         project_info = {
-            'name': name,
+            'email': email,
             'scenario_id': scenario_id,
-            'scenario': scenario,
-            'score': 0,
-            'true_pos': 0,
-            'false_pos': 0
+            'scenario': scenario
         }
+
+        # Get the user from the users list
+        try:
+            users = pickle.load( open('./study-utils/users.p', 'rb'))
+        except:
+            return {'msg': '[ERROR] users does not exist'}, 400, {'Access-Control-Allow-Origin': '*'}
+        
+        # Save the user's questionnaire responses
+        if email not in users.keys():
+            return {'msg': '[ERROR] no user exists with this email'}, 400, {'Access-Control-Allow-Origin': '*'}
+        
+        user = users[email]
+        user.pre_survey = answers
+        user.scenarios = user.scenarios[1:]
+        users[email] = user
+
+        # Save the users object updates
+        pickle.dump( users, open('./study-utils/users.p', 'wb') )
+
         with open(new_project_dir + '/project_info.json', 'w') as f:
             json.dump(project_info, f, indent=4)
 
         print('*** Project info saved ***')
 
-        # Extract the header
-        '''with open(scenario['dirty_dataset']) as f:
-            reader = csv.DictReader(f)
-        header = reader.fieldnames
-        data = list(reader)'''
         data = pd.read_csv(scenario['dirty_dataset'])
         header = [col for col in data.columns]
 
@@ -99,23 +173,24 @@ class Import(Resource):
                 # interaction_metadata[idx][col] = dict()
                 interaction_metadata['feedback_history'][int(idx)][col] = list()
 
-        X = set()
+        # X = set()
         
+        # Initialize hypothesis parameters
         fd_metadata = dict()
-        # target_fd = scenario['target_fd']
-        # target_fd = '(owner, ownertype) => type, manager'
         h_space = scenario['hypothesis_space']
         for h in h_space:
-            # if h['cfd'] != target_fd:
-            #     continue
 
+            # Calculate the mean and variance
             h['vio_pairs'] = set(tuple(vp) for vp in h['vio_pairs'])
             mu = h['conf']
             if mu == 1:
                 mu = 0.99999
             variance = 0.0025
             
+            # Calculate alpha and beta
             alpha, beta = helpers.initialPrior(mu, variance)
+            
+            # Initialize the FD metadata object
             fd_m = helpers.FDMeta(
                 fd=h['cfd'],
                 a=alpha,
@@ -130,42 +205,28 @@ class Import(Resource):
             print('beta:', fd_m.beta)
             print('conf:', h['conf'])
 
-            for i in data.index:
-                for j in data.index:
-                    if i == j:
-                        continue
+            # # Build the
+            # for i in data.index:
+            #     for j in data.index:
+            #         if i == j:
+            #             continue
 
-                    X |= h['vio_pairs']
+            #         X |= h['vio_pairs']
                     
-                    match = True if i not in h['vios'] and j not in h['vios'] else False
+            #         match = True if i not in h['vios'] and j not in h['vios'] else False
 
-                    # match = True
-                    # for lh in fd_m.lhs:
-                    #     if data.at[i, lh] != data.at[j, lh]:
-                    #         match = False
-                    #         break
-
-                    if match is True and ((i, j) not in X and (j, i) not in X):
-                        if i < j:
-                            X.add((i, j))
-                        else:
-                            X.add((j, i)) 
+            #         if match is True and ((i, j) not in X and (j, i) not in X):
+            #             if i < j:
+            #                 X.add((i, j))
+            #             else:
+            #                 X.add((j, i)) 
 
             fd_metadata[h['cfd']] = fd_m
 
-        print(len(X))
+        # print(len(X))
         current_iter += 1
 
         study_metrics = dict()
-        # study_metrics['st_vio_precision'] = list()
-        # study_metrics['lt_vio_precision'] = list()
-        # study_metrics['mt_vio_precision'] = list()
-        # study_metrics['st_vio_recall'] = list()
-        # study_metrics['lt_vio_recall'] = list()
-        # study_metrics['mt_vio_recall'] = list()
-        # study_metrics['st_vio_f1'] = list()
-        # study_metrics['lt_vio_f1'] = list()
-        # study_metrics['mt_vio_f1'] = list()
         study_metrics['iter_err_precision'] = list()
         study_metrics['iter_err_recall'] = list()
         study_metrics['iter_err_f1'] = list()
@@ -177,7 +238,7 @@ class Import(Resource):
         pickle.dump( interaction_metadata, open(new_project_dir + '/interaction_metadata.p', 'wb') )
         pickle.dump( fd_metadata, open(new_project_dir + '/fd_metadata.p', 'wb') )
         pickle.dump( current_iter, open(new_project_dir + '/current_iter.p', 'wb') )
-        pickle.dump( X, open(new_project_dir + '/X.p', 'wb') )
+        pickle.dump( fd_metadata[target_fd].vio_pairs, open(new_project_dir + '/X.p', 'wb') )
 
         print('*** Metadata and objects initialized and saved ***')
 
@@ -185,17 +246,18 @@ class Import(Resource):
         returned_data = {
             'header': header,
             'project_id': new_project_id,
-            'scenario_desc': scenario['description'],
-            'msg': '[SUCCESS] Successfully created new project with project ID = ' + new_project_id + '.'
+            'description': scenario['description']
         }
         response = json.dumps(returned_data)
         return response, 201, {'Access-Control-Allow-Origin': '*'}
 
+# Get the first sample for a scenario interaction
 class Sample(Resource):
     def get(self):
-        return {'msg': '[SUCCESS] This endpoint is live!'}
-
+        return {'msg': '[SUCCESS] /duo/api/sample is live!'}
+    
     def post(self):
+        # Get the project ID
         project_id = request.form.get('project_id')
         if project_id is None:
             # print(request.data)
@@ -204,21 +266,22 @@ class Sample(Resource):
         with open('./store/' + project_id + '/project_info.json') as f:
             project_info = json.load(f)
 
+        # Calculate the start time of the interaction
         start_time = time.time()
         pickle.dump( start_time, open('./store/' + project_id + '/start_time.p', 'wb') )
 
         print('*** Project info loaded ***')
 
+        # Get data
         data = pd.read_csv(project_info['scenario']['dirty_dataset'], keep_default_na=False)
-        
         current_iter = pickle.load( open('./store/' + project_id + '/current_iter.p', 'rb') )
         X = pickle.load( open('./store/' + project_id + '/X.p', 'rb') )
         
-        # Build sample and X_t
+        # Build sample
         s_out, sample_X = helpers.buildSample(data, X, sample_size, project_id, current_iter, start_time)
         s_index = s_out.index
         pickle.dump( s_index, open('./store/' + project_id + '/current_sample.p', 'wb') )
-        pickle.dump( sample_X, open('./store/' + project_id + '/current_X.p', 'wb') )    
+        pickle.dump( sample_X, open('./store/' + project_id + '/current_X.p', 'wb') )
 
         # Build initial feedback map for frontend
         feedback = list()
@@ -231,13 +294,12 @@ class Sample(Resource):
                 })
 
         print('*** Feedback object created ***')
-        print(len(sample_X))
-        
+
+        # Add ID to s_out (for use on frontend)
         s_out.insert(0, 'id', s_out.index, True)
-        print(s_out.index)
 
         # Return information to the user
-        returned_data = {
+        response = {
             'sample': s_out.to_json(orient='index'),
             'X': [list(v) for v in sample_X],
             'feedback': json.dumps(feedback),
@@ -245,104 +307,33 @@ class Sample(Resource):
             'false_pos': 0,
             'msg': '[SUCCESS] Successfully built sample.'
         }
-        response = json.dumps(returned_data)
         return response, 200, {'Access-Control-Allow-Origin': '*'}
 
-class Resume(Resource):
+# Take in and analyze user feedback, and return a new sample
+class Feedback(Resource):
     def get(self):
-        return {'msg': '[SUCCESS] This endpoint is live!'}
-
+        return {'msg': '[SUCCESS] /duo/api/feedback is live!'}
+    
     def post(self):
-        project_id = request.form.get('project_id')
-        projects = [d for d in os.listdir('./store') if os.path.isdir(os.path.join('./store/', d))]
-        if project_id not in projects:
-            returned_data = {
-                'msg': '[INVALID PROJECT ID]'
-            }
-            response = json.dumps(returned_data)
-            return response, 200, {'Access-Control-Allow-Origin': '*'}
-            
-        s_index = pickle.load( open('./store/' + project_id + '/current_sample.p', 'rb') )
-        sample_X = pickle.load( open('./store/' + project_id + '/current_X.p', 'rb') )
-
-        with open('./store/' + project_id + '/project_info.json') as f:
-            project_info = json.load(f)
-
-        data = pd.read_csv(project_info['scenario']['dirty_dataset'], keep_default_na=False)
-        s_out = data.loc[s_index, :]
-
-        feedback = list()
-        interaction_metadata = pickle.load( open('./store/' + project_id + '/interaction_metadata.p', 'rb') )
-        for idx in s_out.index:
-            for col in s_out.columns:
-                feedback.append({
-                    'row': idx,
-                    'col': col,
-                    'marked': bool(interaction_metadata['feedback_history'][int(idx)][col][-1].marked) if len(interaction_metadata['feedback_history'][int(idx)][col]) > 0 else False
-                })
-
-        print('*** Feedback object created ***')
-
-        true_pos, false_pos = helpers.getUserScores(project_id)
-        
-        print('*** Leaderboard created ***')
-
-        current_iter = pickle.load( open('./store/' + project_id + '/current_iter.p', 'rb') )
-
-        clean_h_space = project_info['scenario']['clean_hypothesis_space']
-
-        # top_fd_conf, variance_delta = helpers.checkForTermination(project_id, clean_h_space, current_iter)
-        # conf_threshold = (0.85 / len(project_info['scenario']['cfds']))
-        
-        # if current_iter >= 25 or (top_fd_conf >= conf_threshold and variance_delta is not None and variance_delta < 0.01):
-        if current_iter >= 15:
-            msg = '[DONE]'
-        else:
-            msg = '[SUCCESS]: Saved feedback and built new sample.'
-
-        header = s_out.columns.tolist()
-        s_out.insert(0, 'id', s_out.index, True)
-
-        # Return information to the user
-        returned_data = {
-            'header': header,
-            'sample': s_out.to_json(orient='index'),
-            'X': [list(v) for v in sample_X],
-            'feedback': json.dumps(feedback),
-            'true_pos': true_pos,
-            'false_pos': false_pos,
-            'msg': msg,
-            'scenario_id': project_info['scenario_id'],
-            'scenario_desc': project_info['scenario']['description']
-        }
-        response = json.dumps(returned_data)
-        return response, 200, {'Access-Control-Allow-Origin': '*'}
-
-class Clean(Resource):
-    def get(self):
-        return {'msg': '[SUCCESS] This endpoint is live!'}
-
-    def post(self):
+        # Get the project ID for the interaction and the user's feedback object
         project_id = request.form.get('project_id')
         if project_id is None:
             req = json.loads(request.data)
-            # print(req)
             project_id = req['project_id']
             feedback_dict = req['feedback']
         else:
             feedback_dict = json.loads(request.form.get('feedback'))
 
         print(project_id)
-        # print(feedback)
 
         feedback = pd.DataFrame.from_dict(feedback_dict, orient='index')
         sample_size = 10
 
         print('*** Necessary objects loaded ***')
 
+        # Get the current iteration count and current time
         current_iter = pickle.load( open('./store/' + project_id + '/current_iter.p', 'rb') )
         print(current_iter)
-        # current_time = pickle.load( open('./store/' + project_id + '/current_time.p', 'rb') )
         current_time = time.time()
 
         curr_sample_X = pickle.load( open('./store/' + project_id + '/current_X.p', 'rb') )
@@ -350,24 +341,25 @@ class Clean(Resource):
 
         print('*** Iteration counter updated ***')
 
+        # Get the project info
         with open('./store/' + project_id + '/project_info.json', 'r') as f:
             project_info = json.load(f)
 
         print('*** Project info loaded ***')
         
+        # Load the dataset
         data = pd.read_csv(project_info['scenario']['dirty_dataset'], keep_default_na=False)
 
         print('*** Loaded dirty dataset ***')
 
+        # Record the user's feedback and analyze it
         s_in = data.iloc[feedback.index]
         print('*** Extracted sample from dataset ***')
         helpers.recordFeedback(data, feedback_dict, curr_sample_X, project_id, current_iter, current_time)
         target_fd = project_info['scenario']['target_fd'] # NOTE: For current sims only
-        # target_fd = '(owner, ownertype) => type, manager'
-        # helpers.interpretFeedback(s_in, feedback, X, curr_sample_X, project_id, current_iter, current_time, target_fd)
         helpers.interpretFeedback(s_in, feedback, X, curr_sample_X, project_id, current_iter, current_time)
-        print('*** FD weights updated ***')
 
+        # Build a new sample
         current_iter += 1
         s_out, new_sample_X = helpers.buildSample(data, X, sample_size, project_id, current_iter, current_time)
         s_index = s_out.index
@@ -387,43 +379,24 @@ class Clean(Resource):
 
         print('*** Feedback object created ***')
 
-        true_pos, false_pos = helpers.getUserScores(project_id)
-
-        print('*** User scores retrieved ***')
-
-        with open('./store/' + project_id + '/project_info.json', 'r') as f:
-            project_info = json.load(f)
-        clean_h_space = project_info['scenario']['clean_hypothesis_space']
-        # cfd_metadata = pickle.load( open('./store/' + project_id + '/cfd_metadata.p', 'rb') )
-
-        # top_fd_conf, variance_delta = helpers.checkForTermination(project_id, clean_h_space, current_iter)
-        # conf_threshold = (0.85 / len(project_info['scenario']['cfds']))
-
-        # if refresh == 0 and (current_iter >= 25 or (top_fd_conf >= conf_threshold and variance_delta is not None and variance_delta < 0.01)):
-        target_fd = project_info['scenario']['target_fd']
-        alt_fds = project_info['scenario']['alt_h']
-        if current_iter <= 3:
+        # Check if the scenario is done
+        if current_iter <= 5:
             terminate = False
         else:
             terminate = helpers.checkForTermination(project_id)
         if current_iter > 15 or terminate is True:
-        #if current_iter > 100:
             msg = '[DONE]'
-            # top_fd = max(cfd_metadata, key=lambda x: cfd_metadata[x]['weight'])
-            # concerned_fd_conf = next(h for h in clean_h_space if h['cfd'] == top_fd)['conf'] if top_fd in [k['cfd'] for k in clean_h_space] else None
-            # project_info['flagged'] = True if concerned_fd_conf is None or concerned_fd_conf < conf_threshold else False
         else:
             msg = '[SUCCESS]: Saved feedback and built new sample.'
 
         s_out.insert(0, 'id', s_out.index, True)
         print(s_out.index)
 
+        # Save object updates
         pickle.dump( current_iter, open('./store/' + project_id + '/current_iter.p', 'wb') )
-        # pickle.dump( current_time, open('./store/' + project_id + '/current_time.p', 'wb') )
         with open('./store/' + project_id + '/project_info.json', 'w') as f:
             json.dump(project_info, f)
 
-        # print(X)
         print(new_sample_X)
         
         # Return information to the user
@@ -431,19 +404,49 @@ class Clean(Resource):
             'sample': s_out.to_json(orient='index'),
             'X': [list(v) for v in new_sample_X],
             'feedback': json.dumps(feedback),
-            'true_pos': true_pos,
-            'false_pos': false_pos,
             'msg': msg
         }
         response = json.dumps(returned_data)
         return response, 200, {'Access-Control-Allow-Origin': '*'}
 
+# Store the user's responses to the post-interaction questionnaire
+class PostInteraction(Resource):
+    def get(self):
+        return {'msg': '[SUCCESS] /duo/api/post-interaction is live!'}
 
-api.add_resource(Test, '/duo/api/')
+    def post(self):
+        # Get the provided email and scenario number
+        email = request.form.get('email')
+        scenario_id = request.form.get('scenario_id')
+        answers = request.form.get('answers')
+        if email is None or scenario_id is None or answers is None:
+            email = json.loads(request.data)['email']
+            scenario_id = json.loads(request.data)['scenario_id']
+            answers = json.loads(request.data)['answers']
+        
+        # Get the user from the users list
+        try:
+            users = pickle.load( open('./study-utils/users.p', 'rb'))
+        except:
+            return {'msg': '[ERROR] users does not exist'}, 400, {'Access-Control-Allow-Origin': '*'}
+        
+        # Save the user's questionnaire responses
+        user = users[email]
+        user.post_questionnaire[str(scenario_id)] = answers
+        users[email] = user
+        
+        # Save the users object updates
+        pickle.dump( users, open('./study-utils/users.p', 'wb') )
+
+        # Done
+        return '', 201, {'Access-Control-Allow-Origin': '*'}
+
+api.add_resource(Test, '/duo/api')
+api.add_resource(Start, '/duo/api/start')
 api.add_resource(Import, '/duo/api/import')
 api.add_resource(Sample, '/duo/api/sample')
-api.add_resource(Resume, '/duo/api/resume')
-api.add_resource(Clean, '/duo/api/clean')
+api.add_resource(Feedback, '/duo/api/feedback')
+api.add_resource(PostInteraction, '/duo/api/post-interaction')
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')

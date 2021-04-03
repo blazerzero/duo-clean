@@ -1,13 +1,8 @@
 import pandas as pd
 import numpy as np
 import json
-from collections import Counter
-import random
 import subprocess as sp
-import re
-import string
 from tqdm import tqdm
-import analyze
 import helpers
 from rich.console import Console
 
@@ -25,7 +20,6 @@ if __name__ == '__main__':
         scenarios = json.load(f)
 
     all_scenarios = dict()
-    # all_scenarios_random = dict()
     for s_id, scenario in tqdm(scenarios.items()):
         data = pd.read_csv(scenario['dirty_dataset'], keep_default_na=False)
         clean_data = pd.read_csv(scenario['clean_dataset'], keep_default_na=False)
@@ -53,37 +47,21 @@ if __name__ == '__main__':
             clean_fds = list()
         
         intersecting_fds = list(set([f['cfd'] for f in fds]).intersection(set([c['cfd'] for c in clean_fds])))
-        # intersecting_fds = [fd for fd in intersecting_fds if len(fd.split(' => ')[1].split(', ')) == 1]
-
-        # intersecting_fds = list(set(fds).intersection(set(clean_fds)))
-
-        # print([f['cfd'] for f in fds])
-        # print(intersecting_fds)
 
         h_space = list()
         for fd in fds:
             if fd['cfd'] not in intersecting_fds:
                 continue
-            # print('here')
             h = dict()
             h['cfd'] = fd['cfd']
             h['score'] = 1
             support, vios = helpers.getSupportAndVios(data, clean_data, h['cfd'])
-            all_pairs, vio_pairs = helpers.getPairs(data, support, vios, h['cfd'])
-            # print(h['cfd'])
-            # print(len(all_pairs))
-            # print(len(vio_pairs))
-            # h['conf'] = (len(all_pairs) - len(vio_pairs)) / len(all_pairs)
+            vio_pairs = helpers.getPairs(data, support, h['cfd'])
             h['conf'] = (len(support) - len(vios)) / len(support)
-            # print(h['conf'])
-            # if h['conf'] <= 0.95:
             h['support'] = support
             h['vios'] = vios
-            # h['all_pairs'] = all_pairs
             h['vio_pairs'] = vio_pairs
             h_space.append(h)
-
-        #console.print('scenario', s_id, 'h space size:', len([h['cfd'] for h in h_space]))
 
         clean_h_space = list()
         for fd in clean_fds:
@@ -93,8 +71,6 @@ if __name__ == '__main__':
             h['cfd'] = fd['cfd']
             h['score'] = 1
             support, vios = helpers.getSupportAndVios(clean_data, None, h['cfd'])
-            # all_pairs, vio_pairs = helpers.getPairs(clean_data, support, vios, h['cfd'])
-            # h['conf'] = (len(all_pairs) - len(vio_pairs)) / len(all_pairs)
             h['conf'] = (len(support) - len(vios)) / len(support)
             clean_h_space.append(h)
         
@@ -120,26 +96,6 @@ if __name__ == '__main__':
         all_scenarios[s_id] = scenario
         all_scenarios[s_id]['sampling_method'] = 'DUO'
         all_scenarios[s_id]['update_method'] = 'BAYESIAN'
-        # s_id_plus_8 = str(int(s_id) + 8)
-        # if s_id == '0':
-        #     continue
-        # all_scenarios_random[s_id_plus_8] = scenario.copy()
-
-    # all_scenarios = {**all_scenarios_duo, **all_scenarios_random}
-
-    # for s_id in all_scenarios.keys():
-    #     if int(s_id) == 0 or (int(s_id) >= 1 and int(s_id) <= 8):
-    #         # all_scenarios[s_id]['sampling_method'] = 'DUO'
-    #         all_scenarios[s_id]['update_method'] = 'BAYESIAN'
-    #     else:
-    #         # all_scenarios[s_id]['sampling_method'] = 'RANDOM-PURE'
-    #         all_scenarios[s_id]['update_method'] = 'REINFORCEMENT'
 
     with open('scenarios.json', 'w') as f:
         json.dump(all_scenarios, f)
-
-    # typescripted_scenarios = list()
-    # for s in all_scenarios.values():
-    #     typescripted_scenarios.append(s)
-    # with open('./simulators/scenarios.json', 'w') as f:
-    #     json.dump(typescripted_scenarios, f)
