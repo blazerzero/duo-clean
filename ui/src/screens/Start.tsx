@@ -38,7 +38,7 @@ export const Start: FC<StartProps> = () => {
     const [q1Response, setQ1Response] = useState<string>('')
     const q1CorrectAnswer = 'name'
     const [q2Response, setQ2Response] = useState<string>('')
-    const q2CorrectAnswer = '5_FL'
+    const q2CorrectAnswers = ['5_FL', '7_CA']
 
     const handleReady = async () => {
         setProcessing(true)
@@ -50,8 +50,8 @@ export const Start: FC<StartProps> = () => {
             },
             {
                 answer: q2Response,
-                correctAnswer: q2CorrectAnswer,
-                correct: q2Response === q2CorrectAnswer
+                correctAnswer: q2CorrectAnswers,
+                correct: q2CorrectAnswers.includes(q2Response)
             }
         ]
         const first_scenario: number = scenarios.splice(0, 1) as number
@@ -228,8 +228,8 @@ export const Start: FC<StartProps> = () => {
                             </p>
                             <p>
                                 <strong>NOTE: </strong>
-                                You do not need to worry about finding the right value for a cell. This is
-                                not an error detection problem!
+                                You do not need to worry about knowing or finding the right value for a cell! This is
+                                not an error detection problem! Your goal is just to find violations of FDs or keys.
                             </p>
                             {
                                 yourRoleRead ? (
@@ -534,15 +534,6 @@ export const Start: FC<StartProps> = () => {
                                                 </Form.Field>
                                                 <Form.Field>
                                                     <Radio
-                                                        label='phone'
-                                                        name='q1RadioGroup'
-                                                        value='phone'
-                                                        checked={q1Response === 'phone'}
-                                                        onChange={() => !quizDone && setQ1Response('phone')}
-                                                    />
-                                                </Form.Field>
-                                                <Form.Field>
-                                                    <Radio
                                                         label='The combination of areacode and state'
                                                         name='q1RadioGroup'
                                                         value='combo'
@@ -563,20 +554,20 @@ export const Start: FC<StartProps> = () => {
                                         </Container>
                                         <Divider />
                                         <Container style={{ paddingBottom: 20 }}>
-                                            <p>One of the following tuples violates FD (areacode) {'=>'} state.</p>
-                                            <p>Find the tuple and mark the cell with the violating value.</p>
+                                            <p>The table below contains a violation of the FD <strong>(areacode) {'=>'} state.</strong></p>
+                                            <p>Find the violation and mark one of the cells whose value is causing the violation.</p>
                                             {
                                                 quizDone && (
-                                                    <Message positive={q2Response === q2CorrectAnswer} negative={q2Response !== q2CorrectAnswer}>
+                                                    <Message positive={q2CorrectAnswers.includes(q2Response)} negative={!q2CorrectAnswers.includes(q2Response)}>
                                                         <Message.Header>
                                                             {
-                                                                q2Response === q2CorrectAnswer
+                                                                q2CorrectAnswers.includes(q2Response)
                                                                 ? 'Correct!'
                                                                 : 'Incorrect'
                                                             }
                                                         </Message.Header>
                                                         {
-                                                            q2Response !== q2CorrectAnswer && (
+                                                            !q2CorrectAnswers.includes(q2Response) && (
                                                                 'The correct answer has been highlighted with a green box.'
                                                             )
                                                         }
@@ -600,7 +591,7 @@ export const Start: FC<StartProps> = () => {
                                                                 <Table.Row>
                                                                     {
                                                                         Object.entries(e).map(([k, v], i) => {
-                                                                            if (quizDone && q2CorrectAnswer === `${e.id}_${v}`) {
+                                                                            if (quizDone && q2CorrectAnswers.includes(`${e.id}_${v}`)) {
                                                                                 return (
                                                                                     <Table.Cell
                                                                                         key={`${e.id}_${v}`}

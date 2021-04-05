@@ -5,7 +5,7 @@ Fromage,Crime,2013,episode
 Percy Jackson: Sea of Monsters,Adventure,2013,movie
 The Chosen One,Crime,2013,episode
 The Chosen One,Biography,2014,movie
-The Chosen One,Animation,2014,movie
+The Chosen One,Biography,2014,episode
 The Frozen Ground,Biography,2013,movie
 The Love Spell Potential,Comedy,2013,episode
 Arrhythmia,Action,2013,episode
@@ -49,7 +49,7 @@ Eye Spy,Action,2013,episode
 On All Fours,Comedy,2013,episode
 On All Fours,Comedy,2013,episode
 On All Fours,Thriller,2015,movie
-On All Fours,Thriller,2015,movie
+On All Fours,Thriller,2015,TV-PG
 All the Time in the World,Drama,2013,episode
 Scar Tissue,Crime,2013,episode
 Bulletproof,Action,2014,episode
@@ -58,44 +58,144 @@ Long Arm,Comedy,2014,movie
 Fatal,Crime,2014,episode
 Fatal,Crime,2014,episode
 Fatal,Horror,2016,movie
-Fatal,Drama,2016,movie
+Fatal,Horror,2016,movie
 Quiet Minds,Adventure,2014,episode
 The Adventures of RoboRex,Family,2014,movie
-The Adventures of RoboRex,Family,2014,episode
+The Adventures of RoboRex,Family,2014,movie
 Rom-Com Tom,Short,2013,episode
-Home Invasion,Action,2013,movie
+Home Invasion,Action,2013,episode
 Home Invasion,Action,2013,episode
 Home Invasion,Thriller,2015,movie
-Home Invasion,Family,2015,movie
-Contrary to Likeness,Action,2014,episode
-Contrary to Likeness,Reality-TV,2014,episode
-What Potential!,Short,2014,episode
-What Potential!,Reality-TV,2014,episode
-The Frozen Ground,Biography,2013,episode
+Home Invasion,Thriller,2015,movie
+Contrary to Likeness,Short,2014,episode
+Contrary to Likeness,Short,2014,episode
+What Potential!,Short,2014,TV-14
+What Potential!,Music,2014,PG-13
+The Frozen Ground,Drama,2013,movie
 The Cookie Jar,Drama,2013,episode
-The Frozen Ground,Biography,2013,episode
-The Story of Your Life,Biography,2013,movie
+The Frozen Ground,Biography,2013,movie
+The Story of Your Life,Drama,2013,Not Rated
 The Story of Your Life,Drama,2013,movie
 Episode #2.6,Comedy,2013,episode
-Episode #2.6,Animation,2013,episode
+Episode #2.6,Comedy,2013,episode
 Percy Jackson: Sea of Monsters,Adventure,2013,movie
 Percy Jackson: Sea of Monsters,Adventure,2013,movie
 Born to Race: Fast Track,Action,2014,movie
 Born to Race: Fast Track,Action,2014,movie
+The Inevitable Defeat of Mister & Pete,Action,2013,movie
 The Inevitable Defeat of Mister & Pete,Drama,2013,movie
-The Inevitable Defeat of Mister & Pete,Drama,2013,episode
-Eye Spy,Action,2013,episode
-John Wick,Action,2014,movie
-John Wick,Action,2014,movie
-Rom-Com Tom,Short,2013,episode
-To Bear Witness,Crime,2013,movie
-My Friend Falcon,Comedy,2013,movie
-My Friend Falcon,Biography,2013,episode
-The Love Spell Potential,Comedy,2013,movie
+Eye Spy,Action,2013,TV-MA
+John Wick,Action,2014,TV-14
+John Wick,Sci-Fi,2014,movie
+Rom-Com Tom,Short,2013,PG
+To Bear Witness,Crime,2013,episode
+My Friend Falcon,Comedy,2013,TV-MA
+My Friend Falcon,Comedy,2013,episode
+The Love Spell Potential,Comedy,2013,Unrated
 Addiction,Drama,2014,episode
 Addiction,Drama,2014,episode
 The Twilight's Last Gleaming,Short,2013,episode
-Back to the Hustle,Reality-TV,2013,movie
+Back to the Hustle,Romance,2013,episode
 Back to the Hustle,Reality-TV,2013,episode
-Restitution,Comedy,2014,episode
-Restitution,Action,2014,movie
+Restitution,Action,2014,Unrated
+Restitution,Action,2014,episode
+Cult of the Crystal Skull,Action,2014,Not Rated
+Below the Belt,Drama,2014,TV-MA
+The Revolution Will Not Be Televised,Drama,2014,TV-MA
+"One for the Money, Two for the Show",Drama,2014,TV-MA
+Brave New World,Drama,2013,TV-MA
+Anchorman 2: The Legend Continues,Comedy,2013,R
+Anchorman 2: The Legend Continues,Comedy,2013,R
+The Taking of Deborah Logan,Thriller,2014,R
+Inspired Guns,Comedy,2014,PG
+The Guest,Thriller,2014,R
+Jinn,Thriller,2014,PG-13
+Keep on Keepin' On,Documentary,2014,R
+Criminal Desires,Drama,2013,TV-MA
+"First Thing We Do, Let's Kill All the Lawyers",Drama,2013,TV-MA
+News Night with Will McAvoy,Drama,2013,TV-14
+Election Night: Part II,Drama,2013,TV-14
+Cry Now,Romance,2014,R
+Normal,Short,2013,Not Rated
+Born to Race: Fast Track,Crime,2014,PG
+Jingle All the Way 2,Family,2014,PG
+The Grecophile,Comedy,2014,Not Rated
+Viilante,Short,2013,Not Rated
+Vigilante,Short,2013,Not Rated
+Battledogs,"Action, Horror, Sci-Fi",2013,TV-14
+Farm Strong,Comedy,2013,TV-PG
+In God's Hands,Musical,2014,TV-PG
+Delivery Disaster,Short,2013,Not Rated
+Pilot,Comedy,2014,TV-14
+Looking Glass,Comedy,2014,TV-MA
+Lullaby,Drama,2014,R
+The Battle Within,Short,2013,Unrated
+The Color of Rain,Drama,2014,TV-14
+Hansel & Gretel,Horror,2013,PG-13
+Sharknado,Horror,2013,TV-14
+Movie Night,Horror,2013,Not Rated
+Red Team III,Drama,2013,TV-14
+The Closet Reconfiguration,Comedy,2013,TV-14
+The Love Spell Potential,Comedy,2013,TV-PG
+The Indecision Amalgamation,Comedy,2014,TV-14
+Nothing Left to Fear,Horror,2013,R
+Knightmare,Horror,2014,Not Rated
+The Fall Guy,Drama,2013,TV-PG
+Apophenia,Drama,2014,TV-14
+Debate,Comedy,2014,TV-MA
+Mindy's Minute,Comedy,2013,TV-14
+Mindy's Minute,Comedy,2013,TV-14
+Santa Fe,Comedy,2013,TV-14
+The Humbling,Drama,2014,R
+Helsinki,Comedy,2013,TV-MA
+Special Relationship,Comedy,2014,TV-MA
+Tammy,Comedy,2014,R
+Battle of the Year,Music,2013,PG-13
+Matchup Problems,Comedy,2013,TV-PG
+The Late Show,Comedy,2013,TV-PG
+The Maya Rudolph Show,Comedy,2014,TV-14
+Emily and... The Social Experiment,Drama,2013,TV-14
+"Sydney, Australia",Comedy,2013,TV-14
+"Sydney, Australia",Comedy,2013,TV-MA
+Outbreak,Comedy,2014,TV-14
+Outbreak,Comedy,2014,TV-14
+Chris D'Elia: White Male. Black Comic,Comedy,2013,TV-MA
+Battledogs,"Action, Horror, Sci-Fi",2013,TV-14
+Farm Strong,Comedy,2013,TV-PG
+In God's Hands,Musical,2014,TV-PG
+Delivery Disaster,Short,2013,Not Rated
+Pilot,Comedy,2014,TV-14
+Looking Glass,Documentary,2014,TV-MA
+Lullaby,Drama,2014,TV-MA
+The Battle Within,Sci-Fi,2013,TV-14
+The Color of Rain,Drama,2014,TV-14
+Hansel & Gretel,Horror,2013,PG-13
+Sharknado,Biography,2013,TV-14
+Movie Night,Horror,2013,Not Rated
+Red Team III,Drama,2013,TV-14
+The Closet Reconfiguration,Romance,2013,TV-14
+The Love Spell Potential,Sci-Fi,2013,TV-PG
+The Indecision Amalgamation,Comedy,2014,TV-14
+Nothing Left to Fear,Musical,2013,R
+Knightmare,Horror,2014,Not Rated
+The Fall Guy,Drama,2013,TV-PG
+Apophenia,Drama,2014,PG
+Jinn,Reality-TV,2014,PG-13
+Keep on Keepin' On,Documentary,2014,R
+Criminal Desires,Drama,2013,TV-MA
+"First Thing We Do, Let's Kill All the Lawyers",Documentary,2013,movie
+News Night with Will McAvoy,Sci-Fi,2013,TV-MA
+Election Night: Part II,Drama,2013,TV-14
+Cry Now,Romance,2014,R
+Normal,Documentary,2013,Not Rated
+Born to Race: Fast Track,Horror,2014,PG
+Jingle All the Way 2,Reality-TV,2014,PG
+The Grecophile,Comedy,2014,Not Rated
+Viilante,Short,2013,Not Rated
+Vigilante,Short,2013,R
+The Battle Within,Short,2013,Unrated
+The Color of Rain,Drama,2014,TV-14
+Hansel & Gretel,Documentary,2013,PG-13
+Sharknado,Horror,2013,TV-14
+Movie Night,Adventure,2013,PG
+The Fall Guy,Drama,2013,PG

@@ -6,10 +6,10 @@ In the Clouds,Comedy,David Von Ancken
 The Fabulous Faker Boy,Animation,Bob Anderson
 Endgame,Action,Russo Brothers
 Endgame,Action,Russo Brothers
-Endgame,Action,Russo Brothers
-Endgame,Comedy,David Paymer
+Endgame,Fantasy,Russo Brothers
 Endgame,Comedy,David Paymer
 Endgame,Animation,David Paymer
+Endgame,Comedy,David Paymer
 Rom-Com Tom,Short,Mike Ladue
 Gambler's End,Short,Eric Loubert
 Black Nativity,Drama,Kasi Lemmons
@@ -23,14 +23,14 @@ Vicious Coupling,Animation,Bryan Fordney
 Pilot,Comedy,Miguel Arteta
 Age of Dinosaurs,Action,Joseph J. Lawson
 The Nominations,Drama,Michael Morris
-Til Death Do Us Part,Action,Eagle Egilsson
+Til Death Do Us Part,Horror,Eagle Egilsson
 Trou Normand,Crime,Guillermo Navarro
 Kumail Nanjiani: Beta Male,Comedy,Marcus Raboy
 Fallout,Crime,Diana Valentine
 Fallout,Crime,Diana Valentine
 Fallout,Action,Christopher McQuarrie
-Fallout,Action,Christopher McQuarrie
-Fallout,Short,Christopher McQuarrie
+Fallout,Crime,Christopher McQuarrie
+Fallout,Horror,Christopher McQuarrie
 The Good Mother,Drama,Richard Gabai
 Seal Our Fate,Drama,Rob Corn
 Once Upon a Time in Brooklyn,Action,Paul Borghese
@@ -48,7 +48,7 @@ Atlanta to New York,Comedy,Terence V. Steele
 Steve Rannazzisi: Manchild,Comedy,Ryan Polito
 Rock and a Hard Place,Comedy,David Von Ancken
 Potage,Crime,David Slade
-Engagement,Short,John Terlesky
+Engagement,Drama,John Terlesky
 The Freelancer,Crime,Jace Alexander
 Episode #21.75,Comedy,Liz Plonka
 Dear Daddy,Short,Sandra Capra
@@ -61,55 +61,141 @@ Red: Part One,Crime,Tony Wharmby
 Potage,Crime,David Slade
 Potage,Crime,David Slade
 Richard The Lionheart,Action,Stefano Milla
+Norcen,Fantasy,Jeffrey Jennings
 Norcen,Documentary,Jeffrey Jennings
-Norcen,Documentary,Jeffrey Jennings
-On All Fours,Comedy,Lena Dunham
+On All Fours,Animation,Lena Dunham
 On All Fours,Comedy,Lena Dunham
 Touchy Feely,Drama,Lynn Shelton
-Gambler's End,Crime,Eric Loubert
 Gambler's End,Short,Eric Loubert
-Til Death Do Us Part,Crime,Eagle Egilsson
+Gambler's End,Short,Eric Loubert
 Til Death Do Us Part,Action,Eagle Egilsson
+Til Death Do Us Part,Adventure,Eagle Egilsson
 Til Death Do Us Part,Thriller,Christopher Stokes
-Til Death Do Us Part,Adventure,Christopher Stokes
+Til Death Do Us Part,Action,Christopher Stokes
 The Nominations,Drama,Michael Morris
 The Nominations,Drama,Michael Morris
-The Nominations,Drama,Michael Morris
-Dark Hollow,Fantasy,Guy Ferland
-Dark Hollow,Drama,Guy Ferland
-Whensday,Crime,Tomas Herrera
+The Nominations,Fantasy,Michael Morris
+Dark Hollow,Adventure,Guy Ferland
+Dark Hollow,Adventure,Guy Ferland
 Whensday,Comedy,Tomas Herrera
-The Good Mother,Drama,Richard Gabai
-Rock and a Hard Place,Comedy,David Von Ancken
+Whensday,Comedy,Tomas Herrera
+The Good Mother,Crime,Richard Gabai
+Rock and a Hard Place,Crime,David Von Ancken
 The Battle Within,Short,Andy Santos
-Witch Graveyard,Action,Bruno Renat
-In the Clouds,Comedy,David Von Ancken
+Witch Graveyard,Fantasy,Bruno Renat
+In the Clouds,Documentary,David Von Ancken
 Endgame,Animation,David Paymer
-Die Die Delta Pi,Animation,Sean Donohue
 Die Die Delta Pi,Horror,Sean Donohue
-Redemption,Fantasy,Steven Knight
+Die Die Delta Pi,Adventure,Sean Donohue
+Redemption,Thriller,Steven Knight
 Redemption,Action,Steven Knight
 Episode #21.75,Comedy,Liz Plonka
-Episode #21.75,Short,Liz Plonka
-Atlanta to New York,Drama,Terence V. Steele
-Atlanta to New York,Adventure,Terence V. Steele
+Episode #21.75,Adventure,Liz Plonka
+Atlanta to New York,Comedy,Terence V. Steele
+Atlanta to New York,Comedy,Terence V. Steele
 Engagement,Drama,John Terlesky
-Engagement,Documentary,John Terlesky
-Witch Graveyard,Fantasy,Bruno Renat
-Witch Graveyard,Animation,Bruno Renat
+Engagement,Drama,John Terlesky
+Witch Graveyard,Horror,Bruno Renat
+Witch Graveyard,Short,Bruno Renat
+Broken,Horror,Larry Teng
 Broken,Crime,Larry Teng
-Broken,Crime,Larry Teng
-The Battle Within,Short,Andy Santos
-The Battle Within,Short,Andy Santos
-Black Nativity,Drama,Kasi Lemmons
-Black Nativity,Drama,Kasi Lemmons
+The Battle Within,Thriller,Andy Santos
+The Battle Within,Family,Andy Santos
+Black Nativity,Documentary,Kasi Lemmons
+Black Nativity,Family,Kasi Lemmons
 Kumail Nanjiani: Beta Male,Comedy,Marcus Raboy
-Kumail Nanjiani: Beta Male,Comedy,Marcus Raboy
-The Fabulous Faker Boy,Action,Bob Anderson
-The Fabulous Faker Boy,Crime,Bob Anderson
-Pilot,Animation,Paul McGuigan
+Kumail Nanjiani: Beta Male,Crime,Marcus Raboy
+The Fabulous Faker Boy,Animation,Bob Anderson
+The Fabulous Faker Boy,Animation,Bob Anderson
+Pilot,Comedy,Paul McGuigan
 Pilot,Comedy,Paul McGuigan
 Pilot,Comedy,James Burrows
 Pilot,Comedy,James Burrows
-Pilot,Comedy,James Burrows
-All In,Thriller,Tricia Brock
+Pilot,Animation,James Burrows
+All In,Action,Tricia Brock
+Cult of the Crystal Skull,Action,Aaron R. Thomas
+Below the Belt,Drama,Adam Arkin
+The Revolution Will Not Be Televised,Drama,Adam Arkin
+"One for the Money, Two for the Show",Drama,Adam Bernstein
+Brave New World,Drama,Adam Davidson
+Anchorman 2: The Legend Continues,Comedy,Adam McKay
+Anchorman 2: The Legend Continues,Short,Adam McKay
+Inspired Guns,Comedy,Adam White
+The Guest,Thriller,Adam Wingard
+Jinn,Thriller,Ajmal Zaheer Ahmad
+Criminal Desires,Drama,Alan Kramer
+"First Thing We Do, Let's Kill All the Lawyers",Drama,Alan Poul
+News Night with Will McAvoy,Drama,Alan Poul
+Election Night: Part II,Drama,Alan Poul
+Born to Race: Fast Track,Action,Alex Ranarivelo
+Jingle All the Way 2,Family,Alex Zamm
+The Grecophile,Comedy,Alexander Cherney
+Vigilante,Short,Alexander Soto
+Vigilante,Short,Alexander Soto
+Farm Strong,Comedy,Alisa Statman
+Pilot,Comedy,Andrew Fleming
+Pilot,Comedy,Andrew Gurland
+Looking Glass,Comedy,Andrew Haigh
+Lullaby,Drama,Andrew Levitas
+The Color of Rain,Drama,Anne Wheeler
+Savannah,Drama,Annette Haywood-Carter
+Red Team III,Drama,Anthony Hemingway
+The Fall Guy,Drama,Arlene Sanford
+Apophenia,Drama,Arlene Sanford
+Debate,Comedy,Armando Iannucci
+Mindy's Minute,Comedy,B.J. Novak
+Mindy's Minute,Comedy,B.J. Novak
+Santa Fe,Comedy,B.J. Novak
+"Sydney, Australia",Comedy,Bill D'Elia
+"Sydney, Australia",Comedy,Bill D'Elia
+Outbreak,Comedy,Bill D'Elia
+Outbreak,Thriller,Bill D'Elia
+Athens,Action,Bill Eagles
+Wolfsangel,Crime,Bill Gierhart
+Repairs,Action,Bill Gierhart
+Patton Oswalt: Tragedy Plus Comedy Equals Time,Comedy,Bobcat Goldthwait
+Breaking Arlana Miller,Drama,Bohdan Neswiacheny
+Stonehearst Asylum,Thriller,Brad Anderson
+Coffee Town,Comedy,Brad Copeland
+Chapter Three,Drama,Brad Silberling
+A Strange Brand of Happy,Comedy,Brad Wise
+Savannah,Drama,Annette Haywood-Carter
+Red Team III,Drama,Anthony Hemingway
+The Fall Guy,Drama,Arlene Sanford
+Apophenia,Drama,Arlene Sanford
+Debate,Comedy,Armando Iannucci
+Mindy's Minute,Fantasy,B.J. Novak
+Mindy's Minute,Comedy,B.J. Novak
+Santa Fe,Comedy,B.J. Novak
+"Sydney, Australia",Comedy,Bill D'Elia
+"Sydney, Australia",Drama,Bill D'Elia
+Outbreak,Comedy,Bill D'Elia
+Outbreak,Comedy,Bill D'Elia
+Athens,Action,Bill Eagles
+Wolfsangel,Comedy,Bill Gierhart
+Repairs,Family,Bill Gierhart
+Patton Oswalt: Tragedy Plus Comedy Equals Time,Family,Bobcat Goldthwait
+Breaking Arlana Miller,Drama,Bohdan Neswiacheny
+Stonehearst Asylum,Thriller,Brad Anderson
+Coffee Town,Comedy,Brad Copeland
+Chapter Three,Drama,Brad Silberling
+A Strange Brand of Happy,Comedy,Brad Wise
+Anchorman 2: The Legend Continues,Comedy,Adam McKay
+Inspired Guns,Comedy,Adam White
+The Guest,Thriller,Adam Wingard
+Jinn,Horror,Ajmal Zaheer Ahmad
+Criminal Desires,Drama,Alan Kramer
+"First Thing We Do, Let's Kill All the Lawyers",Drama,Alan Poul
+News Night with Will McAvoy,Thriller,Alan Poul
+The Grecophile,Short,Alexander Cherney
+Vigilante,Short,Alexander Soto
+Vigilante,Drama,Alexander Soto
+Farm Strong,Crime,Alisa Statman
+Pilot,Comedy,Andrew Fleming
+Norcen,Documentary,Jeffrey Jennings
+Morbid,Horror,Chuck Conry
+Whensday,Horror,Tomas Herrera
+Planes,Animation,Klay Hall
+Dog Dean Afternoon,Drama,Tim Andrew
+Red: Part One,Horror,Tony Wharmby
+Potage,Crime,David Slade

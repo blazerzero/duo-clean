@@ -226,13 +226,19 @@ export const Interact: FC<InteractProps> = () => {
                             <span className='home-title'>Duo</span>
                         </Container>
                     </Grid.Row>
+                    <Grid.Row className='content-centered' style={{ paddingBottom: 10 }}>
+                        <Message info>
+                            <Message.Header>
+                                <h4>Need help using the interface or a refresher on the data you're working with?</h4>
+                            </Message.Header>
+                            <p><a style={{ color: 'blue' }} href="https://github.com/blazerzero/duo-help/blob/master/README.md" target='_blank' rel='noopener noreferrer'>Click here!</a></p>
+                        </Message>
+                    </Grid.Row>
                     <Grid.Row className='content-centered'>
-                        <Grid.Column width={7}>
-                            <Message color='yellow'>
-                                <Message.Header><h3>Remember!</h3></Message.Header>
-                                <p>Yellow cells indicate cells you marked as violations of a key or FD.</p>
-                            </Message>
-                        </Grid.Column>
+                        <Message color='yellow'>
+                            <Message.Header><h3>Remember!</h3></Message.Header>
+                            <p>Yellow cells indicate cells you marked as violations of a key or FD.</p>
+                        </Message>
                     </Grid.Row>
                     <Divider />
                     <Grid.Row className='content-centered'>

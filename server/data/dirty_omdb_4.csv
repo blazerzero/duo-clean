@@ -1,102 +1,201 @@
-title,listingnumber,year
-Get with the Program,1,2013
-Get with the Program,1,2013
-Walking on a Dream,2,2013
-Carbon Copy,3,2013
-The Walking Dead,4,2013
-What Happens in Mecklinburg...,5,2014
-What Happens in Mecklinburg...,5,2014
-Prince Avalanche,5,2011
-Dead in Tombstone,6,2013
-Dead in Tombstone,6,2013
-12 Rounds 2: Reloaded,7,2013
-12 Rounds 2: Reloaded,7,2013
-The Devil and D.B. Russell,7,2011
-Seal Team Eight: Behind Enemy Lines,8,2014
-Off to the Races,10,2013
-The New Office,11,2013
-Woman on Top,12,2013
-ClosetCon '13,14,2013
-The Intern,15,2013
-The Intern,15,2013
-The Order of the Dragon,17,2013
-The Crucible,18,2013
-Children of the Night,19,2013
-The Back Nine,20,2013
-ClosetCon '13,20,2015
-The Back Nine,20,2014
-Get with the Program,20,2013
-Camping,21,2013
-It Has Begun...,22,2013
-September Fools,24,2013
-12 Rounds 2: Reloaded,24,2013
-Bad Trouble Here,26,2013
-Back to the Hustle,27,2013
-Seth in Charge,28,2013
-Seth in Charge,28,2013
-Computer Crash,30,2013
-All-American Jewelry and Loan,31,2013
-Breakdown at Tiffany's,32,2013
-Gold Crash,33,2013
-Harold's Gamble,34,2013
-A Typical Night,35,2014
-Safe Place,36,2014
-Safe Place,36,2014
-Reaper's Revenge: Fear the Reaper,37,2014
-Tick Tock,38,2014
-Twerk,38,2014
-Unknown Journeys,39,2014
-Dear Secret Santa,42,2013
-High School Possession,43,2014
-A Space in the Time,44,2013
-A Space in the Time,44,2014
-Carbon Copy,44,2011
-The Drive II: 395 Miles from L.A.,45,2013
-Donald G. Jackson: Confessions,47,2014
-Temptation: Confessions of a Marriage Counselor,48,2013
-Temptation: Confessions of a Marriage Counselor,48,2015
-Dead in Tombstone,48,2013
-The Single Moms Club,49,2014
-Tyler Perry's A Madea Christmas,50,2013
-Emily,51,2013
-It's Your Legacy,52,2013
-Have We Met Before?,54,2013
-In the Clouds,57,2013
-Half Deaf Is Better Than All Dead,59,2013
-Twerk,60,2013
-Little Fish,61,2014
-Little Fish,61,2013
-Homecoming,63,2014
-Tick Tock,63,2017
-Jarhead 2: Field of Fire,65,2014
-Sniper: Legacy,66,2014
-Robosapien: Rebooted,67,2013
-Space Warriors,68,2013
-Batman: The Dark Knight Returns Part 2,69,2013
-Batman: The Dark Knight Returns Part 2,69,2013
-Justice League: The Flashpoint Paradox,70,2013
-Justice League: War,71,2014
-The Prince,72,2014
-Officer Down,73,2013
-Prince Avalanche,74,2013
-Joe,75,2013
-Joe,75,2015
-Force of Execution,78,2013
-Force of Execution,78,2013
-A Good Man,79,2014
-Pilot,80,2013
-Patient Zero,82,2014
-Sacrifice,83,2014
-The Devil and D.B. Russell,85,2013
-Frame by Frame,86,2013
-The CSI Effect,87,2014
-The CSI Effect,87,2014
-The Intern,93,2015
-The New Office,93,2015
-The Walking Dead,95,2013
-The Walking Dead,96,2014
-The Walking Dead,97,2015
-The Walking Dead,98,2016
-Little Fish,99,2011
-Little Fish,99,2017
-Homecoming,100,2016
+title,year,listingnumber
+12 Rounds 2: Reloaded,2013,7
+12 Rounds 2: Reloaded,2013,7
+12 Rounds 2: Reloaded,2013,7
+A Birder's Guide to Everything,2013,115
+A Good Man,2014,79
+A Space in the Time,2013,44
+A Space in the Time,2013,44
+I Want You to Want Me,2017,44
+A Typical Night,2014,35
+All-American Jewelry and Loan,2013,31
+Back to the Hustle,2013,27
+Bad Trouble Here,2013,26
+Bang and Blame,2014,169
+Batman: The Dark Knight Returns Part 2,2013,69
+The Itchy Brain Simulation,2013,69
+Be Cool,2014,124
+Birth of the Living Dead,2013,113
+Black-Winged Redbird,2013,135
+Black-Winged Redbird,2013,135
+Blood in the Water,2013,139
+My Craigslist Roomie,2013,139
+Breakdown at Tiffany's,2013,32
+The Caller,2013,32
+Breakfast Burrito Club,2013,171
+Breakfast Burrito Club,2013,171
+Breakfast Burrito Club,2014,171
+Breakout,2013,154
+In the Name of the Brother,2016,154
+The Back Nine,2017,154
+Camping,2013,21
+Carbon Copy,2013,3
+Carbon Copy,2013,105
+Children of the Night,2013,19
+ClosetCon '13,2013,14
+Computer Crash,2013,30
+Confession,2013,178
+Controlled Flight Into Terrain,2013,165
+Dead in Tombstone,2013,6
+Dead in Tombstone,2013,6
+Dear Secret Santa,2013,42
+Docu-Trauma,2013,141
+Donald G. Jackson: Confessions,2014,47
+Emily,2013,51
+Evolution's Achilles' Heels,2014,130
+Exit to Hell,2013,131
+Exit to Hell,2015,131
+Fishbowl,2014,162
+Flo,2014,102
+The Unfriending,2014,102
+Flo,2016,102
+Fly Away,2014,125
+Follow Me,2013,149
+Force of Execution,2013,78
+ClosetCon '13,2015,78
+Frame by Frame,2013,86
+Get with the Program,2013,1
+Get with the Program,2013,1
+Gold Crash,2013,33
+Green Thumb,2013,136
+The Third Man,2016,136
+Half Deaf Is Better Than All Dead,2013,59
+Half Deaf Is Better Than All Dead,2013,59
+Harold's Gamble,2013,34
+Harold's Gamble,2011,34
+Have We Met Before?,2013,54
+Have We Met Before?,2013,54
+High School Possession,2014,43
+High School Possession,2014,43
+Higher Power,2013,151
+Homecoming,2014,63
+Into the Woods,2011,63
+Homecoming,2016,100
+Homecoming,2014,63
+I Want You to Want Me,2013,140
+In Living Color,2014,164
+In the Clouds,2013,57
+In the Name of the Brother,2013,155
+Interns,2013,170
+In Living Color,2013,170
+Into the Woods,2014,114
+It Has Begun...,2013,22
+It's Your Legacy,2013,52
+Jarhead 2: Field of Fire,2014,65
+Joe,2013,75
+Joe,2011,75
+Justice League: The Flashpoint Paradox,2013,70
+Justice League: War,2014,71
+Lacey,2013,156
+Life Matters,2013,145
+Little Fish,2014,61
+Little Fish,2014,61
+Little Fish,2011,99
+Little Fish,2017,191
+Mis Dos Padres,2014,168
+My Craigslist Roomie,2013,109
+My Man Is a Loser,2014,152
+Off to the Races,2013,10
+Officer Down,2013,73
+On Thin Ice,2013,147
+Paranormal Whacktivity,2013,142
+Patient Zero,2014,82
+Pilot,2013,80
+Playing with Fire,2013,148
+Power,2013,137
+White House Down,2013,137
+Pretty Man,2013,123
+Prince Avalanche,2013,74
+Providence,2014,158
+Raggedy: The Magical Legacy of Johnny Gruelle,2013,110
+Reaper's Revenge: Fear the Reaper,2014,37
+"Red, White and Blue",2013,133
+Regret: Let the Sin Begin Part II,2013,176
+Revenge Play,2013,150
+Robosapien: Rebooted,2013,67
+Sacrifice,2014,83
+Safe Place,2014,36
+Safe Place,2014,36
+Seal Team Eight: Behind Enemy Lines,2014,8
+September Fools,2013,24
+September Fools,2013,24
+Seth in Charge,2013,28
+Docu-Trauma,2013,28
+Shivers Down Your Spine: Shortly After Nightfall,2013,174
+Shivers Down Your Spine: Whispering Board,2014,173
+Silk,2014,111
+Skin,2013,167
+Sniper: Legacy,2014,66
+Space Warriors,2013,68
+Temptation: Confessions of a Marriage Counselor,2013,48
+Temptation: Confessions of a Marriage Counselor,2013,48
+The Occupation Recalibration,2016,48
+The Asset,2013,157
+The Back Nine,2013,20
+The Back Nine,2017,20
+A Typical Night,2013,20
+The Back Nine,2013,20
+The Caller,2013,119
+The Caller,2013,119
+The Cooper Extraction,2013,186
+The Crucible,2013,18
+The CSI Effect,2014,87
+The CSI Effect,2015,87
+The Dalhia Knights,2014,160
+The Devil and D.B. Russell,2013,85
+The Discovery Dissipation,2013,189
+The Drive II: 395 Miles from L.A.,2013,45
+The Face of Change,2013,112
+The Great Escapist,2013,134
+The Hesitation Ramification,2014,187
+The Intern,2013,15
+My Craigslist Roomie,2015,15
+The Intern,2015,93
+The Intern,2015,93
+The Itchy Brain Simulation,2013,183
+Seth in Charge,2016,183
+The Living and the Dead,2013,159
+The New Office,2013,11
+The Occupation Recalibration,2014,188
+The Order of the Dragon,2013,17
+The Prince,2014,72
+The Prophecy of St. Clare,2013,175
+The Proton Displacement,2013,182
+The Raiders Minimization,2013,180
+The Single Moms Club,2014,49
+The Thanksgiving Decoupling,2013,185
+The Third Man,2013,177
+The Unfriending,2013,122
+The Unkindest Cut,2013,127
+The Walking Dead,2013,4
+The Walking Dead,2013,4
+The Walking Dead,2014,96
+The Walking Dead,2015,97
+The Walking Dead,2016,98
+Be Cool,2014,4
+The Wild Rover,2013,106
+The Workplace Proximity,2013,181
+This Little Piggy,2013,144
+Tick Tock,2014,38
+Tick Tock,2014,38
+Tinsel Part II: The Beginning,2013,153
+Toxic Parents,2013,121
+Trust,2013,161
+Trust Me,2013,146
+Twerk,2013,60
+Tyler Perry's A Madea Christmas,2013,50
+Unfinished Business,2013,166
+Unknown Journeys,2014,39
+V3 for Vendetta,2013,116
+Be Cool,2013,116
+V3 for Vendetta,2014,116
+Veronica Mars,2014,126
+Walking on a Dream,2013,2
+What Happens in Mecklinburg...,2014,5
+What Happens in Mecklinburg...,2014,5
+What Happens in Mecklinburg...,2015,5
+September Fools,2017,5
+White House Down,2013,143
+Woman on Top,2013,12
+You Don't Say!,2013,128
+You Don't Say!,2013,128
