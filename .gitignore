@@ -30,3 +30,4 @@ server/analyze-out.txt
 server/docker-out/
 server/plots/0*
 server/plots/cumulative*
+server/study-utils/users.p
