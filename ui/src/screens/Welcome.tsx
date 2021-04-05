@@ -18,7 +18,6 @@ interface WelcomeProps {}
 
 export const Welcome: FC<WelcomeProps> = () => {
 
-    const [scenarios, setScenarios] = useState<string[] | null>(null)
     const [processing, setProcessing] = useState<boolean>(false)
     const [email, setEmail] = useState<string>('')
 
@@ -30,23 +29,26 @@ export const Welcome: FC<WelcomeProps> = () => {
             '/start',
             { email }
         )
-        const s = response.data.scenarios as string[]
-        setScenarios(s)
-    }
-
-    useEffect(() => {
-        if (scenarios && scenarios.length < 4) {
+        const scenarios = response.data.scenarios
+        if (response.status === 201 || scenarios.length === 4) {
+            history.push('/start', { email, scenarios })
+        } else if (response.status === 200) {
+            alert(`Welcome back! You have ${scenarios.length} datasets left to go.`)
+            const next_scenario: number = scenarios.splice(0, 1) as number
+            const response2: AxiosResponse = await server.post('/import', {
+                email,
+                scenario_id: next_scenario.toString(),
+            })
+            const { header, project_id, description } = response2.data
             history.push('/interact', {
                 email,
-                scenarios
+                scenarios,
+                scenario_id: next_scenario.toString(),
+                header,
+                project_id,
+                description
             })
-        } else {
-            handleGoToIntake()
         }
-    }, [scenarios])
-
-    const handleGoToIntake = () => {
-        history.push('/start', { email, scenarios })
     }
 
     return (

@@ -4,6 +4,7 @@ import './css/App.css'
 import { Interact } from './screens/Interact'
 import { Start } from './screens/Start'
 import { Welcome } from './screens/Welcome'
+import { PostInteraction } from './screens/PostInteraction'
 
 function App() {
   return (
@@ -11,7 +12,7 @@ function App() {
         <Route path='/' exact component={Welcome} />
         <Route path='/start/' component={Start} />
         <Route path='/interact/' component={Interact} />
-        {/* <Route path='/post-interaction/' component={PostInteraction} /> */}
+        <Route path='/post-interaction/' component={PostInteraction} />
     </Router>
   )
 }

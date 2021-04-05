@@ -87,6 +87,38 @@ class Start(Resource):
         
         # Return
         return response, status_code, {'Access-Control-Allow-Origin': '*'}
+    
+class PreSurvey(Resource):
+    def get(self):
+        return {'msg': '[SUCCESS] /duo/api/pre-survey is live!'}
+    
+    def post(self):
+        scenario_id = request.form.get('scenario_id')
+        email = request.form.get('email')
+        answers = request.form.get('answers')
+        if scenario_id is None or email is None or answers is None:
+            scenario_id = json.loads(request.data)['scenario_id']
+            email = json.loads(request.data)['email']
+            answers = json.loads(request.data)['answers']
+        
+        # Get the user from the users list
+        try:
+            users = pickle.load( open('./study-utils/users.p', 'rb'))
+        except:
+            return {'msg': '[ERROR] users does not exist'}, 400, {'Access-Control-Allow-Origin': '*'}
+        
+        # Save the user's questionnaire responses
+        if email not in users.keys():
+            return {'msg': '[ERROR] no user exists with this email'}, 400, {'Access-Control-Allow-Origin': '*'}
+        
+        user = users[email]
+        user.pre_survey = answers
+        users[email] = user
+
+        # Save the users object updates
+        pickle.dump( users, open('./study-utils/users.p', 'wb') )
+
+        return '', 201, {'Access-Control-Allow-Origin': '*'}
 
 class Import(Resource):
     def get(self):
@@ -118,11 +150,9 @@ class Import(Resource):
         # Read the scenario number and initialize the scenario accordingly
         scenario_id = request.form.get('scenario_id')
         email = request.form.get('email')
-        answers = request.form.get('answers')
-        if scenario_id is None or email is None or answers is None:
+        if scenario_id is None or email is None:
             scenario_id = json.loads(request.data)['scenario_id']
             email = json.loads(request.data)['email']
-            answers = json.loads(request.data)['answers']
         print(scenario_id)
         with open('scenarios.json', 'r') as f:
             scenarios_list = json.load(f)
@@ -145,7 +175,6 @@ class Import(Resource):
             return {'msg': '[ERROR] no user exists with this email'}, 400, {'Access-Control-Allow-Origin': '*'}
         
         user = users[email]
-        user.pre_survey = answers
         user.scenarios = user.scenarios[1:]
         users[email] = user
 
@@ -243,12 +272,11 @@ class Import(Resource):
         print('*** Metadata and objects initialized and saved ***')
 
         # Return information to the user
-        returned_data = {
+        response = {
             'header': header,
             'project_id': new_project_id,
             'description': scenario['description']
         }
-        response = json.dumps(returned_data)
         return response, 201, {'Access-Control-Allow-Origin': '*'}
 
 # Get the first sample for a scenario interaction
@@ -283,6 +311,9 @@ class Sample(Resource):
         pickle.dump( s_index, open('./store/' + project_id + '/current_sample.p', 'wb') )
         pickle.dump( sample_X, open('./store/' + project_id + '/current_X.p', 'wb') )
 
+        # Add ID to s_out (for use on frontend)
+        s_out.insert(0, 'id', s_out.index, True)
+        
         # Build initial feedback map for frontend
         feedback = list()
         for idx in s_out.index:
@@ -294,9 +325,6 @@ class Sample(Resource):
                 })
 
         print('*** Feedback object created ***')
-
-        # Add ID to s_out (for use on frontend)
-        s_out.insert(0, 'id', s_out.index, True)
 
         # Return information to the user
         response = {
@@ -366,6 +394,9 @@ class Feedback(Resource):
         pickle.dump( s_index, open('./store/' + project_id + '/current_sample.p', 'wb') )
         pickle.dump( new_sample_X, open('./store/' + project_id + '/current_X.p', 'wb') )
 
+        s_out.insert(0, 'id', s_out.index, True)
+        print(s_out.index)
+        
         # Build feedback map for front-end
         feedback = list()
         interaction_metadata = pickle.load( open('./store/' + project_id + '/interaction_metadata.p', 'rb') )
@@ -374,7 +405,7 @@ class Feedback(Resource):
                 feedback.append({
                     'row': idx,
                     'col': col,
-                    'marked': bool(interaction_metadata['feedback_history'][int(idx)][col][-1].marked) if len(interaction_metadata['feedback_history'][int(idx)][col]) > 0 else False
+                    'marked': False if col == 'id' else (bool(interaction_metadata['feedback_history'][int(idx)][col][-1].marked) if len(interaction_metadata['feedback_history'][int(idx)][col]) > 0 else False)
                 })
 
         print('*** Feedback object created ***')
@@ -389,9 +420,6 @@ class Feedback(Resource):
         else:
             msg = '[SUCCESS]: Saved feedback and built new sample.'
 
-        s_out.insert(0, 'id', s_out.index, True)
-        print(s_out.index)
-
         # Save object updates
         pickle.dump( current_iter, open('./store/' + project_id + '/current_iter.p', 'wb') )
         with open('./store/' + project_id + '/project_info.json', 'w') as f:
@@ -400,13 +428,12 @@ class Feedback(Resource):
         print(new_sample_X)
         
         # Return information to the user
-        returned_data = {
+        response = {
             'sample': s_out.to_json(orient='index'),
             'X': [list(v) for v in new_sample_X],
             'feedback': json.dumps(feedback),
             'msg': msg
         }
-        response = json.dumps(returned_data)
         return response, 200, {'Access-Control-Allow-Origin': '*'}
 
 # Store the user's responses to the post-interaction questionnaire
@@ -432,7 +459,7 @@ class PostInteraction(Resource):
         
         # Save the user's questionnaire responses
         user = users[email]
-        user.post_questionnaire[str(scenario_id)] = answers
+        user.post_questionnaire[scenario_id] = answers
         users[email] = user
         
         # Save the users object updates
@@ -443,6 +470,7 @@ class PostInteraction(Resource):
 
 api.add_resource(Test, '/duo/api')
 api.add_resource(Start, '/duo/api/start')
+api.add_resource(PreSurvey, '/duo/api/pre-survey')
 api.add_resource(Import, '/duo/api/import')
 api.add_resource(Sample, '/duo/api/sample')
 api.add_resource(Feedback, '/duo/api/feedback')

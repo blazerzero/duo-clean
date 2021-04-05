@@ -110,12 +110,14 @@
   background-size: cover;
   background-repeat: no-repeat;
   background-position: center;
+  background-attachment: fixed;
+  overflow: scroll;
 }
 
 .home-header {
   height: fit-content;
   margin-top: 5rem;
-  margin-bottom: 15rem;
+  margin-bottom: 5rem;
   align-self: center;
 }
 
@@ -208,3 +210,14 @@
   z-index: 999;
   margin: auto;
 }
+
+.pre-survey-section {
+    padding-top: 10em;
+}
+
+h1 { font-size: 22pt }
+h2 { font-size: 18pt }
+h3 { font-size: 16pt }
+h4 { font-size: 14pt }
+p { font-size: 14pt }
+li { font-size: 14pt }

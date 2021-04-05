@@ -1,18 +1,18 @@
 import { AxiosError, AxiosResponse } from 'axios'
 import React, { FC, useState, useEffect } from 'react'
-import { useHistory, useLocation, useParams } from 'react-router-dom'
+import { useHistory, useLocation } from 'react-router-dom'
 import {
     Button,
     Form,
     Modal,
-    Input,
     Loader,
     Container,
     Grid,
     Dimmer,
     Segment,
     Table,
-    Message
+    Message,
+    Divider
 } from 'semantic-ui-react'
 import { HiMenu, HiSortAscending, HiSortDescending } from 'react-icons/hi'
 import server from '../utils/server'
@@ -25,11 +25,10 @@ export const Interact: FC<InteractProps> = () => {
     const location = useLocation()
     const { email, scenario_id, project_id, description, header, scenarios } = location.state as any
 
-    const [data, setData] = useState<any>([])
-    const [feedback, setFeedback] = useState<{[key: string]: {[key: string]: any}}>({})
+    const [data, setData] = useState<{[key: string]: string}[]>([])
+    const [feedback, setFeedback] = useState<any[]>([])
     const [feedbackMap, setFeedbackMap] = useState<{[key: string]: {[key: string]: boolean}}>({})
     const [processing, setProcessing] = useState<boolean>(false)
-    const [done, setDone] = useState<boolean>(false)
     const [sortMethod, setSortMethod] = useState<{[key: string]: string}>({})
     const [iterCount, setIterCount] = useState<number>(0)
 
@@ -45,128 +44,135 @@ export const Interact: FC<InteractProps> = () => {
         server.post('/sample', { project_id })
             .then((response: AxiosResponse) => {
                 const { sample, msg } = response.data
-                const fdbck = response.data.feedback
-                console.log(msg)
+                const fdbck = JSON.parse(response.data.feedback)
 
-                const prepped_data = prepareSample(sample)
+                const sample_object = JSON.parse(sample)
+
+                const prepped_data = prepareSample(sample_object)
                 const feedback_map = buildFeedbackMap(prepped_data, fdbck)
                 const iter = iterCount + 1
+                const sorting: {[key: string]: string} = {}
+                header.forEach((h: string) => {
+                    sorting[h] = 'NONE'
+                })
+                setSortMethod(sorting)
                 setIterCount(iter)
-                setData(prepped_data)
                 setFeedback(fdbck)
                 setFeedbackMap(feedback_map)
                 setProcessing(false)
+                setData(prepped_data)
             })
-            .catch((error: AxiosError) => console.log(error))
+            .catch((error: AxiosError) => console.error(error))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
-    useEffect(() => {
-        // handle done
-        const idx: number = scenarios.findIndex((s: number) => s === scenario_id)
-        if (idx !== -1) {
-            scenarios.splice(idx, 1)
+    const handleDone = () => {
+        const idx: number = scenarios.findIndex((s: number) => s === parseInt(scenario_id))
+        
+        if (idx === -1) {
             history.push('/post-interaction', {
                 email,
                 scenarios,
+                scenario_id,
             })
         }
-    }, [done])
+    }
 
     const prepareSample = (sample: any) => {
-        for (let i in sample) {
-            for (let j in sample) {
-                if (j === 'id') break
-
-                if (sample[i][j] === null) sample[i][j] = ''
-                else if (typeof data[i][j] != 'string') sample[i][j] = sample[i][j].toString()
-                if (!isNaN(parseInt(sample[i][j])) && Math.ceil(parseFloat(sample[i][j])) - parseFloat(sample[i][j]) === 0) {
-                    sample[i][j] = Math.ceil(parseInt(sample[i][j])).toString();
+        const rows: any[] = Object.values(sample)
+        for (let i = 0; i < rows.length; i++) {
+            for (let j in rows[i]) {
+                if (j === 'id') continue
+                if (rows[i][j] === null) rows[i][j] = ''
+                else if (typeof rows[i][j] != 'string') rows[i][j] = rows[i][j].toString()
+                if (!isNaN(parseInt(rows[i][j])) && Math.ceil(parseFloat(rows[i][j])) - parseFloat(rows[i][j]) === 0) {
+                    rows[i][j] = Math.ceil(parseInt(rows[i][j])).toString();
                 }
             }
         }
-        return sample
+        return rows
     }
 
-    const buildFeedbackMap = (sample: any, feedback: any) => {
-        const fMap = {}
+    const buildFeedbackMap = (sample: any, fdbck: any) => {
+        const feedback_map: any = {}
         const rows = Object.keys(sample)
-        const cols = header
+        const cols = ['id', ...header]
         for (let i = 0; i < rows.length; i++) {
             var tup: any = {}
             for (let j = 0; j < cols.length; j++) {
-                var cell = feedback.find((e: any) => {
+                var cell = fdbck.find((e: any) => {
                     var trimmedCol = cols[j].replace(/[\n\r]+/g, '')
-                    return e.row === parseInt(data[rows[i]]['id']) && e.col === trimmedCol
-                });
+                    return e.row === parseInt(sample[rows[i]]['id']) && e.col === trimmedCol
+                })
                 tup[cols[j]] = cell.marked
             }
-            feedbackMap[rows[i]] = tup
-          }
-        console.log(feedbackMap)
-        return feedbackMap
+            feedback_map[rows[i]] = tup
+        }
+        return feedback_map
     }
 
     const handleCellClick = async (key: string) => {
         // handle cell click
         const pieces: string[] = key.split('_')
+
         const idx: number = parseInt(pieces.shift() || '-1')
-        if (idx !== -1) return
+        if (idx === -1) return
         const id: number = parseInt(data[idx]['id'])
         const attr: string = pieces.join('_')
-        const fdbck: any = feedback
+        const fdbck: any = [...feedback]
         const cell = fdbck.findIndex((e: any) => {
             const trimmedCol: string = attr.replace(/[\n\r]+/g, '')
-            return e.row === parseInt(data[idx]['id']) && e.col === trimmedCol
+            return e.row === id && e.col === trimmedCol
         })
         fdbck[cell].marked = !fdbck[cell].marked
-        const feedback_map = feedbackMap
+        const feedback_map = {...feedbackMap}
         feedback_map[idx][attr] = !feedback_map[idx][attr]
-        setFeedback(fdbck)
         setFeedbackMap(feedback_map)
+        setFeedback(fdbck)
     }
 
     const handleSubmit = async () => {
         setProcessing(true)
         // handle submit
         const fdbck: any = {}
-        for (const f in feedbackMap) {
-            fdbck[data[f]['id']] = feedbackMap[f]
+        for (let i = 0; i < data.length; i++) {
+            fdbck[data[i]['id']] = feedbackMap[i]
         }
         const response: AxiosResponse = await server.post(
             '/feedback',
             {
                 feedback: fdbck,
-                projectID: project_id
+                project_id
             }
         )
-        const res = JSON.parse(response.data)
-        const { msg } = res
+        const { msg } = response.data
         if (msg === '[DONE]') {
             alert('')
-            setDone(true)
+            handleDone()
         } else {
-            const { sample } = res
-            const fdbck = res.feedback
-            const prepped_data = prepareSample(sample)
-            const feedback_map = buildFeedbackMap(sample, fdbck)
+            const { sample } = response.data
+            const new_fdbck = JSON.parse(response.data.feedback)
+            const sample_object = JSON.parse(sample)
+            const prepped_data = prepareSample(sample_object)
+            const feedback_map = buildFeedbackMap(prepped_data, new_fdbck)
             const sorting: {[key: string]: string} = {}
             header.forEach((h: string) => {
                 sorting[h] = 'NONE'
             })
             const iter = iterCount + 1
             setIterCount(iter)
-            setData(prepped_data)
-            setFeedback(fdbck)
-            setFeedbackMap(feedbackMap)
+            setFeedback(new_fdbck)
+            setFeedbackMap(feedback_map)
             setSortMethod(sorting)
             setProcessing(false)
+            setData(prepped_data)
         }
     }
 
     const handleSort = async (attr: string) => {
-        const method = sortMethod
+        const method = {...sortMethod}
         let feedback_map: {[key: string]: {[key: string]: boolean}} = {}
-        const sample = data
+        const sample: {[key: string]: string}[] = data
         // handle sort change for attr
         switch (method[attr]) {
             case 'NONE':
@@ -207,8 +213,8 @@ export const Interact: FC<InteractProps> = () => {
         }
         feedback_map = buildFeedbackMap(sample, feedback)
         setSortMethod(method)
+        setFeedbackMap(feedback_map)
         setData(sample)
-        setFeedbackMap(feedbackMap)
     }
 
     return (
@@ -216,22 +222,24 @@ export const Interact: FC<InteractProps> = () => {
             <Grid centered stretched={false} columns={1} className='site-page'>
                 <Grid.Column>
                     <Grid.Row className='content-centered'>
-                        <Container className='results-header box-blur'>
-                            <span className='results-title'>Duo</span>
-                            <p><strong>Scenario Description: </strong>{description}</p>
+                        <Container className='home-header box-blur'>
+                            <span className='home-title'>Duo</span>
                         </Container>
                     </Grid.Row>
                     <Grid.Row className='content-centered'>
                         <Grid.Column width={7}>
                             <Message color='yellow'>
-                                <Message.Header>Remember!</Message.Header>
+                                <Message.Header><h3>Remember!</h3></Message.Header>
                                 <p>Yellow cells indicate cells you marked as violations of a key or FD.</p>
                             </Message>
                         </Grid.Column>
+                    </Grid.Row>
+                    <Divider />
+                    <Grid.Row className='content-centered'>
                         {
-                            Object.keys(data).length > 0 && (
+                            JSON.stringify(Object.keys(data)) === JSON.stringify(Object.keys(feedbackMap)) && (
                                 <Container className='content-centered'>
-                                    <Table celled>
+                                    <Table celled size='large'>
                                         <Table.Header>
                                             <Table.Row>
                                             {
@@ -255,18 +263,24 @@ export const Interact: FC<InteractProps> = () => {
 
                                         <Table.Body>
                                         {
-                                            Object.keys(data).map((i) => (
-                                                <Table.Row key={i}>
+                                            Object.entries(data).map(([_, row], i) => (
+                                                <Table.Row key={row.id}>
                                                 {
-                                                    Object.keys(data[i]).map((j) => {
-                                                        if (j === 'id') return;
+                                                    Object.keys(row).map((j) => {
+                                                        if (j === 'id') return
                                                         var key = `${i}_${j}`
-                                                        return (
+                                                        return feedbackMap[i][j] ? (
                                                             <Table.Cell
                                                                 key={key}
-                                                                style={{ cursor: 'pointer', backgroundColor: (!!feedbackMap[i][j] ? '#FFF3CD' : 'white')}}
+                                                                style={{ backgroundColor: '#FFF3CD'}}
                                                                 onClick={() => handleCellClick(key)}>
-                                                                {data[i][j]}
+                                                                {row[j]}
+                                                            </Table.Cell>
+                                                        ) : (
+                                                            <Table.Cell
+                                                                key={key}
+                                                                onClick={() => handleCellClick(key)}>
+                                                                {row[j]}
                                                             </Table.Cell>
                                                         )
                                                     })
@@ -280,15 +294,15 @@ export const Interact: FC<InteractProps> = () => {
                             )
                         }
                     </Grid.Row>
+                    <Divider />
                     <Grid.Row>
-                        <Grid.Column width={8}></Grid.Column>
-                        <Grid.Column width={4}>
+                        <Grid.Column className='content-centered'>
                             <Grid.Row>
                                 <Button positive size='big' onClick={handleSubmit}>Next</Button>
                                 <Button
                                     color='grey'
                                     size='big'
-                                    onClick={() => setDone(true)}
+                                    onClick={handleDone}
                                     disabled={iterCount <= 5}>
                                     I'm All Done
                                 </Button>
