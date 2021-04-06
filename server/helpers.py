@@ -3,6 +3,9 @@ from pprint import pprint
 from collections import Counter
 import pandas as pd
 import numpy as np
+from rich.console import Console
+
+console = Console()
 
 class CellFeedback(object):
     def __init__(self, iter_num, marked, elapsed_time):
@@ -254,7 +257,7 @@ def buildSample(data, X, sample_size, project_id, current_iter, current_time):
     
     # Build set of alternative hypothesis violation pairs
     alt_h_vio_pairs = set()
-    for _, h in alt_fd_m.items():
+    for h in alt_fd_m.values():
         alt_h_vio_pairs |= h.vio_pairs
 
     sample_X = set()
@@ -265,7 +268,7 @@ def buildSample(data, X, sample_size, project_id, current_iter, current_time):
     alt_h_sample_ratio = project_info['scenario']['alt_h_sample_ratio']
 
     # Get the sample
-    s_index, sample_X = returnTuples(data, tfd_m.vio_pairs, sample_size, list(alt_h_vio_pairs), target_h_sample_ratio, alt_h_sample_ratio, current_iter)
+    s_index, sample_X = returnTuples(data, tfd_m.vio_pairs, sample_size / 2, list(alt_h_vio_pairs), target_h_sample_ratio, alt_h_sample_ratio, current_iter)
     s_out = data.loc[s_index, :]
 
     print('IDs of tuples in next sample:', s_out.index)
@@ -281,17 +284,17 @@ def returnTuples(data, X, sample_size, alt_h_vio_pairs, target_h_sample_ratio, a
     alt_X_tups = list(itertools.chain(*alt_h_vio_pairs))
 
     # Build sets of viable vio pairs (pairs that satisfy target and violate alt and vice versa)
-    viable_X = [(x, y) for (x, y) in X if x not in alt_X_tups and y not in alt_X_tups]
-    viable_alt_X = [(x, y) for (x, y) in alt_h_vio_pairs if x not in X_tups and y not in X_tups]
+    # viable_X = [(x, y) for (x, y) in X if x not in alt_X_tups and y not in alt_X_tups]
+    # viable_alt_X = [(x, y) for (x, y) in alt_h_vio_pairs if x not in X_tups and y not in X_tups]
     
     # Build set of vio pairs that violate neither the target nor alternative hypotheses
-    viable_rem = [x for x in data.index if x not in X_tups and x not in alt_X_tups]
+    # viable_rem = [x for x in data.index if x not in X_tups and x not in alt_X_tups]
     
     # Add vios to the sample that violate the alt but not the target
-    if len(viable_alt_X) > math.ceil(alt_h_sample_ratio * sample_size):
-        alt_vios_out = random.sample(population=viable_alt_X, k=math.ceil(alt_h_sample_ratio * sample_size))
+    if len(alt_h_vio_pairs) > math.ceil(alt_h_sample_ratio * sample_size):
+        alt_vios_out = random.sample(population=alt_h_vio_pairs, k=math.ceil(alt_h_sample_ratio * sample_size))
     else:
-        alt_vios_out = viable_alt_X
+        alt_vios_out = alt_h_vio_pairs
     for (x, y) in alt_vios_out:
         if x not in s_out:
             s_out.append(x)
@@ -299,10 +302,10 @@ def returnTuples(data, X, sample_size, alt_h_vio_pairs, target_h_sample_ratio, a
             s_out.append(y)
     
     # Add vios to the sample that violate the target but not the alt
-    if len(viable_X) > math.ceil(target_h_sample_ratio * sample_size):
-        target_vios_out = random.sample(population=viable_X, k=math.ceil(target_h_sample_ratio * sample_size))
+    if len(X) > math.ceil(target_h_sample_ratio * sample_size):
+        target_vios_out = random.sample(population=X, k=math.ceil(target_h_sample_ratio * sample_size))
     else:
-        target_vios_out = viable_X
+        target_vios_out = X
     for (x, y) in target_vios_out:
         if x not in s_out:
             s_out.append(x)
@@ -311,19 +314,28 @@ def returnTuples(data, X, sample_size, alt_h_vio_pairs, target_h_sample_ratio, a
     
     # Add tuples to the sample that violate neither the target nor the alt
     for i in range(0, math.ceil((1-target_h_sample_ratio-alt_h_sample_ratio)*sample_size)):
-        other_tups = random.sample(population=viable_rem, k=2)
-        if other_tups[0] not in s_out and other_tups[1] not in s_out:
-            s_out.append(other_tups[0])
-            s_out.append(other_tups[1])
+        other_tups = random.sample(population=data.index.tolist(), k=2)
+        if other_tups[0] not in s_out:
+            if len([x for x in alt_h_vio_pairs if other_tups[0] in x]) == 0 and len([x for x in target_vios_out if other_tups[0] in x]) == 0:
+                s_out.append(other_tups[0])
+        if other_tups[1] not in s_out:
+            if len([x for x in alt_h_vio_pairs if other_tups[1] in x]) == 0 and len([x for x in target_vios_out if other_tups[1] in x]) == 0:
+                s_out.append(other_tups[1])
     
     # Shuffle the sample
     random.shuffle(s_out)
     sample_X = set()
+    sample_all_vios = set()
     for i1 in s_out:
         for i2 in s_out:
             tup = (i1, i2) if i1 < i2 else (i2, i1)
+            sample_all_vios.add(tup)
             if tup in X:
                 sample_X.add(tup)
+    
+    # console.log('Ratios')
+    # console.log(len(target_vios_out) / len(sample_all_vios))
+    # console.log(len(alt_vios_out) / len(sample_all_vios))
 
     return s_out, sample_X
 
@@ -586,7 +598,7 @@ def getPairs(data, support, fd):
                         break
     return list(vio_pairs)   
 
-def vioStats(curr_sample, t_sample, feedback, vio_pairs, rhs, dirty_dataset, clean_dataset):
+def vioStats(curr_sample, t_sample, feedback, vio_pairs, attrs, dirty_dataset, clean_dataset):
     vios_marked = set()
     vios_total = set()
     vios_found = set()
@@ -598,13 +610,13 @@ def vioStats(curr_sample, t_sample, feedback, vio_pairs, rhs, dirty_dataset, cle
         vios_total.add((x, y))
 
         x_marked = False
-        for rh in rhs:
-            if feedback[str(x)][rh] is True:
+        for attr in attrs:
+            if feedback[str(x)][attr] is True:
                 x_marked = True
                 break
         y_marked = False
-        for rh in rhs:
-            if feedback[str(y)][rh] is True:
+        for attr in attrs:
+            if feedback[str(y)][attr] is True:
                 y_marked = True
                 break
         if x_marked == y_marked and x_marked is False:
@@ -616,8 +628,8 @@ def vioStats(curr_sample, t_sample, feedback, vio_pairs, rhs, dirty_dataset, cle
         vios_w_x = {i for i in vios_marked if x in i}
         if len(vios_w_x) == 0:
             marked = True
-            for rh in rhs:
-                if feedback[str(x)][rh] is False:
+            for attr in attrs:
+                if feedback[str(x)][attr] is False:
                     marked = False
                     break
             if marked is True:
@@ -865,10 +877,12 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
             if fd != target_fd:
                 continue
             vio_pairs = h['vio_pairs']
+            lhs = fd.split(' => ')[0][1:-1].split(', ')
             rhs = fd.split(' => ')[1].split(', ')
+            attrs = lhs + rhs
             
             # Check if the violation was caught for short-term memory
-            fd_st_vios_marked, fd_st_vios_found, fd_st_vios_total = vioStats(curr_sample, curr_sample, feedback, vio_pairs, rhs, dirty_dataset, clean_dataset)
+            fd_st_vios_marked, fd_st_vios_found, fd_st_vios_total = vioStats(curr_sample, curr_sample, feedback, vio_pairs, attrs, dirty_dataset, clean_dataset)
             st_vios_marked |= fd_st_vios_marked
             st_vios_found |= fd_st_vios_found
             st_vios_total |= fd_st_vios_total
@@ -883,9 +897,11 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
                 if fd != target_fd:
                     continue
                 vio_pairs = h['vio_pairs']
+                lhs = fd.split(' => ')[0][1:-1].split(', ')
                 rhs = fd.split(' => ')[1].split(', ')
+                attrs = lhs + rhs
                 
-                fd_st_vios_marked, fd_st_vios_found, fd_st_vios_total = vioStats(curr_sample, mt_sample, feedback, vio_pairs, rhs, dirty_dataset, clean_dataset)
+                fd_st_vios_marked, fd_st_vios_found, fd_st_vios_total = vioStats(curr_sample, mt_sample, feedback, vio_pairs, attrs, dirty_dataset, clean_dataset)
                 mt_vios_marked |= fd_st_vios_marked
                 mt_vios_found |= fd_st_vios_found
                 mt_vios_total |= fd_st_vios_total
@@ -900,9 +916,11 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
                 if fd != target_fd:
                     continue
                 vio_pairs = h['vio_pairs']
+                lhs = fd.split(' => ')[0][1:-1].split(', ')
                 rhs = fd.split(' => ')[1].split(', ')
+                attrs = lhs + rhs
                 
-                fd_st_vios_marked, fd_st_vios_found, fd_st_vios_total = vioStats(curr_sample, mt_2_sample, feedback, vio_pairs, rhs, dirty_dataset, clean_dataset)
+                fd_st_vios_marked, fd_st_vios_found, fd_st_vios_total = vioStats(curr_sample, mt_2_sample, feedback, vio_pairs, attrs, dirty_dataset, clean_dataset)
                 mt_2_vios_marked |= fd_st_vios_marked
                 mt_2_vios_found |= fd_st_vios_found
                 mt_2_vios_total |= fd_st_vios_total
@@ -917,9 +935,11 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
                 if fd != target_fd:
                     continue
                 vio_pairs = h['vio_pairs']
+                lhs = fd.split(' => ')[0][1:-1].split(', ')
                 rhs = fd.split(' => ')[1].split(', ')
+                attrs = lhs + rhs
                 
-                fd_st_vios_marked, fd_st_vios_found, fd_st_vios_total = vioStats(curr_sample, mt_3_sample, feedback, vio_pairs, rhs, dirty_dataset, clean_dataset)
+                fd_st_vios_marked, fd_st_vios_found, fd_st_vios_total = vioStats(curr_sample, mt_3_sample, feedback, vio_pairs, attrs, dirty_dataset, clean_dataset)
                 mt_3_vios_marked |= fd_st_vios_marked
                 mt_3_vios_found |= fd_st_vios_found
                 mt_3_vios_total |= fd_st_vios_total
@@ -935,9 +955,11 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
                 if fd != target_fd:
                     continue
                 vio_pairs = h['vio_pairs']
+                lhs = fd.split(' => ')[0][1:-1].split(', ')
                 rhs = fd.split(' => ')[1].split(', ')
+                attrs = lhs + rhs
                 
-                fd_st_vios_marked, fd_st_vios_found, fd_st_vios_total = vioStats(curr_sample, lt_sample, feedback, vio_pairs, rhs, dirty_dataset, clean_dataset)
+                fd_st_vios_marked, fd_st_vios_found, fd_st_vios_total = vioStats(curr_sample, lt_sample, feedback, vio_pairs, attrs, dirty_dataset, clean_dataset)
                 lt_vios_marked |= fd_st_vios_marked
                 lt_vios_found |= fd_st_vios_found
                 lt_vios_total |= fd_st_vios_total

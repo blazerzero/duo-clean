@@ -223,7 +223,7 @@ export const Interact: FC<InteractProps> = () => {
                 <Grid.Column>
                     <Grid.Row className='content-centered'>
                         <Container className='home-header box-blur'>
-                            <span className='home-title'>Duo</span>
+                            <span className='home-title'>Discovering Violations of Keys and FDs</span>
                         </Container>
                     </Grid.Row>
                     <Grid.Row className='content-centered' style={{ paddingBottom: 10 }}>
