@@ -75,8 +75,7 @@ export const PostInteraction: FC<PostInteractionProps> = () => {
         }
     }
 
-    const handleReady = async () => {
-        setProcessing(true)
+    const handleQuizDone = async () => {
         const answers = { fd, durationNeeded }
         const response: AxiosResponse = await server.post('/post-interaction', {
             email,
@@ -84,25 +83,30 @@ export const PostInteraction: FC<PostInteractionProps> = () => {
             answers
         })
         if (response.status === 201) {
-            const next_scenario: number = scenarios.splice(0, 1) as number
-            const response2: AxiosResponse = await server.post('/import', {
-                email,
-                scenario_id: next_scenario.toString(),
-            })
-            const { header, project_id, description } = response2.data
-            console.log(header)
-            history.push('/interact', {
-                email,
-                scenarios,
-                scenario_id: next_scenario.toString(),
-                header,
-                project_id,
-                description
-            })
+            setQuizDone(true)
         } else {
             console.error(response.status)
             console.error(response.data.msg)
         }
+    }
+
+    const handleReady = async () => {
+        setProcessing(true)
+        const next_scenario: number = scenarios.splice(0, 1) as number
+        const response2: AxiosResponse = await server.post('/import', {
+            email,
+            scenario_id: next_scenario.toString(),
+        })
+        const { header, project_id, description } = response2.data
+        console.log(header)
+        history.push('/interact', {
+            email,
+            scenarios,
+            scenario_id: next_scenario.toString(),
+            header,
+            project_id,
+            description
+        })
     }
 
     return (
@@ -162,11 +166,11 @@ export const PostInteraction: FC<PostInteractionProps> = () => {
                                 </Form.Field>
                                 <Form.Field>
                                     <Radio
-                                        label='After a few rounds'
+                                        label='After a couple of rounds'
                                         name='radioGroup'
-                                        value='after-a-few-rounds'
-                                        checked={durationNeeded === 'after-a-few-rounds'}
-                                        onChange={() => setDurationNeeded('after-a-few-rounds')}
+                                        value='after-a-couple-of-rounds'
+                                        checked={durationNeeded === 'after-a-couple-of-rounds'}
+                                        onChange={() => setDurationNeeded('after-a-couple-of-rounds')}
                                     />
                                 </Form.Field>
                                 <Form.Field>
@@ -192,7 +196,7 @@ export const PostInteraction: FC<PostInteractionProps> = () => {
                                 quizDone ? (
                                     <Message color='green'><p>Scroll Down</p></Message>
                                 ) : (
-                                    <Button positive size='big' disabled={fd === '' || durationNeeded === ''}onClick={() => setQuizDone(true)}>Submit</Button>
+                                    <Button positive size='big' disabled={fd === '' || durationNeeded === ''} onClick={handleQuizDone}>Submit</Button>
                                 )
                             }
                         </Message>
