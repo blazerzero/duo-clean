@@ -39,7 +39,8 @@ class User(object):
             'scenarios': self.scenarios,
             'start_time': self.start_time.strftime("%m/%d/%Y, %H:%M:%S"),
             'done': self.done,
-            'post_questionnaire': self.post_questionnaire
+            'pre_survey': self.pre_survey,
+            'post_questionnaire': self.post_questionnaire,
         }
 
 # Test endpoint to check if the server is live
@@ -459,6 +460,7 @@ class PostInteraction(Resource):
         
         # Save the user's questionnaire responses
         user = users[email]
+        user.done.append(scenario_id)
         user.post_questionnaire[scenario_id] = answers
         users[email] = user
         
