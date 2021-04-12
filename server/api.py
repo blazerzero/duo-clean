@@ -37,7 +37,7 @@ class User(object):
     def asdict(self):
         return {
             'scenarios': self.scenarios,
-            'start_time': self.start_time,
+            'start_time': self.start_time.strftime("%m/%d/%Y, %H:%M:%S"),
             'done': self.done,
             'post_questionnaire': self.post_questionnaire
         }

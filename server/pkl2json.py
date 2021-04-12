@@ -2,11 +2,19 @@ import json
 import pickle
 import os
 from helpers import FDMeta
+from api import User
 import sys
 
 def pkl2jsonRecursive(run_type):
     path = './docker-out/' if run_type == 'real' else './store/'
     project_ids = os.listdir(path)
+    if run_type == 'real':
+        obj = pickle.load( open('study-utils/users.p', 'rb') )
+        for user in obj.keys():
+            obj[user] = obj[user].asdict()
+        with open('study-utils/users.json', 'w') as fp:
+            json.dump(obj, fp, ensure_ascii=False, indent=4)
+
     for project_id in project_ids:
         files = os.listdir(path + project_id + '/')
         for f in files:
