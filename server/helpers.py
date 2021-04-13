@@ -722,12 +722,12 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
     study_metrics['mt_vio_f1'] = list()
     study_metrics['mt_2_vio_f1'] = list()
     study_metrics['mt_3_vio_f1'] = list()
-    study_metrics['iter_err_precision'] = list()
-    study_metrics['iter_err_recall'] = list()
-    study_metrics['iter_err_f1'] = list()
-    study_metrics['all_err_precision'] = list()
-    study_metrics['all_err_recall'] = list()
-    study_metrics['all_err_f1'] = list()
+    # study_metrics['iter_err_precision'] = list()
+    # study_metrics['iter_err_recall'] = list()
+    # study_metrics['iter_err_f1'] = list()
+    # study_metrics['all_err_precision'] = list()
+    # study_metrics['all_err_recall'] = list()
+    # study_metrics['all_err_f1'] = list()
 
     study_metrics['st_vios_marked'] = list()
     study_metrics['mt_vios_marked'] = list()
@@ -745,12 +745,12 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
     study_metrics['mt_3_vios_total'] = list()
     study_metrics['lt_vios_total'] = list()
 
-    study_metrics['iter_errors_marked'] = list()
-    study_metrics['iter_errors_found'] = list()
-    study_metrics['iter_errors_total'] = list()
-    study_metrics['all_errors_marked'] = list()
-    study_metrics['all_errors_found'] = list()
-    study_metrics['all_errors_total'] = list()
+    # study_metrics['iter_errors_marked'] = list()
+    # study_metrics['iter_errors_found'] = list()
+    # study_metrics['iter_errors_total'] = list()
+    # study_metrics['all_errors_marked'] = list()
+    # study_metrics['all_errors_found'] = list()
+    # study_metrics['all_errors_total'] = list()
 
     for h in h_space:
         if h['cfd'] not in fd_metadata.keys():
@@ -787,12 +787,12 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
         lt_vios_total = set()
         lt_vios_marked = set()
 
-        iter_errors_found = 0
-        iter_errors_total = 0
-        iter_errors_marked = 0
-        all_errors_found = 0
-        all_errors_total = 0
-        all_errors_marked = 0
+        # iter_errors_found = 0
+        # iter_errors_total = 0
+        # iter_errors_marked = 0
+        # all_errors_found = 0
+        # all_errors_total = 0
+        # all_errors_marked = 0
 
         curr_sample = interaction_metadata['sample_history'][i-1]['value']
         mt_sample = set(curr_sample)
@@ -821,22 +821,22 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
                 if feedback[x][y] is True and x not in marked_rows:
                     marked_rows.add(x)
 
-        for idx in dirty_dataset.index:
-            for col in dirty_dataset.columns:
-                if dirty_dataset.at[idx, col] != clean_dataset.at[idx, col]:
-                    if idx in curr_sample:
-                        iter_errors_total += 1
-                        if feedback[str(idx)][col] is True:
-                            iter_errors_found += 1
-                    if idx in lt_sample:
-                        all_errors_total += 1
-                        if feedback[str(idx)][col] is True:
-                            all_errors_found += 1
-                if feedback[str(idx)][col] is True:
-                    if idx in curr_sample:
-                        iter_errors_marked += 1
-                    if idx in lt_sample:
-                        all_errors_marked += 1
+        # for idx in dirty_dataset.index:
+        #     for col in dirty_dataset.columns:
+        #         if dirty_dataset.at[idx, col] != clean_dataset.at[idx, col]:
+        #             if idx in curr_sample:
+        #                 iter_errors_total += 1
+        #                 if feedback[str(idx)][col] is True:
+        #                     iter_errors_found += 1
+        #             if idx in lt_sample:
+        #                 all_errors_total += 1
+        #                 if feedback[str(idx)][col] is True:
+        #                     all_errors_found += 1
+        #         if feedback[str(idx)][col] is True:
+        #             if idx in curr_sample:
+        #                 iter_errors_marked += 1
+        #             if idx in lt_sample:
+        #                 all_errors_marked += 1
 
         marked_rows = [r for r in marked_rows]
         
@@ -972,41 +972,41 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
         if len(st_vios_total) > 0:
             st_vio_recall = len(st_vios_found) / len(st_vios_total)
         else:
-            st_vio_recall = 1
+            st_vio_recall = 0.5
         
         print('recall:', st_vio_recall)
 
         if len(lt_vios_total) > 0:
             lt_vio_recall = len(lt_vios_found) / len(lt_vios_total)
         else:
-            lt_vio_recall = 1
+            lt_vio_recall = 0.5
 
         if len(mt_vios_total) > 0:
             mt_vio_recall = len(mt_vios_found) / len(mt_vios_total)
         else:
-            mt_vio_recall = 1
+            mt_vio_recall = 0.5
 
         if len(mt_2_vios_total) > 0:
             mt_2_vio_recall = len(mt_2_vios_found) / len(mt_2_vios_total)
         else:
-            mt_2_vio_recall = 1
+            mt_2_vio_recall = 0.5
 
         if len(mt_3_vios_total) > 0:
             mt_3_vio_recall = len(mt_3_vios_found) / len(mt_3_vios_total)
         else:
-            mt_3_vio_recall = 1
+            mt_3_vio_recall = 0.5
 
         if len(st_vios_marked) > 0:
             st_vio_precision = len(st_vios_found) / len(st_vios_marked)
         else:
-            st_vio_precision = 1
+            st_vio_precision = 0.5
 
         print('precision:', st_vio_precision)
 
         if len(lt_vios_marked) > 0:
             lt_vio_precision = len(lt_vios_found) / len(lt_vios_marked)
         else:
-            lt_vio_precision = 1
+            lt_vio_precision = 0.5
 
         if len(mt_vios_marked) > 0:
             mt_vio_precision = len(mt_vios_found) / len(mt_vios_marked)
@@ -1021,72 +1021,72 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
         if len(mt_3_vios_marked) > 0:
             mt_3_vio_precision = len(mt_3_vios_found) / len(mt_3_vios_marked)
         else:
-            mt_3_vio_precision = 1
+            mt_3_vio_precision = 0.5
 
         if st_vio_precision > 0 or st_vio_recall > 0:
             st_vio_f1 = 2 * (st_vio_precision * st_vio_recall) / (st_vio_precision + st_vio_recall)
         else:
-            st_vio_f1 = 1
+            st_vio_f1 = 0.5
         
         print('f1:', st_vio_f1, '\n')
 
         if lt_vio_precision > 0 or lt_vio_recall > 0:
             lt_vio_f1 = 2 * (lt_vio_precision * lt_vio_recall) / (lt_vio_precision + lt_vio_recall)
         else:
-            lt_vio_f1 = 1
+            lt_vio_f1 = 0.5
 
         if mt_vio_precision > 0 or mt_vio_recall > 0:
             mt_vio_f1 = 2 * (mt_vio_precision * mt_vio_recall) / (mt_vio_precision + mt_vio_recall)
         else:
-            mt_vio_f1 = 1
+            mt_vio_f1 = 0.5
 
         if mt_2_vio_precision > 0 or mt_2_vio_recall > 0:
             mt_2_vio_f1 = 2 * (mt_2_vio_precision * mt_2_vio_recall) / (mt_2_vio_precision + mt_2_vio_recall)
         else:
-            mt_2_vio_f1 = 1
+            mt_2_vio_f1 = 0.5
 
         if mt_3_vio_precision > 0 or mt_3_vio_recall > 0:
             mt_3_vio_f1 = 2 * (mt_3_vio_precision * mt_3_vio_recall) / (mt_3_vio_precision + mt_3_vio_recall)
         else:
-            mt_3_vio_f1 = 1
+            mt_3_vio_f1 = 0.5
 
         # Short and long-term error precision, recall, and F1
-        if iter_errors_marked > 0:
-            iter_err_precision = iter_errors_found / iter_errors_marked
-        else:
-            iter_err_precision = 1
+        # if iter_errors_marked > 0:
+        #     iter_err_precision = iter_errors_found / iter_errors_marked
+        # else:
+        #     iter_err_precision = 1
         
-        if iter_errors_total > 0:
-            iter_err_recall = iter_errors_found / iter_errors_total
-        else:
-            iter_err_recall = 1
+        # if iter_errors_total > 0:
+        #     iter_err_recall = iter_errors_found / iter_errors_total
+        # else:
+        #     iter_err_recall = 1
 
-        if iter_err_precision > 0 or iter_err_recall > 0:
-            iter_err_f1 = 2 * (iter_err_precision * iter_err_recall) / (iter_err_precision + iter_err_recall)
-        else:
-            iter_err_f1 = 1
+        # if iter_err_precision > 0 or iter_err_recall > 0:
+        #     iter_err_f1 = 2 * (iter_err_precision * iter_err_recall) / (iter_err_precision + iter_err_recall)
+        # else:
+        #     iter_err_f1 = 1
 
-        if all_errors_marked > 0:
-            all_err_precision = all_errors_found / all_errors_marked
-        else:
-            all_err_precision = 1
+        # if all_errors_marked > 0:
+        #     all_err_precision = all_errors_found / all_errors_marked
+        # else:
+        #     all_err_precision = 1
         
-        if all_errors_total > 0:
-            all_err_recall = all_errors_found / all_errors_total
-        else:
-            all_err_recall = 1
+        # if all_errors_total > 0:
+        #     all_err_recall = all_errors_found / all_errors_total
+        # else:
+        #     all_err_recall = 1
 
-        if all_err_precision > 0 or all_err_recall > 0:
-            all_err_f1 = 2 * (all_err_precision * all_err_recall) / (all_err_precision + all_err_recall)
-        else:
-            all_err_f1 = 1
+        # if all_err_precision > 0 or all_err_recall > 0:
+        #     all_err_f1 = 2 * (all_err_precision * all_err_recall) / (all_err_precision + all_err_recall)
+        # else:
+        #     all_err_f1 = 1
 
-        study_metrics['iter_err_precision'].append({ 'iter_num': int(i), 'value': iter_err_precision, 'elapsed_time': elapsed_time })
-        study_metrics['iter_err_recall'].append({ 'iter_num': int(i), 'value': iter_err_recall, 'elapsed_time': elapsed_time })
-        study_metrics['iter_err_f1'].append({ 'iter_num': int(i), 'value': iter_err_f1, 'elapsed_time': elapsed_time })
-        study_metrics['all_err_precision'].append({ 'iter_num': int(i), 'value': all_err_precision, 'elapsed_time': elapsed_time })
-        study_metrics['all_err_recall'].append({ 'iter_num': int(i), 'value': all_err_recall, 'elapsed_time': elapsed_time })
-        study_metrics['all_err_f1'].append({ 'iter_num': int(i), 'value': all_err_f1, 'elapsed_time': elapsed_time })
+        # study_metrics['iter_err_precision'].append({ 'iter_num': int(i), 'value': iter_err_precision, 'elapsed_time': elapsed_time })
+        # study_metrics['iter_err_recall'].append({ 'iter_num': int(i), 'value': iter_err_recall, 'elapsed_time': elapsed_time })
+        # study_metrics['iter_err_f1'].append({ 'iter_num': int(i), 'value': iter_err_f1, 'elapsed_time': elapsed_time })
+        # study_metrics['all_err_precision'].append({ 'iter_num': int(i), 'value': all_err_precision, 'elapsed_time': elapsed_time })
+        # study_metrics['all_err_recall'].append({ 'iter_num': int(i), 'value': all_err_recall, 'elapsed_time': elapsed_time })
+        # study_metrics['all_err_f1'].append({ 'iter_num': int(i), 'value': all_err_f1, 'elapsed_time': elapsed_time })
         study_metrics['st_vio_recall'].append({ 'iter_num': int(i), 'value': st_vio_recall, 'elapsed_time': elapsed_time })
         study_metrics['mt_vio_recall'].append({ 'iter_num': int(i), 'value': mt_vio_recall, 'elapsed_time': elapsed_time })
         study_metrics['mt_2_vio_recall'].append({ 'iter_num': int(i), 'value': mt_2_vio_recall, 'elapsed_time': elapsed_time })
@@ -1119,10 +1119,10 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
         study_metrics['mt_3_vios_total'].append({ 'iter_num': int(i), 'value': list(mt_3_vios_total), 'elapsed_time': elapsed_time })
         study_metrics['lt_vios_total'].append({ 'iter_num': int(i), 'value': list(lt_vios_total), 'elapsed_time': elapsed_time })
 
-        study_metrics['iter_errors_marked'].append({ 'iter_num': int(i), 'value': iter_errors_marked, 'elapsed_time': elapsed_time })
-        study_metrics['iter_errors_found'].append({ 'iter_num': int(i), 'value': iter_errors_found, 'elapsed_time': elapsed_time })
-        study_metrics['iter_errors_total'].append({ 'iter_num': int(i), 'value': iter_errors_total, 'elapsed_time': elapsed_time })
-        study_metrics['all_errors_marked'].append({ 'iter_num': int(i), 'value': all_errors_marked, 'elapsed_time': elapsed_time })
-        study_metrics['all_errors_found'].append({ 'iter_num': int(i), 'value': all_errors_found, 'elapsed_time': elapsed_time })
-        study_metrics['all_errors_total'].append({ 'iter_num': int(i), 'value': all_errors_total, 'elapsed_time': elapsed_time })
+        # study_metrics['iter_errors_marked'].append({ 'iter_num': int(i), 'value': iter_errors_marked, 'elapsed_time': elapsed_time })
+        # study_metrics['iter_errors_found'].append({ 'iter_num': int(i), 'value': iter_errors_found, 'elapsed_time': elapsed_time })
+        # study_metrics['iter_errors_total'].append({ 'iter_num': int(i), 'value': iter_errors_total, 'elapsed_time': elapsed_time })
+        # study_metrics['all_errors_marked'].append({ 'iter_num': int(i), 'value': all_errors_marked, 'elapsed_time': elapsed_time })
+        # study_metrics['all_errors_found'].append({ 'iter_num': int(i), 'value': all_errors_found, 'elapsed_time': elapsed_time })
+        # study_metrics['all_errors_total'].append({ 'iter_num': int(i), 'value': all_errors_total, 'elapsed_time': elapsed_time })
     return study_metrics, fd_metadata

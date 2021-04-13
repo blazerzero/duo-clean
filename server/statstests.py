@@ -58,7 +58,8 @@ if __name__ == '__main__':
     project_id = sys.argv[2]
     test = sys.argv[3]
     # metric = sys.argv[4]
-    if len(sys.argv) < 5:
+    smoothing_idx = int(sys.argv[4])
+    if len(sys.argv) < 6:
         metrics = [
             'st_vio_precision',
             'mt_vio_precision',
@@ -77,7 +78,7 @@ if __name__ == '__main__':
             'lt_vio_f1'
         ]
     else:
-        metrics = sys.argv[4:]
+        metrics = sys.argv[5:]
     pathstart = './docker-out/' if run_type == 'real' else './store/'
 
     with open(pathstart + project_id + '/study_metrics.json', 'r') as f:
@@ -131,7 +132,8 @@ if __name__ == '__main__':
                     elif i == 1:
                         norm_data.append(np.mean([formatted_data[i], formatted_data[i-1]]))
                     else:
-                        norm_data.append(np.mean([formatted_data[i], formatted_data[i-1], formatted_data[i-2]]))
+                        # norm_data.append(np.mean([formatted_data[i], formatted_data[i-1], formatted_data[i-2]]))
+                        norm_data.append(np.mean(formatted_data[i-smoothing_idx+1 : i+1]))
                 # console.print(norm_data)
                 mannkendall(norm_data)
         elif metric in fd_metadata[project_info['scenario']['target_fd']].keys():
@@ -152,7 +154,8 @@ if __name__ == '__main__':
                         elif i == 1:
                             norm_data.append(np.mean([formatted_data[i], formatted_data[i-1]]))
                         else:
-                            norm_data.append(np.mean([formatted_data[i], formatted_data[i-1], formatted_data[i-2]]))
+                            # norm_data.append(np.mean([formatted_data[i], formatted_data[i-1], formatted_data[i-2]]))
+                            norm_data.append(np.mean(formatted_data[i-smoothing_idx+1 : i+1]))
                     # console.print(norm_data)
                     mannkendall(norm_data)
         console.print()
@@ -188,7 +191,8 @@ if __name__ == '__main__':
                         elif i == 1:
                             norm_data.append(np.mean([formatted_data[i], formatted_data[i-1]]))
                         else:
-                            norm_data.append(np.mean([formatted_data[i], formatted_data[i-1], formatted_data[i-2]]))
+                            # norm_data.append(np.mean([formatted_data[i], formatted_data[i-1], formatted_data[i-2]]))
+                            norm_data.append(np.mean(formatted_data[i-smoothing_idx+1 : i+1]))
                     # console.print(norm_data)
                     mannkendall(norm_data)
             elif metric in fd_metadata[project_info['scenario']['target_fd']].keys():
@@ -209,7 +213,8 @@ if __name__ == '__main__':
                             elif i == 1:
                                 norm_data.append(np.mean([formatted_data[i], formatted_data[i-1]]))
                             else:
-                                norm_data.append(np.mean([formatted_data[i], formatted_data[i-1], formatted_data[i-2]]))
+                                # norm_data.append(np.mean([formatted_data[i], formatted_data[i-1], formatted_data[i-2]]))
+                                norm_data.append(np.mean(formatted_data[i-smoothing_idx+1 : i+1]))
                         # console.print(norm_data)
                         mannkendall(norm_data)
             console.print()
