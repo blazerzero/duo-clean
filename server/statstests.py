@@ -63,19 +63,19 @@ if __name__ == '__main__':
         metrics = [
             'st_vio_precision',
             'mt_vio_precision',
-            'mt_2_vio_precision',
-            'mt_3_vio_precision',
+            # 'mt_2_vio_precision',
+            # 'mt_3_vio_precision',
             'lt_vio_precision',
             'st_vio_recall',
             'mt_vio_recall',
-            'mt_2_vio_recall',
-            'mt_3_vio_recall',
+            # 'mt_2_vio_recall',
+            # 'mt_3_vio_recall',
             'lt_vio_recall',
-            'st_vio_f1',
-            'mt_vio_f1',
-            'mt_2_vio_f1',
-            'mt_3_vio_f1',
-            'lt_vio_f1'
+            # 'st_vio_f1',
+            # 'mt_vio_f1',
+            # 'mt_2_vio_f1',
+            # 'mt_3_vio_f1',
+            # 'lt_vio_f1'
         ]
     else:
         metrics = sys.argv[5:]

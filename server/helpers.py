@@ -627,10 +627,10 @@ def vioStats(curr_sample, t_sample, feedback, vio_pairs, attrs, dirty_dataset, c
     for x in curr_sample:
         vios_w_x = {i for i in vios_marked if x in i}
         if len(vios_w_x) == 0:
-            marked = True
+            marked = False
             for attr in attrs:
-                if feedback[str(x)][attr] is False:
-                    marked = False
+                if feedback[str(x)][attr] is True:
+                    marked = True
                     break
             if marked is True:
                 vios_marked.add((x,x))
@@ -1026,29 +1026,29 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
         if st_vio_precision > 0 or st_vio_recall > 0:
             st_vio_f1 = 2 * (st_vio_precision * st_vio_recall) / (st_vio_precision + st_vio_recall)
         else:
-            st_vio_f1 = 0.5
+            st_vio_f1 = 0
         
         print('f1:', st_vio_f1, '\n')
 
         if lt_vio_precision > 0 or lt_vio_recall > 0:
             lt_vio_f1 = 2 * (lt_vio_precision * lt_vio_recall) / (lt_vio_precision + lt_vio_recall)
         else:
-            lt_vio_f1 = 0.5
+            lt_vio_f1 = 0
 
         if mt_vio_precision > 0 or mt_vio_recall > 0:
             mt_vio_f1 = 2 * (mt_vio_precision * mt_vio_recall) / (mt_vio_precision + mt_vio_recall)
         else:
-            mt_vio_f1 = 0.5
+            mt_vio_f1 = 0
 
         if mt_2_vio_precision > 0 or mt_2_vio_recall > 0:
             mt_2_vio_f1 = 2 * (mt_2_vio_precision * mt_2_vio_recall) / (mt_2_vio_precision + mt_2_vio_recall)
         else:
-            mt_2_vio_f1 = 0.5
+            mt_2_vio_f1 = 0
 
         if mt_3_vio_precision > 0 or mt_3_vio_recall > 0:
             mt_3_vio_f1 = 2 * (mt_3_vio_precision * mt_3_vio_recall) / (mt_3_vio_precision + mt_3_vio_recall)
         else:
-            mt_3_vio_f1 = 0.5
+            mt_3_vio_f1 = 0
 
         # Short and long-term error precision, recall, and F1
         # if iter_errors_marked > 0:
