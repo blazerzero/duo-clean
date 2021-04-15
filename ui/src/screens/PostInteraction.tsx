@@ -1,6 +1,6 @@
 import { AxiosResponse } from 'axios'
 import { url } from 'node:inspector'
-import React, { FC, useRef, useState } from 'react'
+import React, { FC, useEffect, useRef, useState } from 'react'
 import { useHistory, useLocation } from 'react-router-dom'
 import {
     Button,
@@ -20,6 +20,7 @@ import {
     Input
 } from 'semantic-ui-react'
 import server from '../utils/server'
+import logo from '../images/OSU_horizontal_2C_O_over_B.png'
 
 interface PostInteractionProps {}
 
@@ -27,14 +28,16 @@ export const PostInteraction: FC<PostInteractionProps> = () => {
 
     const history = useHistory()
     const location = useLocation()
-    const { email, scenarios, scenario_id } = location.state as any
+    const { header, email, scenarios, scenario_id } = location.state as any
     console.log(scenarios)
 
     const [processing, setProcessing] = useState<boolean>(false)
     const [fd, setFD] = useState<string>('')
+    const [nextFD, setNextFD] = useState<string>('')
     const [durationNeeded, setDurationNeeded] = useState<string>('')
     const [quizDone, setQuizDone] = useState<boolean>(false)
     const [dataOverviewRead, setDataOverviewRead] = useState<boolean>(false)
+    // const [header, setHeader] = useState<string[]>([])
 
     const scenarioDetails: {[key: number]: {[key: string]: string | null }} = {
         6: {
@@ -75,29 +78,32 @@ export const PostInteraction: FC<PostInteractionProps> = () => {
         }
     }
 
-    const handleQuizDone = async () => {
-        const answers = { fd, durationNeeded }
-        const response: AxiosResponse = await server.post('/post-interaction', {
-            email,
-            scenario_id,
-            answers
-        })
-        if (response.status === 201) {
-            setQuizDone(true)
-        } else {
-            console.error(response.status)
-            console.error(response.data.msg)
-        }
-    }
+    // const handleQuizDone = async () => {
+    //     const answers = { fd, durationNeeded }
+    //     const response: AxiosResponse = await server.post('/post-interaction', {
+    //         email,
+    //         scenario_id,
+    //         next_scenario_id: scenarios[0].toString(),
+    //         answers
+    //     })
+    //     if (response.status === 201) {
+    //         setHeader(response.data.header)
+    //         setQuizDone(true)
+    //     } else {
+    //         console.error(response.status)
+    //         console.error(response.data.msg)
+    //     }
+    // }
 
     const handleReady = async () => {
         setProcessing(true)
         const next_scenario: number = scenarios.splice(0, 1) as number
-        const response2: AxiosResponse = await server.post('/import', {
+        const response: AxiosResponse = await server.post('/import', {
             email,
             scenario_id: next_scenario.toString(),
+            initial_fd: nextFD,
         })
-        const { header, project_id, description } = response2.data
+        const { project_id, description } = response.data
         console.log(header)
         history.push('/interact', {
             email,
@@ -114,8 +120,11 @@ export const PostInteraction: FC<PostInteractionProps> = () => {
             <Grid centered stretched={false} columns={1} className='site-page home'>
                 <Grid.Column>
                     <Grid.Row>
+                        <Container className='section' style={{ backgroundColor: 'white', position: 'absolute', top: 0, right: 0, width: '10vw', maxWidth: '500px', height: '8vh', borderBottomLeftRadius: 20 }} >
+                            <img src={logo} style={{ padding: 10, position: 'absolute', top: 0, right: 0, width: '100%', height: 'auto' }} alt='OSU logo' />
+                        </Container>
                         <Container className='content-centered home-header box-blur'>
-                            <span className='home-title'>Discovering Violations of Keys and FDs</span>
+                            <span className='home-title'>Discovering Keys and Functional Dependencies</span>
                         </Container>
                         <Message success>
                             <Message.Header>
@@ -127,7 +136,7 @@ export const PostInteraction: FC<PostInteractionProps> = () => {
                             </p>
                         </Message>
                     </Grid.Row>
-                    <Divider />
+                    {/* <Divider />
                     <Grid.Row>
                         <Message>
                             <Message.Header>
@@ -200,79 +209,94 @@ export const PostInteraction: FC<PostInteractionProps> = () => {
                                 )
                             }
                         </Message>
-                    </Grid.Row>
-                    {
+                    </Grid.Row> */}
+                    {/* {
                         quizDone && (
-                            <>
+                            <> */}
+                    <Divider />
+                    <Grid.Row>
+                    {
+                        scenarios.length > 0 ? (
+                            <Message>
+                                <Message.Header>
+                                    <h2>Your Next Dataset</h2>
+                                </Message.Header>
                                 <Divider />
-                                <Grid.Row>
+                                <h3>{`${scenarioDetails[scenarios[0]].domain} Data`}</h3>
+                                <p>
+                                    {scenarioDetails[scenarios[0]].info}
+                                </p>
                                 {
-                                    scenarios.length > 0 ? (
-                                        <Message>
-                                            <Message.Header>
-                                                <h2>Your Next Dataset</h2>
-                                            </Message.Header>
-                                            <Divider />
-                                            <h3>{`${scenarioDetails[scenarios[0]].domain} Data`}</h3>
-                                            <p>
-                                                {scenarioDetails[scenarios[0]].info}
-                                            </p>
-                                            {
-                                                scenarioDetails[scenarios[0]].note && (
-                                                    <p>
-                                                        <strong>NOTE: </strong>{scenarioDetails[scenarios[0]].note}
-                                                    </p>
-                                                )
-                                            }
-                                            <Divider />
-                                            <p>
-                                                You'll have up to 15 rounds to give feedback before moving on to the next dataset.
-                                            </p>
-                                            <p>
-                                                One round is defined as giving feedback by marking any cells you believe are part
-                                                of violations and clicking "Next."
-                                            </p>
-                                            <p>
-                                                <strong>NOTE: </strong>
-                                                You do not need to worry about knowing or finding the right value for a cell! This is
-                                                not an error detection problem. Your goal is just to find violations of FDs or keys.
-                                            </p>
-                                            {
-                                                dataOverviewRead ? (
-                                                    <Message color='green'><p>Scroll Down</p></Message>
-                                                ) : (
-                                                    <Button positive size='big' onClick={() => setDataOverviewRead(true)}>Got It</Button>
-                                                )
-                                            }
-                                            {
-                                                dataOverviewRead && (
-                                                    <>
-                                                        <Divider />
-                                                        <Message info>
-                                                            <Message.Header>
-                                                                When you're ready to begin working on your next dataset, click "Let's Go" below.
-                                                            </Message.Header>
-                                                        </Message>
-                                                        <Button positive size='big' onClick={handleReady}>Let's Go!</Button>
-                                                    </>
-                                                )
-                                            }
-                                        </Message>
-                                    ) : (
-                                        <Message success>
-                                            <Message.Header>
-                                                You're all done! Thanks for participating in our study!
-                                            </Message.Header>
-                                        </Message>
+                                    scenarioDetails[scenarios[0]].note && (
+                                        <p>
+                                            <strong>NOTE: </strong>{scenarioDetails[scenarios[0]].note}
+                                        </p>
                                     )
                                 }
-                                </Grid.Row>
-                                <Grid.Row>
-                                    
-                                </Grid.Row>
-                            </>
+                                <Divider />
+                                <p>
+                                    You'll have up to 15 rounds to give feedback before moving on to the next dataset.
+                                </p>
+                                <p>
+                                    One round is defined as giving feedback by marking any cells you believe are part
+                                    of violations and clicking "Next."
+                                </p>
+                                <p>
+                                    <strong>NOTE: </strong>
+                                    You do not need to worry about knowing or finding the right value for a cell! This is
+                                    not an error detection problem. Your goal is just to find violations of FDs or keys.
+                                </p>
+                                <Message>
+                                    <Message.Header>
+                                        <h3>
+                                            This dataset has the following attributes: [{header.join(', ')}]. Given this
+                                            schema, what do you think should be the primary FD(s) that holds over this dataset?
+                                        </h3>
+                                    </Message.Header>
+                                    <p>E.g. facilityname is the key; title and year determine director</p>
+                                    <Input
+                                        size='large'
+                                        placeholder='Enter the FD(s) or key(s) here'
+                                        onChange={(_e, props) => setNextFD(props.value)}
+                                        className='input'
+                                    />
+                                </Message>
+                                {
+                                    dataOverviewRead ? (
+                                        <Message color='green'><p>Scroll Down</p></Message>
+                                    ) : (
+                                        <Button positive size='big' onClick={() => setDataOverviewRead(true)}>Continue</Button>
+                                    )
+                                }
+                                {
+                                    dataOverviewRead && (
+                                        <>
+                                            <Divider />
+                                            <Message info>
+                                                <Message.Header>
+                                                    When you're ready to begin working on your next dataset, click "Let's Go" below.
+                                                </Message.Header>
+                                            </Message>
+                                            <Button positive size='big' onClick={handleReady}>Let's Go!</Button>
+                                        </>
+                                    )
+                                }
+                            </Message>
+                        ) : (
+                            <Message success>
+                                <Message.Header>
+                                    You're all done! Thanks for participating in our study!
+                                </Message.Header>
+                            </Message>
                         )
                     }
+                    </Grid.Row>
+                    <Grid.Row>
+                        
+                    </Grid.Row>
+                            {/* </>
+                        )
+                    } */}
                 </Grid.Column>
             </Grid>
             <Dimmer active={processing}>

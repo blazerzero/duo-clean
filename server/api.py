@@ -119,7 +119,17 @@ class PreSurvey(Resource):
         # Save the users object updates
         pickle.dump( users, open('./study-utils/users.p', 'wb') )
 
-        return '', 201, {'Access-Control-Allow-Origin': '*'}
+        with open('scenarios.json', 'r') as f:
+            scenarios_list = json.load(f)
+        scenario = scenarios_list[scenario_id]
+        data = pd.read_csv(scenario['dirty_dataset'])
+        header = [col for col in data.columns]
+
+        response = {
+            'header': header,
+        }
+
+        return response, 201, {'Access-Control-Allow-Origin': '*'}
 
 class Import(Resource):
     def get(self):
@@ -151,9 +161,11 @@ class Import(Resource):
         # Read the scenario number and initialize the scenario accordingly
         scenario_id = request.form.get('scenario_id')
         email = request.form.get('email')
+        initial_user_h = request.form.get('initial_fd')
         if scenario_id is None or email is None:
             scenario_id = json.loads(request.data)['scenario_id']
             email = json.loads(request.data)['email']
+            initial_user_h = json.loads(request.data)['initial_fd']
         print(scenario_id)
         with open('scenarios.json', 'r') as f:
             scenarios_list = json.load(f)
@@ -195,6 +207,7 @@ class Import(Resource):
 
         # Initialize metadata objects
         interaction_metadata = dict()
+        interaction_metadata['user_hypothesis_history'] = [helpers.StudyMetric(iter_num=current_iter, value=initial_user_h, elapsed_time=0)]
         interaction_metadata['feedback_history'] = dict()
         interaction_metadata['sample_history'] = list()
         for idx in data.index:
@@ -274,7 +287,6 @@ class Import(Resource):
 
         # Return information to the user
         response = {
-            'header': header,
             'project_id': new_project_id,
             'description': scenario['description']
         }
@@ -346,10 +358,12 @@ class Feedback(Resource):
     def post(self):
         # Get the project ID for the interaction and the user's feedback object
         project_id = request.form.get('project_id')
+        current_user_h = request.form.get('current_user_h')
         if project_id is None:
             req = json.loads(request.data)
             project_id = req['project_id']
             feedback_dict = req['feedback']
+            current_user_h = req['current_user_h']
         else:
             feedback_dict = json.loads(request.form.get('feedback'))
 
@@ -399,8 +413,13 @@ class Feedback(Resource):
         print(s_out.index)
         
         # Build feedback map for front-end
+        start_time = pickle.load( open('./store/' + project_id + '/start_time.p', 'rb') )
+        elapsed_time = current_time - start_time
         feedback = list()
         interaction_metadata = pickle.load( open('./store/' + project_id + '/interaction_metadata.p', 'rb') )
+        interaction_metadata['user_hypothesis_history'].append(helpers.StudyMetric(iter_num=current_iter, value=current_user_h, elapsed_time=elapsed_time))
+        pickle.dump( interaction_metadata, open('./store/' + project_id + '/interaction_metadata.p', 'wb') )
+        
         for idx in s_out.index:
             for col in s_out.columns:
                 feedback.append({
@@ -444,31 +463,43 @@ class PostInteraction(Resource):
 
     def post(self):
         # Get the provided email and scenario number
-        email = request.form.get('email')
-        scenario_id = request.form.get('scenario_id')
-        answers = request.form.get('answers')
-        if email is None or scenario_id is None or answers is None:
-            email = json.loads(request.data)['email']
-            scenario_id = json.loads(request.data)['scenario_id']
-            answers = json.loads(request.data)['answers']
+        # email = request.form.get('email')
+        # scenario_id = request.form.get('scenario_id')
+        next_scenario_id = request.form.get('next_scenario_id')
+        # answers = request.form.get('answers')
+        # if email is None or scenario_id is None or answers is None:
+        if next_scenario_id is None:
+            # email = json.loads(request.data)['email']
+            # scenario_id = json.loads(request.data)['scenario_id']
+            next_scenario_id = json.loads(request.data)['next_scenario_id']
+            # answers = json.loads(request.data)['answers']
         
         # Get the user from the users list
-        try:
-            users = pickle.load( open('./study-utils/users.p', 'rb'))
-        except:
-            return {'msg': '[ERROR] users does not exist'}, 400, {'Access-Control-Allow-Origin': '*'}
+        # try:
+        #     users = pickle.load( open('./study-utils/users.p', 'rb'))
+        # except:
+        #     return {'msg': '[ERROR] users does not exist'}, 400, {'Access-Control-Allow-Origin': '*'}
         
         # Save the user's questionnaire responses
-        user = users[email]
-        user.done.append(scenario_id)
-        user.post_questionnaire[scenario_id] = answers
-        users[email] = user
+        # user = users[email]
+        # user.done.append(scenario_id)
+        # user.post_questionnaire[scenario_id] = answers
+        # users[email] = user
         
         # Save the users object updates
-        pickle.dump( users, open('./study-utils/users.p', 'wb') )
+        # pickle.dump( users, open('./study-utils/users.p', 'wb') )
 
-        # Done
-        return '', 201, {'Access-Control-Allow-Origin': '*'}
+        with open('scenarios.json', 'r') as f:
+            scenarios_list = json.load(f)
+        scenario = scenarios_list[next_scenario_id]
+        data = pd.read_csv(scenario['dirty_dataset'])
+        header = [col for col in data.columns]
+
+        response = {
+            'header': header,
+        }
+
+        return response, 200, {'Access-Control-Allow-Origin': '*'}
 
 api.add_resource(Test, '/duo/api')
 api.add_resource(Start, '/duo/api/start')

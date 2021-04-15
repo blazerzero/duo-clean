@@ -12,10 +12,13 @@ import {
     Segment,
     Table,
     Message,
-    Divider
+    Divider,
+    Header,
+    Input
 } from 'semantic-ui-react'
 import { HiMenu, HiSortAscending, HiSortDescending } from 'react-icons/hi'
 import server from '../utils/server'
+import logo from '../images/OSU_horizontal_2C_O_over_B.png'
 
 interface InteractProps {}
 
@@ -31,6 +34,9 @@ export const Interact: FC<InteractProps> = () => {
     const [processing, setProcessing] = useState<boolean>(false)
     const [sortMethod, setSortMethod] = useState<{[key: string]: string}>({})
     const [iterCount, setIterCount] = useState<number>(0)
+    const [fd, setFD] = useState<string>('')
+    const [fdModalOpen, setFDModalOpen] = useState<boolean>(false)
+    const [done, setDone] = useState<boolean>(false)
 
     useEffect(() => {
         setProcessing(true)
@@ -66,14 +72,28 @@ export const Interact: FC<InteractProps> = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
-    const handleDone = () => {
+    const handleDone = async () => {
+        setProcessing(true)
+        // const answers = { fd, durationNeeded }
+        const response: AxiosResponse = await server.post('/post-interaction', {
+            next_scenario_id: scenarios[0].toString(),
+        })
+        const header: string[] = response.data.header
+        // if (response.status === 201) {
+        //     setHeader(response.data.header)
+        //     setQuizDone(true)
+        // } else {
+        //     console.error(response.status)
+        //     console.error(response.data.msg)
+        // }
         const idx: number = scenarios.findIndex((s: number) => s === parseInt(scenario_id))
-        
+        setProcessing(false)
         if (idx === -1) {
             history.push('/post-interaction', {
                 email,
                 scenarios,
                 scenario_id,
+                header,
             })
         }
     }
@@ -132,6 +152,11 @@ export const Interact: FC<InteractProps> = () => {
     }
 
     const handleSubmit = async () => {
+        if (done) {
+            handleDone()
+            return
+        }
+
         setProcessing(true)
         // handle submit
         const fdbck: any = {}
@@ -142,7 +167,8 @@ export const Interact: FC<InteractProps> = () => {
             '/feedback',
             {
                 feedback: fdbck,
-                project_id
+                project_id,
+                current_user_h: fd,
             }
         )
         const { msg } = response.data
@@ -166,6 +192,8 @@ export const Interact: FC<InteractProps> = () => {
             setSortMethod(sorting)
             setProcessing(false)
             setData(prepped_data)
+            setFD('')
+            setFDModalOpen(false)
         }
     }
 
@@ -219,11 +247,34 @@ export const Interact: FC<InteractProps> = () => {
 
     return (
         <Dimmer.Dimmable as={Segment} dimmed={processing}>
+            <Modal
+                onClose={() => {}}
+                onOpen={() => setFDModalOpen(true)}
+                open={fdModalOpen}
+            >
+                <Modal.Content>
+                    <Modal.Description>
+                        <Header>Given all the data you've seen up until this point, what do you think is the primary FD or key holding over the data?</Header>
+                        <p>E.g. facilityname is the key; title and year determine director</p>
+                        <Input
+                            size='large'
+                            placeholder='Enter the FD(s) or key(s) here'
+                            onChange={(_e, props) => setFD(props.value)}
+                            className='input'
+                        />
+                    </Modal.Description>
+                    <Divider style={{ borderColor: 'white' }} />
+                    <Button positive size='big' onClick={handleSubmit}>Submit</Button>
+                </Modal.Content>
+            </Modal>
             <Grid centered stretched={false} columns={1} className='site-page'>
                 <Grid.Column>
                     <Grid.Row className='content-centered'>
+                        <Container className='section' style={{ backgroundColor: 'white', position: 'absolute', top: 0, right: 0, width: '10vw', maxWidth: '500px', height: '8vh', borderBottomLeftRadius: 20 }} >
+                            <img src={logo} style={{ padding: 10, position: 'absolute', top: 0, right: 0, width: '100%', height: 'auto' }} alt='OSU logo' />
+                        </Container>
                         <Container className='home-header box-blur'>
-                            <span className='home-title'>Discovering Violations of Keys and FDs</span>
+                            <span className='home-title'>Discovering Keys and Functional Dependencies</span>
                         </Container>
                     </Grid.Row>
                     <Grid.Row className='content-centered' style={{ paddingBottom: 10 }}>
@@ -304,11 +355,14 @@ export const Interact: FC<InteractProps> = () => {
                     <Grid.Row>
                         <Grid.Column className='content-centered'>
                             <Grid.Row>
-                                <Button positive size='big' onClick={handleSubmit}>Next</Button>
+                                <Button positive size='big' onClick={() => setFDModalOpen(true)}>Next</Button>
                                 <Button
                                     color='grey'
                                     size='big'
-                                    onClick={handleDone}
+                                    onClick={() => {
+                                        setDone(true)
+                                        setFDModalOpen(true)
+                                    }}
                                     disabled={iterCount <= 5}>
                                     I'm All Done
                                 </Button>

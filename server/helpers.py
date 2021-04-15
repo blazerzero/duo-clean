@@ -651,6 +651,7 @@ def pkl2Json(project_id):
                     for idx in obj['feedback_history'].keys():
                         for col in obj['feedback_history'][idx].keys():
                             obj['feedback_history'][idx][col] = [i.asdict() for i in obj['feedback_history'][idx][col]]
+                    obj['user_hypothesis_history'] = [i.asdict() for i in obj['user_hypothesis_history']]
                     obj['sample_history'] = [i.asdict() for i in obj['sample_history']]
                 elif f == 'study_metrics.p':
                     for idx in obj.keys():

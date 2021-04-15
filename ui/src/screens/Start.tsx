@@ -16,9 +16,11 @@ import {
     Table,
     Tab,
     Form,
-    Radio
+    Radio,
+    Input
 } from 'semantic-ui-react'
 import server from '../utils/server'
+import logo from '../images/OSU_horizontal_2C_O_over_B.png'
 
 interface StartProps {}
 
@@ -35,6 +37,8 @@ export const Start: FC<StartProps> = () => {
     const [fdReviewRead, setFDReviewRead] = useState<boolean>(false)
     const [quizDone, setQuizDone] = useState<boolean>(false)
     const [quizAnswersReviewed, setQuizAnswersReviewed] = useState<boolean>(false)
+    const [header, setHeader] = useState<string[]>([])
+    const [fd, setFD] = useState<string>('')
 
     const [q1Response, setQ1Response] = useState<string>('')
     const q1CorrectAnswer = 'name'
@@ -79,7 +83,7 @@ export const Start: FC<StartProps> = () => {
         }
     }
 
-    const handleReady = async () => {
+    const handleQuizDone = async () => {
         setProcessing(true)
         const answers = [
             {
@@ -93,30 +97,35 @@ export const Start: FC<StartProps> = () => {
                 correct: q2CorrectAnswers.includes(q2Response)
             }
         ]
-        const first_scenario: number = scenarios.splice(0, 1) as number
+        const first_scenario: number = scenarios[0] as number
         const response: AxiosResponse = await server.post('/pre-survey', {
             email,
             scenario_id: first_scenario.toString(),
             answers
         })
-        if (response.status === 201) {
-            const response2: AxiosResponse = await server.post('/import', {
-                email,
-                scenario_id: first_scenario.toString(),
-            })
-            const { header, project_id, description } = response2.data
-            history.push('/interact', {
-                email,
-                scenarios,
-                scenario_id: first_scenario.toString(),
-                header,
-                project_id,
-                description
-            })
-        } else {
-            console.error(response.status)
-            console.error(response.data.msg)
-        }
+        setQuizDone(true)
+        setHeader(response.data.header)
+        setProcessing(false)
+    }
+
+    const handleReady = async () => {
+        setProcessing(true)
+        const first_scenario: number = scenarios.splice(0, 1) as number
+        const response: AxiosResponse = await server.post('/import', {
+            email,
+            scenario_id: first_scenario.toString(),
+            initial_fd: fd,
+        })
+        const { project_id, description } = response.data
+        history.push('/interact', {
+            email,
+            scenarios,
+            scenario_id: first_scenario.toString(),
+            header,
+            project_id,
+            description
+        })
+        setProcessing(false)
     }
 
     const fdExampleData = [
@@ -265,8 +274,11 @@ export const Start: FC<StartProps> = () => {
             <Grid centered stretched={false} columns={1} className='site-page home'>
                 <Grid.Column>
                     <Grid.Row>
+                        <Container className='section' style={{ backgroundColor: 'white', position: 'absolute', top: 0, right: 0, width: '10vw', maxWidth: '500px', height: '8vh', borderBottomLeftRadius: 20 }} >
+                            <img src={logo} style={{ padding: 10, position: 'absolute', top: 0, right: 0, width: '100%', height: 'auto' }} alt='OSU logo' />
+                        </Container>
                         <Container className='content-centered home-header box-blur'>
-                            <span className='home-title'>Discovering Violations of Keys and FDs</span>
+                            <span className='home-title'>Discovering Keys and Functional Dependencies</span>
                         </Container>
                         <Message>
                             <Message.Header>
@@ -635,7 +647,7 @@ export const Start: FC<StartProps> = () => {
                                                     </>
                                                 )
                                             ) : (
-                                                <Button positive size='big' disabled={q1Response === '' || q2Response === ''} onClick={() => setQuizDone(true)}>Submit</Button>
+                                                <Button positive size='big' disabled={q1Response === '' || q2Response === ''} onClick={handleQuizDone}>Submit</Button>
                                             )
                                         }
                                         
@@ -717,18 +729,34 @@ export const Start: FC<StartProps> = () => {
                                         </p>
                                         <p>
                                             One round is defined as giving feedback by marking any cells you believe are part
-                                            of violations and clicking "Next."
+                                            of violations, clicking "Next," and letting us know what you think the dominant
+                                            FD is over the data given everything you've seen so far.
                                         </p>
                                         <p>
                                             <strong>NOTE: </strong>
                                             You do not need to worry about knowing or finding the right value for a cell! This is
                                             not an error detection problem. Your goal is just to find violations of FDs or keys.
                                         </p>
+                                        <Message>
+                                            <Message.Header>
+                                                <h3>
+                                                    This dataset has the following attributes: [{header.join(', ')}]. Given this
+                                                    schema, what do you think should be the primary FD(s) that holds over this dataset?
+                                                </h3>
+                                            </Message.Header>
+                                            <p>E.g. facilityname is the key; title and year determine director</p>
+                                            <Input
+                                                size='large'
+                                                placeholder='Enter the FD(s) or key(s) here'
+                                                onChange={(_e, props) => setFD(props.value)}
+                                                className='input'
+                                            />
+                                        </Message>
                                         {
                                             dataOverviewRead ? (
                                                 <Message color='green'><p>Scroll Down</p></Message>
                                             ) : (
-                                                <Button positive size='big' onClick={() => setDataOverviewRead(true)}>Got It</Button>
+                                                <Button positive size='big' onClick={() => setDataOverviewRead(true)}>Continue</Button>
                                             )
                                         }
                                         {
@@ -737,7 +765,7 @@ export const Start: FC<StartProps> = () => {
                                                     <Divider />
                                                     <Message info>
                                                         <Message.Header>
-                                                            When you're ready to begin working on your first dataset, click "Let's Go" below.
+                                                            When you're ready to begin, click "Let's Go" below.
                                                         </Message.Header>
                                                     </Message>
                                                     <Button positive size='big' onClick={handleReady}>Let's Go!</Button>

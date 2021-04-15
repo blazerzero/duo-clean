@@ -72,6 +72,8 @@ if __name__ == '__main__':
             h['score'] = 1
             support, vios = helpers.getSupportAndVios(clean_data, None, h['cfd'])
             h['conf'] = (len(support) - len(vios)) / len(support)
+            # console.log(fd['cfd'])
+            # console.log(vios)
             clean_h_space.append(h)
         
         scenario['min_conf'] = min_conf

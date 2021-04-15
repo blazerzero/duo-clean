@@ -10,9 +10,11 @@ import {
     Container,
     Grid,
     Dimmer,
-    Segment
+    Segment,
+    Image
 } from 'semantic-ui-react'
 import server from '../utils/server'
+import logo from '../images/OSU_horizontal_2C_O_over_B.png'
 
 interface WelcomeProps {}
 
@@ -56,8 +58,11 @@ export const Welcome: FC<WelcomeProps> = () => {
             <Grid centered stretched={false} columns={1} className='site-page home'>
                 <Grid.Column>
                     <Grid.Row className='content-centered'>
+                        <Container className='section' style={{ backgroundColor: 'white', position: 'absolute', top: 0, right: 0, width: '10vw', maxWidth: '500px', height: '8vh', borderBottomLeftRadius: 20 }} >
+                            <img src={logo} style={{ padding: 10, position: 'absolute', top: 0, right: 0, width: '100%', height: 'auto' }} alt='OSU logo' />
+                        </Container> 
                         <Container className='home-header box-blur'>
-                            <span className='home-title'>Discovering Violations of Keys and FDs</span>
+                            <span className='home-title'>Discovering Keys and Functional Dependencies</span>
                         </Container>
                         <Form>
                             <Form.Field>
