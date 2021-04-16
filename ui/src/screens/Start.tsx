@@ -297,7 +297,7 @@ export const Start: FC<StartProps> = () => {
                             </Message.Header>
                             <p>
                                 We are analyzing and aim to model how users learn data quality rules and patterns
-                                (e.g. functional dependencies) that apply over datasets.
+                                (i.e. functional dependencies) that apply over datasets.
                             </p>
                         </Message>
                     </Grid.Row>
