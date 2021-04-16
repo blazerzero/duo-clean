@@ -45,7 +45,7 @@ export const Start: FC<StartProps> = () => {
     const [q2Response, setQ2Response] = useState<string>('')
     const q2CorrectAnswers = ['5_305', '7_305', '5_FL', '7_CA']
     const scenarioDetails: {[key: number]: {[key: string]: string | null }} = {
-        6: {
+        15: {
             domain: 'Movie',
             info: `
             This dataset describes information about various English-language movies and TV shows,
@@ -63,7 +63,7 @@ export const Start: FC<StartProps> = () => {
             `,
             note: 'Some airfields have no manager, and these are listed with a manager value of "NO MANAGER."'
         },
-        10: {
+        14: {
             domain: 'Movie',
             info: `
             This dataset describes information about various English-language movies and TV shows,
@@ -73,6 +73,15 @@ export const Start: FC<StartProps> = () => {
             note: null
         },
         11: {
+            domain: 'Airport',
+            info: `
+            This dataset describes information about various airports and airfields, including the name of
+            the airfield, the person, group, or entity that owns the airfield, and the person, group, or
+            entity that owns the airfield.
+            `,
+            note: 'Some airfields have no manager, and these are listed with a manager value of "NO MANAGER."'
+        },
+        13: {
             domain: 'Airport',
             info: `
             This dataset describes information about various airports and airfields, including the name of

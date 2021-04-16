@@ -40,7 +40,7 @@ export const PostInteraction: FC<PostInteractionProps> = () => {
     // const [header, setHeader] = useState<string[]>([])
 
     const scenarioDetails: {[key: number]: {[key: string]: string | null }} = {
-        6: {
+        15: {
             domain: 'Movie',
             info: `
             This dataset describes information about various English-language movies and TV shows,
@@ -58,7 +58,7 @@ export const PostInteraction: FC<PostInteractionProps> = () => {
             `,
             note: 'Some airfields have no manager, and these are listed with a manager value of "NO MANAGER."'
         },
-        10: {
+        14: {
             domain: 'Movie',
             info: `
             This dataset describes information about various English-language movies and TV shows,
@@ -68,6 +68,15 @@ export const PostInteraction: FC<PostInteractionProps> = () => {
             note: null
         },
         11: {
+            domain: 'Airport',
+            info: `
+            This dataset describes information about various airports and airfields, including the name of
+            the airfield, the person, group, or entity that owns the airfield, and the person, group, or
+            entity that owns the airfield.
+            `,
+            note: 'Some airfields have no manager, and these are listed with a manager value of "NO MANAGER."'
+        },
+        13: {
             domain: 'Airport',
             info: `
             This dataset describes information about various airports and airfields, including the name of
