@@ -133,7 +133,7 @@ export const PostInteraction: FC<PostInteractionProps> = () => {
                             <img src={logo} style={{ padding: 10, position: 'absolute', top: 0, right: 0, width: '100%', height: 'auto' }} alt='OSU logo' />
                         </Container>
                         <Container className='content-centered home-header box-blur'>
-                            <span className='home-title'>Discovering Keys and Functional Dependencies</span>
+                            <span className='home-title'>Discovering Functional Dependencies</span>
                         </Container>
                         <Message success>
                             <Message.Header>
@@ -254,7 +254,7 @@ export const PostInteraction: FC<PostInteractionProps> = () => {
                                 <p>
                                     <strong>NOTE: </strong>
                                     You do not need to worry about knowing or finding the right value for a cell! This is
-                                    not an error detection problem. Your goal is just to find violations of FDs or keys.
+                                    not an error detection problem. Your goal is just to find violations of FDs.
                                 </p>
                                 <Message>
                                     <Message.Header>
@@ -266,7 +266,7 @@ export const PostInteraction: FC<PostInteractionProps> = () => {
                                     <p>E.g. facilityname is the key; title and year determine director</p>
                                     <Input
                                         size='large'
-                                        placeholder='Enter the FD(s) or key(s) here'
+                                        placeholder='Enter the FD(s) here'
                                         onChange={(_e, props) => setNextFD(props.value)}
                                         className='input'
                                     />

@@ -287,7 +287,7 @@ export const Start: FC<StartProps> = () => {
                             <img src={logo} style={{ padding: 10, position: 'absolute', top: 0, right: 0, width: '100%', height: 'auto' }} alt='OSU logo' />
                         </Container>
                         <Container className='content-centered home-header box-blur'>
-                            <span className='home-title'>Discovering Keys and Functional Dependencies</span>
+                            <span className='home-title'>Discovering Functional Dependencies</span>
                         </Container>
                         <Message>
                             <Message.Header>
@@ -297,7 +297,7 @@ export const Start: FC<StartProps> = () => {
                             </Message.Header>
                             <p>
                                 We are analyzing and aim to model how users learn data quality rules and patterns
-                                (i.e. keys and functional dependencies) that apply over datasets.
+                                (e.g. functional dependencies) that apply over datasets.
                             </p>
                         </Message>
                     </Grid.Row>
@@ -309,14 +309,12 @@ export const Start: FC<StartProps> = () => {
                             </Message.Header>
                             <Divider />
                             <p>
-                                You will be tasked with detecting and marking violations of keys or 
-                                functional dependencies (FDs) in some datasets.
+                                You will be tasked with detecting and marking violations of functional dependencies (FDs) in some datasets.
                             </p>
                             <p>
                                 You will be interacting with four different datasets that may contain
-                                violations of one or more keys or FDs. Your job will be to think about
-                                the key(s) or FD(s) that exist in the dataset and find exceptions to
-                                those rules.
+                                violations of one or more FDs. Your job will be to figure out
+                                the dominant FD in the dataset and find exceptions to the FD.
                             </p>
                             {
                                 yourRoleRead ? (
@@ -342,7 +340,7 @@ export const Start: FC<StartProps> = () => {
                                 <Grid.Row>
                                     <Message>
                                         <Message.Header>
-                                            <h2>Let's Review FDs and Keys</h2>
+                                            <h2>Let's Review Functional Dependencies</h2>
                                         </Message.Header>
                                         <Divider />
                                         <Message info>
@@ -409,7 +407,7 @@ export const Start: FC<StartProps> = () => {
                                             </Message.Header>
                                             <p>
                                                 If a tuple contains values that do not align with the rest of the dataset with
-                                                respect to an FD or key (e.g. a tuple has a different value for "state" than any
+                                                respect to an FD (e.g. a tuple has a different value for "state" than any
                                                 other tuples with same area code value), the tuple is said to <strong>violate</strong> the FD or key.
                                             </p>
                                         </Message>
@@ -470,7 +468,7 @@ export const Start: FC<StartProps> = () => {
                                             <h2>Knowledge Check</h2>
                                         </Message.Header>
                                         <Divider />
-                                        <p>In the following table, which attribute is the key?</p>
+                                        <p>In the following table, which attribute is the key (i.e. which attribute functionally determines all other attributes)?</p>
                                         {
                                             quizDone && (
                                                 <Message positive={q1Response === q1CorrectAnswer} negative={q1Response !== q1CorrectAnswer}>
@@ -745,7 +743,7 @@ export const Start: FC<StartProps> = () => {
                                         <p>
                                             <strong>NOTE: </strong>
                                             You do not need to worry about knowing or finding the right value for a cell! This is
-                                            not an error detection problem. Your goal is just to find violations of FDs or keys.
+                                            not an error detection problem. Your goal is just to find violations of FDs.
                                         </p>
                                         <Message>
                                             <Message.Header>
@@ -757,7 +755,7 @@ export const Start: FC<StartProps> = () => {
                                             <p>E.g. facilityname is the key; title and year determine director</p>
                                             <Input
                                                 size='large'
-                                                placeholder='Enter the FD(s) or key(s) here'
+                                                placeholder='Enter the FD(s) here'
                                                 onChange={(_e, props) => setFD(props.value)}
                                                 className='input'
                                             />

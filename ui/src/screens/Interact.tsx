@@ -260,11 +260,11 @@ export const Interact: FC<InteractProps> = () => {
             >
                 <Modal.Content>
                     <Modal.Description>
-                        <Header>Given all the data you've seen up until this point, what do you think is the primary FD or key holding over the data?</Header>
+                        <Header>Given all the data you've seen up until this point, what do you think is the primary FD holding over the data?</Header>
                         <p>E.g. facilityname is the key; title and year determine director</p>
                         <Input
                             size='large'
-                            placeholder='Enter the FD(s) or key(s) here'
+                            placeholder='Enter the FD(s) here'
                             onChange={(_e, props) => setFD(props.value)}
                             className='input'
                         />
@@ -280,7 +280,7 @@ export const Interact: FC<InteractProps> = () => {
                             <img src={logo} style={{ padding: 10, position: 'absolute', top: 0, right: 0, width: '100%', height: 'auto' }} alt='OSU logo' />
                         </Container>
                         <Container className='home-header box-blur'>
-                            <span className='home-title'>Discovering Keys and Functional Dependencies</span>
+                            <span className='home-title'>Discovering Functional Dependencies</span>
                         </Container>
                     </Grid.Row>
                     <Grid.Row className='content-centered' style={{ paddingBottom: 10 }}>
@@ -294,7 +294,7 @@ export const Interact: FC<InteractProps> = () => {
                     <Grid.Row className='content-centered'>
                         <Message color='yellow'>
                             <Message.Header><h3>Remember!</h3></Message.Header>
-                            <p>Yellow cells indicate cells you marked as violations of a key or FD.</p>
+                            <p>Yellow cells indicate cells you marked as violations of an FD.</p>
                         </Message>
                     </Grid.Row>
                     <Divider />

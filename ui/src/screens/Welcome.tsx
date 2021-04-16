@@ -62,7 +62,7 @@ export const Welcome: FC<WelcomeProps> = () => {
                             <img src={logo} style={{ padding: 10, position: 'absolute', top: 0, right: 0, width: '100%', height: 'auto' }} alt='OSU logo' />
                         </Container> 
                         <Container className='home-header box-blur'>
-                            <span className='home-title'>Discovering Keys and Functional Dependencies</span>
+                            <span className='home-title'>Discovering Functional Dependencies</span>
                         </Container>
                         <Form>
                             <Form.Field>
