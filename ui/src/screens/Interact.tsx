@@ -75,10 +75,16 @@ export const Interact: FC<InteractProps> = () => {
     const handleDone = async () => {
         setProcessing(true)
         // const answers = { fd, durationNeeded }
-        const response: AxiosResponse = await server.post('/post-interaction', {
-            next_scenario_id: scenarios[0].toString(),
-        })
-        const header: string[] = response.data.header
+        let header: string[]
+        if (scenarios.length > 0) {
+            const response: AxiosResponse = await server.post('/post-interaction', {
+                next_scenario_id: scenarios[0].toString(),
+            })
+            header = response.data.header
+        } else {
+            header = []
+        }
+        
         // if (response.status === 201) {
         //     setHeader(response.data.header)
         //     setQuizDone(true)
@@ -264,7 +270,7 @@ export const Interact: FC<InteractProps> = () => {
                         />
                     </Modal.Description>
                     <Divider style={{ borderColor: 'white' }} />
-                    <Button positive size='big' onClick={handleSubmit}>Submit</Button>
+                    <Button positive size='big' onClick={handleSubmit} disabled={fd.length === 0}>Submit</Button>
                 </Modal.Content>
             </Modal>
             <Grid centered stretched={false} columns={1} className='site-page'>

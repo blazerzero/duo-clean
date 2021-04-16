@@ -248,7 +248,8 @@ export const PostInteraction: FC<PostInteractionProps> = () => {
                                 </p>
                                 <p>
                                     One round is defined as giving feedback by marking any cells you believe are part
-                                    of violations and clicking "Next."
+                                    of violations, clicking "Next," and letting us know what you think the dominant
+                                    FD is over the data given everything you've seen so far.
                                 </p>
                                 <p>
                                     <strong>NOTE: </strong>
@@ -274,7 +275,7 @@ export const PostInteraction: FC<PostInteractionProps> = () => {
                                     dataOverviewRead ? (
                                         <Message color='green'><p>Scroll Down</p></Message>
                                     ) : (
-                                        <Button positive size='big' onClick={() => setDataOverviewRead(true)}>Continue</Button>
+                                        <Button positive size='big' onClick={() => setDataOverviewRead(true)} disabled={nextFD.length === 0}>Continue</Button>
                                     )
                                 }
                                 {

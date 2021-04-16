@@ -116,10 +116,10 @@ omdb_14(title: $t2, year: $y2, genre: $g2, type: $ty2),
                 <strategy charsToSwitch="3">TypoSwitchValue</strategy>
             </defaultStrategy> 
             <attributeStrategy>
-                <attribute table="omdb_10" name="genre">
+                <attribute table="omdb_14" name="genre">
                     <strategy>TypoActiveDomain</strategy>
                 </attribute>
-                <attribute table="omdb_10" name="type">
+                <attribute table="omdb_14" name="type">
                     <strategy>TypoActiveDomain</strategy>
                 </attribute>
             </attributeStrategy>

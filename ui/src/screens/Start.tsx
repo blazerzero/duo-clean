@@ -685,8 +685,9 @@ export const Start: FC<StartProps> = () => {
                                             again to unhighlight and unmark it.
                                         </p>
                                         <p>
-                                            To submit your marks for that round, click "Next," and you'll be presented with
-                                            a new sample from the dataset. If you don't see anything that should be marked,
+                                            To submit your marks for that round, click "Next" and let us know what you
+                                            think is the dominant FD over the dataset given what you've seen so far, and you'll be
+                                            presented with a new sample from the dataset. If you don't see anything that should be marked,
                                             you don't have to mark anything, and you can just click "Next" to get a fresh sample.
                                         </p>
                                         <p>
@@ -697,7 +698,7 @@ export const Start: FC<StartProps> = () => {
                                         </p>
                                         <p>
                                             If you have no more feedback left to give for the dataset or are otherwise
-                                            done giving feedback, click "Done" to finish working with the dataset.
+                                            done giving feedback, click "I'm All Done" to finish working with the dataset.
                                         </p>
                                         {
                                             interfaceGuideRead ? (
@@ -765,7 +766,7 @@ export const Start: FC<StartProps> = () => {
                                             dataOverviewRead ? (
                                                 <Message color='green'><p>Scroll Down</p></Message>
                                             ) : (
-                                                <Button positive size='big' onClick={() => setDataOverviewRead(true)}>Continue</Button>
+                                                <Button positive size='big' onClick={() => setDataOverviewRead(true)} disabled={fd.length === 0}>Continue</Button>
                                             )
                                         }
                                         {
