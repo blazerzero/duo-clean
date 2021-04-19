@@ -261,6 +261,7 @@ export const Interact: FC<InteractProps> = () => {
                     <Modal.Description>
                         <Header>Given all the data you've seen up until this point, what do you think is the primary FD holding over the data?</Header>
                         <p>E.g. facilityname determines type and owner; title and year determine director</p>
+                        <p><strong>REMINDER: </strong>The schema you're working with is [{header.join(', ')}].</p>
                         <Input
                             size='large'
                             placeholder='Enter the FD(s) here'
