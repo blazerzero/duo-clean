@@ -417,7 +417,7 @@ class Feedback(Resource):
         elapsed_time = current_time - start_time
         feedback = list()
         interaction_metadata = pickle.load( open('./store/' + project_id + '/interaction_metadata.p', 'rb') )
-        interaction_metadata['user_hypothesis_history'].append(helpers.StudyMetric(iter_num=current_iter, value=current_user_h, elapsed_time=elapsed_time))
+        interaction_metadata['user_hypothesis_history'].append(helpers.StudyMetric(iter_num=current_iter-1, value=current_user_h, elapsed_time=elapsed_time))   # current iter - 1 because it's for the prev iter (i.e. before incrementing current_iter)
         pickle.dump( interaction_metadata, open('./store/' + project_id + '/interaction_metadata.p', 'wb') )
         
         for idx in s_out.index:
