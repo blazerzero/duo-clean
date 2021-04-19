@@ -406,15 +406,15 @@ export const Start: FC<StartProps> = () => {
                                                 <h3>What is a violation?</h3>
                                             </Message.Header>
                                             <p>
-                                                If a tuple contains values that do not align with the rest of the dataset with
-                                                respect to an FD (e.g. a tuple has a different value for "state" than any
-                                                other tuples with same area code value), the tuple is said to <strong>violate</strong> the FD.
+                                                If a cell in a tuple has a value that does not align with the rest of the dataset with
+                                                respect to an FD (e.g. a cell in the "state" column has a different values than the "state" cell in any
+                                                other tuples with same area code value), the cell is said to be part of a <strong>violation</strong> of the FD.
                                             </p>
                                         </Message>
                                         <p>
                                             Let's see the same dataset again. Here, the two tuples with the address "800 6th Ave" (highlighted below)
-                                            form a violation of the FD <strong>{'(address) => city, state, zip'}</strong>, as two addresses with the
-                                            same city and ZIP code have different states listed.
+                                            have a violation of the FD <strong>{'(address) => city, state, zip'}</strong> present in the zip attribute,
+                                            as two addresses with the same city and ZIP code have different states listed.
                                         </p>
                                         <Table>
                                             <Table.Header>
