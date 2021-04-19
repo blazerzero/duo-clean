@@ -179,7 +179,6 @@ export const Interact: FC<InteractProps> = () => {
         )
         const { msg } = response.data
         if (msg === '[DONE]') {
-            alert('')
             handleDone()
         } else {
             const { sample } = response.data
