@@ -270,6 +270,7 @@ export const PostInteraction: FC<PostInteractionProps> = () => {
                                         </h3>
                                     </Message.Header>
                                     <p>E.g. facilityname determines type and owner; title and year determine director</p>
+                                    <p><strong>NOTE: </strong>If you're not sure yet, you can leave this empty.</p>
                                     <Input
                                         size='large'
                                         placeholder='Enter the FD(s) here'
