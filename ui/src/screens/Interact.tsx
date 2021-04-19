@@ -261,7 +261,7 @@ export const Interact: FC<InteractProps> = () => {
                 <Modal.Content>
                     <Modal.Description>
                         <Header>Given all the data you've seen up until this point, what do you think is the primary FD holding over the data?</Header>
-                        <p>E.g. facilityname is the key; title and year determine director</p>
+                        <p>E.g. facilityname determines type and owner; title and year determine director</p>
                         <Input
                             size='large'
                             placeholder='Enter the FD(s) here'

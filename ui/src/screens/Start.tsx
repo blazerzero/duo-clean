@@ -408,7 +408,7 @@ export const Start: FC<StartProps> = () => {
                                             <p>
                                                 If a tuple contains values that do not align with the rest of the dataset with
                                                 respect to an FD (e.g. a tuple has a different value for "state" than any
-                                                other tuples with same area code value), the tuple is said to <strong>violate</strong> the FD or key.
+                                                other tuples with same area code value), the tuple is said to <strong>violate</strong> the FD.
                                             </p>
                                         </Message>
                                         <p>
@@ -468,7 +468,7 @@ export const Start: FC<StartProps> = () => {
                                             <h2>Knowledge Check</h2>
                                         </Message.Header>
                                         <Divider />
-                                        <p>In the following table, which attribute is the key (i.e. which attribute functionally determines all other attributes)?</p>
+                                        <p>In the following table, which of the following FDs is the primary FD over this dataset?</p>
                                         {
                                             quizDone && (
                                                 <Message positive={q1Response === q1CorrectAnswer} negative={q1Response !== q1CorrectAnswer}>
@@ -516,7 +516,7 @@ export const Start: FC<StartProps> = () => {
                                         <Form>
                                             <Form.Field>
                                                 <Radio
-                                                    label='areacode'
+                                                    label='areacode determines all other attributes'
                                                     name='q1RadioGroup'
                                                     value='areacode'
                                                     checked={q1Response === 'areacode'}
@@ -528,7 +528,7 @@ export const Start: FC<StartProps> = () => {
                                                     quizDone ? (
                                                         <Radio
                                                             style={{ border: '2px solid green', padding: 10 }}
-                                                            label='name'
+                                                            label='name determines all other attributes'
                                                             name='q1RadioGroup'
                                                             value='name'
                                                             checked={q1Response === 'name'}
@@ -536,7 +536,7 @@ export const Start: FC<StartProps> = () => {
                                                         />
                                                     ) : (
                                                         <Radio
-                                                            label='name'
+                                                            label='name determines all other attributes'
                                                             name='q1RadioGroup'
                                                             value='name'
                                                             checked={q1Response === 'name'}
@@ -547,7 +547,7 @@ export const Start: FC<StartProps> = () => {
                                             </Form.Field>
                                             <Form.Field>
                                                 <Radio
-                                                    label='The combination of areacode and state'
+                                                    label='areacode and state determine all other attributes'
                                                     name='q1RadioGroup'
                                                     value='combo'
                                                     checked={q1Response === 'combo'}
@@ -556,7 +556,7 @@ export const Start: FC<StartProps> = () => {
                                             </Form.Field>
                                             <Form.Field>
                                                 <Radio
-                                                    label='zip'
+                                                    label='zip determines all other attributes'
                                                     name='q1RadioGroup'
                                                     value='zip'
                                                     checked={q1Response === 'zip'}
@@ -752,7 +752,8 @@ export const Start: FC<StartProps> = () => {
                                                     schema, what do you think should be the primary FD(s) that holds over this dataset?
                                                 </h3>
                                             </Message.Header>
-                                            <p>E.g. facilityname is the key; title and year determine director</p>
+                                            <p>E.g. facilityname determines type and owner; title and year determine director</p>
+                                            <p>If you're not sure, you can leave this empty.</p>
                                             <Input
                                                 size='large'
                                                 placeholder='Enter the FD(s) here'
@@ -764,7 +765,7 @@ export const Start: FC<StartProps> = () => {
                                             dataOverviewRead ? (
                                                 <Message color='green'><p>Scroll Down</p></Message>
                                             ) : (
-                                                <Button positive size='big' onClick={() => setDataOverviewRead(true)} disabled={fd.length === 0}>Continue</Button>
+                                                <Button positive size='big' onClick={() => setDataOverviewRead(true)}>Continue</Button>
                                             )
                                         }
                                         {

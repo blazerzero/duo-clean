@@ -140,8 +140,11 @@ export const PostInteraction: FC<PostInteractionProps> = () => {
                                 <h1>Scenario Complete</h1>
                             </Message.Header>
                             <p>
-                                You completed a scenario! We just have a couple of questions
-                                about your thinking process throughout your interaction with the dataset.
+                                {
+                                    scenarios.length > 0
+                                    ? `You completed a scenario! Let's take a look at your next dataset now.`
+                                    : `You completed your last scenario!`
+                                }
                             </p>
                         </Message>
                     </Grid.Row>
@@ -228,6 +231,9 @@ export const PostInteraction: FC<PostInteractionProps> = () => {
                         scenarios.length > 0 ? (
                             <Message>
                                 <Message.Header>
+                                    {/* {
+                                        scenarios.length > 1 ? 'Your Next Dataset' : 'Your Last Dataset'
+                                    } */}
                                     <h2>Your Next Dataset</h2>
                                 </Message.Header>
                                 <Divider />
@@ -263,7 +269,7 @@ export const PostInteraction: FC<PostInteractionProps> = () => {
                                             schema, what do you think should be the primary FD(s) that holds over this dataset?
                                         </h3>
                                     </Message.Header>
-                                    <p>E.g. facilityname is the key; title and year determine director</p>
+                                    <p>E.g. facilityname determines type and owner; title and year determine director</p>
                                     <Input
                                         size='large'
                                         placeholder='Enter the FD(s) here'
