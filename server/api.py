@@ -1,4 +1,5 @@
 import json, os, time, pickle, math, logging
+import random
 from pprint import pprint
 from random import shuffle
 from datetime import datetime
@@ -21,6 +22,8 @@ app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
 api = Api(app)
 logging.getLogger('flask_cors').level = logging.DEBUG
+
+TOTAL_SCENARIOS = 5
 
 class User(object):
     def __init__(self):
@@ -167,15 +170,6 @@ class Import(Resource):
             email = json.loads(request.data)['email']
             initial_user_h = json.loads(request.data)['initial_fd']
         print(scenario_id)
-        with open('scenarios.json', 'r') as f:
-            scenarios_list = json.load(f)
-        scenario = scenarios_list[scenario_id]
-        target_fd = scenario['target_fd']
-        project_info = {
-            'email': email,
-            'scenario_id': scenario_id,
-            'scenario': scenario
-        }
 
         # Get the user from the users list
         try:
@@ -189,10 +183,29 @@ class Import(Resource):
         
         user = users[email]
         user.scenarios = user.scenarios[1:]
+        user_interaction_number = TOTAL_SCENARIOS - len(user.scenarios)
         users[email] = user
 
         # Save the users object updates
         pickle.dump( users, open('./study-utils/users.p', 'wb') )
+
+        with open('scenarios.json', 'r') as f:
+            scenarios_list = json.load(f)
+        scenario = scenarios_list[scenario_id]
+        if user_interaction_number > 3:
+            target_h_sample_ratio = 0.2
+            alt_h_sample_ratio = 0.6
+        else:
+            target_h_sample_ratio = 0.5
+            alt_h_sample_ratio = 0.3
+        scenario['target_h_sample_ratio'] = target_h_sample_ratio
+        scenario['alt_h_sample_ratio'] = alt_h_sample_ratio
+        target_fd = scenario['target_fd']
+        project_info = {
+            'email': email,
+            'scenario_id': scenario_id,
+            'scenario': scenario
+        }
 
         with open(new_project_dir + '/project_info.json', 'w') as f:
             json.dump(project_info, f, indent=4)
@@ -201,12 +214,14 @@ class Import(Resource):
 
         data = pd.read_csv(scenario['dirty_dataset'])
         header = [col for col in data.columns]
+        random.shuffle(header)
 
         # Initialize the iteration counter
         current_iter = 0
 
         # Initialize metadata objects
         interaction_metadata = dict()
+        interaction_metadata['header'] = header
         interaction_metadata['user_hypothesis_history'] = [helpers.StudyMetric(iter_num=current_iter, value=initial_user_h, elapsed_time=0)]
         interaction_metadata['feedback_history'] = dict()
         interaction_metadata['sample_history'] = list()

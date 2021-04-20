@@ -259,8 +259,7 @@ export const Interact: FC<InteractProps> = () => {
             >
                 <Modal.Content>
                     <Modal.Description>
-                        <Header>Given all the data you've seen up until this point, what do you think is the primary FD holding over the data?</Header>
-                        <p>E.g. facilityname determines type and owner; title and year determine director</p>
+                        <Header>Given all the data you've seen up until this point, what rule are you most confident holds over the data?</Header>
                         <p><strong>REMINDER: </strong>The schema you're working with is [{header.join(', ')}].</p>
                         <Input
                             size='large'
@@ -280,7 +279,7 @@ export const Interact: FC<InteractProps> = () => {
                             <img src={logo} style={{ padding: 10, position: 'absolute', top: 0, right: 0, width: '100%', height: 'auto' }} alt='OSU logo' />
                         </Container>
                         <Container className='home-header box-blur'>
-                            <span className='home-title'>Discovering Functional Dependencies</span>
+                            <span className='home-title'>Discovering Rules and Patterns in Data</span>
                         </Container>
                     </Grid.Row>
                     <Grid.Row className='content-centered' style={{ paddingBottom: 10 }}>
@@ -294,7 +293,7 @@ export const Interact: FC<InteractProps> = () => {
                     <Grid.Row className='content-centered'>
                         <Message color='yellow'>
                             <Message.Header><h3>Remember!</h3></Message.Header>
-                            <p>Yellow cells indicate cells you marked as violations of an FD.</p>
+                            <p>Yellow cells indicate cells you marked as part of an exception to a rule.</p>
                         </Message>
                     </Grid.Row>
                     <Divider />
@@ -329,8 +328,8 @@ export const Interact: FC<InteractProps> = () => {
                                             Object.entries(data).map(([_, row], i) => (
                                                 <Table.Row key={row.id}>
                                                 {
-                                                    Object.keys(row).map((j) => {
-                                                        if (j === 'id') return
+                                                    header.map((j: string) => {
+                                                        // if (j === 'id') return
                                                         var key = `${i}_${j}`
                                                         return feedbackMap[i][j] ? (
                                                             <Table.Cell
@@ -369,7 +368,7 @@ export const Interact: FC<InteractProps> = () => {
                                         setDone(true)
                                         setFDModalOpen(true)
                                     }}
-                                    disabled={iterCount <= 5}>
+                                    disabled={iterCount <= 6}>
                                     I'm All Done
                                 </Button>
                             </Grid.Row>

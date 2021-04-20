@@ -133,7 +133,7 @@ export const PostInteraction: FC<PostInteractionProps> = () => {
                             <img src={logo} style={{ padding: 10, position: 'absolute', top: 0, right: 0, width: '100%', height: 'auto' }} alt='OSU logo' />
                         </Container>
                         <Container className='content-centered home-header box-blur'>
-                            <span className='home-title'>Discovering Functional Dependencies</span>
+                            <span className='home-title'>Discovering Rules and Patterns in Data</span>
                         </Container>
                         <Message success>
                             <Message.Header>
@@ -249,24 +249,11 @@ export const PostInteraction: FC<PostInteractionProps> = () => {
                                     )
                                 }
                                 <Divider />
-                                <p>
-                                    You'll have up to 15 rounds to give feedback before moving on to the next dataset.
-                                </p>
-                                <p>
-                                    One round is defined as giving feedback by marking any cells you believe are part
-                                    of violations, clicking "Next," and letting us know what you think the dominant
-                                    FD is over the data given everything you've seen so far.
-                                </p>
-                                <p>
-                                    <strong>NOTE: </strong>
-                                    You do not need to worry about knowing or finding the right value for a cell! This is
-                                    not an error detection problem. Your goal is just to find violations of FDs.
-                                </p>
                                 <Message>
                                     <Message.Header>
                                         <h3>
                                             This dataset has the following attributes: [{header.join(', ')}]. Given this
-                                            schema, what do you think should be the primary FD(s) that holds over this dataset?
+                                            schema, what rule are you most confident holds over this dataset?
                                         </h3>
                                     </Message.Header>
                                     <p>E.g. facilityname determines type and owner; title and year determine director</p>
@@ -274,7 +261,7 @@ export const PostInteraction: FC<PostInteractionProps> = () => {
                                     <Input
                                         size='large'
                                         placeholder='Enter the FD(s) here'
-                                        onChange={(_e, props) => setNextFD(props.value)}
+                                        onChange={(_e, props) => setFD(props.value)}
                                         className='input'
                                     />
                                 </Message>

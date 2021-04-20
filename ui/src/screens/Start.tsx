@@ -31,11 +31,11 @@ export const Start: FC<StartProps> = () => {
     const { email, scenarios } = location.state as any
 
     const [processing, setProcessing] = useState<boolean>(false)
-    const [yourRoleRead, setYourRoleRead] = useState<boolean>(false)
     const [interfaceGuideRead, setInterfaceGuideRead] = useState<boolean>(false)
     const [dataOverviewRead, setDataOverviewRead] = useState<boolean>(false)
     const [fdReviewRead, setFDReviewRead] = useState<boolean>(false)
-    const [quizDone, setQuizDone] = useState<boolean>(false)
+    const [quizQ1Done, setQuizQ1Done] = useState<boolean>(false)
+    const [quizFullDone, setQuizFullDone] = useState<boolean>(false)
     const [quizAnswersReviewed, setQuizAnswersReviewed] = useState<boolean>(false)
     const [header, setHeader] = useState<string[]>([])
     const [fd, setFD] = useState<string>('')
@@ -112,7 +112,7 @@ export const Start: FC<StartProps> = () => {
             scenario_id: first_scenario.toString(),
             answers
         })
-        setQuizDone(true)
+        setQuizFullDone(true)
         setHeader(response.data.header)
         setProcessing(false)
     }
@@ -186,42 +186,36 @@ export const Start: FC<StartProps> = () => {
         {
             name: 'Michael',
             areacode: 503,
-            phone: 1111111,
             state: 'OR',
             zip: 97007
         },
         {
             name: 'Nate',
             areacode: 206,
-            phone: 3333333,
             state: 'WA',
             zip: 98802
         },
         {
             name: 'Leilani',
             areacode: 808,
-            phone: 4444444,
             state: 'HI',
             zip: 96850
         },
         {
-            name: 'Mitchell',
+            name: 'Tobias',
             areacode: 541,
-            phone: 1234567,
             state: 'OR',
             zip: 97401
         },
         {
             name: 'Samantha',
             areacode: 206,
-            phone: 4353245,
             state: 'WA',
             zip: 43153
         },
         {
-            name: 'Mitchell',
+            name: 'Tobias',
             areacode: 541,
-            phone: 1234567,
             state: 'OR',
             zip: 97401
         },
@@ -229,50 +223,38 @@ export const Start: FC<StartProps> = () => {
 
     const q2Data = [
         {
-            id: 2,
             name: 'Darrell',
             areacode: 775,
-            phone: 1354785,
             state: 'NV',
             zip: 89501
         },
         {
-            id: 3,
             name: 'Henry',
             areacode: 404,
-            phone: 8546984,
             state: 'GA',
             zip: 30334
         },
         {
-            id: 4,
             name: 'Blake',
             areacode: 775,
-            phone: 8415641,
             state: 'NV',
             zip: 89501
         },
         {
-            id: 5,
             name: 'Jusuf',
             areacode: 305,
-            phone: 2547889,
             state: 'FL',
             zip: 33130
         },
         {
-            id: 6,
             name: 'Shania',
             areacode: 775,
-            phone: 5598465,
             state: 'NV',
             zip: 89501
         },
         {
-            id: 7,
             name: 'Ellen',
             areacode: 305,
-            phone: 9874587,
             state: 'CA',
             zip: 33128
         },
@@ -282,182 +264,137 @@ export const Start: FC<StartProps> = () => {
         <Dimmer.Dimmable as={Segment} dimmed={processing}>
             <Grid centered stretched={false} columns={1} className='site-page home'>
                 <Grid.Column>
-                    <Grid.Row>
+                    <Divider />
+                    <Grid.Row className='content-centered'>
                         <Container className='section' style={{ backgroundColor: 'white', position: 'absolute', top: 0, right: 0, width: '10vw', maxWidth: '500px', height: '8vh', borderBottomLeftRadius: 20 }} >
                             <img src={logo} style={{ padding: 10, position: 'absolute', top: 0, right: 0, width: '100%', height: 'auto' }} alt='OSU logo' />
+                        </Container> 
+                        <Container className='home-header box-blur'>
+                            <span className='home-title'>Discovering Rules and Patterns in Data</span>
                         </Container>
-                        <Container className='content-centered home-header box-blur'>
-                            <span className='home-title'>Discovering Functional Dependencies</span>
-                        </Container>
-                        <Message>
-                            <Message.Header>
-                                <h1>Hello!</h1>
-                                <Divider />
-                                <p><strong>Thank you so much for agreeing to participate in our study!</strong></p>
-                            </Message.Header>
-                            <p>
-                                We are analyzing and aim to model how users learn data quality rules and patterns
-                                (i.e. functional dependencies) that apply over datasets.
-                            </p>
-                        </Message>
                     </Grid.Row>
-                    <Divider />
                     <Grid.Row>
                         <Message>
                             <Message.Header>
-                                <h2>Your Role</h2>
+                                <h2>Let's Review Functional Dependencies</h2>
                             </Message.Header>
                             <Divider />
+                            <Message info>
+                                <Message.Header>
+                                    <h3>What is an FD?</h3>
+                                </Message.Header>
+                                <p>
+                                    A <strong>functional dependency</strong>, or <strong>FD</strong>, is a rule 
+                                    that explains how attributes in a dataset are dependent on each other.
+                                </p>
+                            </Message>
                             <p>
-                                You will be tasked with detecting and marking violations of functional dependencies (FDs) in some datasets.
+                                For example, in the dataset below, a building's city and zip code functionally determine
+                                the state that building is in. This rule is represented by the expression <strong>{'(city, zip) => state'}</strong>.
                             </p>
+                            <Table>
+                                <Table.Header>
+                                    <Table.Row>
+                                    {
+                                        Object.keys(fdExampleData[0]).map((h: string) => h !== 'id' && (
+                                            <Table.HeaderCell key={h}>{h}</Table.HeaderCell>
+                                        ))
+                                    }
+                                    </Table.Row>
+                                </Table.Header>
+                                <Table.Body>
+                                    {
+                                        fdExampleData.map((e) => e.id !== 6 && (
+                                            <Table.Row>
+                                                {
+                                                    Object.entries(e).map(([k, v], i) => (
+                                                        <Table.Cell key={i}>{v}</Table.Cell>
+                                                    ))
+                                                }
+                                            </Table.Row>
+                                        ))
+                                    }
+                                </Table.Body>
+                            </Table>
+                            <Message warning>
+                                <Message.Header>
+                                    <h4>Some FDs functionally determine only one attribute, while others determine many attributes.</h4>
+                                </Message.Header>
+                                <p>
+                                    E.g. area code only determines state, but ID determines all attributes. These are respectfully written
+                                    as <strong>{'(areacode => state)'}</strong> and <strong>{'(id) => address, city, state, zip'}</strong>.
+                                </p>
+                            </Message>
+                            <Message warning>
+                                <Message.Header>
+                                    <h4>
+                                        The attributes that functionally determine other attributes are collectively called the left-hand side (LHS) of the rule,
+                                        while the attributes that are dependent on the left-hand side are collectively called the right-hand side (RHS) of the rule.
+                                    </h4>
+                                </Message.Header>
+                                <p>
+                                    E.g. in the rule {'(city, zip) => state'}, city and zip collectively form the LHS and state forms the RHS.
+                                    In the rule {'(id) => address, city, state, zip'}, id forms the LHS and address, city, state, and zip collectively form the RHS.
+                                </p>
+                            </Message>
                             <p>
-                                You will be interacting with four different datasets that may contain
-                                violations of one or more FDs. Your job will be to figure out
-                                the dominant FD in the dataset and find exceptions to the FD.
+                                For more information on FDs and to see more examples, you can go <a href='https://en.wikipedia.org/wiki/Functional_dependency#Examples' target='_blank' rel='noopener noreferrer'>here</a>.
                             </p>
+                            <Divider />
+                            <Message info>
+                                <Message.Header>
+                                    <h3>What is an exception to a rule?</h3>
+                                </Message.Header>
+                                <p>
+                                    If a cell in a tuple has a value that does not align with the rest of the dataset with
+                                    respect to an FD, the cell is said to be part of a <strong>exception</strong> to the rule.
+                                </p>
+                            </Message>
+                            {/* UPDATE THIS */}
+                            <p>
+                                Let's see the same dataset again. Here, the two tuples with the address "800 6th Ave"
+                                have a exception to the FD <strong>{'(city, zip) => state'}</strong> present in the state attribute (these have been highlighted below),
+                                as two places with the same city and ZIP code have different states listed.
+                            </p>
+                            <Table>
+                                <Table.Header>
+                                    <Table.Row>
+                                    {
+                                        Object.keys(fdExampleData[0]).map((h: string) => h !== 'id' && (
+                                            <Table.HeaderCell key={h}>{h}</Table.HeaderCell>
+                                        ))
+                                    }
+                                    </Table.Row>
+                                </Table.Header>
+                                <Table.Body>
+                                    {
+                                        fdExampleData.map((e) => e.id !== 1 && (
+                                            <Table.Row>
+                                                {
+                                                    Object.entries(e).map(([k, v], _i) => k !== 'id' && (
+                                                        (e.id === 3 || e.id === 6) && k === 'state' ? (
+                                                            <Table.Cell style={{ backgroundColor: '#FFF3CD' }}>
+                                                                {v}
+                                                            </Table.Cell>
+                                                        ) : (
+                                                            <Table.Cell>{v}</Table.Cell>
+                                                        )
+                                                    ))
+                                                }
+                                            </Table.Row>
+                                        ))
+                                    }
+                                </Table.Body>
+                            </Table>
                             {
-                                yourRoleRead ? (
+                                fdReviewRead ? (
                                     <Message color='green'><p>Scroll Down</p></Message>
                                 ) : (
-                                    <Button
-                                        positive 
-                                        size='big' 
-                                        onClick={() => {
-                                            setYourRoleRead(true)
-                                        }}
-                                    >
-                                        Continue
-                                    </Button>
+                                    <Button positive size='big' onClick={() => setFDReviewRead(true)}>Continue</Button>
                                 )
-                            }                            
+                            }
                         </Message>
                     </Grid.Row>
-                    {
-                        yourRoleRead && (
-                            <>
-                                <Divider />
-                                <Grid.Row>
-                                    <Message>
-                                        <Message.Header>
-                                            <h2>Let's Review Functional Dependencies</h2>
-                                        </Message.Header>
-                                        <Divider />
-                                        <Message info>
-                                            <Message.Header>
-                                                <h3>What is an FD?</h3>
-                                            </Message.Header>
-                                            <p>
-                                                A <strong>functional dependency</strong>, or <strong>FD</strong>, is an expression 
-                                                that explains how attributes in a dataset are dependent on each other.
-                                            </p>
-                                            <p>
-                                                A <strong>key</strong> is a special type of FD in which an attribute or set of attributes functionally determines
-                                                every other attribute in the dataset.
-                                            </p>
-                                        </Message>
-                                        <p>
-                                            For example, in the dataset below, a building's street address (e.g. 123 Elm St) functionally determines
-                                            the building's city, state, and ZIP code, as these three values are dependent on the address. This FD is also
-                                            a key, since address determines every other attribute in the tuple.
-                                        </p>
-                                        <Table>
-                                            <Table.Header>
-                                                <Table.Row>
-                                                {
-                                                    Object.keys(fdExampleData[0]).map((h: string) => h !== 'id' && (
-                                                        <Table.HeaderCell key={h}>{h}</Table.HeaderCell>
-                                                    ))
-                                                }
-                                                </Table.Row>
-                                            </Table.Header>
-                                            <Table.Body>
-                                                {
-                                                    fdExampleData.map((e) => e.id !== 6 && (
-                                                        <Table.Row>
-                                                            {
-                                                                Object.entries(e).map(([k, v], _i) => k !== 'id' && (
-                                                                    <Table.Cell>{v}</Table.Cell>
-                                                                ))
-                                                            }
-                                                        </Table.Row>
-                                                    ))
-                                                }
-                                            </Table.Body>
-                                        </Table>
-                                        <p>
-                                            Another FD in this dataset is <strong>{'(city, zip) => state'}</strong>, which states that the city
-                                            and ZIP code together uniquely identify the state.
-                                        </p>
-                                        <Message warning>
-                                            <Message.Header>
-                                                <h4>Some FDs functionally determine only attribute, while others determine many attributes.</h4>
-                                            </Message.Header>
-                                            <p>
-                                                E.g. area code only determines state, but address determines city, state, and zip code.
-                                            </p>
-                                        </Message>
-                                        <p>
-                                            For more information on FDs and to see more examples, you can go <a href='https://en.wikipedia.org/wiki/Functional_dependency#Examples' target='_blank' rel='noopener noreferrer'>here</a>.
-                                        </p>
-                                        <Divider />
-                                        <Message info>
-                                            <Message.Header>
-                                                <h3>What is a violation?</h3>
-                                            </Message.Header>
-                                            <p>
-                                                If a cell in a tuple has a value that does not align with the rest of the dataset with
-                                                respect to an FD (e.g. a cell in the "state" column has a different values than the "state" cell in any
-                                                other tuples with same area code value), the cell is said to be part of a <strong>violation</strong> of the FD.
-                                            </p>
-                                        </Message>
-                                        <p>
-                                            Let's see the same dataset again. Here, the two tuples with the address "800 6th Ave" (highlighted below)
-                                            have a violation of the FD <strong>{'(address) => city, state, zip'}</strong> present in the zip attribute,
-                                            as two addresses with the same city and ZIP code have different states listed.
-                                        </p>
-                                        <Table>
-                                            <Table.Header>
-                                                <Table.Row>
-                                                {
-                                                    Object.keys(fdExampleData[0]).map((h: string) => h !== 'id' && (
-                                                        <Table.HeaderCell key={h}>{h}</Table.HeaderCell>
-                                                    ))
-                                                }
-                                                </Table.Row>
-                                            </Table.Header>
-                                            <Table.Body>
-                                                {
-                                                    fdExampleData.map((e) => e.id !== 1 && (
-                                                        <Table.Row>
-                                                            {
-                                                                Object.entries(e).map(([k, v], _i) => k !== 'id' && (
-                                                                    e.id === 3 || e.id === 6 ? (
-                                                                        <Table.Cell style={{ backgroundColor: '#FFF3CD' }}>
-                                                                            {v}
-                                                                        </Table.Cell>
-                                                                    ) : (
-                                                                        <Table.Cell>{v}</Table.Cell>
-                                                                    )
-                                                                ))
-                                                            }
-                                                        </Table.Row>
-                                                    ))
-                                                }
-                                            </Table.Body>
-                                        </Table>
-                                        {
-                                            fdReviewRead ? (
-                                                <Message color='green'><p>Scroll Down</p></Message>
-                                            ) : (
-                                                <Button positive size='big' onClick={() => setFDReviewRead(true)}>Continue</Button>
-                                            )
-                                        }
-                                    </Message>
-                                </Grid.Row>
-                            </>
-                        )
-                    }
                     {
                         fdReviewRead && (
                             <>
@@ -465,12 +402,12 @@ export const Start: FC<StartProps> = () => {
                                 <Grid.Row>
                                     <Message>
                                         <Message.Header>
-                                            <h2>Knowledge Check</h2>
+                                            <h2>Quiz</h2>
                                         </Message.Header>
                                         <Divider />
-                                        <p>In the following table, which of the following FDs is the primary FD over this dataset?</p>
+                                        <p>In the following table, which of the following rule holds strongest over this dataset?</p>
                                         {
-                                            quizDone && (
+                                            quizFullDone && (
                                                 <Message positive={q1Response === q1CorrectAnswer} negative={q1Response !== q1CorrectAnswer}>
                                                     <Message.Header>
                                                         {
@@ -520,19 +457,19 @@ export const Start: FC<StartProps> = () => {
                                                     name='q1RadioGroup'
                                                     value='areacode'
                                                     checked={q1Response === 'areacode'}
-                                                    onChange={() => !quizDone && setQ1Response('areacode')}
+                                                    onChange={() => !quizFullDone && setQ1Response('areacode')}
                                                 />
                                             </Form.Field>
                                             <Form.Field>
                                                 {
-                                                    quizDone ? (
+                                                    quizFullDone ? (
                                                         <Radio
                                                             style={{ border: '2px solid green', padding: 10 }}
                                                             label='name determines all other attributes'
                                                             name='q1RadioGroup'
                                                             value='name'
                                                             checked={q1Response === 'name'}
-                                                            onChange={() => !quizDone && setQ1Response('name')}
+                                                            onChange={() => !quizFullDone && setQ1Response('name')}
                                                         />
                                                     ) : (
                                                         <Radio
@@ -540,7 +477,7 @@ export const Start: FC<StartProps> = () => {
                                                             name='q1RadioGroup'
                                                             value='name'
                                                             checked={q1Response === 'name'}
-                                                            onChange={() => !quizDone && setQ1Response('name')}
+                                                            onChange={() => !quizFullDone && setQ1Response('name')}
                                                         />
                                                     )
                                                 }
@@ -551,7 +488,7 @@ export const Start: FC<StartProps> = () => {
                                                     name='q1RadioGroup'
                                                     value='combo'
                                                     checked={q1Response === 'combo'}
-                                                    onChange={() => !quizDone && setQ1Response('combo')}
+                                                    onChange={() => !quizFullDone && setQ1Response('combo')}
                                                 />
                                             </Form.Field>
                                             <Form.Field>
@@ -564,97 +501,110 @@ export const Start: FC<StartProps> = () => {
                                                 />
                                             </Form.Field>
                                         </Form>
-                                        <Divider />
-                                        <p>The table below contains a violation of the FD <strong>(areacode) {'=>'} state.</strong></p>
-                                        <p>Find the violation and mark one of the cells whose value is causing the violation.</p>
                                         {
-                                            quizDone && (
-                                                <Message positive={q2CorrectAnswers.includes(q2Response)} negative={!q2CorrectAnswers.includes(q2Response)}>
-                                                    <Message.Header>
-                                                        {
-                                                            q2CorrectAnswers.includes(q2Response)
-                                                            ? 'Correct!'
-                                                            : 'Incorrect'
-                                                        }
-                                                    </Message.Header>
-                                                    All possible correct answers have been highlighted in green.
-                                                </Message>
+                                            quizQ1Done ? (
+                                                <Message color='green'><p>Scroll Down</p></Message>
+                                            ) : (
+                                                <Button positive size='big' disabled={q1Response === '' || q2Response === ''} onClick={() => setQuizQ1Done(true)}>Next</Button>
                                             )
                                         }
-                                        <Table>
-                                            <Table.Header>
-                                                <Table.Row>
-                                                {
-                                                    Object.keys(q2Data[0]).map((h: string) => (
-                                                        <Table.HeaderCell key={h}>{h}</Table.HeaderCell>
-                                                    ))
-                                                }
-                                                </Table.Row>
-                                            </Table.Header>
-                                            <Table.Body>
-                                                {
-                                                    q2Data.map((e) => {
-                                                        return (
-                                                            <Table.Row>
-                                                                {
-                                                                    Object.entries(e).map(([k, v], i) => {
-                                                                        if (quizDone && q2CorrectAnswers.includes(`${e.id}_${v}`)) {
-                                                                            return (
-                                                                                <Table.Cell
-                                                                                    key={`${e.id}_${v}`}
-                                                                                    style={{backgroundColor: '#E5F9E6' }}
-                                                                                >
-                                                                                {v}
-                                                                                </Table.Cell>
-                                                                            )
-                                                                        } else {
-                                                                            return q2Response === `${e.id}_${v}`
-                                                                            ? (
-                                                                                <Table.Cell
-                                                                                    key={`${e.id}_${v}`}
-                                                                                    style={{ cursor: 'pointer', backgroundColor: '#FFF3CD' }}
-                                                                                    onClick={() => {
-                                                                                        if (!quizDone) {
-                                                                                            setQ2Response('')
-                                                                                        }
-                                                                                    }}
-                                                                                >
-                                                                                {v}
-                                                                                </Table.Cell>
-                                                                            ) : (
-                                                                                <Table.Cell
-                                                                                    key={`${e.id}_${v}`}
-                                                                                    style={{ cursor: 'pointer' }}
-                                                                                    onClick={() => {
-                                                                                        if (!quizDone) {
-                                                                                            setQ2Response(`${e.id}_${v}`)
-                                                                                        }
-                                                                                    }}
-                                                                                >
-                                                                                {v}
-                                                                                </Table.Cell>
-                                                                            )
-                                                                        }
-                                                                    })
-                                                                }
-                                                            </Table.Row>
+                                        { 
+                                            quizQ1Done && (
+                                                <>
+                                                    <Divider />
+                                                    <p>The table below contains an exception to the rule <strong>{'(areacode) => state'}.</strong></p>
+                                                    <p>Find the exception and mark one of the cells whose value is causing the exception.</p>
+                                                    {
+                                                        quizFullDone && (
+                                                            <Message positive={q2CorrectAnswers.includes(q2Response)} negative={!q2CorrectAnswers.includes(q2Response)}>
+                                                                <Message.Header>
+                                                                    {
+                                                                        q2CorrectAnswers.includes(q2Response)
+                                                                        ? 'Correct!'
+                                                                        : 'Incorrect'
+                                                                    }
+                                                                </Message.Header>
+                                                                All possible correct answers have been highlighted in green.
+                                                            </Message>
                                                         )
-                                                    })
-                                                }
-                                            </Table.Body>
-                                        </Table>
-                                        {
-                                            quizDone ? (
-                                                quizAnswersReviewed ? (
-                                                    <Message color='green'><p>Scroll Down</p></Message>
-                                                ) : (
-                                                    <>
-                                                        <Message warning><p>Review Your Answers</p></Message>
-                                                        <Button positive size='big' onClick={() => setQuizAnswersReviewed(true)}>Continue</Button>
-                                                    </>
-                                                )
-                                            ) : (
-                                                <Button positive size='big' disabled={q1Response === '' || q2Response === ''} onClick={handleQuizDone}>Submit</Button>
+                                                    }
+                                                    <Table>
+                                                        <Table.Header>
+                                                            <Table.Row>
+                                                            {
+                                                                Object.keys(q2Data[0]).map((h: string) => (
+                                                                    <Table.HeaderCell key={h}>{h}</Table.HeaderCell>
+                                                                ))
+                                                            }
+                                                            </Table.Row>
+                                                        </Table.Header>
+                                                        <Table.Body>
+                                                            {
+                                                                q2Data.map((e) => {
+                                                                    return (
+                                                                        <Table.Row>
+                                                                            {
+                                                                                Object.entries(e).map(([k, v], i) => {
+                                                                                    if (quizFullDone && q2CorrectAnswers.includes(`${i}_${v}`)) {
+                                                                                        return (
+                                                                                            <Table.Cell
+                                                                                                key={`${i}_${v}`}
+                                                                                                style={{backgroundColor: '#E5F9E6' }}
+                                                                                            >
+                                                                                            {v}
+                                                                                            </Table.Cell>
+                                                                                        )
+                                                                                    } else {
+                                                                                        return q2Response === `${i}_${v}`
+                                                                                        ? (
+                                                                                            <Table.Cell
+                                                                                                key={`${i}_${v}`}
+                                                                                                style={{ cursor: 'pointer', backgroundColor: '#FFF3CD' }}
+                                                                                                onClick={() => {
+                                                                                                    if (!quizFullDone) {
+                                                                                                        setQ2Response('')
+                                                                                                    }
+                                                                                                }}
+                                                                                            >
+                                                                                            {v}
+                                                                                            </Table.Cell>
+                                                                                        ) : (
+                                                                                            <Table.Cell
+                                                                                                key={`${i}_${v}`}
+                                                                                                style={{ cursor: 'pointer' }}
+                                                                                                onClick={() => {
+                                                                                                    if (!quizFullDone) {
+                                                                                                        setQ2Response(`${i}_${v}`)
+                                                                                                    }
+                                                                                                }}
+                                                                                            >
+                                                                                            {v}
+                                                                                            </Table.Cell>
+                                                                                        )
+                                                                                    }
+                                                                                })
+                                                                            }
+                                                                        </Table.Row>
+                                                                    )
+                                                                })
+                                                            }
+                                                        </Table.Body>
+                                                    </Table>
+                                                    {
+                                                        quizFullDone ? (
+                                                            quizAnswersReviewed ? (
+                                                                <Message color='green'><p>Scroll Down</p></Message>
+                                                            ) : (
+                                                                <>
+                                                                    <Message warning><p>Review Your Answers</p></Message>
+                                                                    <Button positive size='big' onClick={() => setQuizAnswersReviewed(true)}>Continue</Button>
+                                                                </>
+                                                            )
+                                                        ) : (
+                                                            <Button positive size='big' disabled={q1Response === '' || q2Response === ''} onClick={handleQuizDone}>Submit</Button>
+                                                        )
+                                                    }
+                                                </>
                                             )
                                         }
                                         
@@ -664,7 +614,7 @@ export const Start: FC<StartProps> = () => {
                         )
                     }
                     {
-                        quizDone && quizAnswersReviewed && (
+                        quizFullDone && quizAnswersReviewed && (
                             <>
                                 <Divider />
                                 <Grid.Row>
@@ -674,28 +624,41 @@ export const Start: FC<StartProps> = () => {
                                         </Message.Header>
                                         <Divider />
                                         <p>
-                                            To mark a cell as part of a violation, click on the cell. The cell will be
+                                            To mark a cell as part of a exception to a rule, click on the cell. The cell will be
                                             highlighted yellow.
                                         </p>
                                         <p>
-                                            If you decide at any point that this cell is not part of a violation and want
+                                            If you decide at any point that this cell is not part of an exception and want
                                             to undo your feedback for that cell, you can simply click on the cell
                                             again to unhighlight and unmark it.
                                         </p>
                                         <p>
-                                            To submit your marks for that round, click "Next" and let us know what you
-                                            think is the dominant FD over the dataset given what you've seen so far, and you'll be
+                                            To submit your marks for that round, click "Next" and let us know what rule you're most confident
+                                            holds over the dataset given what you've seen so far, and you'll be
                                             presented with a new sample from the dataset. If you don't see anything that should be marked,
                                             you don't have to mark anything, and you can just click "Next" and respond to the prompt to get a fresh sample.
                                         </p>
                                         <p>
                                             Your feedback will be visible throughout the entire interaction, i.e. if you 
-                                            previously marked a cell as part of a violation and that tuple reappears in a sample later
+                                            previously marked a cell as part of an exception and that tuple reappears in a sample later
                                             on, the cell will still be highlighted so that you can review and change your
                                             previous feedback alongside new data.
                                         </p>
                                         <p>
-                                            If you have no more feedback left to give for the dataset or are otherwise
+                                            You'll have up to 15 rounds to give feedback before moving on to the next dataset.
+                                        </p>
+                                        <p>
+                                            One round is defined as giving feedback by marking any cells you believe are part
+                                            of exceptions, clicking "Next," and letting us know what you think is the strongest rule
+                                            over the data given everything you've seen so far.
+                                        </p>
+                                        <p>
+                                            <strong>NOTE: </strong>
+                                            You do not need to worry about knowing or finding the right value for a cell! This is
+                                            not an error detection problem. Your goal is just to discover rules and find exceptions to them.
+                                        </p>
+                                        <p>
+                                            After 6 iterations, if you have no more feedback left to give for the dataset or are otherwise
                                             done giving feedback, click "I'm All Done" to finish working with the dataset.
                                         </p>
                                         {
@@ -732,24 +695,11 @@ export const Start: FC<StartProps> = () => {
                                             )
                                         }
                                         <Divider />
-                                        <p>
-                                            You'll have up to 15 rounds to give feedback before moving on to the next dataset.
-                                        </p>
-                                        <p>
-                                            One round is defined as giving feedback by marking any cells you believe are part
-                                            of violations, clicking "Next," and letting us know what you think the dominant
-                                            FD is over the data given everything you've seen so far.
-                                        </p>
-                                        <p>
-                                            <strong>NOTE: </strong>
-                                            You do not need to worry about knowing or finding the right value for a cell! This is
-                                            not an error detection problem. Your goal is just to find violations of FDs.
-                                        </p>
                                         <Message>
                                             <Message.Header>
                                                 <h3>
                                                     This dataset has the following attributes: [{header.join(', ')}]. Given this
-                                                    schema, what do you think should be the primary FD(s) that holds over this dataset?
+                                                    schema, what rule are you most confident holds over this dataset?
                                                 </h3>
                                             </Message.Header>
                                             <p>E.g. facilityname determines type and owner; title and year determine director</p>

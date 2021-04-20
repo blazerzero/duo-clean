@@ -1,40 +1,40 @@
-155.genre,Sci-Fi,Horror
-93.genre,Drama,Horror
-16.genre,Biography,Action
-170.type,movie,episode
-134.genre,Drama,Adventure
-177.genre,Crime,Comedy
-41.type,episode,movie
-168.type,movie,episode
-137.genre,Biography,Comedy
-59.type,movie,episode
-115.type,movie,episode
-175.genre,Thriller,Action
-135.type,episode,movie
-69.genre,Musical,Horror
-160.genre,Sci-Fi,Short
-6.genre,Reality-TV,Drama
-55.type,movie,episode
-139.genre,Romance,Drama
-192.type,movie,episode
-24.type,episode,movie
-117.type,episode,movie
-119.genre,Romance,Drama
-107.genre,Short,Horror
-125.type,movie,episode
-141.type,movie,episode
-113.genre,Reality-TV,Comedy
-69.type,episode,movie
-199.type,movie,episode
-100.type,episode,movie
-88.type,episode,movie
-31.genre,Thriller,Short
-9.genre,Reality-TV,Comedy
-16.type,episode,movie
-37.genre,Comedy,Drama
-160.type,episode,movie
-52.genre,Crime,Comedy
-163.type,episode,movie
-147.genre,Family,Action
-82.type,episode,movie
-197.genre,Music,Action
+78.genre,Thriller,Musical
+177.type,TV episode,movie
+119.type,TV episode,movie
+145.genre,Music,Drama
+145.type,movie,TV episode
+37.type,TV episode,movie
+119.genre,Comedy,Drama
+168.type,movie,TV episode
+199.genre,Action,Short
+6.type,movie,TV episode
+163.genre,Comedy,Biography
+139.genre,Horror,Drama
+52.genre,Animation,Comedy
+96.type,movie,TV episode
+31.genre,Music,Short
+115.genre,Biography,Drama
+187.genre,Drama,Comedy
+199.type,movie,TV episode
+100.type,TV episode,movie
+123.genre,Sci-Fi,Horror
+127.type,TV episode,movie
+22.type,TV episode,movie
+61.genre,Thriller,Horror
+141.genre,Animation,Action
+125.genre,Biography,Comedy
+88.type,TV episode,movie
+88.genre,Sci-Fi,Action
+87.genre,Family,Action
+39.type,TV episode,movie
+185.genre,Adventure,Drama
+151.type,movie,TV episode
+39.genre,Action,Romance
+107.type,TV episode,movie
+47.genre,Musical,Short
+109.type,movie,TV episode
+187.type,movie,TV episode
+160.genre,Romance,Short
+130.type,movie,TV episode
+173.type,TV episode,movie
+135.type,TV episode,movie

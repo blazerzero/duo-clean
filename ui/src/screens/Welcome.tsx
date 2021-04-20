@@ -11,7 +11,9 @@ import {
     Grid,
     Dimmer,
     Segment,
-    Image
+    Image,
+    Message,
+    Divider
 } from 'semantic-ui-react'
 import server from '../utils/server'
 import logo from '../images/OSU_horizontal_2C_O_over_B.png'
@@ -62,8 +64,40 @@ export const Welcome: FC<WelcomeProps> = () => {
                             <img src={logo} style={{ padding: 10, position: 'absolute', top: 0, right: 0, width: '100%', height: 'auto' }} alt='OSU logo' />
                         </Container> 
                         <Container className='home-header box-blur'>
-                            <span className='home-title'>Discovering Functional Dependencies</span>
+                            <span className='home-title'>Discovering Rules and Patterns in Data</span>
                         </Container>
+                    </Grid.Row>
+                    <Grid.Row>
+                        <Message>
+                            <Message.Header>
+                                <h1>Hello!</h1>
+                                <Divider />
+                                <p><strong>Thank you so much for agreeing to participate in our study!</strong></p>
+                            </Message.Header>
+                            <p>
+                                We are analyzing and aim to model how users learn data quality rules and patterns
+                                (i.e. functional dependencies) that apply over datasets.
+                            </p>
+                        </Message>
+                    </Grid.Row>
+                    <Divider />
+                    <Grid.Row>
+                        <Message>
+                            <Message.Header>
+                                <h2>Your Role</h2>
+                            </Message.Header>
+                            <Divider />
+                            <p>
+                                You will be tasked with discovering rules and patterns that hold with high confidence in some datasets and finding exceptions to those rules in the data.
+                            </p>
+                            <p>
+                                You will be interacting with four different datasets that may contain
+                                exceptions to one or more rules. Your job will be to figure out
+                                the rule that holds best over the dataset and find exceptions to that rule.
+                            </p>                        
+                        </Message>
+                    </Grid.Row>
+                    <Grid.Row>
                         <Form>
                             <Form.Field>
                                 <Container className='section'>
