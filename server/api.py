@@ -35,6 +35,7 @@ class User(object):
         self.done = list()
         self.pre_survey = dict()
         self.post_questionnaire = dict()
+        self.comments = ''
         console.log(self.scenarios)
     
     def asdict(self):
@@ -165,10 +166,12 @@ class Import(Resource):
         scenario_id = request.form.get('scenario_id')
         email = request.form.get('email')
         initial_user_h = request.form.get('initial_fd')
+        fd_comment = request.form.get('fd_comment')
         if scenario_id is None or email is None:
             scenario_id = json.loads(request.data)['scenario_id']
             email = json.loads(request.data)['email']
             initial_user_h = json.loads(request.data)['initial_fd']
+            fd_comment = json.loads(request.data)['fd_comment']
         print(scenario_id)
 
         # Get the user from the users list
@@ -192,12 +195,21 @@ class Import(Resource):
         with open('scenarios.json', 'r') as f:
             scenarios_list = json.load(f)
         scenario = scenarios_list[scenario_id]
-        if user_interaction_number > 3:
+        if user_interaction_number == 1:
             target_h_sample_ratio = 0.2
             alt_h_sample_ratio = 0.6
-        else:
+        elif user_interaction_number == 2:
+            target_h_sample_ratio = 0.3
+            alt_h_sample_ratio = 0.5
+        elif user_interaction_number == 3:
+            target_h_sample_ratio = 0.4
+            alt_h_sample_ratio = 0.4
+        elif user_interaction_number == 4:
             target_h_sample_ratio = 0.5
             alt_h_sample_ratio = 0.3
+        else:
+            target_h_sample_ratio = 0.6
+            alt_h_sample_ratio = 0.2
         scenario['target_h_sample_ratio'] = target_h_sample_ratio
         scenario['alt_h_sample_ratio'] = alt_h_sample_ratio
         target_fd = scenario['target_fd']
@@ -222,7 +234,7 @@ class Import(Resource):
         # Initialize metadata objects
         interaction_metadata = dict()
         interaction_metadata['header'] = header
-        interaction_metadata['user_hypothesis_history'] = [helpers.StudyMetric(iter_num=current_iter, value=initial_user_h, elapsed_time=0)]
+        interaction_metadata['user_hypothesis_history'] = [helpers.StudyMetric(iter_num=current_iter, value=[initial_user_h, fd_comment], elapsed_time=0)]
         interaction_metadata['feedback_history'] = dict()
         interaction_metadata['sample_history'] = list()
         for idx in data.index:
@@ -374,11 +386,13 @@ class Feedback(Resource):
         # Get the project ID for the interaction and the user's feedback object
         project_id = request.form.get('project_id')
         current_user_h = request.form.get('current_user_h')
+        user_h_comment = request.form.get('user_h_comment')
         if project_id is None:
             req = json.loads(request.data)
             project_id = req['project_id']
             feedback_dict = req['feedback']
             current_user_h = req['current_user_h']
+            user_h_comment = req['user_h_comment']
         else:
             feedback_dict = json.loads(request.form.get('feedback'))
 
@@ -432,7 +446,7 @@ class Feedback(Resource):
         elapsed_time = current_time - start_time
         feedback = list()
         interaction_metadata = pickle.load( open('./store/' + project_id + '/interaction_metadata.p', 'rb') )
-        interaction_metadata['user_hypothesis_history'].append(helpers.StudyMetric(iter_num=current_iter-1, value=current_user_h, elapsed_time=elapsed_time))   # current iter - 1 because it's for the prev iter (i.e. before incrementing current_iter)
+        interaction_metadata['user_hypothesis_history'].append(helpers.StudyMetric(iter_num=current_iter-1, value=[current_user_h, user_h_comment], elapsed_time=elapsed_time))   # current iter - 1 because it's for the prev iter (i.e. before incrementing current_iter)
         pickle.dump( interaction_metadata, open('./store/' + project_id + '/interaction_metadata.p', 'wb') )
         
         for idx in s_out.index:
@@ -446,11 +460,11 @@ class Feedback(Resource):
         print('*** Feedback object created ***')
 
         # Check if the scenario is done
-        if current_iter <= 5:
-            terminate = False
-        else:
-            terminate = helpers.checkForTermination(project_id)
-        if current_iter > 15 or terminate is True:
+        # if current_iter <= 5:
+        #     terminate = False
+        # else:
+        #     terminate = helpers.checkForTermination(project_id)
+        if current_iter > 15:
             msg = '[DONE]'
         else:
             msg = '[SUCCESS]: Saved feedback and built new sample.'
@@ -478,31 +492,9 @@ class PostInteraction(Resource):
 
     def post(self):
         # Get the provided email and scenario number
-        # email = request.form.get('email')
-        # scenario_id = request.form.get('scenario_id')
         next_scenario_id = request.form.get('next_scenario_id')
-        # answers = request.form.get('answers')
-        # if email is None or scenario_id is None or answers is None:
         if next_scenario_id is None:
-            # email = json.loads(request.data)['email']
-            # scenario_id = json.loads(request.data)['scenario_id']
             next_scenario_id = json.loads(request.data)['next_scenario_id']
-            # answers = json.loads(request.data)['answers']
-        
-        # Get the user from the users list
-        # try:
-        #     users = pickle.load( open('./study-utils/users.p', 'rb'))
-        # except:
-        #     return {'msg': '[ERROR] users does not exist'}, 400, {'Access-Control-Allow-Origin': '*'}
-        
-        # Save the user's questionnaire responses
-        # user = users[email]
-        # user.done.append(scenario_id)
-        # user.post_questionnaire[scenario_id] = answers
-        # users[email] = user
-        
-        # Save the users object updates
-        # pickle.dump( users, open('./study-utils/users.p', 'wb') )
 
         with open('scenarios.json', 'r') as f:
             scenarios_list = json.load(f)
@@ -516,6 +508,36 @@ class PostInteraction(Resource):
 
         return response, 200, {'Access-Control-Allow-Origin': '*'}
 
+class Done(Resource):
+    def get(self):
+        return {'msg': '[SUCCESS] /duo/api/done is live!'}
+    
+    def post(self):
+        email = request.form.get('email')
+        comments = request.form.get('comments')
+        if email is None or comments is None:
+            email = json.loads(request.data)['email']
+            comments = json.loads(request.data)['comments']
+        
+        # Get the user from the users list
+        try:
+            users = pickle.load( open('./study-utils/users.p', 'rb'))
+        except:
+            return {'msg': '[ERROR] users does not exist'}, 400, {'Access-Control-Allow-Origin': '*'}
+        
+        # Save the user's questionnaire responses
+        if email not in users.keys():
+            return {'msg': '[ERROR] no user exists with this email'}, 400, {'Access-Control-Allow-Origin': '*'}
+        
+        user = users[email]
+        user.comments = comments
+        users[email] = user
+
+        # Save the users object updates
+        pickle.dump( users, open('./study-utils/users.p', 'wb') )
+
+        return '', 201, {'Access-Control-Allow-Origin': '*'}
+
 api.add_resource(Test, '/duo/api')
 api.add_resource(Start, '/duo/api/start')
 api.add_resource(PreSurvey, '/duo/api/pre-survey')
@@ -523,6 +545,7 @@ api.add_resource(Import, '/duo/api/import')
 api.add_resource(Sample, '/duo/api/sample')
 api.add_resource(Feedback, '/duo/api/feedback')
 api.add_resource(PostInteraction, '/duo/api/post-interaction')
+api.add_resource(Done, '/duo/api/done')
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')

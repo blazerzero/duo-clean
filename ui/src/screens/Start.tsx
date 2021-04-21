@@ -1,6 +1,6 @@
 import { AxiosResponse } from 'axios'
 import { url } from 'node:inspector'
-import React, { FC, useRef, useState } from 'react'
+import React, { FC, useEffect, useRef, useState } from 'react'
 import { useHistory, useLocation } from 'react-router-dom'
 import {
     Button,
@@ -18,7 +18,8 @@ import {
     Form,
     Radio,
     Input,
-    Checkbox
+    Checkbox,
+    Dropdown
 } from 'semantic-ui-react'
 import server from '../utils/server'
 import logo from '../images/OSU_horizontal_2C_O_over_B.png'
@@ -41,6 +42,7 @@ export const Start: FC<StartProps> = () => {
     const [header, setHeader] = useState<string[]>([])
     const [fd, setFD] = useState<{[key: string]: string}>({})
     const [doesntKnowFD, setDoesntKnowFD] = useState<boolean>(false)
+    const [fdComment, setFDComment] = useState<string>('')
 
     const [q1Response, setQ1Response] = useState<string>('')
     const q1CorrectAnswer = 'name'
@@ -94,6 +96,12 @@ export const Start: FC<StartProps> = () => {
         }
     }
 
+    useEffect(() => {
+        const init_fd: {[key: string]: string} = {}
+        header.forEach((h: string) => init_fd[h] = 'N/A')
+        setFD(init_fd)
+    }, [header])
+
     const handleQuizDone = async () => {
         setProcessing(true)
         const answers = [
@@ -132,6 +140,7 @@ export const Start: FC<StartProps> = () => {
             email,
             scenario_id: first_scenario.toString(),
             initial_fd,
+            fd_comment: fdComment,
         })
         const { project_id, description } = response.data
         history.push('/interact', {
@@ -150,10 +159,27 @@ export const Start: FC<StartProps> = () => {
         && Object.keys(fd).filter((k: string) => fd[k] === 'RHS').length > 0
     }
 
+    const buildFD = (attrs: any, side: 'LHS' | 'RHS') => {
+        if (attrs) {
+            const fresh_fd: {[key: string]: string} = {}
+            header.forEach((h: string) => {
+                fresh_fd[h] = fd[h]
+            })
+            attrs.forEach((attr: string) => {
+                fresh_fd[attr] = side
+            })
+            header.forEach((h: string) => {
+                if (!attrs.includes(h) && fresh_fd[h] === side) fresh_fd[h] = 'N/A'
+            })
+            console.log(fresh_fd)
+            setFD(fresh_fd)
+        }
+    }
+
     const fdExampleData = [
         {
             id: 1,
-            address: '123 Elm St',
+            address: '123 SW Elm St',
             city: 'Portland',
             state: 'OR',
             zip: 97123,
@@ -167,28 +193,28 @@ export const Start: FC<StartProps> = () => {
         },
         {
             id: 3,
-            address: '800 6th Ave',
+            address: '800 SW 6th Ave',
             city: 'Portland',
             state: 'OR',
             zip: 97209,
         },
         {
             id: 4,
-            address: '250 Irving St',
+            address: '250 NE Irving St',
             city: 'Los Angeles',
             state: 'CA',
             zip: 90254,
         },
         {
             id: 5,
-            address: '515 Marshall St',
+            address: '515 NW Marshall St',
             city: 'Portland',
             state: 'OR',
             zip: 97123,
         },
         {
             id: 6,
-            address: '800 6th Ave',
+            address: '800 SW 6th Ave',
             city: 'Portland',
             state: 'ME',
             zip: 97209,
@@ -289,7 +315,7 @@ export const Start: FC<StartProps> = () => {
                             <img src={logo} style={{ padding: 10, position: 'absolute', top: 0, right: 0, width: '100%', height: 'auto' }} alt='OSU logo' />
                         </Container> 
                         <Container className='home-header box-blur'>
-                            <span className='home-title'>Discovering Rules and Patterns in Data</span>
+                            <span className='home-title'>Discovering Patterns in Data</span>
                         </Container>
                     </Grid.Row>
                     <Grid.Row>
@@ -303,13 +329,13 @@ export const Start: FC<StartProps> = () => {
                                     <h3>What is an FD?</h3>
                                 </Message.Header>
                                 <p>
-                                    A <strong>functional dependency</strong>, or <strong>FD</strong>, is a rule 
-                                    that explains how attributes in a dataset are dependent on each other.
+                                    A <strong>functional dependency</strong>, or <strong>FD</strong>, is a pattern that explains
+                                    how some attributes determine some other attributes in a dataset.
                                 </p>
                             </Message>
                             <p>
-                                For example, in the dataset below, a building's city and zip code functionally determine
-                                the state that building is in. This rule is represented by the expression <strong>{'(city, zip) => state'}</strong>.
+                                For example, in the dataset below, an address's city and zip code determine the state of the location.
+                                This pattern is represented by the expression <strong>{'(city, zip) => state'}</strong>.
                             </p>
                             <Table>
                                 <Table.Header>
@@ -337,14 +363,14 @@ export const Start: FC<StartProps> = () => {
                             </Table>
                             <Message warning>
                                 <Message.Header>
-                                    <h4>Some FDs functionally determine only one attribute, while others determine many attributes.</h4>
+                                    <h4>There may be one or more attributes on the left or right-hand sides of an FD (on the left or right side of the "{'=>'}").</h4>
                                 </Message.Header>
                                 <p>
-                                    E.g. area code only determines state, but ID determines all attributes. These are respectfully written
-                                    as <strong>{'(areacode => state)'}</strong> and <strong>{'(id) => address, city, state, zip'}</strong>.
+                                    E.g. city and zip code determine state, but address and city determine zip code and state. These are respectfully written
+                                    as <strong>{'(city, zip) => state'}</strong> and <strong>{'(address, city) => zip, state'}</strong>.
                                 </p>
                             </Message>
-                            <Message warning>
+                            {/* <Message warning>
                                 <Message.Header>
                                     <h4>
                                         The attributes that functionally determine other attributes are collectively called the left-hand side (LHS) of the rule,
@@ -355,25 +381,23 @@ export const Start: FC<StartProps> = () => {
                                     E.g. in the rule <strong>{'(city, zip) => state'}</strong>, city and zip collectively form the LHS and state forms the RHS.
                                     In the rule <strong>{'(id) => address, city, state, zip'}</strong>, id forms the LHS and address, city, state, and zip collectively form the RHS.
                                 </p>
-                            </Message>
+                            </Message> */}
                             <p>
                                 For more information on FDs and to see more examples, you can go <a href='https://en.wikipedia.org/wiki/Functional_dependency#Examples' target='_blank' rel='noopener noreferrer'>here</a>.
                             </p>
                             <Divider />
                             <Message info>
                                 <Message.Header>
-                                    <h3>What is an exception to a rule?</h3>
+                                    <h3>What is an exception to an FD?</h3>
                                 </Message.Header>
                                 <p>
                                     If a cell in a tuple has a value that does not align with the rest of the dataset with
-                                    respect to an FD, the cell is said to be part of a <strong>exception</strong> to the rule.
+                                    respect to an FD, the cell is said to be an <strong>exception</strong> to the FD.
                                 </p>
                             </Message>
-                            {/* UPDATE THIS */}
                             <p>
-                                Let's see the same dataset again. Here, the two tuples with the address "800 6th Ave"
-                                have a exception to the FD <strong>{'(city, zip) => state'}</strong> present in the state attribute (these have been highlighted below),
-                                as two places with the same city and ZIP code have different states listed.
+                                In the following dataset, the two tuples with the address "800 6th Ave" have exceptions to the FD <strong>{'(city, zip) => state'}</strong> as
+                                two places with the same city and ZIP code have different states listed. These exceptions have been highlighted below.
                             </p>
                             <Table>
                                 <Table.Header>
@@ -422,11 +446,13 @@ export const Start: FC<StartProps> = () => {
                                     <Message>
                                         <Message.Header>
                                             <h2>Quiz</h2>
+                                            <Divider />
+                                            <h4>This serves to evaluate your understanding of FDs and their exceptions. It's just two questions.</h4>
                                         </Message.Header>
                                         <Divider />
-                                        <p>In the following table, which of the following rule holds strongest over this dataset?</p>
+                                        <p><strong>1)</strong> The following table contains information about employees at a company. Which of the following FDs holds with fewest exceptions over this dataset?</p>
                                         {
-                                            quizFullDone && (
+                                            quizQ1Done && (
                                                 <Message positive={q1Response === q1CorrectAnswer} negative={q1Response !== q1CorrectAnswer}>
                                                     <Message.Header>
                                                         {
@@ -476,12 +502,12 @@ export const Start: FC<StartProps> = () => {
                                                     name='q1RadioGroup'
                                                     value='areacode'
                                                     checked={q1Response === 'areacode'}
-                                                    onChange={() => !quizFullDone && setQ1Response('areacode')}
+                                                    onChange={() => !quizQ1Done && setQ1Response('areacode')}
                                                 />
                                             </Form.Field>
                                             <Form.Field>
                                                 {
-                                                    quizFullDone ? (
+                                                    quizQ1Done ? (
                                                         <Radio
                                                             style={{ border: '2px solid green', padding: 10 }}
                                                             label='name determines all other attributes'
@@ -532,8 +558,7 @@ export const Start: FC<StartProps> = () => {
                                             quizQ1Done && (
                                                 <>
                                                     <Divider />
-                                                    <p>The table below contains an exception to the rule <strong>{'(areacode) => state'}.</strong></p>
-                                                    <p>Find the exception and mark one of the cells whose value is causing the exception.</p>
+                                                    <p><strong>2)</strong> The following table information about employees at a company. It contains exceptions to the FD <strong>{'areacode => state'}.</strong> Find and mark one exception to this FD.</p>
                                                     {
                                                         quizFullDone && (
                                                             <Message positive={q2CorrectAnswers.includes(q2Response)} negative={!q2CorrectAnswers.includes(q2Response)}>
@@ -644,42 +669,29 @@ export const Start: FC<StartProps> = () => {
                                         </Message.Header>
                                         <Divider />
                                         <p>
-                                            To mark a cell as part of a exception to a rule, click on the cell. The cell will be
-                                            highlighted yellow.
+                                            You'll be interacting with five different datasets. For each dataset, you'll be shown small samples
+                                            of the dataset in rounds, and your job will be to figure out the FD that should most reasonably
+                                            hold over the entire dataset given everything you've seen so far and mark any exceptions to that FD
+                                            you see in the data.
                                         </p>
                                         <p>
-                                            If you decide at any point that this cell is not part of an exception and want
-                                            to undo your feedback for that cell, you can simply click on the cell
-                                            again to unhighlight and unmark it.
+                                            One round is defined as marking any cells you believe are part of exceptions,
+                                            indicating what you think the FD is given everything you've seen so far using the provided dropdown selectors,
+                                            and clicking the green <strong><i>Next</i></strong> button. You'll have up to 15 rounds to figure
+                                            out the FD and mark exceptions before moving on to the next dataset.
                                         </p>
                                         <p>
-                                            To submit your marks for that round, click "Next" and let us know what rule you're most confident
-                                            holds over the dataset given what you've seen so far, and you'll be
-                                            presented with a new sample from the dataset. If you don't see anything that should be marked,
-                                            you don't have to mark anything, and you can just respond to the prompt to get a fresh sample.
+                                            To mark a cell as an exception to an FD, click on the cell. The cell will be highlighted yellow.
+                                            You can undo your decision for that cell by simply clicking on the cell again to unhighlight and unmark it.
+                                            If you don't see anything that should be marked, you don't have to mark anything. Just answer the prompt using the dropdowns
+                                            and press <strong><i>Next</i></strong> to get a fresh sample. After 6 rounds, if you are can't find any more exceptions or are otherwise
+                                            done with the dataset, answer the prompt one last time and click <strong><i>I'm All Done</i></strong> to finish working with the dataset.
                                         </p>
                                         <p>
-                                            Your feedback will be visible throughout the entire interaction, i.e. if you 
+                                            Your markings will be visible throughout the entire interaction, i.e. if you 
                                             previously marked a cell as part of an exception and that tuple reappears in a sample later
                                             on, the cell will still be highlighted so that you can review and change your
-                                            previous feedback alongside new data.
-                                        </p>
-                                        <p>
-                                            You'll have up to 15 rounds to give feedback before moving on to the next dataset.
-                                        </p>
-                                        <p>
-                                            One round is defined as giving feedback by marking any cells you believe are part
-                                            of exceptions, clicking "Next," and letting us know what you think is the strongest rule
-                                            over the data given everything you've seen so far.
-                                        </p>
-                                        <p>
-                                            After 6 rounds, if you have no more feedback left to give for the dataset or are otherwise
-                                            done giving feedback, answer the prompt at the bottom one last time and click "I'm All Done" to finish working with the dataset.
-                                        </p>
-                                        <p>
-                                            <strong>NOTE: </strong>
-                                            You do not need to worry about knowing or finding the right value for a cell! This is
-                                            not an error detection problem. Your goal is just to discover rules and find exceptions to them.
+                                            previous markings alongside new data.
                                         </p>
                                         {
                                             interfaceGuideRead ? (
@@ -718,82 +730,53 @@ export const Start: FC<StartProps> = () => {
                                         <Message>
                                             <Message.Header>
                                                 <h3>
-                                                    This dataset has the following attributes: [{header.join(', ')}]. Given this
-                                                    schema, what rule are you most confident holds over this dataset?
+                                                    This dataset has the following attributes: [{header.join(', ')}]. What FD do you think holds with the fewest exceptions?
                                                 </h3>
+                                                <p>Indicate your answer using the dropdowns below. Pick one or more attributes for each side of the FD.</p>
                                             </Message.Header>
-                                            <p>E.g. {'(facilityname) => type, owner'}; {'(title, year) => director'}</p>
-                                            <h4>Answer by indicating, for each attribute below, whether the attribute is part of the left-hand side or right-hand side of the rule, or not part of the rule.</h4>
-                                            <p><strong>NOTE: </strong>If you're not sure yet, you can check "I Don't Know" instead.</p>
                                             <Divider />
+                                            <div style={{ flexDirection: 'row' }}>
+                                            <Dropdown
+                                                placeholder='Select an attribute(s)...'
+                                                multiple
+                                                selection
+                                                options={header.filter((h: string) => fd[h] !== 'RHS').map((h: string) => ({ key: h, text: h, value: h }))}
+                                                onChange={(_e, props) => buildFD(props.value, 'LHS')}
+                                            />
+                                            <span style={{ paddingLeft: 10, paddingRight: 10, fontSize: 20 }}><strong>{'=>'}</strong></span>
+                                            <Dropdown
+                                                placeholder='Select an attribute(s)...'
+                                                multiple
+                                                selection
+                                                options={header.filter((h: string) => fd[h] !== 'LHS').map((h: string) => ({ key: h, text: h, value: h }))}
+                                                onChange={(_e, props) => buildFD(props.value, 'RHS')}
+                                            />
+                                            </div>
+                                            {
+                                                !isValidFD() && !doesntKnowFD && (
+                                                    <Message error>
+                                                        You must either select at least one attribute for the LHS and one for the RHS, or check "I Don't Know."
+                                                    </Message>
+                                                )
+                                            }
+                                            <h3 style={{ paddingTop: 10, paddingBottom: 10 }}>OR</h3>
                                             <Checkbox
                                                 label={`I Don't Know`}
                                                 name='idk_checkbox'
                                                 value='IDK'
                                                 checked={doesntKnowFD}
                                                 onChange={() => setDoesntKnowFD(!doesntKnowFD)}
+                                                style={{ paddingBottom: 10 }}
                                             />
-                                            <h3 style={{ paddingTop: 10, paddingBottom: 10 }}>OR</h3>
-                                            {
-                                                header.map((h: string) => (
-                                                    <div style={{ flexDirection: 'row', paddingBottom: 10 }}>
-                                                        <h4>{h}</h4>
-                                                        <Radio
-                                                            style={{ padding: 10 }}
-                                                            label='Left-hand side'
-                                                            name={`${h}_radioGroup`}
-                                                            value='LHS'
-                                                            checked={fd[h] === 'LHS'}
-                                                            onChange={() => {
-                                                                const newFD: {[key: string]: string} = {}
-                                                                Object.keys(fd).forEach((h: string) => newFD[h] = fd[h])
-                                                                console.log(newFD)
-                                                                newFD[h] = 'LHS'
-                                                                console.log(newFD)
-                                                                setFD(newFD)
-                                                            }}
-                                                        />
-                                                        <Radio
-                                                            style={{ padding: 10 }}
-                                                            label='Right-hand side'
-                                                            name={`${h}_radioGroup`}
-                                                            value='RHS'
-                                                            checked={fd[h] === 'RHS'}
-                                                            onChange={() => {
-                                                                const newFD: {[key: string]: string} = {}
-                                                                Object.keys(fd).forEach((h: string) => newFD[h] = fd[h])
-                                                                console.log(newFD)
-                                                                newFD[h] = 'RHS'
-                                                                console.log(newFD)
-                                                                setFD(newFD)
-                                                            }}
-                                                        />
-                                                        <Radio
-                                                            style={{ padding: 10 }}
-                                                            label='Not part of the rule'
-                                                            name={`${h}_radioGroup`}
-                                                            value='N/A'
-                                                            checked={fd[h] === 'N/A'}
-                                                            onChange={() => {
-                                                                const newFD: {[key: string]: string} = {}
-                                                                Object.keys(fd).forEach((h: string) => newFD[h] = fd[h])
-                                                                console.log(newFD)
-                                                                newFD[h] = 'N/A'
-                                                                console.log(newFD)
-                                                                setFD(newFD)
-                                                            }}
-                                                        />
-                                                    </div>
-                                                ))
-                                            }
-                                            {
-                                                !isValidFD() && !doesntKnowFD && (
-                                                    <Message error>
-                                                        You must select at least one attribute for the LHS and one for the RHS.
-                                                    </Message>
-                                                )
-                                            }
-                                            
+                                            <Divider />
+                                            <Input
+                                                fluid
+                                                style={{ paddingTop: 10 }}
+                                                type='text'
+                                                size='large'
+                                                placeholder='Add any comments supporting your thinking here...'
+                                                onChange={(_e, props) => setFDComment(props.value)}
+                                            />
                                         </Message>
                                         {
                                             dataOverviewRead ? (

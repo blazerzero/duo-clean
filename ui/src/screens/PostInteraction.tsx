@@ -18,7 +18,8 @@ import {
     Form,
     Radio,
     Input,
-    Checkbox
+    Checkbox,
+    Dropdown
 } from 'semantic-ui-react'
 import server from '../utils/server'
 import logo from '../images/OSU_horizontal_2C_O_over_B.png'
@@ -35,10 +36,16 @@ export const PostInteraction: FC<PostInteractionProps> = () => {
     const [processing, setProcessing] = useState<boolean>(false)
     const [fd, setFD] = useState<{[key: string]: string}>({})
     const [doesntKnowFD, setDoesntKnowFD] = useState<boolean>(false)
-    const [durationNeeded, setDurationNeeded] = useState<string>('')
-    const [quizDone, setQuizDone] = useState<boolean>(false)
+    const [fdComment, setFDComment] = useState<string>('')
     const [dataOverviewRead, setDataOverviewRead] = useState<boolean>(false)
-    // const [header, setHeader] = useState<string[]>([])
+    const [done, setDone] = useState<boolean>(false)
+    const [comments, setComments] = useState<string>('')
+
+    useEffect(() => {
+        const init_fd: {[key: string]: string} = {}
+        header.forEach((h: string) => init_fd[h] = 'N/A')
+        setFD(init_fd)
+    }, [header])
 
     const scenarioDetails: {[key: number]: {[key: string]: string | null }} = {
         15: {
@@ -118,6 +125,7 @@ export const PostInteraction: FC<PostInteractionProps> = () => {
             email,
             scenario_id: next_scenario.toString(),
             initial_fd,
+            fd_comment: fdComment,
         })
         const { project_id, description } = response.data
         console.log(header)
@@ -131,9 +139,39 @@ export const PostInteraction: FC<PostInteractionProps> = () => {
         })
     }
 
+    const handleDoneComments = async () => {
+        setProcessing(true)
+        const response: AxiosResponse = await server.post('/done', {
+            email,
+            comments,
+        })
+        if (response.status === 201) {
+            setProcessing(false)
+            setDone(true)
+        }
+    }
+
     const isValidFD = () => {
         return Object.keys(fd).filter((k: string) => fd[k] === 'LHS').length !== 0
         && Object.keys(fd).filter((k: string) => fd[k] === 'RHS').length !== 0
+    }
+
+    const buildFD = (attrs: any, side: 'LHS' | 'RHS') => {
+        if (attrs) {
+            const fresh_fd: {[key: string]: string} = {}
+            header.forEach((h: string) => {
+                fresh_fd[h] = fd[h]
+            })
+            attrs.forEach((attr: string) => {
+                fresh_fd[attr] = side
+            })
+            header.forEach((h: string) => {
+                if (!attrs.includes(h) && fresh_fd[h] === side) fresh_fd[h] = 'N/A'
+            })
+            console.log(fresh_fd)
+            setFD(fresh_fd)
+        }
+        isValidFD()
     }
 
     return (
@@ -145,7 +183,7 @@ export const PostInteraction: FC<PostInteractionProps> = () => {
                             <img src={logo} style={{ padding: 10, position: 'absolute', top: 0, right: 0, width: '100%', height: 'auto' }} alt='OSU logo' />
                         </Container>
                         <Container className='content-centered home-header box-blur'>
-                            <span className='home-title'>Discovering Rules and Patterns in Data</span>
+                            <span className='home-title'>Discovering Patterns in Data</span>
                         </Container>
                         <Message success>
                             <Message.Header>
@@ -160,83 +198,6 @@ export const PostInteraction: FC<PostInteractionProps> = () => {
                             </p>
                         </Message>
                     </Grid.Row>
-                    {/* <Divider />
-                    <Grid.Row>
-                        <Message>
-                            <Message.Header>
-                                <h3>
-                                    At the end of your interaction with the data, what did you
-                                    think was the key in the dataset, or the functional dependency
-                                    (FD) that the errors in the dataset were based on?
-                                </h3>
-                            </Message.Header>
-                            <p>E.g. facilityname was the key; title and year determine director</p>
-                            <Input
-                                size='large'
-                                placeholder='Enter the FD or key here'
-                                onChange={(_e, props) => setFD(props.value)}
-                                className='input'
-                            />
-                        </Message>
-                    </Grid.Row>
-                    <Divider />
-                    <Grid.Row>
-                        <Message>
-                            <Message.Header>
-                                <h3>
-                                    How long do you think it took you to reach this conclusion?
-                                </h3>
-                            </Message.Header>
-                            <Form style={{ paddingTop: 20, paddingBottom: 20 }}>
-                                <Form.Field>
-                                    <Radio
-                                        label='I figured it out right away'
-                                        name='radioGroup'
-                                        value='right-away'
-                                        checked={durationNeeded === 'right-away'}
-                                        onChange={() => setDurationNeeded('right-away')}
-                                    />
-                                </Form.Field>
-                                <Form.Field>
-                                    <Radio
-                                        label='After a couple of rounds'
-                                        name='radioGroup'
-                                        value='after-a-couple-of-rounds'
-                                        checked={durationNeeded === 'after-a-couple-of-rounds'}
-                                        onChange={() => setDurationNeeded('after-a-couple-of-rounds')}
-                                    />
-                                </Form.Field>
-                                <Form.Field>
-                                    <Radio
-                                        label='About halfway through'
-                                        name='radioGroup'
-                                        value='halfway'
-                                        checked={durationNeeded === 'halfway'}
-                                        onChange={() => setDurationNeeded('halfway')}
-                                    />
-                                </Form.Field>
-                                <Form.Field>
-                                    <Radio
-                                        label='Towards the end of the interaction'
-                                        name='radioGroup'
-                                        value='towards-the-end'
-                                        checked={durationNeeded === 'towards-the-end'}
-                                        onChange={() => setDurationNeeded('towards-the-end')}
-                                    />
-                                </Form.Field>
-                            </Form>
-                            {
-                                quizDone ? (
-                                    <Message color='green'><p>Scroll Down</p></Message>
-                                ) : (
-                                    <Button positive size='big' disabled={fd === '' || durationNeeded === ''} onClick={handleQuizDone}>Submit</Button>
-                                )
-                            }
-                        </Message>
-                    </Grid.Row> */}
-                    {/* {
-                        quizDone && (
-                            <> */}
                     <Divider />
                     <Grid.Row>
                     {
@@ -264,14 +225,38 @@ export const PostInteraction: FC<PostInteractionProps> = () => {
                                 <Message>
                                     <Message.Header>
                                         <h3>
-                                            This dataset has the following attributes: [{header.join(', ')}]. Given this
-                                            schema, what rule are you most confident holds over this dataset?
+                                            This dataset has the following attributes: [{header.join(', ')}]. What FD do you think holds with the fewest exceptions?
                                         </h3>
                                     </Message.Header>
                                     <p>E.g. {'(facilityname) => type, owner'}; {'(title, year) => director'}</p>
                                     <h4>Answer by indicating, for each attribute below, whether the attribute is part of the LHS, RHS, or not part of the rule.</h4>
                                     <p><strong>NOTE: </strong>If you're not sure yet, you can check "I Don't Know" instead.</p>
                                     <Divider />
+                                    <div style={{ flexDirection: 'row' }}>
+                                    <Dropdown
+                                        placeholder='Select an attribute(s)...'
+                                        multiple
+                                        selection
+                                        options={header.filter((h: string) => fd[h] !== 'RHS').map((h: string) => ({ key: h, text: h, value: h }))}
+                                        onChange={(_e, props) => buildFD(props.value, 'LHS')}
+                                    />
+                                    <span style={{ paddingLeft: 10, paddingRight: 10, fontSize: 20 }}><strong>{'=>'}</strong></span>
+                                    <Dropdown
+                                        placeholder='Select an attribute(s)...'
+                                        multiple
+                                        selection
+                                        options={header.filter((h: string) => fd[h] !== 'LHS').map((h: string) => ({ key: h, text: h, value: h }))}
+                                        onChange={(_e, props) => buildFD(props.value, 'RHS')}
+                                    />
+                                    </div>
+                                    {
+                                        !isValidFD() && !doesntKnowFD && (
+                                            <Message error>
+                                                You must either select at least one attribute for the LHS and one for the RHS, or check "I Don't Know."
+                                            </Message>
+                                        )
+                                    }
+                                    <h3 style={{ paddingTop: 10, paddingBottom: 10 }}>OR</h3>
                                     <Checkbox
                                         label={`I Don't Know`}
                                         name='idk_checkbox'
@@ -279,60 +264,13 @@ export const PostInteraction: FC<PostInteractionProps> = () => {
                                         checked={doesntKnowFD}
                                         onChange={() => setDoesntKnowFD(!doesntKnowFD)}
                                     />
-                                    <h3 style={{ paddingTop: 10, paddingBottom: 10 }}>OR</h3>
-                                    {
-                                        header.map((h: string) => (
-                                            <div style={{ flexDirection: 'row' }}>
-                                                <h4>{h}</h4>
-                                                <Radio
-                                                    style={{ padding: 10 }}
-                                                    label='Left-hand side'
-                                                    name={`${h}_radioGroup`}
-                                                    value='LHS'
-                                                    checked={Object.keys(fd).includes(h) && fd[h] === 'LHS'}
-                                                    onChange={() => {
-                                                        const newFD: {[key: string]: string} = {}
-                                                        Object.keys(fd).forEach((h: string) => newFD[h] = fd[h])
-                                                        newFD[h] = 'LHS'
-                                                        setFD(newFD)
-                                                    }}
-                                                />
-                                                <Radio
-                                                    style={{ padding: 10 }}
-                                                    label='Right-hand side'
-                                                    name={`${h}_radioGroup`}
-                                                    value='RHS'
-                                                    checked={Object.keys(fd).includes(h) && fd[h] === 'RHS'}
-                                                    onChange={() => {
-                                                        const newFD: {[key: string]: string} = {}
-                                                        Object.keys(fd).forEach((h: string) => newFD[h] = fd[h])
-                                                        newFD[h] = 'RHS'
-                                                        setFD(newFD)
-                                                    }}
-                                                />
-                                                <Radio
-                                                    style={{ padding: 10 }}
-                                                    label='Not part of the rule'
-                                                    name={`${h}_radioGroup`}
-                                                    value='N/A'
-                                                    checked={Object.keys(fd).includes(h) && fd[h] === 'N/A'}
-                                                    onChange={() => {
-                                                        const newFD: {[key: string]: string} = {}
-                                                        Object.keys(fd).forEach((h: string) => newFD[h] = fd[h])
-                                                        newFD[h] = 'N/A'
-                                                        setFD(newFD)
-                                                    }}
-                                                />
-                                            </div>
-                                        ))
-                                    }
-                                    {
-                                        !isValidFD() && !doesntKnowFD && (
-                                            <Message error>
-                                                You must select at least one attribute for the LHS and one for the RHS.
-                                            </Message>
-                                        )
-                                    }
+                                    <Divider style={{ paddingBottom: 10, paddingTop: 10 }} />
+                                    <Input
+                                        type='text'
+                                        size='large'
+                                        placeholder='Add any comments supporting your thinking here...'
+                                        onChange={(_e, props) => setFDComment(props.value)}
+                                    />
                                 </Message>
                                 {
                                     dataOverviewRead ? (
@@ -358,8 +296,27 @@ export const PostInteraction: FC<PostInteractionProps> = () => {
                         ) : (
                             <Message success>
                                 <Message.Header>
-                                    You're all done! Thanks for participating in our study!
+                                    You're all done! How did everything go? Leave any comments or feedback you have about your study experience below!
                                 </Message.Header>
+                                <Input 
+                                    type='text'
+                                    size='large'
+                                    placeholder='Add any comments or feedback here...'
+                                    onChange={(_e, props) => setComments(props.value)}
+                                />
+                                <div style={{ flexDirection: 'row' }}>
+                                    <Button secondary size='big' onClick={() => setDone(true)} style={{ marginRight: 10 }}>Skip</Button>
+                                    <Button positive size='big' onClick={handleDoneComments}>Submit</Button>
+                                </div>
+                                {
+                                    done &&
+                                    <>
+                                        <Divider />
+                                        <Message.Header>
+                                            Thanks for participating in our study!
+                                        </Message.Header>
+                                    </>
+                                }
                             </Message>
                         )
                     }

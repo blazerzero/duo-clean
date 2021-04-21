@@ -16,7 +16,8 @@ import {
     Header,
     Input,
     Radio,
-    Checkbox
+    Checkbox,
+    Dropdown
 } from 'semantic-ui-react'
 import { HiMenu, HiSortAscending, HiSortDescending } from 'react-icons/hi'
 import server from '../utils/server'
@@ -37,8 +38,17 @@ export const Interact: FC<InteractProps> = () => {
     const [sortMethod, setSortMethod] = useState<{[key: string]: string}>({})
     const [iterCount, setIterCount] = useState<number>(0)
     const [fd, setFD] = useState<{[key: string]: string}>({})
+    const [lhs, setLHS] = useState<string[]>([])
+    const [rhs, setRHS] = useState<string[]>([])
+    const [fdComment, setFDComment] = useState<string>('')
     const [doesntKnowFD, setDoesntKnowFD] = useState<boolean>(false)
     const [done, setDone] = useState<boolean>(false)
+    
+    useEffect(() => {
+        const init_fd: {[key: string]: string} = {}
+        header.forEach((h: string) => init_fd[h] = 'N/A')
+        setFD(init_fd)
+    }, [header])
 
     useEffect(() => {
         setProcessing(true)
@@ -183,6 +193,7 @@ export const Interact: FC<InteractProps> = () => {
                 feedback: fdbck,
                 project_id,
                 current_user_h,
+                user_h_comment: fdComment,
             }
         )
         const { msg } = response.data
@@ -199,14 +210,18 @@ export const Interact: FC<InteractProps> = () => {
                 sorting[h] = 'NONE'
             })
             const iter = iterCount + 1
+            const re_init_fd: {[key: string]: string} = {}
+            header.forEach((h: string) => re_init_fd[h] = 'N/A')
             setIterCount(iter)
             setFeedback(new_fdbck)
             setFeedbackMap(feedback_map)
             setSortMethod(sorting)
             setProcessing(false)
             setData(prepped_data)
-            setFD({})
+            setFD(re_init_fd)
             setDoesntKnowFD(false)
+            setLHS([])
+            setRHS([])
         }
     }
 
@@ -263,28 +278,28 @@ export const Interact: FC<InteractProps> = () => {
         && Object.keys(fd).filter((k: string) => fd[k] === 'RHS').length !== 0
     }
 
+    const buildFD = (attrs: any, side: 'LHS' | 'RHS') => {
+        if (attrs) {
+            console.log(attrs)
+            const fresh_fd: {[key: string]: string} = {}
+            header.forEach((h: string) => {
+                fresh_fd[h] = fd[h]
+            })
+            attrs.forEach((attr: string) => {
+                fresh_fd[attr] = side
+            })
+            header.forEach((h: string) => {
+                if (!attrs.includes(h) && fresh_fd[h] === side) fresh_fd[h] = 'N/A'
+            })
+            console.log(fresh_fd)
+            if (side === 'LHS') setLHS(attrs)
+            else setRHS(attrs)
+            setFD(fresh_fd)
+        }
+    }
+
     return (
         <Dimmer.Dimmable as={Segment} dimmed={processing}>
-            {/* <Modal
-                onClose={() => {}}
-                onOpen={() => setFDModalOpen(true)}
-                open={fdModalOpen}
-            >
-                <Modal.Content>
-                    <Modal.Description>
-                        <Header>Given all the data you've seen up until this point, what rule are you most confident holds over the data?</Header>
-                        <p><strong>REMINDER: </strong>The schema you're working with is [{header.join(', ')}].</p>
-                        <Input
-                            size='large'
-                            placeholder='Enter the FD(s) here'
-                            onChange={(_e, props) => setFD(props.value)}
-                            className='input'
-                        />
-                    </Modal.Description>
-                    <Divider style={{ borderColor: 'white' }} />
-                    <Button positive size='big' onClick={handleSubmit} disabled={fd.length === 0}>Submit</Button>
-                </Modal.Content>
-            </Modal> */}
             <Grid centered stretched={false} columns={1} className='site-page'>
                 <Grid.Column>
                     <Grid.Row className='content-centered'>
@@ -292,7 +307,7 @@ export const Interact: FC<InteractProps> = () => {
                             <img src={logo} style={{ padding: 10, position: 'absolute', top: 0, right: 0, width: '100%', height: 'auto' }} alt='OSU logo' />
                         </Container>
                         <Container className='home-header box-blur'>
-                            <span className='home-title'>Discovering Rules and Patterns in Data</span>
+                            <span className='home-title'>Discovering Patterns in Data</span>
                         </Container>
                     </Grid.Row>
                     <Grid.Row className='content-centered' style={{ paddingBottom: 10 }}>
@@ -306,7 +321,7 @@ export const Interact: FC<InteractProps> = () => {
                     <Grid.Row className='content-centered'>
                         <Message color='yellow'>
                             <Message.Header><h3>Remember!</h3></Message.Header>
-                            <p>Yellow cells indicate cells you marked as part of an exception to a rule.</p>
+                            <p>Yellow cells indicate cells you marked as part of an exception to an FD.</p>
                         </Message>
                     </Grid.Row>
                     <Divider />
@@ -379,67 +394,50 @@ export const Interact: FC<InteractProps> = () => {
                             </Message.Header>
                             <h4>Answer by indicating, for each attribute below, whether the attribute is part of the left-hand side or right-hand side of the rule, or not part of the rule.</h4>
                             <p><strong>NOTE: </strong>If you're not sure yet, you can check "I Don't Know" instead.</p>
+                            <div style={{ flexDirection: 'row' }}>
+                                <Dropdown
+                                    placeholder='Select an attribute(s)...'
+                                    multiple
+                                    selection
+                                    options={header.filter((h: string) => fd[h] !== 'RHS').map((h: string) => ({ key: h, text: h, value: h }))}
+                                    onChange={(_e, props) => buildFD(props.value, 'LHS')}
+                                    value={lhs}
+                                />
+                                <span style={{ paddingLeft: 10, paddingRight: 10, fontSize: 20 }}><strong>{'=>'}</strong></span>
+                                <Dropdown
+                                    placeholder='Select an attribute(s)...'
+                                    multiple
+                                    selection
+                                    options={header.filter((h: string) => fd[h] !== 'LHS').map((h: string) => ({ key: h, text: h, value: h }))}
+                                    onChange={(_e, props) => buildFD(props.value, 'RHS')}
+                                    value={rhs}
+                                />
+                            </div>
+                            {
+                                !isValidFD() && !doesntKnowFD && (
+                                    <Message error>
+                                        You must either select at least one attribute for the LHS and one for the RHS, or check "I Don't Know."
+                                    </Message>
+                                )
+                            }
+                            <h3 style={{ paddingTop: 10, paddingBottom: 10 }}>OR</h3>
                             <Checkbox
                                 label={`I Don't Know`}
                                 name='idk_checkbox'
                                 value='IDK'
                                 checked={doesntKnowFD}
                                 onChange={() => setDoesntKnowFD(!doesntKnowFD)}
+                                style={{ paddingBottom: 10 }}
                             />
-                            <h3 style={{ paddingTop: 10, paddingBottom: 10 }}>OR</h3>
-                            {
-                                header.map((h: string) => (
-                                    <div style={{ flexDirection: 'row' }}>
-                                        <h4>{h}</h4>
-                                        <Radio
-                                            style={{ padding: 10 }}
-                                            label='Left-hand side'
-                                            name={`${h}_radioGroup`}
-                                            value='LHS'
-                                            checked={Object.keys(fd).includes(h) && fd[h] === 'LHS'}
-                                            onChange={() => {
-                                                const newFD: {[key: string]: string} = {}
-                                                Object.keys(fd).forEach((h: string) => newFD[h] = fd[h])
-                                                newFD[h] = 'LHS'
-                                                setFD(newFD)
-                                            }}
-                                        />
-                                        <Radio
-                                            style={{ padding: 10 }}
-                                            label='Right-hand side'
-                                            name={`${h}_radioGroup`}
-                                            value='RHS'
-                                            checked={Object.keys(fd).includes(h) && fd[h] === 'RHS'}
-                                            onChange={() => {
-                                                const newFD: {[key: string]: string} = {}
-                                                Object.keys(fd).forEach((h: string) => newFD[h] = fd[h])
-                                                newFD[h] = 'RHS'
-                                                setFD(newFD)
-                                            }}
-                                        />
-                                        <Radio
-                                            style={{ padding: 10 }}
-                                            label='Not part of the rule'
-                                            name={`${h}_radioGroup`}
-                                            value='N/A'
-                                            checked={Object.keys(fd).includes(h) && fd[h] === 'N/A'}
-                                            onChange={() => {
-                                                const newFD: {[key: string]: string} = {}
-                                                Object.keys(fd).forEach((h: string) => newFD[h] = fd[h])
-                                                newFD[h] = 'N/A'
-                                                setFD(newFD)
-                                            }}
-                                        />
-                                    </div>
-                                ))
-                            }
-                            {
-                                !isValidFD() && !doesntKnowFD && (
-                                    <Message error>
-                                        You must select at least one attribute for the LHS and one for the RHS.
-                                    </Message>
-                                )
-                            }
+                            <Divider />
+                            <Input
+                                fluid
+                                style={{ paddingTop: 10 }}
+                                type='text'
+                                size='large'
+                                placeholder='Add any comments supporting your thinking here...'
+                                onChange={(_e, props) => setFDComment(props.value)}
+                            />
                         </Message>
                     </Grid.Row>
                     <Divider />

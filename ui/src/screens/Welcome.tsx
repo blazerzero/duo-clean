@@ -64,7 +64,7 @@ export const Welcome: FC<WelcomeProps> = () => {
                             <img src={logo} style={{ padding: 10, position: 'absolute', top: 0, right: 0, width: '100%', height: 'auto' }} alt='OSU logo' />
                         </Container> 
                         <Container className='home-header box-blur'>
-                            <span className='home-title'>Discovering Rules and Patterns in Data</span>
+                            <span className='home-title'>Discovering Patterns in Data</span>
                         </Container>
                     </Grid.Row>
                     <Grid.Row>
@@ -75,8 +75,7 @@ export const Welcome: FC<WelcomeProps> = () => {
                                 <p><strong>Thank you so much for agreeing to participate in our study!</strong></p>
                             </Message.Header>
                             <p>
-                                We are analyzing and aim to model how users learn data quality rules and patterns
-                                (i.e. functional dependencies) that apply over datasets.
+                                Our goal is to understand how users discover patterns in data.
                             </p>
                         </Message>
                     </Grid.Row>
@@ -88,13 +87,8 @@ export const Welcome: FC<WelcomeProps> = () => {
                             </Message.Header>
                             <Divider />
                             <p>
-                                You will be tasked with discovering rules and patterns that hold with high confidence in some datasets and finding exceptions to those rules in the data.
-                            </p>
-                            <p>
-                                You will be interacting with four different datasets that may contain
-                                exceptions to one or more rules. Your job will be to figure out
-                                the rule that holds best over the dataset and find exceptions to that rule.
-                            </p>                        
+                                You will be interacting with small samples from some datasets, and your job will be to figure out <strong>patterns</strong> that should reasonably hold over the entire dataset.
+                            </p>                     
                         </Message>
                     </Grid.Row>
                     <Divider />
