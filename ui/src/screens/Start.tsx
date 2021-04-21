@@ -345,8 +345,8 @@ export const Start: FC<StartProps> = () => {
                                     </h4>
                                 </Message.Header>
                                 <p>
-                                    E.g. in the rule {'(city, zip) => state'}, city and zip collectively form the LHS and state forms the RHS.
-                                    In the rule {'(id) => address, city, state, zip'}, id forms the LHS and address, city, state, and zip collectively form the RHS.
+                                    E.g. in the rule <strong>{'(city, zip) => state'}</strong>, city and zip collectively form the LHS and state forms the RHS.
+                                    In the rule <strong>{'(id) => address, city, state, zip'}</strong>, id forms the LHS and address, city, state, and zip collectively form the RHS.
                                 </p>
                             </Message>
                             <p>
