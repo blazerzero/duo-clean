@@ -449,7 +449,7 @@ export const Interact: FC<InteractProps> = () => {
                                     color='grey'
                                     size='big'
                                     onClick={() => handleSubmit(true)}
-                                    disabled={iterCount <= 6 || (!doesntKnowFD && !isValidFD())}>
+                                    disabled={iterCount <= 8 || (!doesntKnowFD && !isValidFD())}>
                                     I'm All Done
                                 </Button>
                             </Grid.Row>

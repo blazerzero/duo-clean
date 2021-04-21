@@ -195,21 +195,25 @@ class Import(Resource):
         with open('scenarios.json', 'r') as f:
             scenarios_list = json.load(f)
         scenario = scenarios_list[scenario_id]
-        if user_interaction_number == 1:
+        # if user_interaction_number == 1:
+        if user_interaction_number <= 3:
             target_h_sample_ratio = 0.2
             alt_h_sample_ratio = 0.6
-        elif user_interaction_number == 2:
-            target_h_sample_ratio = 0.3
-            alt_h_sample_ratio = 0.5
-        elif user_interaction_number == 3:
-            target_h_sample_ratio = 0.4
-            alt_h_sample_ratio = 0.4
-        elif user_interaction_number == 4:
-            target_h_sample_ratio = 0.5
-            alt_h_sample_ratio = 0.3
+        # elif user_interaction_number == 2:
+        #     target_h_sample_ratio = 0.3
+        #     alt_h_sample_ratio = 0.5
+        # elif user_interaction_number == 3:
+        #     target_h_sample_ratio = 0.4
+        #     alt_h_sample_ratio = 0.4
+        # elif user_interaction_number == 4:
+        #     target_h_sample_ratio = 0.5
+        #     alt_h_sample_ratio = 0.3
+        # else:
+        #     target_h_sample_ratio = 0.6
+        #     alt_h_sample_ratio = 0.2
         else:
-            target_h_sample_ratio = 0.6
-            alt_h_sample_ratio = 0.2
+            target_h_sample_ratio = 0.3
+            alt_h_sample_ratio = 0.45
         scenario['target_h_sample_ratio'] = target_h_sample_ratio
         scenario['alt_h_sample_ratio'] = alt_h_sample_ratio
         target_fd = scenario['target_fd']

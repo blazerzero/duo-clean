@@ -684,8 +684,9 @@ export const Start: FC<StartProps> = () => {
                                             To mark a cell as an exception to an FD, click on the cell. The cell will be highlighted yellow.
                                             You can undo your decision for that cell by simply clicking on the cell again to unhighlight and unmark it.
                                             If you don't see anything that should be marked, you don't have to mark anything. Just answer the prompt using the dropdowns
-                                            and press <strong><i>Next</i></strong> to get a fresh sample. After 6 rounds, if you are can't find any more exceptions or are otherwise
-                                            done with the dataset, answer the prompt one last time and click <strong><i>I'm All Done</i></strong> to finish working with the dataset.
+                                            and press <strong><i>Next</i></strong> to get a fresh sample. After 8 rounds, if you've figured it out, you can click
+                                            <strong><i>I'm All Done</i></strong> to finish working with the dataset. However, if you're still working to figure out the FD,
+                                            you can keep going, up to a total of 15 rounds.
                                         </p>
                                         <p>
                                             Your markings will be visible throughout the entire interaction, i.e. if you 
