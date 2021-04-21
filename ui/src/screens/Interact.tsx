@@ -15,7 +15,8 @@ import {
     Divider,
     Header,
     Input,
-    Radio
+    Radio,
+    Checkbox
 } from 'semantic-ui-react'
 import { HiMenu, HiSortAscending, HiSortDescending } from 'react-icons/hi'
 import server from '../utils/server'
@@ -36,6 +37,7 @@ export const Interact: FC<InteractProps> = () => {
     const [sortMethod, setSortMethod] = useState<{[key: string]: string}>({})
     const [iterCount, setIterCount] = useState<number>(0)
     const [fd, setFD] = useState<{[key: string]: string}>({})
+    const [doesntKnowFD, setDoesntKnowFD] = useState<boolean>(false)
     const [done, setDone] = useState<boolean>(false)
 
     useEffect(() => {
@@ -204,6 +206,7 @@ export const Interact: FC<InteractProps> = () => {
             setProcessing(false)
             setData(prepped_data)
             setFD({})
+            setDoesntKnowFD(false)
         }
     }
 
@@ -253,6 +256,11 @@ export const Interact: FC<InteractProps> = () => {
         setSortMethod(method)
         setFeedbackMap(feedback_map)
         setData(sample)
+    }
+
+    const isValidFD = () => {
+        return Object.keys(fd).filter((k: string) => fd[k] === 'LHS').length !== 0
+        && Object.keys(fd).filter((k: string) => fd[k] === 'RHS').length !== 0
     }
 
     return (
@@ -369,8 +377,16 @@ export const Interact: FC<InteractProps> = () => {
                                     Given all the data you've seen up until this point, what rule are you most confident holds over the data?
                                 </h3>
                             </Message.Header>
-                            <h4>Answer by indicating, for each attribute below, whether the attribute is part of the LHS, RHS, or not part of the rule.</h4>
-                            <p><strong>NOTE: </strong>If you're not sure yet, you can leave this empty.</p>
+                            <h4>Answer by indicating, for each attribute below, whether the attribute is part of the left-hand side or right-hand side of the rule, or not part of the rule.</h4>
+                            <p><strong>NOTE: </strong>If you're not sure yet, you can check "I Don't Know" instead.</p>
+                            <Checkbox
+                                label={`I Don't Know`}
+                                name='idk_checkbox'
+                                value='IDK'
+                                checked={doesntKnowFD}
+                                onChange={() => setDoesntKnowFD(!doesntKnowFD)}
+                            />
+                            <h3 style={{ paddingTop: 10, paddingBottom: 10 }}>OR</h3>
                             {
                                 header.map((h: string) => (
                                     <div style={{ flexDirection: 'row' }}>
@@ -417,18 +433,25 @@ export const Interact: FC<InteractProps> = () => {
                                     </div>
                                 ))
                             }
+                            {
+                                !isValidFD() && !doesntKnowFD && (
+                                    <Message error>
+                                        You must select at least one attribute for the LHS and one for the RHS.
+                                    </Message>
+                                )
+                            }
                         </Message>
                     </Grid.Row>
                     <Divider />
                     <Grid.Row>
                         <Grid.Column className='content-centered'>
                             <Grid.Row>
-                                <Button positive size='big' onClick={() => handleSubmit(false)}>Next</Button>
+                                <Button positive size='big' onClick={() => handleSubmit(false)} disabled={!isValidFD() && !doesntKnowFD}>Next</Button>
                                 <Button
                                     color='grey'
                                     size='big'
                                     onClick={() => handleSubmit(true)}
-                                    disabled={iterCount <= 6}>
+                                    disabled={iterCount <= 6 || (!doesntKnowFD && !isValidFD())}>
                                     I'm All Done
                                 </Button>
                             </Grid.Row>

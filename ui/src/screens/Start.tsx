@@ -17,7 +17,8 @@ import {
     Tab,
     Form,
     Radio,
-    Input
+    Input,
+    Checkbox
 } from 'semantic-ui-react'
 import server from '../utils/server'
 import logo from '../images/OSU_horizontal_2C_O_over_B.png'
@@ -39,6 +40,7 @@ export const Start: FC<StartProps> = () => {
     const [quizAnswersReviewed, setQuizAnswersReviewed] = useState<boolean>(false)
     const [header, setHeader] = useState<string[]>([])
     const [fd, setFD] = useState<{[key: string]: string}>({})
+    const [doesntKnowFD, setDoesntKnowFD] = useState<boolean>(false)
 
     const [q1Response, setQ1Response] = useState<string>('')
     const q1CorrectAnswer = 'name'
@@ -141,6 +143,11 @@ export const Start: FC<StartProps> = () => {
             description
         })
         setProcessing(false)
+    }
+
+    const isValidFD = () => {
+        return Object.keys(fd).filter((k: string) => fd[k] === 'LHS').length > 0
+        && Object.keys(fd).filter((k: string) => fd[k] === 'RHS').length > 0
     }
 
     const fdExampleData = [
@@ -716,9 +723,17 @@ export const Start: FC<StartProps> = () => {
                                                 </h3>
                                             </Message.Header>
                                             <p>E.g. {'(facilityname) => type, owner'}; {'(title, year) => director'}</p>
-                                            <h4>Answer by indicating, for each attribute below, whether the attribute is part of the LHS, RHS, or not part of the rule.</h4>
-                                            <p><strong>NOTE: </strong>If you're not sure yet, you can leave this empty.</p>
+                                            <h4>Answer by indicating, for each attribute below, whether the attribute is part of the left-hand side or right-hand side of the rule, or not part of the rule.</h4>
+                                            <p><strong>NOTE: </strong>If you're not sure yet, you can check "I Don't Know" instead.</p>
                                             <Divider />
+                                            <Checkbox
+                                                label={`I Don't Know`}
+                                                name='idk_checkbox'
+                                                value='IDK'
+                                                checked={doesntKnowFD}
+                                                onChange={() => setDoesntKnowFD(!doesntKnowFD)}
+                                            />
+                                            <h3 style={{ paddingTop: 10, paddingBottom: 10 }}>OR</h3>
                                             {
                                                 header.map((h: string) => (
                                                     <div style={{ flexDirection: 'row', paddingBottom: 10 }}>
@@ -771,12 +786,20 @@ export const Start: FC<StartProps> = () => {
                                                     </div>
                                                 ))
                                             }
+                                            {
+                                                !isValidFD() && !doesntKnowFD && (
+                                                    <Message error>
+                                                        You must select at least one attribute for the LHS and one for the RHS.
+                                                    </Message>
+                                                )
+                                            }
+                                            
                                         </Message>
                                         {
                                             dataOverviewRead ? (
                                                 <Message color='green'><p>Scroll Down</p></Message>
                                             ) : (
-                                                <Button positive size='big' onClick={() => setDataOverviewRead(true)}>Continue</Button>
+                                                <Button positive size='big' onClick={() => setDataOverviewRead(true)} disabled={!doesntKnowFD && !isValidFD()}>Continue</Button>
                                             )
                                         }
                                         {
