@@ -45,6 +45,7 @@ class User(object):
             'done': self.done,
             'pre_survey': self.pre_survey,
             'post_questionnaire': self.post_questionnaire,
+            'comments': self.comments if hasattr(self, 'comments') else None
         }
 
 # Test endpoint to check if the server is live
@@ -173,6 +174,7 @@ class Import(Resource):
             initial_user_h = json.loads(request.data)['initial_fd']
             fd_comment = json.loads(request.data)['fd_comment']
         print(scenario_id)
+        console.log(initial_user_h)
 
         # Get the user from the users list
         try:
@@ -401,6 +403,7 @@ class Feedback(Resource):
             feedback_dict = json.loads(request.form.get('feedback'))
 
         print(project_id)
+        console.log(current_user_h)
 
         feedback = pd.DataFrame.from_dict(feedback_dict, orient='index')
         sample_size = 10
@@ -496,15 +499,38 @@ class PostInteraction(Resource):
 
     def post(self):
         # Get the provided email and scenario number
+        prev_scenario_id = request.form.get('prev_scenario_id')
         next_scenario_id = request.form.get('next_scenario_id')
+        email = request.form.get('email')
         if next_scenario_id is None:
+            prev_scenario_id = json.loads(request.data)['prev_scenario_id']
             next_scenario_id = json.loads(request.data)['next_scenario_id']
+            email = json.loads(request.data)['email']
 
-        with open('scenarios.json', 'r') as f:
-            scenarios_list = json.load(f)
-        scenario = scenarios_list[next_scenario_id]
-        data = pd.read_csv(scenario['dirty_dataset'])
-        header = [col for col in data.columns]
+        if next_scenario_id != '0':
+            with open('scenarios.json', 'r') as f:
+                scenarios_list = json.load(f)
+            scenario = scenarios_list[next_scenario_id]
+            data = pd.read_csv(scenario['dirty_dataset'])
+            header = [col for col in data.columns]
+        else:
+            header = list()
+
+        try:
+            users = pickle.load( open('./study-utils/users.p', 'rb'))
+        except:
+            return {'msg': '[ERROR] users does not exist'}, 400, {'Access-Control-Allow-Origin': '*'}
+        
+        # Save the user's questionnaire responses
+        if email not in users.keys():
+            return {'msg': '[ERROR] no user exists with this email'}, 400, {'Access-Control-Allow-Origin': '*'}
+        
+        user = users[email]
+        user.done.append(prev_scenario_id)
+        users[email] = user
+
+        # Save the users object updates
+        pickle.dump( users, open('./study-utils/users.p', 'wb') )
 
         response = {
             'header': header,
@@ -523,6 +549,8 @@ class Done(Resource):
             email = json.loads(request.data)['email']
             comments = json.loads(request.data)['comments']
         
+        console.log(email)
+        console.log(comments)
         # Get the user from the users list
         try:
             users = pickle.load( open('./study-utils/users.p', 'rb'))

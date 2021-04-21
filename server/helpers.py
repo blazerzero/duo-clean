@@ -333,9 +333,9 @@ def returnTuples(data, X, sample_size, alt_h_vio_pairs, target_h_sample_ratio, a
             if tup in X:
                 sample_X.add(tup)
     
-    # console.log('Ratios')
-    # console.log(len(target_vios_out) / len(sample_all_vios))
-    # console.log(len(alt_vios_out) / len(sample_all_vios))
+    console.log('Ratios')
+    console.log(len(target_vios_out) / len(sample_all_vios))
+    console.log(len(alt_vios_out) / len(sample_all_vios))
 
     return s_out, sample_X
 

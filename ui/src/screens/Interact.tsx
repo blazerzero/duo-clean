@@ -88,14 +88,13 @@ export const Interact: FC<InteractProps> = () => {
         setProcessing(true)
         // const answers = { fd, durationNeeded }
         let header: string[]
-        if (scenarios.length > 0) {
-            const response: AxiosResponse = await server.post('/post-interaction', {
-                next_scenario_id: scenarios[0].toString(),
-            })
-            header = response.data.header
-        } else {
-            header = []
-        }
+        const response: AxiosResponse = await server.post('/post-interaction', {
+            next_scenario_id: scenarios.length > 0 ? scenarios[0].toString() : '0',
+            prev_scenario_id: scenario_id.toString(),
+            email,
+        })
+        header = response.data.header
+
         
         // if (response.status === 201) {
         //     setHeader(response.data.header)
@@ -192,7 +191,7 @@ export const Interact: FC<InteractProps> = () => {
             {
                 feedback: fdbck,
                 project_id,
-                current_user_h,
+                current_user_h: doesntKnowFD ? 'Not Sure' : current_user_h,
                 user_h_comment: fdComment,
             }
         )
@@ -212,6 +211,7 @@ export const Interact: FC<InteractProps> = () => {
             const iter = iterCount + 1
             const re_init_fd: {[key: string]: string} = {}
             header.forEach((h: string) => re_init_fd[h] = 'N/A')
+            setFDComment('')
             setIterCount(iter)
             setFeedback(new_fdbck)
             setFeedbackMap(feedback_map)
@@ -437,6 +437,7 @@ export const Interact: FC<InteractProps> = () => {
                                 size='large'
                                 placeholder='Add any comments supporting your thinking here...'
                                 onChange={(_e, props) => setFDComment(props.value)}
+                                value={fdComment}
                             />
                         </Message>
                     </Grid.Row>

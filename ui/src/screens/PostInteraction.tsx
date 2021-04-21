@@ -31,7 +31,7 @@ export const PostInteraction: FC<PostInteractionProps> = () => {
     const history = useHistory()
     const location = useLocation()
     const { header, email, scenarios, scenario_id } = location.state as any
-    console.log(scenarios)
+    // console.log(scenarios)
 
     const [processing, setProcessing] = useState<boolean>(false)
     const [fd, setFD] = useState<{[key: string]: string}>({})
@@ -124,7 +124,7 @@ export const PostInteraction: FC<PostInteractionProps> = () => {
         const response: AxiosResponse = await server.post('/import', {
             email,
             scenario_id: next_scenario.toString(),
-            initial_fd,
+            initial_fd: doesntKnowFD ? 'Not Sure' : initial_fd,
             fd_comment: fdComment,
         })
         const { project_id, description } = response.data
@@ -139,11 +139,11 @@ export const PostInteraction: FC<PostInteractionProps> = () => {
         })
     }
 
-    const handleDoneComments = async () => {
+    const handleDoneComments = async (mode: 'skip' | 'submit') => {
         setProcessing(true)
         const response: AxiosResponse = await server.post('/done', {
             email,
-            comments,
+            comments: mode === 'submit' ? comments : '',
         })
         if (response.status === 201) {
             setProcessing(false)
@@ -295,27 +295,32 @@ export const PostInteraction: FC<PostInteractionProps> = () => {
                             </Message>
                         ) : (
                             <Message success>
-                                <Message.Header>
-                                    You're all done! How did everything go? Leave any comments or feedback you have about your study experience below!
-                                </Message.Header>
-                                <Input 
-                                    type='text'
-                                    size='large'
-                                    placeholder='Add any comments or feedback here...'
-                                    onChange={(_e, props) => setComments(props.value)}
-                                />
-                                <div style={{ flexDirection: 'row' }}>
-                                    <Button secondary size='big' onClick={() => setDone(true)} style={{ marginRight: 10 }}>Skip</Button>
-                                    <Button positive size='big' onClick={handleDoneComments}>Submit</Button>
-                                </div>
                                 {
-                                    done &&
-                                    <>
-                                        <Divider />
-                                        <Message.Header>
-                                            Thanks for participating in our study!
-                                        </Message.Header>
-                                    </>
+                                    done ? (
+                                        <>
+                                            <Message.Header>
+                                                Thanks for participating in our study!
+                                            </Message.Header>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Message.Header>
+                                                You're all done! How did everything go? Leave any comments or feedback you have about your study experience below!
+                                            </Message.Header>
+                                            <Input
+                                                fluid
+                                                type='text'
+                                                size='large'
+                                                placeholder='Add any comments or feedback here...'
+                                                onChange={(_e, props) => setComments(props.value)}
+                                                style={{ paddingTop: 20, paddingBottom: 20}}
+                                            />
+                                            <div style={{ flexDirection: 'row' }}>
+                                                <Button color='grey' size='big' onClick={() => handleDoneComments('skip')} style={{ marginRight: 10 }}>Skip</Button>
+                                                <Button positive size='big' onClick={() => handleDoneComments('submit')}>Submit</Button>
+                                            </div>
+                                        </>
+                                    )
                                 }
                             </Message>
                         )
