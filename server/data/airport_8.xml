@@ -23,7 +23,7 @@
     <dependencies>
 <![CDATA[
 DCs:
-// FD1: (facilityname) -> manager
+// FD1: (facilityname, type) -> manager
 e1: airport_8(facilityname: $fn1, type: $t1, manager: $m1), 
 airport_8(facilityname: $fn2, type: $t2, manager: $m2), 
     $fn1 == $fn2, $t1 == $t2, $m1 != $m2 -> #fail.

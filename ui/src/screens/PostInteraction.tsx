@@ -32,8 +32,7 @@ export const PostInteraction: FC<PostInteractionProps> = () => {
     console.log(scenarios)
 
     const [processing, setProcessing] = useState<boolean>(false)
-    const [fd, setFD] = useState<string>('')
-    const [nextFD, setNextFD] = useState<string>('')
+    const [fd, setFD] = useState<{[key: string]: string}>({})
     const [durationNeeded, setDurationNeeded] = useState<string>('')
     const [quizDone, setQuizDone] = useState<boolean>(false)
     const [dataOverviewRead, setDataOverviewRead] = useState<boolean>(false)
@@ -107,10 +106,16 @@ export const PostInteraction: FC<PostInteractionProps> = () => {
     const handleReady = async () => {
         setProcessing(true)
         const next_scenario: number = scenarios.splice(0, 1) as number
+        const lhs: string[] = Object.keys(fd).filter((k: string) => fd[k] === 'LHS')
+        lhs.sort()
+        const rhs: string[] = Object.keys(fd).filter((k: string) => fd[k] === 'RHS')
+        rhs.sort()
+        const initial_fd: string = `(${lhs.join(', ')}) => ${rhs.join(', ')}`
+        console.log(initial_fd)
         const response: AxiosResponse = await server.post('/import', {
             email,
             scenario_id: next_scenario.toString(),
-            initial_fd: nextFD,
+            initial_fd,
         })
         const { project_id, description } = response.data
         console.log(header)
@@ -256,20 +261,61 @@ export const PostInteraction: FC<PostInteractionProps> = () => {
                                             schema, what rule are you most confident holds over this dataset?
                                         </h3>
                                     </Message.Header>
-                                    <p>E.g. facilityname determines type and owner; title and year determine director</p>
+                                    <h4>Answer by indicating, for each attribute below, whether the attribute is part of the LHS, RHS, or not part of the rule.</h4>
+                                    <p>E.g. {'(facilityname) => type, owner'}; {'(title, year) => director'}</p>
                                     <p><strong>NOTE: </strong>If you're not sure yet, you can leave this empty.</p>
-                                    <Input
-                                        size='large'
-                                        placeholder='Enter the FD(s) here'
-                                        onChange={(_e, props) => setFD(props.value)}
-                                        className='input'
-                                    />
+                                    {
+                                        header.map((h: string) => (
+                                            <div style={{ flexDirection: 'row' }}>
+                                                <h4>{h}</h4>
+                                                <Radio
+                                                    style={{ padding: 10 }}
+                                                    label='Left-hand side'
+                                                    name={`${h}_radioGroup`}
+                                                    value='LHS'
+                                                    checked={Object.keys(fd).includes(h) && fd[h] === 'LHS'}
+                                                    onChange={() => {
+                                                        const newFD: {[key: string]: string} = {}
+                                                        Object.keys(fd).forEach((h: string) => newFD[h] = fd[h])
+                                                        newFD[h] = 'LHS'
+                                                        setFD(newFD)
+                                                    }}
+                                                />
+                                                <Radio
+                                                    style={{ padding: 10 }}
+                                                    label='Right-hand side'
+                                                    name={`${h}_radioGroup`}
+                                                    value='RHS'
+                                                    checked={Object.keys(fd).includes(h) && fd[h] === 'RHS'}
+                                                    onChange={() => {
+                                                        const newFD: {[key: string]: string} = {}
+                                                        Object.keys(fd).forEach((h: string) => newFD[h] = fd[h])
+                                                        newFD[h] = 'RHS'
+                                                        setFD(newFD)
+                                                    }}
+                                                />
+                                                <Radio
+                                                    style={{ padding: 10 }}
+                                                    label='Not part of the rule'
+                                                    name={`${h}_radioGroup`}
+                                                    value='N/A'
+                                                    checked={Object.keys(fd).includes(h) && fd[h] === 'N/A'}
+                                                    onChange={() => {
+                                                        const newFD: {[key: string]: string} = {}
+                                                        Object.keys(fd).forEach((h: string) => newFD[h] = fd[h])
+                                                        newFD[h] = 'N/A'
+                                                        setFD(newFD)
+                                                    }}
+                                                />
+                                            </div>
+                                        ))
+                                    }
                                 </Message>
                                 {
                                     dataOverviewRead ? (
                                         <Message color='green'><p>Scroll Down</p></Message>
                                     ) : (
-                                        <Button positive size='big' onClick={() => setDataOverviewRead(true)} disabled={nextFD.length === 0}>Continue</Button>
+                                        <Button positive size='big' onClick={() => setDataOverviewRead(true)}>Continue</Button>
                                     )
                                 }
                                 {
@@ -278,10 +324,10 @@ export const PostInteraction: FC<PostInteractionProps> = () => {
                                             <Divider />
                                             <Message info>
                                                 <Message.Header>
-                                                    When you're ready to begin working on your next dataset, click "Let's Go" below.
+                                                    When you're ready to begin interacting with your next dataset, click "Go to the Data" below.
                                                 </Message.Header>
                                             </Message>
-                                            <Button positive size='big' onClick={handleReady}>Let's Go!</Button>
+                                            <Button positive size='big' onClick={handleReady}>Go to the Data</Button>
                                         </>
                                     )
                                 }

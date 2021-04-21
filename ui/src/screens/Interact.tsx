@@ -14,7 +14,8 @@ import {
     Message,
     Divider,
     Header,
-    Input
+    Input,
+    Radio
 } from 'semantic-ui-react'
 import { HiMenu, HiSortAscending, HiSortDescending } from 'react-icons/hi'
 import server from '../utils/server'
@@ -34,8 +35,7 @@ export const Interact: FC<InteractProps> = () => {
     const [processing, setProcessing] = useState<boolean>(false)
     const [sortMethod, setSortMethod] = useState<{[key: string]: string}>({})
     const [iterCount, setIterCount] = useState<number>(0)
-    const [fd, setFD] = useState<string>('')
-    const [fdModalOpen, setFDModalOpen] = useState<boolean>(false)
+    const [fd, setFD] = useState<{[key: string]: string}>({})
     const [done, setDone] = useState<boolean>(false)
 
     useEffect(() => {
@@ -157,8 +157,8 @@ export const Interact: FC<InteractProps> = () => {
         setFeedback(fdbck)
     }
 
-    const handleSubmit = async () => {
-        if (done) {
+    const handleSubmit = async (isDone: boolean) => {
+        if (isDone) {
             handleDone()
             return
         }
@@ -169,12 +169,18 @@ export const Interact: FC<InteractProps> = () => {
         for (let i = 0; i < data.length; i++) {
             fdbck[data[i]['id']] = feedbackMap[i]
         }
+        const lhs: string[] = Object.keys(fd).filter((k: string) => fd[k] === 'LHS')
+        lhs.sort()
+        const rhs: string[] = Object.keys(fd).filter((k: string) => fd[k] === 'RHS')
+        rhs.sort()
+        const current_user_h: string = `(${lhs.join(', ')}) => ${rhs.join(', ')}`
+        console.log(current_user_h)
         const response: AxiosResponse = await server.post(
             '/feedback',
             {
                 feedback: fdbck,
                 project_id,
-                current_user_h: fd,
+                current_user_h,
             }
         )
         const { msg } = response.data
@@ -197,8 +203,7 @@ export const Interact: FC<InteractProps> = () => {
             setSortMethod(sorting)
             setProcessing(false)
             setData(prepped_data)
-            setFD('')
-            setFDModalOpen(false)
+            setFD({})
         }
     }
 
@@ -252,7 +257,7 @@ export const Interact: FC<InteractProps> = () => {
 
     return (
         <Dimmer.Dimmable as={Segment} dimmed={processing}>
-            <Modal
+            {/* <Modal
                 onClose={() => {}}
                 onOpen={() => setFDModalOpen(true)}
                 open={fdModalOpen}
@@ -271,7 +276,7 @@ export const Interact: FC<InteractProps> = () => {
                     <Divider style={{ borderColor: 'white' }} />
                     <Button positive size='big' onClick={handleSubmit} disabled={fd.length === 0}>Submit</Button>
                 </Modal.Content>
-            </Modal>
+            </Modal> */}
             <Grid centered stretched={false} columns={1} className='site-page'>
                 <Grid.Column>
                     <Grid.Row className='content-centered'>
@@ -358,16 +363,71 @@ export const Interact: FC<InteractProps> = () => {
                     </Grid.Row>
                     <Divider />
                     <Grid.Row>
+                        <Message>
+                            <Message.Header>
+                                <h3>
+                                    Given all the data you've seen up until this point, what rule are you most confident holds over the data?
+                                </h3>
+                            </Message.Header>
+                            <h4>Answer by indicating, for each attribute below, whether the attribute is part of the LHS, RHS, or not part of the rule.</h4>
+                            <p><strong>NOTE: </strong>If you're not sure yet, you can leave this empty.</p>
+                            {
+                                header.map((h: string) => (
+                                    <div style={{ flexDirection: 'row' }}>
+                                        <h4>{h}</h4>
+                                        <Radio
+                                            style={{ padding: 10 }}
+                                            label='Left-hand side'
+                                            name={`${h}_radioGroup`}
+                                            value='LHS'
+                                            checked={Object.keys(fd).includes(h) && fd[h] === 'LHS'}
+                                            onChange={() => {
+                                                const newFD: {[key: string]: string} = {}
+                                                Object.keys(fd).forEach((h: string) => newFD[h] = fd[h])
+                                                newFD[h] = 'LHS'
+                                                setFD(newFD)
+                                            }}
+                                        />
+                                        <Radio
+                                            style={{ padding: 10 }}
+                                            label='Right-hand side'
+                                            name={`${h}_radioGroup`}
+                                            value='RHS'
+                                            checked={Object.keys(fd).includes(h) && fd[h] === 'RHS'}
+                                            onChange={() => {
+                                                const newFD: {[key: string]: string} = {}
+                                                Object.keys(fd).forEach((h: string) => newFD[h] = fd[h])
+                                                newFD[h] = 'RHS'
+                                                setFD(newFD)
+                                            }}
+                                        />
+                                        <Radio
+                                            style={{ padding: 10 }}
+                                            label='Not part of the rule'
+                                            name={`${h}_radioGroup`}
+                                            value='N/A'
+                                            checked={Object.keys(fd).includes(h) && fd[h] === 'N/A'}
+                                            onChange={() => {
+                                                const newFD: {[key: string]: string} = {}
+                                                Object.keys(fd).forEach((h: string) => newFD[h] = fd[h])
+                                                newFD[h] = 'N/A'
+                                                setFD(newFD)
+                                            }}
+                                        />
+                                    </div>
+                                ))
+                            }
+                        </Message>
+                    </Grid.Row>
+                    <Divider />
+                    <Grid.Row>
                         <Grid.Column className='content-centered'>
                             <Grid.Row>
-                                <Button positive size='big' onClick={() => setFDModalOpen(true)}>Next</Button>
+                                <Button positive size='big' onClick={() => handleSubmit(false)}>Next</Button>
                                 <Button
                                     color='grey'
                                     size='big'
-                                    onClick={() => {
-                                        setDone(true)
-                                        setFDModalOpen(true)
-                                    }}
+                                    onClick={() => handleSubmit(true)}
                                     disabled={iterCount <= 6}>
                                     I'm All Done
                                 </Button>

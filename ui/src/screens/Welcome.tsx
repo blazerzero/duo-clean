@@ -97,32 +97,35 @@ export const Welcome: FC<WelcomeProps> = () => {
                             </p>                        
                         </Message>
                     </Grid.Row>
+                    <Divider />
                     <Grid.Row>
-                        <Form>
-                            <Form.Field>
-                                <Container className='section'>
+                        <Message>
+                            <Message.Header>
+                                <h3>Enter your email address to get started!</h3>
+                            </Message.Header>
+                            <Divider />
+                            <Form>
+                                <Form.Field>
                                     <Input
                                         type='email'
                                         size='large'
                                         label='Email Address: '
                                         placeholder='Enter your email address'
                                         onChange={(_e, props) => setEmail(props.value)}
-                                        className='input'
                                     />
-                                </Container>
-                            </Form.Field>
-                            <Container className='section'>
-                                <Button
-                                    positive
-                                    size='big'
-                                    type='submit'
-                                    disabled={email === '' || !email.includes('@')}
-                                    onClick={handleGetStarted}
-                                >
-                                    Get Started
-                                </Button>
-                            </Container>
-                        </Form>
+                                </Form.Field>
+                                    <Button
+                                        positive
+                                        size='big'
+                                        type='submit'
+                                        disabled={email === '' || !email.includes('@')}
+                                        onClick={handleGetStarted}
+                                    >
+                                        Get Started
+                                    </Button>
+                            </Form>
+                        </Message>
+                        
                     </Grid.Row>
                 </Grid.Column>
             </Grid>

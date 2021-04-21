@@ -38,12 +38,12 @@ export const Start: FC<StartProps> = () => {
     const [quizFullDone, setQuizFullDone] = useState<boolean>(false)
     const [quizAnswersReviewed, setQuizAnswersReviewed] = useState<boolean>(false)
     const [header, setHeader] = useState<string[]>([])
-    const [fd, setFD] = useState<string>('')
+    const [fd, setFD] = useState<{[key: string]: string}>({})
 
     const [q1Response, setQ1Response] = useState<string>('')
     const q1CorrectAnswer = 'name'
     const [q2Response, setQ2Response] = useState<string>('')
-    const q2CorrectAnswers = ['5_305', '7_305', '5_FL', '7_CA']
+    const q2CorrectAnswers = ['4_305', '6_305', '4_FL', '6_CA']
     const scenarioDetails: {[key: number]: {[key: string]: string | null }} = {
         15: {
             domain: 'Movie',
@@ -120,10 +120,16 @@ export const Start: FC<StartProps> = () => {
     const handleReady = async () => {
         setProcessing(true)
         const first_scenario: number = scenarios.splice(0, 1) as number
+        const lhs: string[] = Object.keys(fd).filter((k: string) => fd[k] === 'LHS')
+        lhs.sort()
+        const rhs: string[] = Object.keys(fd).filter((k: string) => fd[k] === 'RHS')
+        rhs.sort()
+        const initial_fd: string = `(${lhs.join(', ')}) => ${rhs.join(', ')}`
+        console.log(initial_fd)
         const response: AxiosResponse = await server.post('/import', {
             email,
             scenario_id: first_scenario.toString(),
-            initial_fd: fd,
+            initial_fd,
         })
         const { project_id, description } = response.data
         history.push('/interact', {
@@ -223,36 +229,42 @@ export const Start: FC<StartProps> = () => {
 
     const q2Data = [
         {
+            id: 1,
             name: 'Darrell',
             areacode: 775,
             state: 'NV',
             zip: 89501
         },
         {
+            id: 2,
             name: 'Henry',
             areacode: 404,
             state: 'GA',
             zip: 30334
         },
         {
+            id: 3,
             name: 'Blake',
             areacode: 775,
             state: 'NV',
             zip: 89501
         },
         {
+            id: 4,
             name: 'Jusuf',
             areacode: 305,
             state: 'FL',
             zip: 33130
         },
         {
+            id: 5,
             name: 'Shania',
             areacode: 775,
             state: 'NV',
             zip: 89501
         },
         {
+            id: 6,
             name: 'Ellen',
             areacode: 305,
             state: 'CA',
@@ -307,7 +319,7 @@ export const Start: FC<StartProps> = () => {
                                         fdExampleData.map((e) => e.id !== 6 && (
                                             <Table.Row>
                                                 {
-                                                    Object.entries(e).map(([k, v], i) => (
+                                                    Object.entries(e).map(([k, v], i) => k !== 'id' && (
                                                         <Table.Cell key={i}>{v}</Table.Cell>
                                                     ))
                                                 }
@@ -501,11 +513,12 @@ export const Start: FC<StartProps> = () => {
                                                 />
                                             </Form.Field>
                                         </Form>
+                                        <Divider />
                                         {
                                             quizQ1Done ? (
                                                 <Message color='green'><p>Scroll Down</p></Message>
                                             ) : (
-                                                <Button positive size='big' disabled={q1Response === '' || q2Response === ''} onClick={() => setQuizQ1Done(true)}>Next</Button>
+                                                <Button positive size='big' disabled={q1Response === ''} onClick={() => setQuizQ1Done(true)}>Next</Button>
                                             )
                                         }
                                         { 
@@ -532,7 +545,7 @@ export const Start: FC<StartProps> = () => {
                                                         <Table.Header>
                                                             <Table.Row>
                                                             {
-                                                                Object.keys(q2Data[0]).map((h: string) => (
+                                                                Object.keys(q2Data[0]).map((h: string) => h !== 'id' && (
                                                                     <Table.HeaderCell key={h}>{h}</Table.HeaderCell>
                                                                 ))
                                                             }
@@ -544,21 +557,21 @@ export const Start: FC<StartProps> = () => {
                                                                     return (
                                                                         <Table.Row>
                                                                             {
-                                                                                Object.entries(e).map(([k, v], i) => {
-                                                                                    if (quizFullDone && q2CorrectAnswers.includes(`${i}_${v}`)) {
+                                                                                Object.entries(e).filter(([k, v], i) => k !== 'id').map(([k, v], i) => {
+                                                                                    if (quizFullDone && q2CorrectAnswers.includes(`${e.id}_${v}`)) {
                                                                                         return (
                                                                                             <Table.Cell
-                                                                                                key={`${i}_${v}`}
+                                                                                                key={`${e.id}_${v}`}
                                                                                                 style={{backgroundColor: '#E5F9E6' }}
                                                                                             >
                                                                                             {v}
                                                                                             </Table.Cell>
                                                                                         )
                                                                                     } else {
-                                                                                        return q2Response === `${i}_${v}`
+                                                                                        return q2Response === `${e.id}_${v}`
                                                                                         ? (
                                                                                             <Table.Cell
-                                                                                                key={`${i}_${v}`}
+                                                                                                key={`${e.id}_${v}`}
                                                                                                 style={{ cursor: 'pointer', backgroundColor: '#FFF3CD' }}
                                                                                                 onClick={() => {
                                                                                                     if (!quizFullDone) {
@@ -570,11 +583,11 @@ export const Start: FC<StartProps> = () => {
                                                                                             </Table.Cell>
                                                                                         ) : (
                                                                                             <Table.Cell
-                                                                                                key={`${i}_${v}`}
+                                                                                                key={`${e.id}_${v}`}
                                                                                                 style={{ cursor: 'pointer' }}
                                                                                                 onClick={() => {
                                                                                                     if (!quizFullDone) {
-                                                                                                        setQ2Response(`${i}_${v}`)
+                                                                                                        setQ2Response(`${e.id}_${v}`)
                                                                                                     }
                                                                                                 }}
                                                                                             >
@@ -653,13 +666,13 @@ export const Start: FC<StartProps> = () => {
                                             over the data given everything you've seen so far.
                                         </p>
                                         <p>
+                                            After 6 rounds, if you have no more feedback left to give for the dataset or are otherwise
+                                            done giving feedback, click "I'm All Done" to finish working with the dataset.
+                                        </p>
+                                        <p>
                                             <strong>NOTE: </strong>
                                             You do not need to worry about knowing or finding the right value for a cell! This is
                                             not an error detection problem. Your goal is just to discover rules and find exceptions to them.
-                                        </p>
-                                        <p>
-                                            After 6 iterations, if you have no more feedback left to give for the dataset or are otherwise
-                                            done giving feedback, click "I'm All Done" to finish working with the dataset.
                                         </p>
                                         {
                                             interfaceGuideRead ? (
@@ -702,14 +715,62 @@ export const Start: FC<StartProps> = () => {
                                                     schema, what rule are you most confident holds over this dataset?
                                                 </h3>
                                             </Message.Header>
-                                            <p>E.g. facilityname determines type and owner; title and year determine director</p>
+                                            <p>E.g. {'(facilityname) => type, owner'}; {'(title, year) => director'}</p>
+                                            <h4>Answer by indicating, for each attribute below, whether the attribute is part of the LHS, RHS, or not part of the rule.</h4>
                                             <p><strong>NOTE: </strong>If you're not sure yet, you can leave this empty.</p>
-                                            <Input
-                                                size='large'
-                                                placeholder='Enter the FD(s) here'
-                                                onChange={(_e, props) => setFD(props.value)}
-                                                className='input'
-                                            />
+                                            <Divider />
+                                            {
+                                                header.map((h: string) => (
+                                                    <div style={{ flexDirection: 'row', paddingBottom: 10 }}>
+                                                        <h4>{h}</h4>
+                                                        <Radio
+                                                            style={{ padding: 10 }}
+                                                            label='Left-hand side'
+                                                            name={`${h}_radioGroup`}
+                                                            value='LHS'
+                                                            checked={fd[h] === 'LHS'}
+                                                            onChange={() => {
+                                                                const newFD: {[key: string]: string} = {}
+                                                                Object.keys(fd).forEach((h: string) => newFD[h] = fd[h])
+                                                                console.log(newFD)
+                                                                newFD[h] = 'LHS'
+                                                                console.log(newFD)
+                                                                setFD(newFD)
+                                                            }}
+                                                        />
+                                                        <Radio
+                                                            style={{ padding: 10 }}
+                                                            label='Right-hand side'
+                                                            name={`${h}_radioGroup`}
+                                                            value='RHS'
+                                                            checked={fd[h] === 'RHS'}
+                                                            onChange={() => {
+                                                                const newFD: {[key: string]: string} = {}
+                                                                Object.keys(fd).forEach((h: string) => newFD[h] = fd[h])
+                                                                console.log(newFD)
+                                                                newFD[h] = 'RHS'
+                                                                console.log(newFD)
+                                                                setFD(newFD)
+                                                            }}
+                                                        />
+                                                        <Radio
+                                                            style={{ padding: 10 }}
+                                                            label='Not part of the rule'
+                                                            name={`${h}_radioGroup`}
+                                                            value='N/A'
+                                                            checked={fd[h] === 'N/A'}
+                                                            onChange={() => {
+                                                                const newFD: {[key: string]: string} = {}
+                                                                Object.keys(fd).forEach((h: string) => newFD[h] = fd[h])
+                                                                console.log(newFD)
+                                                                newFD[h] = 'N/A'
+                                                                console.log(newFD)
+                                                                setFD(newFD)
+                                                            }}
+                                                        />
+                                                    </div>
+                                                ))
+                                            }
                                         </Message>
                                         {
                                             dataOverviewRead ? (
@@ -724,10 +785,10 @@ export const Start: FC<StartProps> = () => {
                                                     <Divider />
                                                     <Message info>
                                                         <Message.Header>
-                                                            When you're ready to begin, click "Let's Go" below.
+                                                            When you're ready to begin interacting with the dataset, click "Go to the Data" below.
                                                         </Message.Header>
                                                     </Message>
-                                                    <Button positive size='big' onClick={handleReady}>Let's Go!</Button>
+                                                    <Button positive size='big' onClick={handleReady}>Go to the Data</Button>
                                                 </>
                                             )
                                         }
