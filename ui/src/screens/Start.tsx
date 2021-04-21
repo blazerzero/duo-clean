@@ -656,7 +656,7 @@ export const Start: FC<StartProps> = () => {
                                             To submit your marks for that round, click "Next" and let us know what rule you're most confident
                                             holds over the dataset given what you've seen so far, and you'll be
                                             presented with a new sample from the dataset. If you don't see anything that should be marked,
-                                            you don't have to mark anything, and you can just click "Next" and respond to the prompt to get a fresh sample.
+                                            you don't have to mark anything, and you can just respond to the prompt to get a fresh sample.
                                         </p>
                                         <p>
                                             Your feedback will be visible throughout the entire interaction, i.e. if you 
@@ -674,7 +674,7 @@ export const Start: FC<StartProps> = () => {
                                         </p>
                                         <p>
                                             After 6 rounds, if you have no more feedback left to give for the dataset or are otherwise
-                                            done giving feedback, click "I'm All Done" to finish working with the dataset.
+                                            done giving feedback, answer the prompt at the bottom one last time and click "I'm All Done" to finish working with the dataset.
                                         </p>
                                         <p>
                                             <strong>NOTE: </strong>
