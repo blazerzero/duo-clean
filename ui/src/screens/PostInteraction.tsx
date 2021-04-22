@@ -264,6 +264,7 @@ export const PostInteraction: FC<PostInteractionProps> = () => {
                                     />
                                     <Divider style={{ paddingBottom: 10, paddingTop: 10 }} />
                                     <Input
+                                        fluid
                                         type='text'
                                         size='large'
                                         placeholder='Add any comments supporting your thinking here...'
