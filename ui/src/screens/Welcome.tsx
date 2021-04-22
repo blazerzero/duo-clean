@@ -35,23 +35,10 @@ export const Welcome: FC<WelcomeProps> = () => {
         )
         const scenarios = response.data.scenarios
         if (response.status === 201 || scenarios.length === 4) {
-            history.push('/start', { email, scenarios })
+            history.push('/start', { email, scenarios, status: 'begin' })
         } else if (response.status === 200) {
             alert(`Welcome back! You have ${scenarios.length} datasets left to go.`)
-            const next_scenario: number = scenarios.splice(0, 1) as number
-            const response2: AxiosResponse = await server.post('/import', {
-                email,
-                scenario_id: next_scenario.toString(),
-            })
-            const { header, project_id, description } = response2.data
-            history.push('/interact', {
-                email,
-                scenarios,
-                scenario_id: next_scenario.toString(),
-                header,
-                project_id,
-                description
-            })
+            history.push('/start', { email, scenarios, status: 'resume'})
         }
     }
 

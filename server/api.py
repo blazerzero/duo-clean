@@ -495,6 +495,29 @@ class Feedback(Resource):
         }
         return response, 200, {'Access-Control-Allow-Origin': '*'}
 
+class Resume(Resource):
+    def get(self):
+        return {'msg': '[SUCCESS] /duo/api/resume is live!'}
+    
+    def post(self):
+        scenario_id = request.form.get('scenario_id')
+        email = request.form.get('email')
+        if scenario_id is None or email is None:
+            scenario_id = json.loads(request.data)['scenario_id']
+            email = json.loads(request.data)['email']
+
+        with open('scenarios.json', 'r') as f:
+            scenarios_list = json.load(f)
+        scenario = scenarios_list[scenario_id]
+        data = pd.read_csv(scenario['dirty_dataset'])
+        header = [col for col in data.columns]
+
+        response = {
+            'header': header,
+        }
+
+        return response, 201, {'Access-Control-Allow-Origin': '*'}
+
 # Store the user's responses to the post-interaction questionnaire
 class PostInteraction(Resource):
     def get(self):
@@ -579,6 +602,7 @@ api.add_resource(PreSurvey, '/duo/api/pre-survey')
 api.add_resource(Import, '/duo/api/import')
 api.add_resource(Sample, '/duo/api/sample')
 api.add_resource(Feedback, '/duo/api/feedback')
+api.add_resource(Resume, '/duo/api/resume')
 api.add_resource(PostInteraction, '/duo/api/post-interaction')
 api.add_resource(Done, '/duo/api/done')
 
