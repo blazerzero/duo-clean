@@ -75,7 +75,7 @@ export const Welcome: FC<WelcomeProps> = () => {
                                 <p><strong>Thank you so much for agreeing to participate in our study!</strong></p>
                             </Message.Header>
                             <p>
-                                Our goal is to understand how users discover patterns in data.
+                                Our goal is to understand how humans discover patterns in data.
                             </p>
                         </Message>
                     </Grid.Row>
@@ -87,7 +87,9 @@ export const Welcome: FC<WelcomeProps> = () => {
                             </Message.Header>
                             <Divider />
                             <p>
-                                You will be interacting with small samples from some datasets, and your job will be to figure out <strong>patterns</strong> that should reasonably hold over the entire dataset.
+                                You will analyze five different datasets interactively. You will see only a small sample of
+                                each dataset. Your job will be to predict the <strong>pattern</strong> that most
+                                reasonably holds over the entire dataset.
                             </p>                     
                         </Message>
                     </Grid.Row>

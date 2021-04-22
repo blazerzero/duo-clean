@@ -225,7 +225,7 @@ export const PostInteraction: FC<PostInteractionProps> = () => {
                                 <Message>
                                     <Message.Header>
                                         <h3>
-                                            This dataset has the following attributes: [{header.join(', ')}]. What FD do you think holds with the fewest exceptions?
+                                        This dataset has the following attributes: [{header.join(', ')}]. Without looking at the data, what FD do you think holds with the full {scenarioDetails[scenarios[0]].domain} dataset?
                                         </h3>
                                         <p>Indicate your answer using the dropdowns below. Pick one or more attributes for each side of the FD.</p>
                                     </Message.Header>
