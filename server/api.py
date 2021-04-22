@@ -44,7 +44,7 @@ class User(object):
             'scenarios': self.scenarios,
             'start_time': self.start_time.strftime("%m/%d/%Y, %H:%M:%S"),
             'done': self.done,
-            'runs': self.runs,
+            'runs': self.runs if hasattr(self, 'runs') else None,
             'pre_survey': self.pre_survey,
             'post_questionnaire': self.post_questionnaire,
             'comments': self.comments if hasattr(self, 'comments') else None
