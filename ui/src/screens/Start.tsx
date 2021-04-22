@@ -686,7 +686,9 @@ export const Start: FC<StartProps> = () => {
                                             and press <strong><i>Next</i></strong> to get a fresh sample.
                                         </p>
                                         <p>
-                                            Your markings will be visible throughout the entire interaction, i.e. if you 
+                                            If you want to sort a column alphabetically, you can use the icon next to the column name
+                                            to sort the column in ascending or descending order.
+                                            Your markings will also be visible throughout the entire interaction, i.e. if you 
                                             previously marked a cell as part of an exception and that tuple reappears in a sample later
                                             on, the cell will still be highlighted so that you can review and change your
                                             previous markings alongside new data.

@@ -322,6 +322,7 @@ export const Interact: FC<InteractProps> = () => {
                         <Message color='yellow'>
                             <Message.Header><h3>Remember!</h3></Message.Header>
                             <p>Yellow cells indicate cells you marked as part of an exception to an FD.</p>
+                            <p>To sort a column alphabetically, click the icon next to the column's name.</p>
                         </Message>
                     </Grid.Row>
                     <Divider />

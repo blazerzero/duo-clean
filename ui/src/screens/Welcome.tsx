@@ -110,15 +110,15 @@ export const Welcome: FC<WelcomeProps> = () => {
                                         onChange={(_e, props) => setEmail(props.value)}
                                     />
                                 </Form.Field>
-                                    <Button
-                                        positive
-                                        size='big'
-                                        type='submit'
-                                        disabled={email === '' || !email.includes('@')}
-                                        onClick={handleGetStarted}
-                                    >
-                                        Get Started
-                                    </Button>
+                                <Button
+                                    positive
+                                    size='big'
+                                    type='submit'
+                                    disabled={email === '' || !email.includes('@')}
+                                    onClick={handleGetStarted}
+                                >
+                                    Get Started
+                                </Button>
                             </Form>
                         </Message>
                         

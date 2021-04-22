@@ -305,18 +305,29 @@ export const PostInteraction: FC<PostInteractionProps> = () => {
                                             <Message.Header>
                                                 You're all done! How did everything go? Leave any comments or feedback you have about your study experience below!
                                             </Message.Header>
-                                            <Input
-                                                fluid
-                                                type='text'
-                                                size='large'
-                                                placeholder='Add any comments or feedback here...'
-                                                onChange={(_e, props) => setComments(props.value)}
-                                                style={{ paddingTop: 20, paddingBottom: 20}}
-                                            />
-                                            <div style={{ flexDirection: 'row' }}>
-                                                <Button color='grey' size='big' onClick={() => handleDoneComments('skip')} style={{ marginRight: 10 }}>Skip</Button>
-                                                <Button positive size='big' onClick={() => handleDoneComments('submit')}>Submit</Button>
-                                            </div>
+                                            <Form>
+                                                <Form.Field>
+                                                    <Input
+                                                        fluid
+                                                        type='text'
+                                                        size='large'
+                                                        placeholder='Add any comments or feedback here...'
+                                                        onChange={(_e, props) => setComments(props.value)}
+                                                        style={{ paddingTop: 20, paddingBottom: 20}}
+                                                    />
+                                                </Form.Field>
+                                                <div style={{ flexDirection: 'row' }}>
+                                                    <Button color='grey' size='big' onClick={() => handleDoneComments('skip')} style={{ marginRight: 10 }}>Skip</Button>
+                                                    <Button
+                                                        positive
+                                                        type='submit'
+                                                        size='big'
+                                                        onClick={() => handleDoneComments('submit')}
+                                                    >
+                                                        Submit
+                                                    </Button>
+                                                </div>
+                                            </Form>
                                         </>
                                     )
                                 }
