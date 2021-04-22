@@ -334,7 +334,7 @@ export const Start: FC<StartProps> = () => {
                                 </p>
                             </Message>
                             <p>
-                                For example, in the dataset below, an address's city and zip code determine the state of the location.
+                                For example, in the dataset below, an address's city and zip code determine its state.
                                 This pattern is represented by the expression <strong>{'(city, zip) => state'}</strong>.
                             </p>
                             <Table>
@@ -366,8 +366,8 @@ export const Start: FC<StartProps> = () => {
                                     <h4>There may be one or more attributes on the left or right-hand sides of an FD (on the left or right side of the "{'=>'}").</h4>
                                 </Message.Header>
                                 <p>
-                                    E.g. city and zip code determine state, but address and city determine zip code and state. These are respectfully written
-                                    as <strong>{'(city, zip) => state'}</strong> and <strong>{'(address, city) => zip, state'}</strong>.
+                                    For example, address and city determine zip code and state. This is written
+                                    as <strong>{'(address, city) => (zip, state)'}</strong>.
                                 </p>
                             </Message>
                             {/* <Message warning>
@@ -397,7 +397,7 @@ export const Start: FC<StartProps> = () => {
                             </Message>
                             <p>
                                 In the following dataset, the two tuples with the address "800 6th Ave" have exceptions to the FD <strong>{'(city, zip) => state'}</strong> as
-                                two places with the same city and ZIP code have different states listed. These exceptions have been highlighted below.
+                                two places with the same city and ZIP code have different states listed. Cells relevant to this exception have been highlighted below.
                             </p>
                             <Table>
                                 <Table.Header>
@@ -415,7 +415,7 @@ export const Start: FC<StartProps> = () => {
                                             <Table.Row>
                                                 {
                                                     Object.entries(e).map(([k, v], _i) => k !== 'id' && (
-                                                        (e.id === 3 || e.id === 6) && k === 'state' ? (
+                                                        (e.id === 3 || e.id === 6) && (k === 'city' || k === 'zip' || k === 'state') ? (
                                                             <Table.Cell style={{ backgroundColor: '#FFF3CD' }}>
                                                                 {v}
                                                             </Table.Cell>
@@ -558,7 +558,7 @@ export const Start: FC<StartProps> = () => {
                                             quizQ1Done && (
                                                 <>
                                                     <Divider />
-                                                    <p><strong>2)</strong> The following table information about employees at a company. It contains exceptions to the FD <strong>{'areacode => state'}.</strong> Find and mark one exception to this FD.</p>
+                                                    <p><strong>2)</strong> The following table contains information about employees at a company. It contains exceptions to the FD <strong>{'areacode => state'}.</strong> Find and mark one exception to this FD.</p>
                                                     {
                                                         quizFullDone && (
                                                             <Message positive={q2CorrectAnswers.includes(q2Response)} negative={!q2CorrectAnswers.includes(q2Response)}>
@@ -670,15 +670,14 @@ export const Start: FC<StartProps> = () => {
                                         <Divider />
                                         <p>
                                             You'll be interacting with five different datasets. For each dataset, you'll be shown small samples
-                                            of the dataset in rounds, and your job will be to figure out the FD that should most reasonably
-                                            hold over the entire dataset given everything you've seen so far and mark any exceptions to that FD
-                                            you see in the data.
-                                        </p>
-                                        <p>
-                                            One round is defined as marking any cells you believe are part of exceptions,
-                                            indicating what you think the FD is given everything you've seen so far using the provided dropdown selectors,
-                                            and clicking the green <strong><i>Next</i></strong> button. You'll have up to 15 rounds to figure
-                                            out the FD and mark exceptions before moving on to the next dataset.
+                                            of the dataset in rounds. Each sample will contain about 8-12 tuples from the full dataset. Your job
+                                            will be to find or revise the FD you think holds with the fewest exceptions over the entire dataset
+                                            given everything you've seen so far. You will enter this FD using the dropdown selectors below the
+                                            sample, and mark any exceptions to this FD you see in the sample in each round. After you're done in
+                                            each round, click the green <strong><i>Next</i></strong> button to go to the next round. After 8 rounds,
+                                            if you've figured out the FD, you can click <strong><i>I'm All Done</i></strong> to finish working
+                                            with the dataset. However, if you're still working to figure out the FD, you can keep going, up to a
+                                            total of 15 rounds before moving on to the next dataset.
                                         </p>
                                         <p>
                                             To mark a cell as an exception to an FD, click on the cell. The cell will be highlighted yellow.
