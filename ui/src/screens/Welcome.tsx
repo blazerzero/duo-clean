@@ -34,7 +34,7 @@ export const Welcome: FC<WelcomeProps> = () => {
             { email }
         )
         const scenarios = response.data.scenarios
-        if (response.status === 201 || scenarios.length === 4) {
+        if (response.status === 201 || scenarios.length === 5) {
             history.push('/start', { email, scenarios, status: 'begin' })
         } else if (response.status === 200) {
             alert(`Welcome back! You have ${scenarios.length} datasets left to go.`)
