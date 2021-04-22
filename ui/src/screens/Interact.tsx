@@ -218,10 +218,10 @@ export const Interact: FC<InteractProps> = () => {
             setSortMethod(sorting)
             setProcessing(false)
             setData(prepped_data)
-            setFD(re_init_fd)
+            // setFD(re_init_fd)
             setDoesntKnowFD(false)
-            setLHS([])
-            setRHS([])
+            // setLHS([])
+            // setRHS([])
         }
     }
 
