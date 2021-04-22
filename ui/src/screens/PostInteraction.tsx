@@ -227,10 +227,8 @@ export const PostInteraction: FC<PostInteractionProps> = () => {
                                         <h3>
                                             This dataset has the following attributes: [{header.join(', ')}]. What FD do you think holds with the fewest exceptions?
                                         </h3>
+                                        <p>Indicate your answer using the dropdowns below. Pick one or more attributes for each side of the FD.</p>
                                     </Message.Header>
-                                    <p>E.g. {'(facilityname) => type, owner'}; {'(title, year) => director'}</p>
-                                    <h4>Answer by indicating, for each attribute below, whether the attribute is part of the LHS, RHS, or not part of the rule.</h4>
-                                    <p><strong>NOTE: </strong>If you're not sure yet, you can check "I Don't Know" instead.</p>
                                     <Divider />
                                     <div style={{ flexDirection: 'row' }}>
                                     <Dropdown

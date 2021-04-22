@@ -391,9 +391,8 @@ export const Interact: FC<InteractProps> = () => {
                                 <h3>
                                     Given all the data you've seen up until this point, what rule are you most confident holds over the data?
                                 </h3>
+                                <p>Indicate your answer using the dropdowns below. Pick one or more attributes for each side of the FD.</p>
                             </Message.Header>
-                            <h4>Answer by indicating, for each attribute below, whether the attribute is part of the left-hand side or right-hand side of the rule, or not part of the rule.</h4>
-                            <p><strong>NOTE: </strong>If you're not sure yet, you can check "I Don't Know" instead.</p>
                             <div style={{ flexDirection: 'row' }}>
                                 <Dropdown
                                     placeholder='Select an attribute(s)...'
