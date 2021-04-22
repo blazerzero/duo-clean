@@ -33,6 +33,7 @@ class User(object):
         shuffle(self.scenarios)
         self.start_time = datetime.now()
         self.done = list()
+        self.runs = list()
         self.pre_survey = dict()
         self.post_questionnaire = dict()
         self.comments = ''
@@ -43,6 +44,7 @@ class User(object):
             'scenarios': self.scenarios,
             'start_time': self.start_time.strftime("%m/%d/%Y, %H:%M:%S"),
             'done': self.done,
+            'runs': self.runs,
             'pre_survey': self.pre_survey,
             'post_questionnaire': self.post_questionnaire,
             'comments': self.comments if hasattr(self, 'comments') else None
@@ -188,6 +190,7 @@ class Import(Resource):
         
         user = users[email]
         user.scenarios = user.scenarios[1:]
+        user.runs.append(new_project_id)
         user_interaction_number = TOTAL_SCENARIOS - len(user.scenarios)
         users[email] = user
 
