@@ -24,6 +24,9 @@ def eval_user_h(project_id, run_type):
     user_h_vio_match_history = list()
     for h in user_h_history:
         fd = h['value'][0]
+        if fd == 'Not Sure':
+            user_h_conf_history.append(0)
+            user_h_vio_match_history.append(0)
         lhs = fd.split(' => ')[0][1:-1].split(', ')
         rhs = fd.split(' => ')[1].split(', ')
         try:
