@@ -28,7 +28,7 @@ def eval_user_h(project_id, run_type):
             user_h_conf_history.append(0)
             user_h_vio_match_history.append(0)
             continue
-        
+
         lhs = fd.split(' => ')[0][1:-1].split(', ')
         rhs = fd.split(' => ')[1].split(', ')
         try:
@@ -71,8 +71,8 @@ def eval_user_h(project_id, run_type):
 
     fig1.tight_layout()
     fig2.tight_layout()
-    fig1.savefig('./plots/h_strength.jpg')
-    fig2.savefig('./plots/h_applicability_vios.jpg')
+    fig1.savefig('./plots/h_strength-' + project_id + '.jpg')
+    fig2.savefig('./plots/h_applicability_vios-' + project_id + '.jpg')
     plt.clf()
 
 if __name__ == '__main__':
