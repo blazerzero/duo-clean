@@ -73,5 +73,4 @@ def eval_user_h(project_id, run_type):
 if __name__ == '__main__':
     run_type = sys.argv[1]
     project_id = sys.argv[2]
-    func = sys.argv[3]
     eval_user_h(project_id, run_type)
