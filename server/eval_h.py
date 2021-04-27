@@ -44,7 +44,7 @@ def eval_user_h(project_id, run_type):
         target_vios = target_fd_dirty_meta['vios']
 
         user_h_conf_history.append(conf)
-        vio_match_rate = len([v for v in vios in v in target_vios]) / len(target_vios)
+        vio_match_rate = len([v for v in vios if v in target_vios]) / len(target_vios)
         user_h_vio_match_history.append(vio_match_rate)
     
     fig1, ax1 = plt.subplots()
