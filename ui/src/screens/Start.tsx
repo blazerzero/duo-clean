@@ -684,15 +684,22 @@ export const Start: FC<StartProps> = () => {
                                                     </Message.Header>
                                                     <Divider />
                                                     <p>
-                                                        You will analyze five different datasets interactively. For each dataset, you'll be shown small samples
-                                                        of the dataset in rounds. Each sample will contain about 8-12 tuples from the full dataset. Your job
-                                                        is to find or revise the FD you think holds with the fewest exceptions over the entire dataset
-                                                        given everything you've seen so far. Notice that you will never see the entire dataset. You will enter this FD using the dropdown selectors below the
-                                                        sample, and mark any exceptions to this FD you see in the sample in each round. After you're done in
-                                                        each round, click the green <strong><i>Next</i></strong> button to go to the next round. After 8 rounds,
-                                                        if you're sure that your suggested FD holds over the dataset with the fewest exceptions, you can click <strong><i>I'm All Done</i></strong> to finish working
-                                                        with the dataset. However, if you're still working to figure out the FD, you can keep going, up to a
-                                                        total of 15 rounds before moving on to the next dataset.
+                                                        You will analyze five different datasets interactively. For each dataset, you'll be shown small
+                                                        samples of the dataset in some rounds. You will never see the entire dataset. Your job is to find
+                                                        the FD you think holds with the fewest exceptions <strong>over the entire dataset</strong> given
+                                                        everything you've seen so far. The FDs that you find over the observed samples <strong>should generalize reasonably accurately to the full dataset.</strong>
+                                                    </p>
+                                                    <p>
+                                                        For each dataset you will be shown 8-12 tuples from the full dataset in each round. You may revise
+                                                        your suggessted FD in each round given everything you've seen so far. You will enter this FD using
+                                                        the dropdown selectors below the sample and mark any exceptions to this FD you see in the sample in
+                                                        each round. After you're done in each round, click the green <strong><i>Next</i></strong> button to
+                                                        go to the next round.
+                                                    </p>
+                                                    <p>
+                                                        After 8 rounds, if you're sure that your suggested FD holds over the entire dataset with the fewest
+                                                        exceptions, you can click <strong><i>I'm All Done</i></strong> to finish working with the dataset. You
+                                                        may continue the interaction up to a total of 15 rounds before moving on to the next round.
                                                     </p>
                                                     <p>
                                                         To mark a cell as an exception to an FD, click on the cell. The cell will be highlighted yellow.
