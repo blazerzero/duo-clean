@@ -22,11 +22,15 @@ def eval_user_h(project_id, run_type):
     user_h_history = interaction_metadata['user_hypothesis_history']
     user_h_conf_history = list()
     user_h_vio_match_history = list()
+    user_h_seen_conf_history = list()
+    seen_tuples = set()
     for h in user_h_history:
         fd = h['value'][0]
         if fd == 'Not Sure':
             user_h_conf_history.append(0)
             user_h_vio_match_history.append(0)
+            if h['iter_num'] > 0:
+                user_h_seen_conf_history.append(0)
             continue
 
         lhs = fd.split(' => ')[0][1:-1].split(', ')
@@ -51,28 +55,47 @@ def eval_user_h(project_id, run_type):
         user_h_conf_history.append(conf)
         vio_match_rate = len([v for v in vios if v in target_vios]) / len(target_vios)
         user_h_vio_match_history.append(vio_match_rate)
+
+        if h['iter_num'] == 0:
+            continue
+        current_sample = next(i['value'] for i in interaction_metadata['sample_history'] if i['iter_num'] == h['iter_num'])
+        seen_tuples |= set(current_sample)
+        seen_data = data[seen_tuples]
+        seen_clean_data = clean_data[seen_tuples]
+        support, vios = helpers.getSupportAndVios(seen_data, seen_clean_data, fd)
+        conf = (len(support) - len(vios)) / len(support)
+        user_h_seen_conf_history.append(conf)
     
     fig1, ax1 = plt.subplots()
     fig2, ax2 = plt.subplots()
+    fig3, ax3 = plt.subplots()
     ax1.set_xticks(np.arange(0, 15, 3))
     ax2.set_xticks(np.arange(0, 15, 3))
+    ax3.set_xticks(np.arange(0, 15, 3))
     ax1.set_ylim([0, 1])
     ax2.set_ylim([0, 1])
+    ax3.set_ylim([0, 1])
 
     ax1.plot([i['iter_num'] for i in user_h_history], user_h_conf_history)
     ax2.plot([i['iter_num'] for i in user_h_history], user_h_vio_match_history)
+    ax3.plot([i['iter_num'] for i in user_h_history if i['iter_num'] > 0], user_h_seen_conf_history)
 
     ax1.set_xlabel('Iteration #')
-    ax1.set_ylabel('FD Confidence')
-    ax1.set_title('Hypothesis Strength Over the Interaction')
+    ax1.set_ylabel('FD Precision')
+    ax1.set_title('FD Precision Over the Interaction')
     ax2.set_xlabel('Iteration #')
     ax2.set_ylabel('Match Rate')
-    ax2.set_title("Applicability of the User's Hypothesis to the Ground Truth Violations in the Data")
+    ax2.set_title("Applicability of User FD to Real Violations")
+    ax3.set_xlabel('Iteration #')
+    ax3.set_ylabel('FD Precision')
+    ax3.set_title('FD Precision Over What the User Has Seen So Far')
 
     fig1.tight_layout()
     fig2.tight_layout()
-    fig1.savefig('./plots/h_strength-' + project_id + '.jpg')
-    fig2.savefig('./plots/h_applicability_vios-' + project_id + '.jpg')
+    fig3.tight_layout()
+    fig1.savefig('./plots/fd-precicion/' + project_id + '.jpg')
+    fig2.savefig('./plots/fd-applicability-to-violations/' + project_id + '.jpg')
+    fig3.savefig('./plots/fd-precision-seen/' + project_id + '.jpg')
     plt.clf()
 
 if __name__ == '__main__':
