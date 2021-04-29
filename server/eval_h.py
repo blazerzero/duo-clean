@@ -135,7 +135,7 @@ def eval_user_h(project_id, run_type):
     fig2.savefig('./plots/fd-applicability-to-violations/' + project_id + '.jpg')
     fig3.savefig('./plots/fd-precision-seen/' + project_id + '.jpg')
     fig4.savefig('./plots/cumulative-user-precision/' + project_id + '.jpg')
-    fig5.savefig('./plots/cumulative-user-recall' + project_id + '.jpg')
+    fig5.savefig('./plots/cumulative-user-recall/' + project_id + '.jpg')
     plt.clf()
 
 if __name__ == '__main__':
