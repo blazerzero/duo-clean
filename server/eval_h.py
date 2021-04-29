@@ -131,7 +131,7 @@ def eval_user_h(project_id, run_type):
     fig3.tight_layout()
     fig4.tight_layout()
     fig5.tight_layout()
-    fig1.savefig('./plots/fd-precicion/' + project_id + '.jpg')
+    fig1.savefig('./plots/fd-precision/' + project_id + '.jpg')
     fig2.savefig('./plots/fd-applicability-to-violations/' + project_id + '.jpg')
     fig3.savefig('./plots/fd-precision-seen/' + project_id + '.jpg')
     fig4.savefig('./plots/cumulative-user-precision/' + project_id + '.jpg')
