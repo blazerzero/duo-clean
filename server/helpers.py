@@ -1132,7 +1132,7 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
             curr_marked = study_metrics['st_vios_marked'][-1]['value']
             curr_total = study_metrics['st_vios_total'][-1]['value']
 
-            cumulative_precision = 0.5 if prev_marked == 0 and curr_marked == 0 else (prev_found + curr_found) / (prev_marked + curr_marked)
+            cumulative_precision = 0.5 if len(prev_marked) == 0 and len(curr_marked) == 0 else (len(prev_found) + len(curr_found)) / (len(prev_marked) + len(curr_marked))
             cumulative_recall = (len(prev_found) + len(curr_found)) / (len(prev_total) + len(curr_total))
         else:
             cumulative_precision = study_metrics['st_vio_precision'][-1]['value']
