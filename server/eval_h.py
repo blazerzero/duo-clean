@@ -67,7 +67,7 @@ def eval_user_h(project_id, run_type):
 
         user_h_conf_history.append(conf)
         fd_recall = len([v for v in vios if v in target_vios]) / len(target_vios)
-        fd_precision = len([v for v in vios if v in target_vios]) / len(vios)
+        fd_precision = 0 if len(vios) == 0 else len([v for v in vios if v in target_vios]) / len(vios)
         fd_recall_history.append(fd_recall)
         fd_precision_history.append(fd_precision)
 
@@ -83,10 +83,10 @@ def eval_user_h(project_id, run_type):
         user_h_seen_conf_history.append(conf)
 
         fd_recall_seen = len([v for v in vios if v in target_vios_seen]) / len(target_vios_seen)
-        fd_precision_seen = len([v for v in vios if v in target_vios_seen]) / len(vios)
+        fd_precision_seen = 0 if len(vios) == 0 else len([v for v in vios if v in target_vios_seen]) / len(vios)
 
-        fd_recall_seen_history.append(fd_recall)
-        fd_precision_seen_history.append(fd_precision)
+        fd_recall_seen_history.append(fd_recall_seen)
+        fd_precision_seen_history.append(fd_precision_seen)
     
     study_metrics, fd_metadata = helpers.deriveStats(
         interaction_metadata,
