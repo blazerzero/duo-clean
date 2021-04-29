@@ -687,32 +687,39 @@ export const Start: FC<StartProps> = () => {
                                                         You will analyze five different datasets interactively. For each dataset, you'll be shown small
                                                         samples of the dataset in some rounds. You will never see the entire dataset. Your job is to find
                                                         the FD you think holds with the fewest exceptions <strong>over the entire dataset</strong> given
-                                                        everything you've seen so far. The FDs that you find over the observed samples <strong>should generalize reasonably accurately to the full dataset.</strong>
-                                                    </p>
-                                                    <p>
-                                                        For each dataset you will be shown 8-12 tuples from the full dataset in each round. You may revise
-                                                        your suggessted FD in each round given everything you've seen so far. You will enter this FD using
-                                                        the dropdown selectors below the sample and mark any exceptions to this FD you see in the sample in
-                                                        each round. After you're done in each round, click the green <strong><i>Next</i></strong> button to
-                                                        go to the next round.
-                                                    </p>
-                                                    <p>
-                                                        After 8 rounds, if you're sure that your suggested FD holds over the entire dataset with the fewest
-                                                        exceptions, you can click <strong><i>I'm All Done</i></strong> to finish working with the dataset. You
-                                                        may continue the interaction up to a total of 15 rounds before moving on to the next round.
-                                                    </p>
-                                                    <p>
-                                                        To mark a cell as an exception to an FD, click on the cell. The cell will be highlighted yellow.
+                                                        everything you've seen so far. The FDs that you find over the observed samples <strong>should generalize
+                                                        reasonably accurately to the full dataset.</strong> To mark a cell as an exception to an FD, click on the cell. The cell will be highlighted yellow.
                                                         You can undo your decision for that cell by simply clicking on the cell again to unhighlight and unmark it.
                                                         If you don't see anything that should be marked, you don't have to mark anything. Just answer the prompt using the dropdowns
                                                         and press <strong><i>Next</i></strong> to get a fresh sample.
                                                     </p>
                                                     <p>
-                                                        Your markings will be visible throughout the entire interaction, i.e. if you 
+                                                        For each dataset, you will be shown 8-12 tuples from the full dataset in each round. You may revise
+                                                        your suggested FD in each round given everything you've seen so far. You will enter this FD using
+                                                        the dropdown selectors below the sample and mark any exceptions to this FD in the sample in
+                                                        each round. After you're done in each round, click the green <strong><i>Next</i></strong> button to
+                                                        go to the next round. Your markings will be visible throughout the entire interaction, i.e. if you 
                                                         previously marked a cell as part of an exception and that tuple reappears in a sample later
                                                         on, the cell will still be highlighted so that you can review and change your
                                                         previous markings alongside new data.
                                                     </p>
+                                                    <p>
+                                                        After 8 rounds, if you're sure that your suggested FD holds over the entire dataset with the fewest
+                                                        exceptions, you can click <strong><i>I'm All Done</i></strong> to finish working with the dataset. You
+                                                        may continue the interaction up to a total of 15 rounds before moving on to the next dataset.
+                                                    </p>
+                                                    {/* <p>
+                                                        To mark a cell as an exception to an FD, click on the cell. The cell will be highlighted yellow.
+                                                        You can undo your decision for that cell by simply clicking on the cell again to unhighlight and unmark it.
+                                                        If you don't see anything that should be marked, you don't have to mark anything. Just answer the prompt using the dropdowns
+                                                        and press <strong><i>Next</i></strong> to get a fresh sample.
+                                                    </p> */}
+                                                    {/* <p>
+                                                        Your markings will be visible throughout the entire interaction, i.e. if you 
+                                                        previously marked a cell as part of an exception and that tuple reappears in a sample later
+                                                        on, the cell will still be highlighted so that you can review and change your
+                                                        previous markings alongside new data.
+                                                    </p> */}
                                                     {
                                                         interfaceGuideRead ? (
                                                             <Message color='green'><p>Scroll Down</p></Message>
