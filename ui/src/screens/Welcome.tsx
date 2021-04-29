@@ -74,9 +74,9 @@ export const Welcome: FC<WelcomeProps> = () => {
                             </Message.Header>
                             <Divider />
                             <p>
-                                You will analyze five different datasets interactively. You will see only a small sample of
-                                each dataset. Your job will be to predict the <strong>pattern</strong> that most
-                                reasonably holds over the entire dataset.
+                                In this study, you should find patterns that most reasonably hold over a large dataset
+                                by observing only <strong>a small sample of the dataset.</strong> You will inspect this
+                                small sample interactively. You will perform this task for five different datasets.
                             </p>                     
                         </Message>
                     </Grid.Row>
