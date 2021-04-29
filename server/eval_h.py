@@ -146,8 +146,8 @@ def eval_user_h(project_id, run_type):
     ax6.plot([i['iter_num'] for i in cumulative_precision_noover], [i['value'] for i in cumulative_precision_noover])
     ax7.plot([i['iter_num'] for i in cumulative_recall_noover], [i['value'] for i in cumulative_recall_noover])
     ax8.plot([i['iter_num'] for i in user_h_history], fd_precision_history)
-    ax9.plot([i['iter_num'] for i in user_h_history], fd_recall_seen_history)
-    ax10.plot([i['iter_num'] for i in user_h_history], fd_precision_seen_history)
+    ax9.plot([i['iter_num'] for i in user_h_history if i['iter_num'] > 0], fd_recall_seen_history)
+    ax10.plot([i['iter_num'] for i in user_h_history if i['iter_num'] > 0], fd_precision_seen_history)
 
     ax1.set_xlabel('Iteration #')
     ax1.set_ylabel('Confidence')
