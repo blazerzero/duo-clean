@@ -15,6 +15,7 @@ def eval_user_h(project_id, run_type):
     with open(pathstart + project_id + '/project_info.json', 'r') as f:
         project_info = json.load(f)
     scenario = project_info['scenario']
+    scenario_id = project_info['scenario_id']
     data = pd.read_csv(scenario['dirty_dataset'], keep_default_na=False)
     clean_data = pd.read_csv(scenario['clean_dataset'], keep_default_na=False)
     target_fd = scenario['target_fd']
@@ -27,16 +28,22 @@ def eval_user_h(project_id, run_type):
         study_metrics = json.load(f)
     user_h_history = interaction_metadata['user_hypothesis_history']
     user_h_conf_history = list()
-    user_h_vio_match_history = list()
+    fd_recall_history = list()
+    fd_precision_history = list()
+    fd_recall_seen_history = list()
+    fd_precision_seen_history = list()
     user_h_seen_conf_history = list()
     seen_tuples = set()
     for h in user_h_history:
         fd = h['value'][0]
         if fd == 'Not Sure':
             user_h_conf_history.append(0)
-            user_h_vio_match_history.append(0)
+            fd_recall_history.append(0)
+            fd_precision_history.append(0)
             if h['iter_num'] > 0:
                 user_h_seen_conf_history.append(0)
+                fd_recall_seen_history.append(0)
+                fd_precision_seen_history.append(0)
             continue
 
         lhs = fd.split(' => ')[0][1:-1].split(', ')
@@ -59,8 +66,10 @@ def eval_user_h(project_id, run_type):
         target_vios = target_fd_dirty_meta['vios']
 
         user_h_conf_history.append(conf)
-        vio_match_rate = len([v for v in vios if v in target_vios]) / len(target_vios)
-        user_h_vio_match_history.append(vio_match_rate)
+        fd_recall = len([v for v in vios if v in target_vios]) / len(target_vios)
+        fd_precision = len([v for v in vios if v in target_vios]) / len(vios)
+        fd_recall_history.append(fd_recall)
+        fd_precision_history.append(fd_precision)
 
         if h['iter_num'] == 0:
             continue
@@ -69,8 +78,15 @@ def eval_user_h(project_id, run_type):
         seen_data = data.iloc[list(seen_tuples)]
         seen_clean_data = clean_data.iloc[list(seen_tuples)]
         support, vios = helpers.getSupportAndVios(seen_data, seen_clean_data, fd)
+        _, target_vios_seen = helpers.getSupportAndVios(seen_data, seen_clean_data, target_fd)
         conf = (len(support) - len(vios)) / len(support)
         user_h_seen_conf_history.append(conf)
+
+        fd_recall_seen = len([v for v in vios if v in target_vios_seen]) / len(target_vios_seen)
+        fd_precision_seen = len([v for v in vios if v in target_vios_seen]) / len(vios)
+
+        fd_recall_seen_history.append(fd_recall)
+        fd_precision_seen_history.append(fd_precision)
     
     study_metrics, fd_metadata = helpers.deriveStats(
         interaction_metadata,
@@ -96,6 +112,10 @@ def eval_user_h(project_id, run_type):
     fig5, ax5 = plt.subplots()
     fig6, ax6 = plt.subplots()
     fig7, ax7 = plt.subplots()
+    fig8, ax8 = plt.subplots()
+    fig9, ax9 = plt.subplots()
+    fig10, ax10 = plt.subplots()
+
     ax1.set_xticks(np.arange(0, 15, 3))
     ax2.set_xticks(np.arange(0, 15, 3))
     ax3.set_xticks(np.arange(0, 15, 3))
@@ -103,6 +123,10 @@ def eval_user_h(project_id, run_type):
     ax5.set_xticks(np.arange(0, 15, 3))
     ax6.set_xticks(np.arange(0, 15, 3))
     ax7.set_xticks(np.arange(0, 15, 3))
+    ax8.set_xticks(np.arange(0, 15, 3))
+    ax9.set_xticks(np.arange(0, 15, 3))
+    ax10.set_xticks(np.arange(0, 15, 3))
+
     ax1.set_ylim([0, 1])
     ax2.set_ylim([0, 1])
     ax3.set_ylim([0, 1])
@@ -110,36 +134,60 @@ def eval_user_h(project_id, run_type):
     ax5.set_ylim([0, 1])
     ax6.set_ylim([0, 1])
     ax7.set_ylim([0, 1])
+    ax8.set_ylim([0, 1])
+    ax9.set_ylim([0, 1])
+    ax10.set_ylim([0, 1])
 
     ax1.plot([i['iter_num'] for i in user_h_history], user_h_conf_history)
-    ax2.plot([i['iter_num'] for i in user_h_history], user_h_vio_match_history)
+    ax2.plot([i['iter_num'] for i in user_h_history], fd_recall_history)
     ax3.plot([i['iter_num'] for i in user_h_history if i['iter_num'] > 0], user_h_seen_conf_history)
     ax4.plot([i['iter_num'] for i in cumulative_precision], [i['value'] for i in cumulative_precision])
     ax5.plot([i['iter_num'] for i in cumulative_recall], [i['value'] for i in cumulative_recall])
     ax6.plot([i['iter_num'] for i in cumulative_precision_noover], [i['value'] for i in cumulative_precision_noover])
     ax7.plot([i['iter_num'] for i in cumulative_recall_noover], [i['value'] for i in cumulative_recall_noover])
+    ax8.plot([i['iter_num'] for i in user_h_history], fd_precision_history)
+    ax9.plot([i['iter_num'] for i in user_h_history], fd_recall_seen_history)
+    ax10.plot([i['iter_num'] for i in user_h_history], fd_precision_seen_history)
 
     ax1.set_xlabel('Iteration #')
-    ax1.set_ylabel('Precision')
-    ax1.set_title('FD Precision Over the Interaction')
+    ax1.set_ylabel('Confidence')
+    ax1.set_title('Suggested FD Confidence Over the Interaction')
+   
     ax2.set_xlabel('Iteration #')
-    ax2.set_ylabel('Match Rate')
-    ax2.set_title("Applicability of User FD to Real Violations")
+    ax2.set_ylabel('Recall')
+    ax2.set_title('Suggested FD Recall')
+    
     ax3.set_xlabel('Iteration #')
-    ax3.set_ylabel('Precision')
-    ax3.set_title('FD Precision Over What the User Has Seen So Far')
+    ax3.set_ylabel('Confidence')
+    ax3.set_title('Suggested FD Confidence Over What the User Has Seen')
+    
     ax4.set_xlabel('Iteration #')
     ax4.set_ylabel('Precision')
     ax4.set_ylabel('Cumulative User Precision')
+    
     ax5.set_xlabel('Iteration #')
     ax5.set_ylabel('Recall')
     ax5.set_ylabel('Cumulative User Recall')
+    
     ax6.set_xlabel('Iteration #')
     ax6.set_ylabel('Precision')
     ax6.set_ylabel('Cumulative User Precision (w/o Duplicate Vios)')
+    
     ax7.set_xlabel('Iteration #')
     ax7.set_ylabel('Recall')
     ax7.set_ylabel('Cumulative User Recall (w/o Duplicate Vios)')
+
+    ax8.set_xlabel('Iteration #')
+    ax8.set_ylabel('Precision')
+    ax8.set_title('Suggested FD Precision')
+
+    ax9.set_xlabel('Iteration #')
+    ax9.set_ylabel('Recall')
+    ax9.set_title('Suggested FD Recall Over What the User Has Seen')
+
+    ax10.set_xlabel('Iteration #')
+    ax10.set_ylabel('Precision')
+    ax10.set_title('Suggested FD Precision Over What the User Has Seen')
 
     fig1.tight_layout()
     fig2.tight_layout()
@@ -148,13 +196,21 @@ def eval_user_h(project_id, run_type):
     fig5.tight_layout()
     fig6.tight_layout()
     fig7.tight_layout()
-    fig1.savefig('./plots/fd-precision/' + project_id + '.jpg')
-    fig2.savefig('./plots/fd-applicability-to-violations/' + project_id + '.jpg')
-    fig3.savefig('./plots/fd-precision-seen/' + project_id + '.jpg')
-    fig4.savefig('./plots/cumulative-user-precision/' + project_id + '.jpg')
-    fig5.savefig('./plots/cumulative-user-recall/' + project_id + '.jpg')
-    fig6.savefig('./plots/cumulative-user-precision-nodup/' + project_id + '.jpg')
-    fig7.savefig('./plots/cumulative-user-recall-nodup/' + project_id + '.jpg')
+    fig8.tight_layout()
+    fig9.tight_layout()
+    fig10.tight_layout()
+
+    fig1.savefig('./plots/fd-confidence/' + project_id + '-s' + scenario_id + '.jpg')
+    fig2.savefig('./plots/fd-recall/' + project_id + '-s' + scenario_id + '.jpg')
+    fig3.savefig('./plots/fd-confidence-seen/' + project_id + '-s' + scenario_id + '.jpg')
+    fig4.savefig('./plots/cumulative-user-precision/' + project_id + '-s' + scenario_id + '.jpg')
+    fig5.savefig('./plots/cumulative-user-recall/' + project_id + '-s' + scenario_id + '.jpg')
+    fig6.savefig('./plots/cumulative-user-precision-nodup/' + project_id + '-s' + scenario_id + '.jpg')
+    fig7.savefig('./plots/cumulative-user-recall-nodup/' + project_id + '-s' + scenario_id + '.jpg')
+    fig8.savefig('./plots/fd-precision/' + project_id + '-s' + scenario_id + '.jpg')
+    fig9.savefig('./plots/fd-recall-seen/' + project_id + '-s' + scenario_id + '.jpg')
+    fig10.savefig('./plots/fd-precision-seen/' + project_id + '-s' + scenario_id + '.jpg')
+    
     plt.clf()
 
 if __name__ == '__main__':
