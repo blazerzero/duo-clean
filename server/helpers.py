@@ -1139,9 +1139,9 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
             total_set = set()
 
             for it in range(0, len(study_metrics['st_vios_found'])):
-                found.extend(study_metrics['st_vios_found'][it]['value'])
-                marked.extend(study_metrics['st_vios_marked'][it]['value'])
-                total.extend(study_metrics['st_vios_total'][it]['value'])
+                found += study_metrics['st_vios_found'][it]['value']
+                marked += study_metrics['st_vios_marked'][it]['value']
+                total += study_metrics['st_vios_total'][it]['value']
                 found_set |= set(study_metrics['st_vios_found'][it]['value'])
                 marked_set |= set(study_metrics['st_vios_marked'][it]['value'])
                 total_set |= set(study_metrics['st_vios_total'][it]['value'])
