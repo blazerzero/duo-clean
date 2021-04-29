@@ -17,8 +17,14 @@ def eval_user_h(project_id, run_type):
     scenario = project_info['scenario']
     data = pd.read_csv(scenario['dirty_dataset'], keep_default_na=False)
     clean_data = pd.read_csv(scenario['clean_dataset'], keep_default_na=False)
+    target_fd = scenario['target_fd']
+    h_space = scenario['hypothesis_space']
     with open(pathstart + project_id + '/interaction_metadata.json', 'r') as f:
         interaction_metadata = json.load(f)
+    with open(pathstart + project_id + '/fd_metadata.json', 'r') as f:
+        fd_metadata = json.load(f)
+    with open(pathstart + project_id + '/study_metrics.json', 'r') as f:
+        study_metrics = json.load(f)
     user_h_history = interaction_metadata['user_hypothesis_history']
     user_h_conf_history = list()
     user_h_vio_match_history = list()
@@ -66,36 +72,70 @@ def eval_user_h(project_id, run_type):
         conf = (len(support) - len(vios)) / len(support)
         user_h_seen_conf_history.append(conf)
     
+    study_metrics, fd_metadata = helpers.deriveStats(
+        interaction_metadata,
+        fd_metadata,
+        h_space,
+        study_metrics,
+        data,
+        clean_data,
+        target_fd
+    )
+    with open(pathstart + project_id + '/study_metrics.json', 'w') as f:
+        json.dump(study_metrics, f)
+    with open(pathstart + project_id + '/fd_metadata.json', 'w') as f:
+        json.load(fd_metadata, f)
+    
+    cumulative_precision, cumulative_recall = study_metrics['cumulative_precision'], study_metrics['cumulative_recall']
+    
     fig1, ax1 = plt.subplots()
     fig2, ax2 = plt.subplots()
     fig3, ax3 = plt.subplots()
+    fig4, ax4 = plt.subplots()
+    fig5, ax5 = plt.subplots()
     ax1.set_xticks(np.arange(0, 15, 3))
     ax2.set_xticks(np.arange(0, 15, 3))
     ax3.set_xticks(np.arange(0, 15, 3))
+    ax4.set_xticks(np.arange(0, 15, 3))
+    ax5.set_xticks(np.arange(0, 15, 3))
     ax1.set_ylim([0, 1])
     ax2.set_ylim([0, 1])
     ax3.set_ylim([0, 1])
+    ax4.set_ylim([0, 1])
+    ax5.set_ylim([0, 1])
 
     ax1.plot([i['iter_num'] for i in user_h_history], user_h_conf_history)
     ax2.plot([i['iter_num'] for i in user_h_history], user_h_vio_match_history)
     ax3.plot([i['iter_num'] for i in user_h_history if i['iter_num'] > 0], user_h_seen_conf_history)
+    ax4.plot([i['iter_num'] for i in cumulative_precision], [i['value'] for i in cumulative_precision])
+    ax5.plot([i['iter_num'] for i in cumulative_recall], [i['value'] for i in cumulative_recall])
 
     ax1.set_xlabel('Iteration #')
-    ax1.set_ylabel('FD Precision')
+    ax1.set_ylabel('Precision')
     ax1.set_title('FD Precision Over the Interaction')
     ax2.set_xlabel('Iteration #')
     ax2.set_ylabel('Match Rate')
     ax2.set_title("Applicability of User FD to Real Violations")
     ax3.set_xlabel('Iteration #')
-    ax3.set_ylabel('FD Precision')
+    ax3.set_ylabel('Precision')
     ax3.set_title('FD Precision Over What the User Has Seen So Far')
+    ax4.set_xlabel('Iteration #')
+    ax4.set_ylabel('Precision')
+    ax4.set_ylabel('Cumulative User Precision')
+    ax5.set_xlabel('Iteration #')
+    ax5.set_ylabel('Recall')
+    ax5.set_ylabel('Cumulative User Recall')
 
     fig1.tight_layout()
     fig2.tight_layout()
     fig3.tight_layout()
+    fig4.tight_layout()
+    fig5.tight_layout()
     fig1.savefig('./plots/fd-precicion/' + project_id + '.jpg')
     fig2.savefig('./plots/fd-applicability-to-violations/' + project_id + '.jpg')
     fig3.savefig('./plots/fd-precision-seen/' + project_id + '.jpg')
+    fig4.savefig('./plots/cumulative-user-precision/' + project_id + '.jpg')
+    fig5.savefig('./plots/cumulative-user-recall' + project_id + '.jpg')
     plt.clf()
 
 if __name__ == '__main__':

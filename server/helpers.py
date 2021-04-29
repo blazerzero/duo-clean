@@ -745,6 +745,10 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
     study_metrics['mt_2_vios_total'] = list()
     study_metrics['mt_3_vios_total'] = list()
     study_metrics['lt_vios_total'] = list()
+    study_metrics['cumulative_recall'] = list()
+    study_metrics['cumulative_recall_noover'] = list()
+    study_metrics['cumulative_precision'] = list()
+    study_metrics['cumulative_precision_noover'] = list()
 
     # study_metrics['iter_errors_marked'] = list()
     # study_metrics['iter_errors_found'] = list()
@@ -1119,6 +1123,23 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
         study_metrics['mt_2_vios_total'].append({ 'iter_num': int(i), 'value': list(mt_2_vios_total), 'elapsed_time': elapsed_time })
         study_metrics['mt_3_vios_total'].append({ 'iter_num': int(i), 'value': list(mt_3_vios_total), 'elapsed_time': elapsed_time })
         study_metrics['lt_vios_total'].append({ 'iter_num': int(i), 'value': list(lt_vios_total), 'elapsed_time': elapsed_time })
+
+        if i > 1:
+            prev_found = study_metrics['st_vios_found'][-2]['value']
+            prev_marked = study_metrics['st_vios_marked'][-2]['value']
+            prev_total = study_metrics['st_vios_total'][-2]['value']
+            curr_found = study_metrics['st_vios_found'][-1]['value']
+            curr_marked = study_metrics['st_vios_marked'][-1]['value']
+            curr_total = study_metrics['st_vios_total'][-1]['value']
+
+            cumulative_precision = 0.5 if prev_marked == 0 and curr_marked == 0 else (prev_found + curr_found) / (prev_marked + curr_marked)
+            cumulative_recall = (prev_found + curr_found) / (prev_total + curr_total)
+        else:
+            cumulative_precision = study_metrics['st_vio_precision'][-1]['value']
+            cumulative_recall = study_metrics['st_vio_recall'][-1]['value']
+        
+        study_metrics['cumulative_precision'].append({ 'iter_num': int(i), 'value': cumulative_precision, 'elapsed_time': elapsed_time })
+        study_metrics['cumulative_recall'].append({ 'iter_num': int(i), 'value': cumulative_recall, 'elapsed_time': elapsed_time })
 
         # study_metrics['iter_errors_marked'].append({ 'iter_num': int(i), 'value': iter_errors_marked, 'elapsed_time': elapsed_time })
         # study_metrics['iter_errors_found'].append({ 'iter_num': int(i), 'value': iter_errors_found, 'elapsed_time': elapsed_time })
