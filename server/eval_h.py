@@ -66,8 +66,8 @@ def eval_user_h(project_id, run_type):
             continue
         current_sample = next(i['value'] for i in interaction_metadata['sample_history'] if i['iter_num'] == h['iter_num'])
         seen_tuples |= set(current_sample)
-        seen_data = data[seen_tuples]
-        seen_clean_data = clean_data[seen_tuples]
+        seen_data = data.iloc[list(seen_tuples)]
+        seen_clean_data = clean_data.iloc[list(seen_tuples)]
         support, vios = helpers.getSupportAndVios(seen_data, seen_clean_data, fd)
         conf = (len(support) - len(vios)) / len(support)
         user_h_seen_conf_history.append(conf)

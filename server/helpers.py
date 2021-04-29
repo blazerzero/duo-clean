@@ -1016,12 +1016,12 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
         if len(mt_vios_marked) > 0:
             mt_vio_precision = len(mt_vios_found) / len(mt_vios_marked)
         else:
-            mt_vio_precision = 1
+            mt_vio_precision = 0.5
 
         if len(mt_2_vios_marked) > 0:
             mt_2_vio_precision = len(mt_2_vios_found) / len(mt_2_vios_marked)
         else:
-            mt_2_vio_precision = 1
+            mt_2_vio_precision = 0.5
 
         if len(mt_3_vios_marked) > 0:
             mt_3_vio_precision = len(mt_3_vios_found) / len(mt_3_vios_marked)
@@ -1133,7 +1133,7 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
             curr_total = study_metrics['st_vios_total'][-1]['value']
 
             cumulative_precision = 0.5 if prev_marked == 0 and curr_marked == 0 else (prev_found + curr_found) / (prev_marked + curr_marked)
-            cumulative_recall = (prev_found + curr_found) / (prev_total + curr_total)
+            cumulative_recall = (len(prev_found) + len(curr_found)) / (len(prev_total) + len(curr_total))
         else:
             cumulative_precision = study_metrics['st_vio_precision'][-1]['value']
             cumulative_recall = study_metrics['st_vio_recall'][-1]['value']
