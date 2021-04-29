@@ -1125,21 +1125,41 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
         study_metrics['lt_vios_total'].append({ 'iter_num': int(i), 'value': list(lt_vios_total), 'elapsed_time': elapsed_time })
 
         if int(i) > 1:
-            prev_found = study_metrics['st_vios_found'][-2]['value']
-            prev_marked = study_metrics['st_vios_marked'][-2]['value']
-            prev_total = study_metrics['st_vios_total'][-2]['value']
-            curr_found = study_metrics['st_vios_found'][-1]['value']
-            curr_marked = study_metrics['st_vios_marked'][-1]['value']
-            curr_total = study_metrics['st_vios_total'][-1]['value']
+            # prev_found = study_metrics['st_vios_found'][-2]['value']
+            # prev_marked = study_metrics['st_vios_marked'][-2]['value']
+            # prev_total = study_metrics['st_vios_total'][-2]['value']
+            # curr_found = study_metrics['st_vios_found'][-1]['value']
+            # curr_marked = study_metrics['st_vios_marked'][-1]['value']
+            # curr_total = study_metrics['st_vios_total'][-1]['value']
+            found = list()
+            marked = list()
+            total = list()
+            found_set = set()
+            marked_set = set()
+            total_set = set()
 
-            cumulative_precision = 0.5 if len(prev_marked) == 0 and len(curr_marked) == 0 else (len(prev_found) + len(curr_found)) / (len(prev_marked) + len(curr_marked))
-            cumulative_recall = (len(prev_found) + len(curr_found)) / (len(prev_total) + len(curr_total))
+            for it in range(1, len(study_metrics['st_vios_found'])+1):
+                found.extend(study_metrics['st_vios_found'][it]['value'])
+                marked.extend(study_metrics['st_vios_marked'][it]['value'])
+                total.extend(study_metrics['st_vios_total'][it]['value'])
+                found_set |= set(study_metrics['st_vios_found'][it]['value'])
+                marked_set |= set(study_metrics['st_vios_marked'][it]['value'])
+                total_set |= set(study_metrics['st_vios_total'][it]['value'])
+
+            cumulative_precision = 0.5 if len(marked) == 0 else (len(found)) / (len(marked))
+            cumulative_precision_noover = 0.5 if len(marked_set) == 0 else (len(found_set) / len(marked_set))
+            cumulative_recall = (len(found)) / (len(total))
+            cumulative_recall_noover = (len(found_set) / len(total_set))
         else:
             cumulative_precision = study_metrics['st_vio_precision'][-1]['value']
             cumulative_recall = study_metrics['st_vio_recall'][-1]['value']
+            cumulative_precision_noover = study_metrics['st_vio_precision'][-1]['value']
+            cumulative_recall_noover = study_metrics['st_vio_recall'][-1]['value']
         
         study_metrics['cumulative_precision'].append({ 'iter_num': int(i), 'value': cumulative_precision, 'elapsed_time': elapsed_time })
         study_metrics['cumulative_recall'].append({ 'iter_num': int(i), 'value': cumulative_recall, 'elapsed_time': elapsed_time })
+        study_metrics['cumulative_precision_noover'].append({ 'iter_num': int(i), 'value': cumulative_precision_noover, 'elapsed_time': elapsed_time })
+        study_metrics['cumulative_recall_noover'].append({ 'iter_num': int(i), 'value': cumulative_recall_noover, 'elapsed_time': elapsed_time })
 
         # study_metrics['iter_errors_marked'].append({ 'iter_num': int(i), 'value': iter_errors_marked, 'elapsed_time': elapsed_time })
         # study_metrics['iter_errors_found'].append({ 'iter_num': int(i), 'value': iter_errors_found, 'elapsed_time': elapsed_time })
