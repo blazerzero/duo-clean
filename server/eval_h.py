@@ -84,7 +84,7 @@ def eval_user_h(project_id, run_type):
     with open(pathstart + project_id + '/study_metrics.json', 'w') as f:
         json.dump(study_metrics, f)
     with open(pathstart + project_id + '/fd_metadata.json', 'w') as f:
-        json.load(fd_metadata, f)
+        json.dump(fd_metadata, f)
     
     cumulative_precision, cumulative_recall = study_metrics['cumulative_precision'], study_metrics['cumulative_recall']
     
