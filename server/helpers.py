@@ -1124,7 +1124,7 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
         study_metrics['mt_3_vios_total'].append({ 'iter_num': int(i), 'value': list(mt_3_vios_total), 'elapsed_time': elapsed_time })
         study_metrics['lt_vios_total'].append({ 'iter_num': int(i), 'value': list(lt_vios_total), 'elapsed_time': elapsed_time })
 
-        if i > 1:
+        if int(i) > 1:
             prev_found = study_metrics['st_vios_found'][-2]['value']
             prev_marked = study_metrics['st_vios_marked'][-2]['value']
             prev_total = study_metrics['st_vios_total'][-2]['value']
