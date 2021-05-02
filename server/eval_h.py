@@ -34,6 +34,16 @@ def eval_user_h(project_id, run_type):
     fd_precision_seen_history = list()
     user_h_seen_conf_history = list()
     seen_tuples = set()
+
+    with open('./study-utils/users.json', 'r') as f:
+        users = json.load(f)
+    user_num_dict = dict()
+    counter = 1
+    for email in users.keys():
+        user_num_dict[email] = counter
+        counter += 1
+    user_num = user_num_dict[project_id['email']]
+
     for h in user_h_history:
         fd = h['value'][0]
         if fd == 'Not Sure':
@@ -200,16 +210,16 @@ def eval_user_h(project_id, run_type):
     fig9.tight_layout()
     fig10.tight_layout()
 
-    fig1.savefig('./plots/fd-confidence/' + project_id + '-s' + scenario_id + '.jpg')
-    fig2.savefig('./plots/fd-recall/' + project_id + '-s' + scenario_id + '.jpg')
-    fig3.savefig('./plots/fd-confidence-seen/' + project_id + '-s' + scenario_id + '.jpg')
-    fig4.savefig('./plots/cumulative-user-precision/' + project_id + '-s' + scenario_id + '.jpg')
-    fig5.savefig('./plots/cumulative-user-recall/' + project_id + '-s' + scenario_id + '.jpg')
-    fig6.savefig('./plots/cumulative-user-precision-nodup/' + project_id + '-s' + scenario_id + '.jpg')
-    fig7.savefig('./plots/cumulative-user-recall-nodup/' + project_id + '-s' + scenario_id + '.jpg')
-    fig8.savefig('./plots/fd-precision/' + project_id + '-s' + scenario_id + '.jpg')
-    fig9.savefig('./plots/fd-recall-seen/' + project_id + '-s' + scenario_id + '.jpg')
-    fig10.savefig('./plots/fd-precision-seen/' + project_id + '-s' + scenario_id + '.jpg')
+    fig1.savefig('./plots/fd-confidence/' + project_id + '-s' + scenario_id + '-u' + user_num + '.jpg')
+    fig2.savefig('./plots/fd-recall/' + project_id + '-s' + scenario_id + '-u' + user_num + '.jpg')
+    fig3.savefig('./plots/fd-confidence-seen/' + project_id + '-s' + scenario_id + '-u' + user_num + '.jpg')
+    fig4.savefig('./plots/cumulative-user-precision/' + project_id + '-s' + scenario_id + '-u' + user_num + '.jpg')
+    fig5.savefig('./plots/cumulative-user-recall/' + project_id + '-s' + scenario_id + '-u' + user_num + '.jpg')
+    fig6.savefig('./plots/cumulative-user-precision-nodup/' + project_id + '-s' + scenario_id + '-u' + user_num + '.jpg')
+    fig7.savefig('./plots/cumulative-user-recall-nodup/' + project_id + '-s' + scenario_id + '-u' + user_num + '.jpg')
+    fig8.savefig('./plots/fd-precision/' + project_id + '-s' + scenario_id + '-u' + user_num + '.jpg')
+    fig9.savefig('./plots/fd-recall-seen/' + project_id + '-s' + scenario_id + '-u' + user_num + '.jpg')
+    fig10.savefig('./plots/fd-precision-seen/' + project_id + '-s' + scenario_id + '-u' + user_num + '.jpg')
     
     plt.clf()
 
