@@ -173,19 +173,19 @@ def eval_user_h(project_id, run_type):
     
     ax4.set_xlabel('Iteration #')
     ax4.set_ylabel('Precision')
-    ax4.set_ylabel('Cumulative User Precision')
+    ax4.set_title('Cumulative User Precision')
     
     ax5.set_xlabel('Iteration #')
     ax5.set_ylabel('Recall')
-    ax5.set_ylabel('Cumulative User Recall')
+    ax5.set_title('Cumulative User Recall')
     
     ax6.set_xlabel('Iteration #')
     ax6.set_ylabel('Precision')
-    ax6.set_ylabel('Cumulative User Precision (w/o Duplicate Vios)')
+    ax6.set_title('Cumulative User Precision (w/o Duplicate Vios)')
     
     ax7.set_xlabel('Iteration #')
     ax7.set_ylabel('Recall')
-    ax7.set_ylabel('Cumulative User Recall (w/o Duplicate Vios)')
+    ax7.set_title('Cumulative User Recall (w/o Duplicate Vios)')
 
     ax8.set_xlabel('Iteration #')
     ax8.set_ylabel('Precision')
