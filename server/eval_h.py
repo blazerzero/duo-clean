@@ -42,7 +42,7 @@ def eval_user_h(project_id, run_type):
     for email in users.keys():
         user_num_dict[email] = counter
         counter += 1
-    user_num = user_num_dict[project_info['email']]
+    user_num = str(user_num_dict[project_info['email']])
 
     for h in user_h_history:
         fd = h['value'][0]
