@@ -401,6 +401,8 @@ def eval_h_grouped(group_type, run_type, id):
         cumulative_precision, cumulative_recall = study_metrics['cumulative_precision'], study_metrics['cumulative_recall']
         cumulative_precision_noover, cumulative_recall_noover = study_metrics['cumulative_precision_noover'], study_metrics['cumulative_recall_noover']
 
+        console.print('\nSEPARATE USER\n')
+
         ax1.plot([i['iter_num'] for i in user_h_history], user_h_conf_history)
         statstests.mannkendall(user_h_conf_history)
 
