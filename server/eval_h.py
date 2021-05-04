@@ -311,6 +311,8 @@ def eval_h_grouped(group_type, run_type, id):
             project_info = json.load(f)
         scenario = project_info['scenario']
         scenario_id = project_info['scenario_id']
+        user_num = str(user_num_dict[project_info['email']])
+        
         data = pd.read_csv(scenario['dirty_dataset'], keep_default_na=False)
         clean_data = pd.read_csv(scenario['clean_dataset'], keep_default_na=False)
         target_fd = scenario['target_fd']
