@@ -278,7 +278,7 @@ def eval_h_grouped(group_type, run_type, id):
         user_num = str(user_num_dict[project_info['email']])
 
         if group_type == 'scenario':
-            if scenario_id != 'id':
+            if scenario_id != id:
                 continue
         elif group_type == 'user':
             if int(id) not in user_num_dict.values():
