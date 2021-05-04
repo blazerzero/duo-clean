@@ -151,64 +151,34 @@ def eval_user_h(project_id, run_type):
     ax10.set_ylim([0, 1])
 
     ax1.plot([i['iter_num'] for i in user_h_history], user_h_conf_history)
-    data1 = pd.DataFrame(columns=['iter_num', 'fd_confidence'])
-    data1['iter_num'] = [i['iter_num'] for i in user_h_history]
-    data1['fd_confidence'] = user_h_conf_history
-    statstests.mannkendall(data1)
+    statstests.mannkendall(user_h_conf_history)
 
     ax2.plot([i['iter_num'] for i in user_h_history], fd_recall_history)
-    data2 = pd.DataFrame(columns=['iter_num', 'fd_recall'])
-    data2['iter_num'] = [i['iter_num'] for i in user_h_history]
-    data2['fd_recall'] = fd_recall_history
-    statstests.mannkendall(data2)
+    statstests.mannkendall(fd_recall_history)
 
     ax3.plot([i['iter_num'] for i in user_h_history if i['iter_num'] > 0], user_h_seen_conf_history)
-    data3 = pd.DataFrame(columns=['iter_num', 'fd_confidence'])
-    data3['iter_num'] = [i['iter_num'] for i in user_h_history]
-    data3['fd_confidence'] = user_h_seen_conf_history
-    statstests.mannkendall(data3)
+    statstests.mannkendall(user_h_seen_conf_history)
 
     ax4.plot([i['iter_num'] for i in cumulative_precision], [i['value'] for i in cumulative_precision])
-    data4 = pd.DataFrame(columns=['iter_num', 'user_precision'])
-    data4['iter_num'] = [i['iter_num'] for i in cumulative_precision]
-    data4['user_precision'] = [i['value'] for i in cumulative_precision]
-    statstests.mannkendall(data4)
+    statstests.mannkendall([i['value'] for i in cumulative_precision])
 
     ax5.plot([i['iter_num'] for i in cumulative_recall], [i['value'] for i in cumulative_recall])
-    data5 = pd.DataFrame(columns=['iter_num', 'user_recall'])
-    data5['iter_num'] = [i['iter_num'] for i in cumulative_recall]
-    data5['user_recall'] = [i['value'] for i in cumulative_recall]
-    statstests.mannkendall(data5)
+    statstests.mannkendall([i['value'] for i in cumulative_recall])
 
     ax6.plot([i['iter_num'] for i in cumulative_precision_noover], [i['value'] for i in cumulative_precision_noover])
-    data6 = pd.DataFrame(columns=['iter_num', 'user_precision'])
-    data6['iter_num'] = [i['iter_num'] for i in cumulative_precision_noover]
-    data6['user_precision'] = [i['value'] for i in cumulative_precision_noover]
-    statstests.mannkendall(data6)
+    statstests.mannkendall([i['value'] for i in cumulative_precision_noover])
 
     ax7.plot([i['iter_num'] for i in cumulative_recall_noover], [i['value'] for i in cumulative_recall_noover])
-    data7 = pd.DataFrame(columns=['iter_num', 'user_recall'])
-    data7['iter_num'] = [i['iter_num'] for i in cumulative_recall_noover]
-    data7['user_recall'] = [i['value'] for i in cumulative_recall_noover]
-    statstests.mannkendall(data7)
+    statstests.mannkendall([i['value'] for i in cumulative_recall_noover])
 
     ax8.plot([i['iter_num'] for i in user_h_history], fd_precision_history)
-    data8 = pd.DataFrame(columns=['iter_num', 'fd_precision'])
-    data8['iter_num'] = [i['iter_num'] for i in user_h_history]
-    data8['fd_precision'] = fd_precision_history
-    statstests.mannkendall(data8)
+    statstests.mannkendall(fd_precision_history)
 
     ax9.plot([i['iter_num'] for i in user_h_history if i['iter_num'] > 0], fd_recall_seen_history)
-    data9 = pd.DataFrame(columns=['iter_num', 'fd_recall'])
-    data9['iter_num'] = [i['iter_num'] for i in user_h_history]
-    data9['fd_recall'] = fd_recall_seen_history
-    statstests.mannkendall(data9)
+    statstests.mannkendall(fd_recall_seen_history)
 
     ax10.plot([i['iter_num'] for i in user_h_history if i['iter_num'] > 0], fd_precision_seen_history)
-    data10 = pd.DataFrame(columns=['iter_num', 'fd_precision'])
-    data10['iter_num'] = [i['iter_num'] for i in user_h_history]
-    data10['fd_precision'] = fd_precision_seen_history
-    statstests.mannkendall(data10)
+    statstests.mannkendall(fd_precision_seen_history)
 
     ax1.set_xlabel('Iteration #')
     ax1.set_ylabel('Confidence')
@@ -432,64 +402,34 @@ def eval_h_grouped(group_type, run_type, id):
         cumulative_precision_noover, cumulative_recall_noover = study_metrics['cumulative_precision_noover'], study_metrics['cumulative_recall_noover']
 
         ax1.plot([i['iter_num'] for i in user_h_history], user_h_conf_history)
-        data1 = pd.DataFrame(columns=['iter_num', 'fd_confidence'])
-        data1['iter_num'] = [i['iter_num'] for i in user_h_history]
-        data1['fd_confidence'] = user_h_conf_history
-        statstests.mannkendall(data1)
+        statstests.mannkendall(user_h_conf_history)
 
         ax2.plot([i['iter_num'] for i in user_h_history], fd_recall_history)
-        data2 = pd.DataFrame(columns=['iter_num', 'fd_recall'])
-        data2['iter_num'] = [i['iter_num'] for i in user_h_history]
-        data2['fd_recall'] = fd_recall_history
-        statstests.mannkendall(data2)
+        statstests.mannkendall(fd_recall_history)
 
         ax3.plot([i['iter_num'] for i in user_h_history if i['iter_num'] > 0], user_h_seen_conf_history)
-        data3 = pd.DataFrame(columns=['iter_num', 'fd_confidence'])
-        data3['iter_num'] = [i['iter_num'] for i in user_h_history]
-        data3['fd_confidence'] = user_h_seen_conf_history
-        statstests.mannkendall(data3)
+        statstests.mannkendall(user_h_seen_conf_history)
 
         ax4.plot([i['iter_num'] for i in cumulative_precision], [i['value'] for i in cumulative_precision])
-        data4 = pd.DataFrame(columns=['iter_num', 'user_precision'])
-        data4['iter_num'] = [i['iter_num'] for i in cumulative_precision]
-        data4['user_precision'] = [i['value'] for i in cumulative_precision]
-        statstests.mannkendall(data4)
+        statstests.mannkendall([i['value'] for i in cumulative_precision])
 
         ax5.plot([i['iter_num'] for i in cumulative_recall], [i['value'] for i in cumulative_recall])
-        data5 = pd.DataFrame(columns=['iter_num', 'user_recall'])
-        data5['iter_num'] = [i['iter_num'] for i in cumulative_recall]
-        data5['user_recall'] = [i['value'] for i in cumulative_recall]
-        statstests.mannkendall(data5)
+        statstests.mannkendall([i['value'] for i in cumulative_recall])
 
         ax6.plot([i['iter_num'] for i in cumulative_precision_noover], [i['value'] for i in cumulative_precision_noover])
-        data6 = pd.DataFrame(columns=['iter_num', 'user_precision'])
-        data6['iter_num'] = [i['iter_num'] for i in cumulative_precision_noover]
-        data6['user_precision'] = [i['value'] for i in cumulative_precision_noover]
-        statstests.mannkendall(data6)
+        statstests.mannkendall([i['value'] for i in cumulative_precision_noover])
 
         ax7.plot([i['iter_num'] for i in cumulative_recall_noover], [i['value'] for i in cumulative_recall_noover])
-        data7 = pd.DataFrame(columns=['iter_num', 'user_recall'])
-        data7['iter_num'] = [i['iter_num'] for i in cumulative_recall_noover]
-        data7['user_recall'] = [i['value'] for i in cumulative_recall_noover]
-        statstests.mannkendall(data7)
+        statstests.mannkendall([i['value'] for i in cumulative_recall_noover])
 
         ax8.plot([i['iter_num'] for i in user_h_history], fd_precision_history)
-        data8 = pd.DataFrame(columns=['iter_num', 'fd_precision'])
-        data8['iter_num'] = [i['iter_num'] for i in user_h_history]
-        data8['fd_precision'] = fd_precision_history
-        statstests.mannkendall(data8)
+        statstests.mannkendall(fd_precision_history)
 
         ax9.plot([i['iter_num'] for i in user_h_history if i['iter_num'] > 0], fd_recall_seen_history)
-        data9 = pd.DataFrame(columns=['iter_num', 'fd_recall'])
-        data9['iter_num'] = [i['iter_num'] for i in user_h_history]
-        data9['fd_recall'] = fd_recall_seen_history
-        statstests.mannkendall(data9)
+        statstests.mannkendall(fd_recall_seen_history)
 
         ax10.plot([i['iter_num'] for i in user_h_history if i['iter_num'] > 0], fd_precision_seen_history)
-        data10 = pd.DataFrame(columns=['iter_num', 'fd_precision'])
-        data10['iter_num'] = [i['iter_num'] for i in user_h_history]
-        data10['fd_precision'] = fd_precision_seen_history
-        statstests.mannkendall(data10)
+        statstests.mannkendall(fd_precision_seen_history)
 
     ax1.set_xlabel('Iteration #')
     ax1.set_ylabel('Confidence')
