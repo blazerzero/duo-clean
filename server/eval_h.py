@@ -287,6 +287,10 @@ def eval_h_grouped(group_type, run_type, id):
         project_ids.append(project_id)
     
     for project_id in project_ids:
+        with open(pathstart + project_id + '/project_info.json', 'r') as f:
+            project_info = json.load(f)
+        scenario = project_info['scenario']
+        scenario_id = project_info['scenario_id']
         data = pd.read_csv(scenario['dirty_dataset'], keep_default_na=False)
         clean_data = pd.read_csv(scenario['clean_dataset'], keep_default_na=False)
         target_fd = scenario['target_fd']
