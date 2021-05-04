@@ -111,9 +111,9 @@ if __name__ == '__main__':
     with open(pathstart + project_id + '/fd_metadata.json', 'w') as f:
         json.dump(fd_metadata, f, indent=4)
 
-    console.print('\n*** Target Hypothesis ***\n')
+    # console.print('\n*** Target Hypothesis ***\n')
     for metric in metrics:
-        console.print(metric)
+        # console.print(metric)
         data = pd.DataFrame(columns = ['iter_num', metric])
         if metric in study_metrics.keys():
             data['iter_num'] = [i['iter_num'] for i in study_metrics[metric]]
@@ -158,7 +158,7 @@ if __name__ == '__main__':
                             norm_data.append(np.mean(formatted_data[i-smoothing_idx+1 : i+1]))
                     # console.print(norm_data)
                     mannkendall(norm_data)
-        console.print()
+        # console.print()
 
     for h in alt_fds:
         study_metrics, fd_metadata = helpers.deriveStats(
@@ -170,9 +170,9 @@ if __name__ == '__main__':
             clean_dataset,
             h
         )
-        console.print('\n*** Alternative Hypothesis:', h, '***\n')
+        # console.print('\n*** Alternative Hypothesis:', h, '***\n')
         for metric in metrics:
-            console.print(metric)
+            # console.print(metric)
             data = pd.DataFrame(columns = ['iter_num', metric])
             if metric in study_metrics.keys():
                 data['iter_num'] = [i['iter_num'] for i in study_metrics[metric]]
@@ -217,5 +217,5 @@ if __name__ == '__main__':
                                 norm_data.append(np.mean(formatted_data[i-smoothing_idx+1 : i+1]))
                         # console.print(norm_data)
                         mannkendall(norm_data)
-            console.print()
+            # console.print()
 
