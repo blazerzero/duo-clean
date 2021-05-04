@@ -41,6 +41,7 @@ if __name__ == '__main__':
 
         if clean_process.returncode == 0:
             clean_output = res[0].decode('latin_1').replace(',]', ']').replace('\r', '').replace('\t', '').replace('\n', '')
+            # NOTE: THIS SHOULD BE CLEAN_OUTPUT IN THE LINE BELOW, NOT OUTPUT
             clean_fds = [c['cfd'] for c in json.loads(output, strict=False)['cfds'] if '=' not in c['cfd'].split(' => ')[0] and '=' not in c['cfd'].split(' => ')[1] and c['cfd'].split(' => ')[0] != '()']
             clean_fds = helpers.buildCompositionSpace(clean_fds, None, clean_data, None, min_conf, max_ant)
         else:

@@ -708,6 +708,7 @@ def checkForTermination(project_id):
 
 def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty_dataset, clean_dataset, target_fd):
     feedback_history = interaction_metadata['feedback_history']
+    user_hypothesis_history = interaction_metadata['user_hypothesis_history']
     study_metrics['st_vio_precision'] = list()
     study_metrics['lt_vio_precision'] = list()
     study_metrics['mt_vio_precision'] = list()
@@ -749,6 +750,7 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
     study_metrics['cumulative_recall_noover'] = list()
     study_metrics['cumulative_precision'] = list()
     study_metrics['cumulative_precision_noover'] = list()
+    study_metrics['bayesian_prediction'] = [{ 'iter_num': user_hypothesis_history[0]['iter_num'], 'value': user_hypothesis_history[0]['value'][0], 'elapsed_time': user_hypothesis_history[0]['elapsed_time'] }]
 
     # study_metrics['iter_errors_marked'] = list()
     # study_metrics['iter_errors_found'] = list()
@@ -757,11 +759,12 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
     # study_metrics['all_errors_found'] = list()
     # study_metrics['all_errors_total'] = list()
 
+    max_h = user_hypothesis_history[0]['value'][0]
     for h in h_space:
-        if h['cfd'] not in fd_metadata.keys():
-            continue
+        # if h['cfd'] not in fd_metadata.keys():
+        #     continue
 
-        mu = h['conf']
+        mu = h['conf'] if h['cfd'] != max_h else 1
         variance = 0.0025
         alpha, beta = initialPrior(mu, variance)
         conf = alpha / (alpha + beta)
@@ -772,7 +775,7 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
 
         fd_metadata[h['cfd']]['alpha_history'] = [{ 'iter_num': 0, 'value': alpha, 'elapsed_time': 0 }]
         fd_metadata[h['cfd']]['beta_history'] = [{ 'iter_num': 0, 'value': beta, 'elapsed_time': 0 }]
-        fd_metadata[h['cfd']]['conf_history'] = [{ 'iter_num': 0, 'value': conf, 'elapsed_time': 0 }]
+        fd_metadata[h['cfd']]['conf_history'] = [{ 'iter_num': 0, 'value': conf, 'elapsed_time': 0 }]        
 
     iters = range(1, len(interaction_metadata['sample_history'])+1)
     for i in iters:
@@ -845,6 +848,7 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
 
         marked_rows = [r for r in marked_rows]
         
+        max_h = study_metrics['bayesian_prediction'][-1]['value']
         for h in h_space:
             successes = 0
             failures = 0
@@ -879,6 +883,9 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
             fd_m['beta_history'].append({ 'iter_num': i, 'value': fd_m['beta'], 'elapsed_time': elapsed_time })
             fd_m['conf_history'].append({ 'iter_num': i, 'value': fd_m['conf'], 'elapsed_time': elapsed_time })
 
+            if fd != max_h and fd_m['conf'] > fd_metadata[max_h]['conf_history'][-1]:
+                max_h = fd
+
             if fd != target_fd:
                 continue
             vio_pairs = h['vio_pairs']
@@ -894,6 +901,8 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
             # print('vios found:', st_vios_found)
             # print('vios marked:', st_vios_marked)
             # print('vios total:', st_vios_total)
+        
+        study_metrics['bayesian_prediction'].append({ 'iter_num': i, 'value': max_h, 'elapsed_time': elapsed_time })
 
         # Medium-term memory violation calculations
         if i > 1:
