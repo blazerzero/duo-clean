@@ -891,9 +891,9 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
             st_vios_marked |= fd_st_vios_marked
             st_vios_found |= fd_st_vios_found
             st_vios_total |= fd_st_vios_total
-            print('vios found:', st_vios_found)
-            print('vios marked:', st_vios_marked)
-            print('vios total:', st_vios_total)
+            # print('vios found:', st_vios_found)
+            # print('vios marked:', st_vios_marked)
+            # print('vios total:', st_vios_total)
 
         # Medium-term memory violation calculations
         if i > 1:
@@ -979,7 +979,7 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
         else:
             st_vio_recall = 0.5
         
-        print('recall:', st_vio_recall)
+        # print('recall:', st_vio_recall)
 
         if len(lt_vios_total) > 0:
             lt_vio_recall = len(lt_vios_found) / len(lt_vios_total)
@@ -1006,7 +1006,7 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
         else:
             st_vio_precision = 0.5
 
-        print('precision:', st_vio_precision)
+        # print('precision:', st_vio_precision)
 
         if len(lt_vios_marked) > 0:
             lt_vio_precision = len(lt_vios_found) / len(lt_vios_marked)
@@ -1033,7 +1033,7 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
         else:
             st_vio_f1 = 0
         
-        print('f1:', st_vio_f1, '\n')
+        # print('f1:', st_vio_f1, '\n')
 
         if lt_vio_precision > 0 or lt_vio_recall > 0:
             lt_vio_f1 = 2 * (lt_vio_precision * lt_vio_recall) / (lt_vio_precision + lt_vio_recall)
