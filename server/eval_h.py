@@ -301,7 +301,7 @@ def eval_h_grouped(group_type, run_type, id):
             if scenario_id != id:
                 continue
         elif group_type == 'user':
-            if int(id) not in user_num_dict.values():
+            if user_num != id:
                 continue
         
         project_ids.append(project_id)
