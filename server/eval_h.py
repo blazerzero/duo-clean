@@ -401,37 +401,38 @@ def eval_h_grouped(group_type, run_type, id):
         cumulative_precision, cumulative_recall = study_metrics['cumulative_precision'], study_metrics['cumulative_recall']
         cumulative_precision_noover, cumulative_recall_noover = study_metrics['cumulative_precision_noover'], study_metrics['cumulative_recall_noover']
 
-        console.print('\nSEPARATE USER\n')
-        console.log(user_h_conf_history)
-        ax1.plot([i['iter_num'] for i in user_h_history], user_h_conf_history)
-        statstests.mannkendall(user_h_conf_history)
+        if len(user_h_history) > 1:
+            console.print('\nSEPARATE USER\n')
+            console.log(user_h_conf_history)
+            ax1.plot([i['iter_num'] for i in user_h_history], user_h_conf_history)
+            statstests.mannkendall(user_h_conf_history)
 
-        ax2.plot([i['iter_num'] for i in user_h_history], fd_recall_history)
-        statstests.mannkendall(fd_recall_history)
+            ax2.plot([i['iter_num'] for i in user_h_history], fd_recall_history)
+            statstests.mannkendall(fd_recall_history)
 
-        ax3.plot([i['iter_num'] for i in user_h_history if i['iter_num'] > 0], user_h_seen_conf_history)
-        statstests.mannkendall(user_h_seen_conf_history)
+            ax3.plot([i['iter_num'] for i in user_h_history if i['iter_num'] > 0], user_h_seen_conf_history)
+            statstests.mannkendall(user_h_seen_conf_history)
 
-        ax4.plot([i['iter_num'] for i in cumulative_precision], [i['value'] for i in cumulative_precision])
-        statstests.mannkendall([i['value'] for i in cumulative_precision])
+            ax4.plot([i['iter_num'] for i in cumulative_precision], [i['value'] for i in cumulative_precision])
+            statstests.mannkendall([i['value'] for i in cumulative_precision])
 
-        ax5.plot([i['iter_num'] for i in cumulative_recall], [i['value'] for i in cumulative_recall])
-        statstests.mannkendall([i['value'] for i in cumulative_recall])
+            ax5.plot([i['iter_num'] for i in cumulative_recall], [i['value'] for i in cumulative_recall])
+            statstests.mannkendall([i['value'] for i in cumulative_recall])
 
-        ax6.plot([i['iter_num'] for i in cumulative_precision_noover], [i['value'] for i in cumulative_precision_noover])
-        statstests.mannkendall([i['value'] for i in cumulative_precision_noover])
+            ax6.plot([i['iter_num'] for i in cumulative_precision_noover], [i['value'] for i in cumulative_precision_noover])
+            statstests.mannkendall([i['value'] for i in cumulative_precision_noover])
 
-        ax7.plot([i['iter_num'] for i in cumulative_recall_noover], [i['value'] for i in cumulative_recall_noover])
-        statstests.mannkendall([i['value'] for i in cumulative_recall_noover])
+            ax7.plot([i['iter_num'] for i in cumulative_recall_noover], [i['value'] for i in cumulative_recall_noover])
+            statstests.mannkendall([i['value'] for i in cumulative_recall_noover])
 
-        ax8.plot([i['iter_num'] for i in user_h_history], fd_precision_history)
-        statstests.mannkendall(fd_precision_history)
+            ax8.plot([i['iter_num'] for i in user_h_history], fd_precision_history)
+            statstests.mannkendall(fd_precision_history)
 
-        ax9.plot([i['iter_num'] for i in user_h_history if i['iter_num'] > 0], fd_recall_seen_history)
-        statstests.mannkendall(fd_recall_seen_history)
+            ax9.plot([i['iter_num'] for i in user_h_history if i['iter_num'] > 0], fd_recall_seen_history)
+            statstests.mannkendall(fd_recall_seen_history)
 
-        ax10.plot([i['iter_num'] for i in user_h_history if i['iter_num'] > 0], fd_precision_seen_history)
-        statstests.mannkendall(fd_precision_seen_history)
+            ax10.plot([i['iter_num'] for i in user_h_history if i['iter_num'] > 0], fd_precision_seen_history)
+            statstests.mannkendall(fd_precision_seen_history)
 
     ax1.set_xlabel('Iteration #')
     ax1.set_ylabel('Confidence')
