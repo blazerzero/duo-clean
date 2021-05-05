@@ -891,7 +891,7 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
             else:
                 formatted_max_h = 'Not Sure'
 
-            if fd != formatted_max_h and fd_m['conf'] > fd_metadata[formatted_max_h]['conf_history'][-1]:
+            if fd != formatted_max_h and fd_m['conf'] > fd_metadata[formatted_max_h]['conf_history'][-1]['value']:
                 max_h = fd
 
             if fd != target_fd:
