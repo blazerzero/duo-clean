@@ -23,7 +23,7 @@ if __name__ == '__main__':
     for s_id, scenario in tqdm(scenarios.items()):
         data = pd.read_csv(scenario['dirty_dataset'], keep_default_na=False)
         clean_data = pd.read_csv(scenario['clean_dataset'], keep_default_na=False)
-        min_conf = 0.001
+        min_conf = 0.6
         max_ant = 3
 
         process = sp.Popen(['./data/cfddiscovery/CFDD', scenario['dirty_dataset'], str(len(data.index)), str(min_conf), str(max_ant)], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})     # CFDD

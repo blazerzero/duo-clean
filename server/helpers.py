@@ -761,10 +761,8 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
 
     max_h = user_hypothesis_history[0]['value'][0]
     for h in h_space:
-        if h['cfd'] not in fd_metadata.keys():
-            fd_metadata[h['cfd']] = dict()
-            fd_metadata[h['cfd']]['vios'] = h['vios']
-            fd_metadata[h['cfd']]['vio_pairs'] = h['vio_pairs']
+        # if h['cfd'] not in fd_metadata.keys():
+        #     continue
 
         mu = h['conf'] if h['cfd'] != max_h else 1
         variance = 0.0025
@@ -855,13 +853,8 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
             successes = 0
             failures = 0
 
-            h_lhs = set(h['cfd'].split(' => ')[0][1:-1].split(', '))
-            h_rhs = set(h['cfd'].split(' => ')[1].split(', '))
-            max_h_lhs = set(max_h.split(' => ')[0][1:-1].split(', ')) if max_h != 'Not Sure' else set()
-            max_h_rhs = set(max_h.split(' => ')[1].split(', ')) if max_h != 'Not Sure' else set()
-
             fd = h['cfd']
-            if h_lhs != max_h_lhs or h_rhs != max_h_rhs:
+            if fd not in fd_metadata.keys():
                 continue
             fd_m = fd_metadata[fd]
 
@@ -890,12 +883,7 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
             fd_m['beta_history'].append({ 'iter_num': i, 'value': fd_m['beta'], 'elapsed_time': elapsed_time })
             fd_m['conf_history'].append({ 'iter_num': i, 'value': fd_m['conf'], 'elapsed_time': elapsed_time })
 
-            if max_h != 'Not Sure':
-                formatted_max_h = next(f for f in fd_metadata.keys() if set(f.split(' => ')[0][1:-1].split(', ')) == max_h_lhs and set(f.split(' => ')[1].split(', ')) == max_h_rhs)
-            else:
-                formatted_max_h = 'Not Sure'
-
-            if fd != formatted_max_h and fd_m['conf'] > fd_metadata[formatted_max_h]['conf_history'][-1]['value']:
+            if fd != max_h and fd_m['conf'] > fd_metadata[max_h]['conf_history'][-1]:
                 max_h = fd
 
             if fd != target_fd:

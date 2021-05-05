@@ -1,7 +1,7 @@
 import copy
 import pandas as pd
 import numpy as np
-import subprocess as sp
+import scipy as sp
 import sys
 import helpers
 import json
@@ -117,130 +117,130 @@ def eval_user_h(project_id, run_type):
     cumulative_precision, cumulative_recall = study_metrics['cumulative_precision'], study_metrics['cumulative_recall']
     cumulative_precision_noover, cumulative_recall_noover = study_metrics['cumulative_precision_noover'], study_metrics['cumulative_recall_noover']
     
-    # fig1, ax1 = plt.subplots()
-    # fig2, ax2 = plt.subplots()
-    # fig3, ax3 = plt.subplots()
-    # fig4, ax4 = plt.subplots()
-    # fig5, ax5 = plt.subplots()
-    # fig6, ax6 = plt.subplots()
-    # fig7, ax7 = plt.subplots()
-    # fig8, ax8 = plt.subplots()
-    # fig9, ax9 = plt.subplots()
-    # fig10, ax10 = plt.subplots()
+    fig1, ax1 = plt.subplots()
+    fig2, ax2 = plt.subplots()
+    fig3, ax3 = plt.subplots()
+    fig4, ax4 = plt.subplots()
+    fig5, ax5 = plt.subplots()
+    fig6, ax6 = plt.subplots()
+    fig7, ax7 = plt.subplots()
+    fig8, ax8 = plt.subplots()
+    fig9, ax9 = plt.subplots()
+    fig10, ax10 = plt.subplots()
 
-    # ax1.set_xticks(np.arange(0, 15, 3))
-    # ax2.set_xticks(np.arange(0, 15, 3))
-    # ax3.set_xticks(np.arange(0, 15, 3))
-    # ax4.set_xticks(np.arange(0, 15, 3))
-    # ax5.set_xticks(np.arange(0, 15, 3))
-    # ax6.set_xticks(np.arange(0, 15, 3))
-    # ax7.set_xticks(np.arange(0, 15, 3))
-    # ax8.set_xticks(np.arange(0, 15, 3))
-    # ax9.set_xticks(np.arange(0, 15, 3))
-    # ax10.set_xticks(np.arange(0, 15, 3))
+    ax1.set_xticks(np.arange(0, 15, 3))
+    ax2.set_xticks(np.arange(0, 15, 3))
+    ax3.set_xticks(np.arange(0, 15, 3))
+    ax4.set_xticks(np.arange(0, 15, 3))
+    ax5.set_xticks(np.arange(0, 15, 3))
+    ax6.set_xticks(np.arange(0, 15, 3))
+    ax7.set_xticks(np.arange(0, 15, 3))
+    ax8.set_xticks(np.arange(0, 15, 3))
+    ax9.set_xticks(np.arange(0, 15, 3))
+    ax10.set_xticks(np.arange(0, 15, 3))
 
-    # ax1.set_ylim([0, 1])
-    # ax2.set_ylim([0, 1])
-    # ax3.set_ylim([0, 1])
-    # ax4.set_ylim([0, 1])
-    # ax5.set_ylim([0, 1])
-    # ax6.set_ylim([0, 1])
-    # ax7.set_ylim([0, 1])
-    # ax8.set_ylim([0, 1])
-    # ax9.set_ylim([0, 1])
-    # ax10.set_ylim([0, 1])
+    ax1.set_ylim([0, 1])
+    ax2.set_ylim([0, 1])
+    ax3.set_ylim([0, 1])
+    ax4.set_ylim([0, 1])
+    ax5.set_ylim([0, 1])
+    ax6.set_ylim([0, 1])
+    ax7.set_ylim([0, 1])
+    ax8.set_ylim([0, 1])
+    ax9.set_ylim([0, 1])
+    ax10.set_ylim([0, 1])
 
-    # ax1.plot([i['iter_num'] for i in user_h_history], user_h_conf_history)
-    # statstests.mannkendall(user_h_conf_history)
+    ax1.plot([i['iter_num'] for i in user_h_history], user_h_conf_history)
+    statstests.mannkendall(user_h_conf_history)
 
-    # ax2.plot([i['iter_num'] for i in user_h_history], fd_recall_history)
-    # statstests.mannkendall(fd_recall_history)
+    ax2.plot([i['iter_num'] for i in user_h_history], fd_recall_history)
+    statstests.mannkendall(fd_recall_history)
 
-    # ax3.plot([i['iter_num'] for i in user_h_history if i['iter_num'] > 0], user_h_seen_conf_history)
-    # statstests.mannkendall(user_h_seen_conf_history)
+    ax3.plot([i['iter_num'] for i in user_h_history if i['iter_num'] > 0], user_h_seen_conf_history)
+    statstests.mannkendall(user_h_seen_conf_history)
 
-    # ax4.plot([i['iter_num'] for i in cumulative_precision], [i['value'] for i in cumulative_precision])
-    # statstests.mannkendall([i['value'] for i in cumulative_precision])
+    ax4.plot([i['iter_num'] for i in cumulative_precision], [i['value'] for i in cumulative_precision])
+    statstests.mannkendall([i['value'] for i in cumulative_precision])
 
-    # ax5.plot([i['iter_num'] for i in cumulative_recall], [i['value'] for i in cumulative_recall])
-    # statstests.mannkendall([i['value'] for i in cumulative_recall])
+    ax5.plot([i['iter_num'] for i in cumulative_recall], [i['value'] for i in cumulative_recall])
+    statstests.mannkendall([i['value'] for i in cumulative_recall])
 
-    # ax6.plot([i['iter_num'] for i in cumulative_precision_noover], [i['value'] for i in cumulative_precision_noover])
-    # statstests.mannkendall([i['value'] for i in cumulative_precision_noover])
+    ax6.plot([i['iter_num'] for i in cumulative_precision_noover], [i['value'] for i in cumulative_precision_noover])
+    statstests.mannkendall([i['value'] for i in cumulative_precision_noover])
 
-    # ax7.plot([i['iter_num'] for i in cumulative_recall_noover], [i['value'] for i in cumulative_recall_noover])
-    # statstests.mannkendall([i['value'] for i in cumulative_recall_noover])
+    ax7.plot([i['iter_num'] for i in cumulative_recall_noover], [i['value'] for i in cumulative_recall_noover])
+    statstests.mannkendall([i['value'] for i in cumulative_recall_noover])
 
-    # ax8.plot([i['iter_num'] for i in user_h_history], fd_precision_history)
-    # statstests.mannkendall(fd_precision_history)
+    ax8.plot([i['iter_num'] for i in user_h_history], fd_precision_history)
+    statstests.mannkendall(fd_precision_history)
 
-    # ax9.plot([i['iter_num'] for i in user_h_history if i['iter_num'] > 0], fd_recall_seen_history)
-    # statstests.mannkendall(fd_recall_seen_history)
+    ax9.plot([i['iter_num'] for i in user_h_history if i['iter_num'] > 0], fd_recall_seen_history)
+    statstests.mannkendall(fd_recall_seen_history)
 
-    # ax10.plot([i['iter_num'] for i in user_h_history if i['iter_num'] > 0], fd_precision_seen_history)
-    # statstests.mannkendall(fd_precision_seen_history)
+    ax10.plot([i['iter_num'] for i in user_h_history if i['iter_num'] > 0], fd_precision_seen_history)
+    statstests.mannkendall(fd_precision_seen_history)
 
-    # ax1.set_xlabel('Iteration #')
-    # ax1.set_ylabel('Confidence')
-    # ax1.set_title('Suggested FD Confidence Over the Interaction')
+    ax1.set_xlabel('Iteration #')
+    ax1.set_ylabel('Confidence')
+    ax1.set_title('Suggested FD Confidence Over the Interaction')
    
-    # ax2.set_xlabel('Iteration #')
-    # ax2.set_ylabel('Recall')
-    # ax2.set_title('Suggested FD Recall')
+    ax2.set_xlabel('Iteration #')
+    ax2.set_ylabel('Recall')
+    ax2.set_title('Suggested FD Recall')
     
-    # ax3.set_xlabel('Iteration #')
-    # ax3.set_ylabel('Confidence')
-    # ax3.set_title('Suggested FD Confidence Over What the User Has Seen')
+    ax3.set_xlabel('Iteration #')
+    ax3.set_ylabel('Confidence')
+    ax3.set_title('Suggested FD Confidence Over What the User Has Seen')
     
-    # ax4.set_xlabel('Iteration #')
-    # ax4.set_ylabel('Precision')
-    # ax4.set_title('Cumulative User Precision')
+    ax4.set_xlabel('Iteration #')
+    ax4.set_ylabel('Precision')
+    ax4.set_title('Cumulative User Precision')
     
-    # ax5.set_xlabel('Iteration #')
-    # ax5.set_ylabel('Recall')
-    # ax5.set_title('Cumulative User Recall')
+    ax5.set_xlabel('Iteration #')
+    ax5.set_ylabel('Recall')
+    ax5.set_title('Cumulative User Recall')
     
-    # ax6.set_xlabel('Iteration #')
-    # ax6.set_ylabel('Precision')
-    # ax6.set_title('Cumulative User Precision (w/o Duplicate Vios)')
+    ax6.set_xlabel('Iteration #')
+    ax6.set_ylabel('Precision')
+    ax6.set_title('Cumulative User Precision (w/o Duplicate Vios)')
     
-    # ax7.set_xlabel('Iteration #')
-    # ax7.set_ylabel('Recall')
-    # ax7.set_title('Cumulative User Recall (w/o Duplicate Vios)')
+    ax7.set_xlabel('Iteration #')
+    ax7.set_ylabel('Recall')
+    ax7.set_title('Cumulative User Recall (w/o Duplicate Vios)')
 
-    # ax8.set_xlabel('Iteration #')
-    # ax8.set_ylabel('Precision')
-    # ax8.set_title('Suggested FD Precision')
+    ax8.set_xlabel('Iteration #')
+    ax8.set_ylabel('Precision')
+    ax8.set_title('Suggested FD Precision')
 
-    # ax9.set_xlabel('Iteration #')
-    # ax9.set_ylabel('Recall')
-    # ax9.set_title('Suggested FD Recall Over What the User Has Seen')
+    ax9.set_xlabel('Iteration #')
+    ax9.set_ylabel('Recall')
+    ax9.set_title('Suggested FD Recall Over What the User Has Seen')
 
-    # ax10.set_xlabel('Iteration #')
-    # ax10.set_ylabel('Precision')
-    # ax10.set_title('Suggested FD Precision Over What the User Has Seen')
+    ax10.set_xlabel('Iteration #')
+    ax10.set_ylabel('Precision')
+    ax10.set_title('Suggested FD Precision Over What the User Has Seen')
 
-    # fig1.tight_layout()
-    # fig2.tight_layout()
-    # fig3.tight_layout()
-    # fig4.tight_layout()
-    # fig5.tight_layout()
-    # fig6.tight_layout()
-    # fig7.tight_layout()
-    # fig8.tight_layout()
-    # fig9.tight_layout()
-    # fig10.tight_layout()
+    fig1.tight_layout()
+    fig2.tight_layout()
+    fig3.tight_layout()
+    fig4.tight_layout()
+    fig5.tight_layout()
+    fig6.tight_layout()
+    fig7.tight_layout()
+    fig8.tight_layout()
+    fig9.tight_layout()
+    fig10.tight_layout()
 
-    # fig1.savefig('./plots/fd-confidence/' + project_id + '-s' + scenario_id + '-u' + user_num + '.jpg')
-    # fig2.savefig('./plots/fd-recall/' + project_id + '-s' + scenario_id + '-u' + user_num + '.jpg')
-    # fig3.savefig('./plots/fd-confidence-seen/' + project_id + '-s' + scenario_id + '-u' + user_num + '.jpg')
-    # fig4.savefig('./plots/cumulative-user-precision/' + project_id + '-s' + scenario_id + '-u' + user_num + '.jpg')
-    # fig5.savefig('./plots/cumulative-user-recall/' + project_id + '-s' + scenario_id + '-u' + user_num + '.jpg')
-    # fig6.savefig('./plots/cumulative-user-precision-nodup/' + project_id + '-s' + scenario_id + '-u' + user_num + '.jpg')
-    # fig7.savefig('./plots/cumulative-user-recall-nodup/' + project_id + '-s' + scenario_id + '-u' + user_num + '.jpg')
-    # fig8.savefig('./plots/fd-precision/' + project_id + '-s' + scenario_id + '-u' + user_num + '.jpg')
-    # fig9.savefig('./plots/fd-recall-seen/' + project_id + '-s' + scenario_id + '-u' + user_num + '.jpg')
-    # fig10.savefig('./plots/fd-precision-seen/' + project_id + '-s' + scenario_id + '-u' + user_num + '.jpg')
+    fig1.savefig('./plots/fd-confidence/' + project_id + '-s' + scenario_id + '-u' + user_num + '.jpg')
+    fig2.savefig('./plots/fd-recall/' + project_id + '-s' + scenario_id + '-u' + user_num + '.jpg')
+    fig3.savefig('./plots/fd-confidence-seen/' + project_id + '-s' + scenario_id + '-u' + user_num + '.jpg')
+    fig4.savefig('./plots/cumulative-user-precision/' + project_id + '-s' + scenario_id + '-u' + user_num + '.jpg')
+    fig5.savefig('./plots/cumulative-user-recall/' + project_id + '-s' + scenario_id + '-u' + user_num + '.jpg')
+    fig6.savefig('./plots/cumulative-user-precision-nodup/' + project_id + '-s' + scenario_id + '-u' + user_num + '.jpg')
+    fig7.savefig('./plots/cumulative-user-recall-nodup/' + project_id + '-s' + scenario_id + '-u' + user_num + '.jpg')
+    fig8.savefig('./plots/fd-precision/' + project_id + '-s' + scenario_id + '-u' + user_num + '.jpg')
+    fig9.savefig('./plots/fd-recall-seen/' + project_id + '-s' + scenario_id + '-u' + user_num + '.jpg')
+    fig10.savefig('./plots/fd-precision-seen/' + project_id + '-s' + scenario_id + '-u' + user_num + '.jpg')
     
     plt.clf()
 
@@ -315,28 +315,24 @@ def eval_h_grouped(group_type, run_type, id):
         
         data = pd.read_csv(scenario['dirty_dataset'], keep_default_na=False)
         clean_data = pd.read_csv(scenario['clean_dataset'], keep_default_na=False)
-        # target_fd = scenario['target_fd']
-        # h_space = scenario['hypothesis_space']
-
-        with open('scenarios.json', 'r') as f:
-            scenarios_master = json.load(f)
-        master_scenario = scenarios_master[scenario_id]
-        fds = master_scenario['hypothesis_space']
         target_fd = scenario['target_fd']
+        h_space = scenario['hypothesis_space']
 
-        # min_conf = 0.
-        # max_ant = 3
+        data = pd.read_csv(scenario['dirty_dataset'], keep_default_na=False)
+        clean_data = pd.read_csv(scenario['clean_dataset'], keep_default_na=False)
+        min_conf = 0.001
+        max_ant = 3
 
-        # process = sp.Popen(['./data/cfddiscovery/CFDD', scenario['clean_dataset'], str(len(clean_data.index)), str(min_conf), str(max_ant)], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})   # CFDD for clean h space
+        process = sp.Popen(['./data/cfddiscovery/CFDD', scenario['clean_dataset'], str(len(data.index)), str(min_conf), str(max_ant)], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})   # CFDD for clean h space
 
-        # res = process.communicate()
-        # if process.returncode == 0:
-        #     output = res[0].decode('latin_1').replace(',]', ']').replace('\r', '').replace('\t', '').replace('\n', '')
-        #     fds = [c['cfd'] for c in json.loads(output, strict=False)['cfds'] if '=' not in c['cfd'].split(' => ')[0] and '=' not in c['cfd'].split(' => ')[1] and c['cfd'].split(' => ')[0] != '()']
+        res = process.communicate()
+        if process.returncode == 0:
+            output = res[0].decode('latin_1').replace(',]', ']').replace('\r', '').replace('\t', '').replace('\n', '')
+            fds = [c['cfd'] for c in json.loads(output, strict=False)['cfds'] if '=' not in c['cfd'].split(' => ')[0] and '=' not in c['cfd'].split(' => ')[1] and c['cfd'].split(' => ')[0] != '()']
             
-        #     fds = helpers.buildCompositionSpace(fds, None, data, clean_data, min_conf, max_ant)
-        # else:
-        #     fds = list()
+            fds = helpers.buildCompositionSpace(fds, None, data, clean_data, min_conf, max_ant)
+        else:
+            fds = list()
         
         h_space = list()
         for fd in fds:
@@ -537,8 +533,8 @@ def eval_h_grouped(group_type, run_type, id):
 if __name__ == '__main__':
     run_type = sys.argv[1]
     diff = sys.argv[2]
-    id = sys.argv[3] if len(sys.argv) == 4 else None
+    id = sys.argv[3]
     if '0' in diff:
-        eval_user_h(diff, run_type)
+        eval_user_h(diff, run_type, id)
     else:
         eval_h_grouped(diff, run_type, id)
