@@ -853,11 +853,13 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
             successes = 0
             failures = 0
 
+            h_lhs = set(h['cfd'].split(' => ')[0][1:-1].split(', '))
+            h_rhs = set(h['cfd'].split(' => ')[1].split(', '))
             max_h_lhs = set(max_h.split(' => ')[0][1:-1].split(', '))
             max_h_rhs = set(max_h.split(' => ')[1].split(', '))
 
             fd = h['cfd']
-            if fd not in fd_metadata.keys():
+            if h_lhs != max_h_lhs or h_rhs != max_h_rhs:
                 continue
             fd_m = fd_metadata[fd]
 

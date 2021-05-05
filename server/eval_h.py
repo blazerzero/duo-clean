@@ -315,22 +315,28 @@ def eval_h_grouped(group_type, run_type, id):
         
         data = pd.read_csv(scenario['dirty_dataset'], keep_default_na=False)
         clean_data = pd.read_csv(scenario['clean_dataset'], keep_default_na=False)
+        # target_fd = scenario['target_fd']
+        # h_space = scenario['hypothesis_space']
+
+        with open('scenarios.json', 'r') as f:
+            scenarios_master = json.load(f)
+        master_scenario = scenarios_master[scenario_id]
+        fds = master_scenario['hypothesis_space']
         target_fd = scenario['target_fd']
-        h_space = scenario['hypothesis_space']
 
-        min_conf = 0.6
-        max_ant = 3
+        # min_conf = 0.
+        # max_ant = 3
 
-        process = sp.Popen(['./data/cfddiscovery/CFDD', scenario['clean_dataset'], str(len(clean_data.index)), str(min_conf), str(max_ant)], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})   # CFDD for clean h space
+        # process = sp.Popen(['./data/cfddiscovery/CFDD', scenario['clean_dataset'], str(len(clean_data.index)), str(min_conf), str(max_ant)], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})   # CFDD for clean h space
 
-        res = process.communicate()
-        if process.returncode == 0:
-            output = res[0].decode('latin_1').replace(',]', ']').replace('\r', '').replace('\t', '').replace('\n', '')
-            fds = [c['cfd'] for c in json.loads(output, strict=False)['cfds'] if '=' not in c['cfd'].split(' => ')[0] and '=' not in c['cfd'].split(' => ')[1] and c['cfd'].split(' => ')[0] != '()']
+        # res = process.communicate()
+        # if process.returncode == 0:
+        #     output = res[0].decode('latin_1').replace(',]', ']').replace('\r', '').replace('\t', '').replace('\n', '')
+        #     fds = [c['cfd'] for c in json.loads(output, strict=False)['cfds'] if '=' not in c['cfd'].split(' => ')[0] and '=' not in c['cfd'].split(' => ')[1] and c['cfd'].split(' => ')[0] != '()']
             
-            fds = helpers.buildCompositionSpace(fds, None, data, clean_data, min_conf, max_ant)
-        else:
-            fds = list()
+        #     fds = helpers.buildCompositionSpace(fds, None, data, clean_data, min_conf, max_ant)
+        # else:
+        #     fds = list()
         
         h_space = list()
         for fd in fds:
