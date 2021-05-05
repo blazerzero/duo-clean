@@ -1,7 +1,7 @@
 import copy
 import pandas as pd
 import numpy as np
-import scipy as sp
+import subprocess as sp
 import sys
 import helpers
 import json
