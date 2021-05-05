@@ -885,7 +885,7 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
             fd_m['beta_history'].append({ 'iter_num': i, 'value': fd_m['beta'], 'elapsed_time': elapsed_time })
             fd_m['conf_history'].append({ 'iter_num': i, 'value': fd_m['conf'], 'elapsed_time': elapsed_time })
 
-            if fd != max_h and fd_m['conf'] > fd_metadata[max_h]['conf_history'][-1]['value']:
+            if fd != max_h and (max_h == 'Not Sure' or fd_m['conf'] > fd_metadata[max_h]['conf_history'][-1]['value']):
                 max_h = fd
 
             if fd != target_fd:
