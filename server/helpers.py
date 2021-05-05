@@ -917,9 +917,9 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
             st_vios_marked |= fd_st_vios_marked
             st_vios_found |= fd_st_vios_found
             st_vios_total |= fd_st_vios_total
-            # print('vios found:', st_vios_found)
-            # print('vios marked:', st_vios_marked)
-            # print('vios total:', st_vios_total)
+            print('vios found:', st_vios_found)
+            print('vios marked:', st_vios_marked)
+            print('vios total:', st_vios_total)
         
         study_metrics['bayesian_prediction'].append({ 'iter_num': i, 'value': max_h, 'elapsed_time': elapsed_time })
 
@@ -1176,8 +1176,8 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
 
             cumulative_precision = 0.5 if len(marked) == 0 else (len(found)) / (len(marked))
             cumulative_precision_noover = 0.5 if len(marked_set) == 0 else (len(found_set) / len(marked_set))
-            cumulative_recall = 0.5 if len(total) == 0 else (len(found)) / (len(total))
-            cumulative_recall_noover = 0.5 if len(total_set) == 0 else (len(found_set) / len(total_set))
+            cumulative_recall = (len(found)) / (len(total))
+            cumulative_recall_noover = (len(found_set) / len(total_set))
         else:
             cumulative_precision = study_metrics['st_vio_precision'][-1]['value']
             cumulative_recall = study_metrics['st_vio_recall'][-1]['value']
