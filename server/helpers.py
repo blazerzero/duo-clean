@@ -853,6 +853,9 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
             successes = 0
             failures = 0
 
+            max_h_lhs = set(max_h.split(' => ')[0][1:-1].split(', '))
+            max_h_rhs = set(max_h.split(' => ')[1].split(', '))
+
             fd = h['cfd']
             if fd not in fd_metadata.keys():
                 continue
@@ -883,7 +886,12 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
             fd_m['beta_history'].append({ 'iter_num': i, 'value': fd_m['beta'], 'elapsed_time': elapsed_time })
             fd_m['conf_history'].append({ 'iter_num': i, 'value': fd_m['conf'], 'elapsed_time': elapsed_time })
 
-            if fd != max_h and fd_m['conf'] > fd_metadata[max_h]['conf_history'][-1]:
+            if max_h != 'Not Sure':
+                formatted_max_h = next(f for f in fd_metadata.keys() if set(f.split(' => ')[0][1:-1].split(', ')) == max_h_lhs and set(f.split(' => ')[1].split(', ')) == max_h_rhs)
+            else:
+                formatted_max_h = 'Not Sure'
+
+            if fd != formatted_max_h and fd_m['conf'] > fd_metadata[formatted_max_h]['conf_history'][-1]:
                 max_h = fd
 
             if fd != target_fd:
