@@ -893,13 +893,13 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
             fd_m['beta_history'].append({ 'iter_num': i, 'value': fd_m['beta'], 'elapsed_time': elapsed_time })
             fd_m['conf_history'].append({ 'iter_num': i, 'value': fd_m['conf'], 'elapsed_time': elapsed_time })
 
+            console.log(fd_metadata.keys())
+            console.log(max_h)
+
             if max_h != 'Not Sure':
                 formatted_max_h = next(f for f in fd_metadata.keys() if set(f.split(' => ')[0][1:-1].split(', ')) == max_h_lhs and set(f.split(' => ')[1].split(', ')) == max_h_rhs)
             else:
                 formatted_max_h = 'Not Sure'
-            
-            console.log(fd_metadata.keys())
-            console.log(formatted_max_h)
 
             if fd != formatted_max_h and (formatted_max_h == 'Not Sure' or fd_m['conf'] > fd_metadata[formatted_max_h]['conf_history'][-1]['value']):
                 max_h = fd
