@@ -29,6 +29,7 @@ def eval_user_h(project_id, run_type):
     with open(pathstart + project_id + '/study_metrics.json', 'r') as f:
         study_metrics = json.load(f)
     user_h_history = interaction_metadata['user_hypothesis_history']
+    bayesian_predictions = study_metrics['bayesian_prediction']
     user_h_conf_history = list()
     fd_recall_history = list()
     fd_precision_history = list()
@@ -241,6 +242,14 @@ def eval_user_h(project_id, run_type):
     fig8.savefig('./plots/fd-precision/' + project_id + '-s' + scenario_id + '-u' + user_num + '.jpg')
     fig9.savefig('./plots/fd-recall-seen/' + project_id + '-s' + scenario_id + '-u' + user_num + '.jpg')
     fig10.savefig('./plots/fd-precision-seen/' + project_id + '-s' + scenario_id + '-u' + user_num + '.jpg')
+
+    bayesian_matches = list()
+    for i in range(1, len(user_h_history)):
+        match = True if user_h_history[i]['value'] == bayesian_predictions[i]['value'] else False
+        bayesian_matches.append(match)
+    
+    with open('./plots/bayesian-match/' + project_id + '-s' + scenario_id + '-u' + user_num + '.jpg', 'w') as f:
+        json.dump(bayesian_matches, f)
     
     plt.clf()
 
