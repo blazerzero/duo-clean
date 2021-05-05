@@ -275,8 +275,8 @@ def eval_user_h(project_id, run_type):
 
     bayesian_matches = list()
     for i in range(1, len(user_h_history)):
-        user_h_lhs = set(user_h_history[i]['value'].split(' => ')[0][1:-1].split(', '))
-        user_h_rhs = set(user_h_history[i]['value'].split(' => ')[1].split(', '))
+        user_h_lhs = set(user_h_history[i]['value'][0].split(' => ')[0][1:-1].split(', '))
+        user_h_rhs = set(user_h_history[i]['value'][0].split(' => ')[1].split(', '))
         bayesian_h_lhs = set(bayesian_predictions[i]['value'].split(' => ')[0][1:-1].split(', '))
         bayesian_h_rhs = set(bayesian_predictions[i]['value'].split(' => ')[1].split(', '))
 
