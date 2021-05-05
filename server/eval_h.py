@@ -46,6 +46,35 @@ def eval_user_h(project_id, run_type):
         counter += 1
     user_num = str(user_num_dict[project_info['email']])
 
+    data = pd.read_csv(scenario['dirty_dataset'], keep_default_na=False)
+    clean_data = pd.read_csv(scenario['clean_dataset'], keep_default_na=False)
+    min_conf = 0.001
+    max_ant = 3
+
+    process = sp.Popen(['./data/cfddiscovery/CFDD', scenario['clean_dataset'], str(len(data.index)), str(min_conf), str(max_ant)], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})   # CFDD for clean h space
+
+    res = process.communicate()
+    if process.returncode == 0:
+        output = res[0].decode('latin_1').replace(',]', ']').replace('\r', '').replace('\t', '').replace('\n', '')
+        fds = [c['cfd'] for c in json.loads(output, strict=False)['cfds'] if '=' not in c['cfd'].split(' => ')[0] and '=' not in c['cfd'].split(' => ')[1] and c['cfd'].split(' => ')[0] != '()']
+        
+        fds = helpers.buildCompositionSpace(fds, None, data, clean_data, min_conf, max_ant)
+    else:
+        fds = list()
+    
+    h_space = list()
+    for fd in fds:
+        h = dict()
+        h['cfd'] = fd['cfd']
+        h['score'] = 1
+        support, vios = helpers.getSupportAndVios(data, clean_data, h['cfd'])
+        vio_pairs = helpers.getPairs(data, support, h['cfd'])
+        h['conf'] = (len(support) - len(vios)) / len(support)
+        h['support'] = support
+        h['vios'] = vios
+        h['vio_pairs'] = vio_pairs
+        h_space.append(h)
+
     for h in user_h_history:
         fd = h['value'][0]
         if fd == 'Not Sure':
