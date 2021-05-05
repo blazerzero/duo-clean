@@ -761,10 +761,8 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
 
     max_h = user_hypothesis_history[0]['value'][0]
     for h in h_space:
-        if h['cfd'] not in fd_metadata.keys():
-            fd_metadata[h['cfd']] = dict()
-            fd_metadata[h['cfd']]['vios'] = h['vios']
-            fd_metadata[h['cfd']]['vio_pairs'] = h['vio_pairs']
+        # if h['cfd'] not in fd_metadata.keys():
+        #     continue
 
         mu = h['conf'] if h['cfd'] != max_h else 1
         variance = 0.0025
@@ -780,7 +778,6 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
         fd_metadata[h['cfd']]['conf_history'] = [{ 'iter_num': 0, 'value': conf, 'elapsed_time': 0 }]        
 
     iters = range(1, len(interaction_metadata['sample_history'])+1)
-    console.log(iters)
     for i in iters:
         st_vios_found = set()
         st_vios_total = set()
@@ -852,25 +849,13 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
         marked_rows = [r for r in marked_rows]
         
         max_h = study_metrics['bayesian_prediction'][-1]['value']
-        console.log(h_space)
         for h in h_space:
             successes = 0
             failures = 0
 
-            max_h_lhs = set(max_h.split(' => ')[0][1:-1].split(', ')) if max_h != 'Not Sure' else set()
-            max_h_rhs = set(max_h.split(' => ')[1].split(', ')) if max_h != 'Not Sure' else set()
-
-            # h_lhs = set(h['cfd'].split(' => ')[0][1:-1].split(', '))
-            # h_rhs = set(h['cfd'].split(' => ')[1].split(', '))
-
-            # if max_h_lhs == h_lhs and max_h_rhs == h_rhs:
-            #     max_h = h['cfd']
-
             fd = h['cfd']
             if fd not in fd_metadata.keys():
-                console.log('continue')
                 continue
-            console.log('good')
             fd_m = fd_metadata[fd]
 
             removed_pairs = set()
@@ -898,35 +883,24 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
             fd_m['beta_history'].append({ 'iter_num': i, 'value': fd_m['beta'], 'elapsed_time': elapsed_time })
             fd_m['conf_history'].append({ 'iter_num': i, 'value': fd_m['conf'], 'elapsed_time': elapsed_time })
 
-            # console.log(fd_metadata.keys())
-            # console.log(max_h)
-
-            if max_h != 'Not Sure':
-                formatted_max_h = next(f for f in fd_metadata.keys() if set(f.split(' => ')[0][1:-1].split(', ')) == max_h_lhs and set(f.split(' => ')[1].split(', ')) == max_h_rhs)
-            else:
-                formatted_max_h = 'Not Sure'
-
-            if fd != formatted_max_h and (formatted_max_h == 'Not Sure' or fd_m['conf'] > fd_metadata[formatted_max_h]['conf_history'][-1]['value']):
+            if fd != max_h and fd_m['conf'] > fd_metadata[max_h]['conf_history'][-1]:
                 max_h = fd
 
+            if fd != target_fd:
+                continue
             vio_pairs = h['vio_pairs']
             lhs = fd.split(' => ')[0][1:-1].split(', ')
             rhs = fd.split(' => ')[1].split(', ')
-            target_lhs = target_fd.split(' => ')[0][1:-1].split(', ')
-            target_rhs = target_fd.split(' => ')[1].split(', ')
-            if lhs != target_lhs or rhs != target_rhs:
-                continue
             attrs = lhs + rhs
             
             # Check if the violation was caught for short-term memory
             fd_st_vios_marked, fd_st_vios_found, fd_st_vios_total = vioStats(curr_sample, curr_sample, feedback, vio_pairs, attrs, dirty_dataset, clean_dataset)
-            console.log(fd_st_vios_total)
             st_vios_marked |= fd_st_vios_marked
             st_vios_found |= fd_st_vios_found
             st_vios_total |= fd_st_vios_total
-            print('vios found:', st_vios_found)
-            print('vios marked:', st_vios_marked)
-            print('vios total:', st_vios_total)
+            # print('vios found:', st_vios_found)
+            # print('vios marked:', st_vios_marked)
+            # print('vios total:', st_vios_total)
         
         study_metrics['bayesian_prediction'].append({ 'iter_num': i, 'value': max_h, 'elapsed_time': elapsed_time })
 
@@ -1183,8 +1157,8 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
 
             cumulative_precision = 0.5 if len(marked) == 0 else (len(found)) / (len(marked))
             cumulative_precision_noover = 0.5 if len(marked_set) == 0 else (len(found_set) / len(marked_set))
-            cumulative_recall = 0.5 if len(total) == 0 else (len(found)) / (len(total))
-            cumulative_recall_noover = 0.5 if len(total_set) == 0 else (len(found_set) / len(total_set))
+            cumulative_recall = (len(found)) / (len(total))
+            cumulative_recall_noover = (len(found_set) / len(total_set))
         else:
             cumulative_precision = study_metrics['st_vio_precision'][-1]['value']
             cumulative_recall = study_metrics['st_vio_recall'][-1]['value']
