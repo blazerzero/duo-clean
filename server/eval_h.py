@@ -275,12 +275,15 @@ def eval_user_h(project_id, run_type):
 
     bayesian_matches = list()
     for i in range(1, len(user_h_history)):
-        user_h_lhs = set(user_h_history[i]['value'][0].split(' => ')[0][1:-1].split(', '))
-        user_h_rhs = set(user_h_history[i]['value'][0].split(' => ')[1].split(', '))
-        bayesian_h_lhs = set(bayesian_predictions[i]['value'].split(' => ')[0][1:-1].split(', '))
-        bayesian_h_rhs = set(bayesian_predictions[i]['value'].split(' => ')[1].split(', '))
+        if user_h_history[i]['value'][0] == 'Not Sure':
+            match = False
+        else:
+            user_h_lhs = set(user_h_history[i]['value'][0].split(' => ')[0][1:-1].split(', '))
+            user_h_rhs = set(user_h_history[i]['value'][0].split(' => ')[1].split(', '))
+            bayesian_h_lhs = set(bayesian_predictions[i]['value'].split(' => ')[0][1:-1].split(', '))
+            bayesian_h_rhs = set(bayesian_predictions[i]['value'].split(' => ')[1].split(', '))
 
-        match = True if user_h_lhs == user_h_rhs and bayesian_h_lhs == bayesian_h_rhs else False
+            match = True if user_h_lhs == user_h_rhs and bayesian_h_lhs == bayesian_h_rhs else False
         bayesian_matches.append(match)
     
     with open('./plots/bayesian-match/' + project_id + '-s' + scenario_id + '-u' + user_num + '.txt', 'w') as f:
