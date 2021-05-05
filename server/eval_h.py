@@ -278,7 +278,7 @@ def eval_user_h(project_id, run_type):
         match = True if user_h_history[i]['value'] == bayesian_predictions[i]['value'] else False
         bayesian_matches.append(match)
     
-    with open('./plots/bayesian-match/' + project_id + '-s' + scenario_id + '-u' + user_num + '.jpg', 'w') as f:
+    with open('./plots/bayesian-match/' + project_id + '-s' + scenario_id + '-u' + user_num + '.txt', 'w') as f:
         json.dump(bayesian_matches, f)
     
     plt.clf()
