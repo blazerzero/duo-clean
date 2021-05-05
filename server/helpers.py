@@ -1170,6 +1170,7 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
                 found += study_metrics['st_vios_found'][it]['value']
                 marked += study_metrics['st_vios_marked'][it]['value']
                 total += study_metrics['st_vios_total'][it]['value']
+                console.log(study_metrics['st_vios_total'][it]['value'])
                 found_set |= set(study_metrics['st_vios_found'][it]['value'])
                 marked_set |= set(study_metrics['st_vios_marked'][it]['value'])
                 total_set |= set(study_metrics['st_vios_total'][it]['value'])
