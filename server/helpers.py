@@ -851,11 +851,12 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
         marked_rows = [r for r in marked_rows]
         
         max_h = study_metrics['bayesian_prediction'][-1]['value']
-        max_h_lhs = set(max_h.split(' => ')[0][1:-1].split(', ')) if max_h != 'Not Sure' else set()
-        max_h_rhs = set(max_h.split(' => ')[1].split(', ')) if max_h != 'Not Sure' else set()
         for h in h_space:
             successes = 0
             failures = 0
+
+            max_h_lhs = set(max_h.split(' => ')[0][1:-1].split(', ')) if max_h != 'Not Sure' else set()
+            max_h_rhs = set(max_h.split(' => ')[1].split(', ')) if max_h != 'Not Sure' else set()
 
             # h_lhs = set(h['cfd'].split(' => ')[0][1:-1].split(', '))
             # h_rhs = set(h['cfd'].split(' => ')[1].split(', '))
