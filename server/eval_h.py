@@ -29,7 +29,6 @@ def eval_user_h(project_id, run_type):
     with open(pathstart + project_id + '/study_metrics.json', 'r') as f:
         study_metrics = json.load(f)
     user_h_history = interaction_metadata['user_hypothesis_history']
-    bayesian_predictions = study_metrics['bayesian_prediction']
     user_h_conf_history = list()
     fd_recall_history = list()
     fd_precision_history = list()
@@ -114,6 +113,8 @@ def eval_user_h(project_id, run_type):
         json.dump(study_metrics, f)
     with open(pathstart + project_id + '/fd_metadata.json', 'w') as f:
         json.dump(fd_metadata, f)
+    
+    bayesian_predictions = study_metrics['bayesian_prediction']
     
     cumulative_precision, cumulative_recall = study_metrics['cumulative_precision'], study_metrics['cumulative_recall']
     cumulative_precision_noover, cumulative_recall_noover = study_metrics['cumulative_precision_noover'], study_metrics['cumulative_recall_noover']
