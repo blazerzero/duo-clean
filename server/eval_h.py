@@ -482,7 +482,7 @@ def eval_h_grouped(group_type, run_type, id):
 
         if len(user_h_history) > 2:
             console.print('\nSEPARATE USER\n')
-            console.log(user_h_conf_history)
+            # console.log(user_h_conf_history)
             ax1.plot([i['iter_num'] for i in user_h_history], user_h_conf_history)
             statstests.mannkendall(user_h_conf_history)
 

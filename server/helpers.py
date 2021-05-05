@@ -759,6 +759,8 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
     # study_metrics['all_errors_found'] = list()
     # study_metrics['all_errors_total'] = list()
 
+    console.log('test')
+
     max_h = user_hypothesis_history[0]['value'][0]
     for h in h_space:
         if h['cfd'] not in fd_metadata.keys():
@@ -866,9 +868,9 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
 
             fd = h['cfd']
             if fd not in fd_metadata.keys():
-                console.log('continue')
+                # console.log('continue')
                 continue
-            console.log('good')
+            # console.log('good')
             fd_m = fd_metadata[fd]
 
             removed_pairs = set()
