@@ -905,11 +905,13 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
             if fd != formatted_max_h and (formatted_max_h == 'Not Sure' or fd_m['conf'] > fd_metadata[formatted_max_h]['conf_history'][-1]['value']):
                 max_h = fd
 
-            if fd != target_fd:
-                continue
             vio_pairs = h['vio_pairs']
             lhs = fd.split(' => ')[0][1:-1].split(', ')
             rhs = fd.split(' => ')[1].split(', ')
+            target_lhs = target_fd.split(' => ')[0][1:-1].split(', ')
+            target_rhs = target_fd.split(' => ')[1].split(', ')
+            if lhs != target_lhs or rhs != target_rhs:
+                continue
             attrs = lhs + rhs
             
             # Check if the violation was caught for short-term memory
