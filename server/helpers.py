@@ -759,8 +759,6 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
     # study_metrics['all_errors_found'] = list()
     # study_metrics['all_errors_total'] = list()
 
-    console.log('test')
-
     max_h = user_hypothesis_history[0]['value'][0]
     for h in h_space:
         if h['cfd'] not in fd_metadata.keys():
@@ -782,6 +780,7 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
         fd_metadata[h['cfd']]['conf_history'] = [{ 'iter_num': 0, 'value': conf, 'elapsed_time': 0 }]        
 
     iters = range(1, len(interaction_metadata['sample_history'])+1)
+    console.log(iters)
     for i in iters:
         st_vios_found = set()
         st_vios_total = set()
