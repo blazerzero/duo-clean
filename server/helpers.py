@@ -1170,15 +1170,14 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
                 found += study_metrics['st_vios_found'][it]['value']
                 marked += study_metrics['st_vios_marked'][it]['value']
                 total += study_metrics['st_vios_total'][it]['value']
-                console.log(study_metrics['st_vios_total'][it]['value'])
                 found_set |= set(study_metrics['st_vios_found'][it]['value'])
                 marked_set |= set(study_metrics['st_vios_marked'][it]['value'])
                 total_set |= set(study_metrics['st_vios_total'][it]['value'])
 
             cumulative_precision = 0.5 if len(marked) == 0 else (len(found)) / (len(marked))
             cumulative_precision_noover = 0.5 if len(marked_set) == 0 else (len(found_set) / len(marked_set))
-            cumulative_recall = (len(found)) / (len(total))
-            cumulative_recall_noover = (len(found_set) / len(total_set))
+            cumulative_recall = 0.5 if len(total) == 0 else (len(found)) / (len(total))
+            cumulative_recall_noover = 0.5 if len(total_set) else (len(found_set) / len(total_set))
         else:
             cumulative_precision = study_metrics['st_vio_precision'][-1]['value']
             cumulative_recall = study_metrics['st_vio_recall'][-1]['value']
