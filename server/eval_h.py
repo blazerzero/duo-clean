@@ -533,8 +533,8 @@ def eval_h_grouped(group_type, run_type, id):
 if __name__ == '__main__':
     run_type = sys.argv[1]
     diff = sys.argv[2]
-    id = sys.argv[3]
+    id = sys.argv[3] if len(sys.argv) == 4 else None
     if '0' in diff:
-        eval_user_h(diff, run_type, id)
+        eval_user_h(diff, run_type)
     else:
         eval_h_grouped(diff, run_type, id)
