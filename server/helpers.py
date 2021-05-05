@@ -852,6 +852,7 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
         marked_rows = [r for r in marked_rows]
         
         max_h = study_metrics['bayesian_prediction'][-1]['value']
+        console.log(h_space)
         for h in h_space:
             successes = 0
             failures = 0
