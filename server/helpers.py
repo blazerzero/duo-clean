@@ -766,21 +766,28 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
     max_h = user_hypothesis_history[0]['value'][0]
     console.log(max_h)
     for h in h_space:
+        try:
+            existing_fds = list(fd_metadata.keys())
+            existing_fd = next(h for h in existing_fds if set(h.split(' => ')[0][1:-1].split(', ')) == lhs and set(h.split(' => ')[1].split(', ')) == rhs)
+            fd = existing_fd
+        except StopIteration:
+            fd = h['cfd']
+
         if max_h != 'Not Sure':
-            lhs = set(h['cfd'].split(' => ')[0][1:-1].split(', '))
-            rhs = set(h['cfd'].split(' => ')[1].split(', '))
+            lhs = set(fd.split(' => ')[0][1:-1].split(', '))
+            rhs = set(fd.split(' => ')[1].split(', '))
 
             max_h_lhs = set(max_h.split(' => ')[0][1:-1].split(', '))
             max_h_rhs = set(max_h.split(' => ')[1].split(', '))
             if max_h_lhs == lhs and max_h_rhs == rhs:
-                max_h = h['cfd']
+                max_h = fd
                 console.log(fd_metadata[max_h]['conf'])
         else:
             console.log(0.5)
 
         # mu = h['conf'] if h['cfd'] != max_h else 1
         variance = 0.0025
-        if h['cfd'] == max_h:
+        if fd == max_h:
             mu = 1
             alpha, beta = initialPrior(mu, variance)
         elif max_h == 'Not Sure':
@@ -793,13 +800,13 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
 
         console.log(fd_metadata.keys())
         
-        fd_metadata[h['cfd']]['alpha'] = alpha
-        fd_metadata[h['cfd']]['beta'] = beta
-        fd_metadata[h['cfd']]['conf'] = conf
+        fd_metadata[fd]['alpha'] = alpha
+        fd_metadata[fd]['beta'] = beta
+        fd_metadata[fd]['conf'] = conf
 
-        fd_metadata[h['cfd']]['alpha_history'] = [{ 'iter_num': 0, 'value': alpha, 'elapsed_time': 0 }]
-        fd_metadata[h['cfd']]['beta_history'] = [{ 'iter_num': 0, 'value': beta, 'elapsed_time': 0 }]
-        fd_metadata[h['cfd']]['conf_history'] = [{ 'iter_num': 0, 'value': conf, 'elapsed_time': 0 }]        
+        fd_metadata[fd]['alpha_history'] = [{ 'iter_num': 0, 'value': alpha, 'elapsed_time': 0 }]
+        fd_metadata[fd]['beta_history'] = [{ 'iter_num': 0, 'value': beta, 'elapsed_time': 0 }]
+        fd_metadata[fd]['conf_history'] = [{ 'iter_num': 0, 'value': conf, 'elapsed_time': 0 }]        
 
     iters = range(1, len(interaction_metadata['sample_history'])+1)
     for i in iters:
