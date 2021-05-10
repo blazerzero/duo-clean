@@ -867,15 +867,15 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
         marked_rows = [r for r in marked_rows]
         
         # max_h = study_metrics['bayesian_prediction'][-1]['value']
-        console.log(max_h)
-        lhs = set(max_h.split(' => ')[0][1:-1].split(', '))
-        rhs = set(max_h.split(' => ')[1].split(', '))
-        try:
-            existing_fds = map(extract_fd, h_space)
-            existing_fd = next(h for h in existing_fds if set(h.split(' => ')[0][1:-1].split(', ')) == lhs and set(h.split(' => ')[1].split(', ')) == rhs)
-            max_h = existing_fd
-        except StopIteration:
-            pass
+        # console.log(max_h)
+        # lhs = set(max_h.split(' => ')[0][1:-1].split(', '))
+        # rhs = set(max_h.split(' => ')[1].split(', '))
+        # try:
+        #     existing_fds = map(extract_fd, h_space)
+        #     existing_fd = next(h for h in existing_fds if set(h.split(' => ')[0][1:-1].split(', ')) == lhs and set(h.split(' => ')[1].split(', ')) == rhs)
+        #     max_h = existing_fd
+        # except StopIteration:
+        #     pass
 
         for h in h_space:
             successes = 0
