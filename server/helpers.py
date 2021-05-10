@@ -764,13 +764,14 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
 
     max_h = user_hypothesis_history[0]['value'][0]
     for h in h_space:
-        lhs = set(h['cfd'].split(' => ')[0][1:-1].split(', '))
-        rhs = set(h['cfd'].split(' => ')[1].split(', '))
+        if max_h != 'Not Sure':
+            lhs = set(h['cfd'].split(' => ')[0][1:-1].split(', '))
+            rhs = set(h['cfd'].split(' => ')[1].split(', '))
 
-        max_h_lhs = set(max_h.split(' => ')[0][1:-1].split(', '))
-        max_h_rhs = set(max_h.split(' => ')[1].split(', '))
-        if max_h_lhs == lhs and max_h_rhs == rhs:
-            max_h = h['cfd']
+            max_h_lhs = set(max_h.split(' => ')[0][1:-1].split(', '))
+            max_h_rhs = set(max_h.split(' => ')[1].split(', '))
+            if max_h_lhs == lhs and max_h_rhs == rhs:
+                max_h = h['cfd']
 
         mu = h['conf'] if h['cfd'] != max_h else 1
         variance = 0.0025
