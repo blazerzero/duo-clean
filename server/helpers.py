@@ -775,8 +775,8 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
             if max_h_lhs == lhs and max_h_rhs == rhs:
                 max_h = h['cfd']
                 console.log(fd_metadata[max_h]['conf'])
-            else:
-                console.log(0.5)
+        else:
+            console.log(0.5)
 
         # mu = h['conf'] if h['cfd'] != max_h else 1
         variance = 0.0025
