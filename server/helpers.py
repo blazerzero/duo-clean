@@ -760,7 +760,9 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
     # study_metrics['all_errors_total'] = list()
 
     max_h = user_hypothesis_history[0]['value'][0]
+    console.log(max_h)
     for h in h_space:
+        console.log(h['cfd'])
         lhs = set(h['cfd'].split(' => ')[0][1:-1].split(', '))
         rhs = set(h['cfd'].split(' => ')[1].split(', '))
         # if h['cfd'] not in fd_metadata.keys():
