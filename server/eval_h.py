@@ -359,7 +359,25 @@ def eval_h_grouped(group_type, run_type, id):
                 h['conf'] = (len(support) - len(vios)) / len(support)
                 h['support'] = support
                 h['vios'] = vios
-                h['vio_pairs'] = vio_pairs
+                h['vio_pairs'] = set(tuple(vp) for vp in h['vio_pairs'])
+                mu = h['conf']
+                if mu == 1:
+                    mu = 0.99999
+                variance = 0.0025
+                
+                # Calculate alpha and beta
+                alpha, beta = helpers.initialPrior(mu, variance)
+                
+                # Initialize the FD metadata object
+                fd_m = helpers.FDMeta(
+                    fd=h['cfd'],
+                    a=alpha,
+                    b=beta,
+                    support=h['support'],
+                    vios=h['vios'],
+                    vio_pairs=h['vio_pairs'],
+                )
+                fd_metadata[h['cfd']] = fd_m
                 h_space.append(h)
 
         with open(pathstart + project_id + '/interaction_metadata.json', 'r') as f:
