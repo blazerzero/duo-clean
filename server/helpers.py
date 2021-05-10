@@ -790,6 +790,8 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
             mu = h['conf']
             alpha, beta = initialPrior(mu, variance)
         conf = alpha / (alpha + beta)
+
+        console.log(fd_metadata.keys())
         
         fd_metadata[h['cfd']]['alpha'] = alpha
         fd_metadata[h['cfd']]['beta'] = beta
