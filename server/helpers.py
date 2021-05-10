@@ -753,7 +753,8 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
     study_metrics['cumulative_recall_noover'] = list()
     study_metrics['cumulative_precision'] = list()
     study_metrics['cumulative_precision_noover'] = list()
-    study_metrics['bayesian_prediction'] = [{ 'iter_num': user_hypothesis_history[0]['iter_num'], 'value': user_hypothesis_history[0]['value'][0], 'elapsed_time': user_hypothesis_history[0]['elapsed_time'] }]
+    # study_metrics['bayesian_prediction'] = [{ 'iter_num': user_hypothesis_history[0]['iter_num'], 'value': user_hypothesis_history[0]['value'][0], 'elapsed_time': user_hypothesis_history[0]['elapsed_time'] }]
+    study_metrics['bayesian_prediction'] = list()
 
     # study_metrics['iter_errors_marked'] = list()
     # study_metrics['iter_errors_found'] = list()
@@ -773,9 +774,17 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
             if max_h_lhs == lhs and max_h_rhs == rhs:
                 max_h = h['cfd']
 
-        mu = h['conf'] if h['cfd'] != max_h else 1
-        variance = 0.0025
-        alpha, beta = initialPrior(mu, variance)
+        # mu = h['conf'] if h['cfd'] != max_h else 1
+        if h['cfd'] == max_h:
+            mu = 1
+            variance = 0.0025
+            alpha, beta = initialPrior(mu, variance)
+        elif max_h == 'Not Sure':
+            alpha = 1
+            beta = 1
+        else:
+            mu = h['conf']
+            alpha, beta = initialPrior(mu, variance)
         conf = alpha / (alpha + beta)
         
         fd_metadata[h['cfd']]['alpha'] = alpha
@@ -857,7 +866,7 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
 
         marked_rows = [r for r in marked_rows]
         
-        max_h = study_metrics['bayesian_prediction'][-1]['value']
+        # max_h = study_metrics['bayesian_prediction'][-1]['value']
         console.log(max_h)
         lhs = set(max_h.split(' => ')[0][1:-1].split(', '))
         rhs = set(max_h.split(' => ')[1].split(', '))
@@ -902,9 +911,9 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
             fd_m['beta_history'].append({ 'iter_num': i, 'value': fd_m['beta'], 'elapsed_time': elapsed_time })
             fd_m['conf_history'].append({ 'iter_num': i, 'value': fd_m['conf'], 'elapsed_time': elapsed_time })
 
-            if fd != max_h and fd_m['conf'] > fd_metadata[max_h]['conf_history'][-1]['value']:
-                max_h = fd
-                console.log(max_h)
+            # if fd != max_h and fd_m['conf'] > fd_metadata[max_h]['conf_history'][-1]['value']:
+            #     max_h = fd
+            #     console.log(max_h)
 
             if fd != target_fd:
                 continue
@@ -921,7 +930,7 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
             # print('vios found:', st_vios_found)
             # print('vios marked:', st_vios_marked)
             # print('vios total:', st_vios_total)
-        
+        max_h = max(fd_metadata.keys(), key=lambda x: fd_metadata[x]['conf'])
         study_metrics['bayesian_prediction'].append({ 'iter_num': i, 'value': max_h, 'elapsed_time': elapsed_time })
 
         # Medium-term memory violation calculations
