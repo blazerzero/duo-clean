@@ -914,16 +914,19 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
                 if x in marked_rows or y in marked_rows:
                     removed_pairs.add((x, y))
             
+            relevant_vio_pairs = {(x, y) for (x, y) in sample_X_in_fd if x not in marked_rows and y not in marked_rows}
+            
             for ix in curr_sample:
                 if ix in marked_rows:
                     continue
-                if i not in fd_m['vios']:
+                # if i not in fd_m['vios']:
+                #     successes += 1
+                # else:
+                if len([x for x in relevant_vio_pairs if ix in x]) == 0:
                     successes += 1
                 else:
-                    if len([x for x in removed_pairs if ix in x]) > 0:
-                        successes += 1
-                    else:
-                        failures += 1
+                    failures += 1
+
 
             fd_m['alpha'] += successes
             fd_m['beta'] += failures
