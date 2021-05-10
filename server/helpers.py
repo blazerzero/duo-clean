@@ -766,9 +766,11 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
     max_h = user_hypothesis_history[0]['value'][0]
     console.log(max_h)
     for h in h_space:
+        lhs = set(h['cfd'].split(' => ')[0][1:-1].split(', '))
+        rhs = set(h['cfd'].split(' => ')[1].split(', '))
         try:
             existing_fds = list(fd_metadata.keys())
-            existing_fd = next(h for h in existing_fds if set(h.split(' => ')[0][1:-1].split(', ')) == lhs and set(h.split(' => ')[1].split(', ')) == rhs)
+            existing_fd = next(ef for ef in existing_fds if set(ef.split(' => ')[0][1:-1].split(', ')) == lhs and set(ef.split(' => ')[1].split(', ')) == rhs)
             fd = existing_fd
         except StopIteration:
             fd = h['cfd']
