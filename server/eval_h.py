@@ -314,6 +314,8 @@ def eval_h_grouped(group_type, run_type, id):
             project_info = json.load(f)
         with open('scenarios.json', 'r') as f:
             scenarios = json.load(f)
+        with open(pathstart + project_id + '/fd_metadata.json', 'r') as f:
+            fd_metadata = json.load(f)
         # scenario = project_info['scenario']
         scenario_id = project_info['scenario_id']
         scenario = scenarios[scenario_id]
@@ -382,8 +384,6 @@ def eval_h_grouped(group_type, run_type, id):
 
         with open(pathstart + project_id + '/interaction_metadata.json', 'r') as f:
             interaction_metadata = json.load(f)
-        with open(pathstart + project_id + '/fd_metadata.json', 'r') as f:
-            fd_metadata = json.load(f)
         with open(pathstart + project_id + '/study_metrics.json', 'r') as f:
             study_metrics = json.load(f)
         user_h_history = interaction_metadata['user_hypothesis_history']
