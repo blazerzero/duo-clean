@@ -760,22 +760,13 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
     # study_metrics['all_errors_total'] = list()
 
     max_h = user_hypothesis_history[0]['value'][0]
-    console.log(max_h)
     for h in h_space:
-        console.log(h['cfd'])
         lhs = set(h['cfd'].split(' => ')[0][1:-1].split(', '))
         rhs = set(h['cfd'].split(' => ')[1].split(', '))
-        # if h['cfd'] not in fd_metadata.keys():
-        #     continue
 
         max_h_lhs = set(max_h.split(' => ')[0][1:-1].split(', '))
         max_h_rhs = set(max_h.split(' => ')[1].split(', '))
-        console.log(lhs)
-        console.log(max_h_lhs)
-        console.log(rhs)
-        console.log(max_h_rhs)
-
-        if len(max_h_lhs.difference(lhs)) == 0 and len(max_h_rhs.difference(rhs)) == 0:
+        if max_h_lhs == lhs and max_h_rhs == rhs:
             max_h = h['cfd']
 
         mu = h['conf'] if h['cfd'] != max_h else 1
@@ -896,6 +887,14 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
             fd_m['alpha_history'].append({ 'iter_num': i, 'value': fd_m['alpha'], 'elapsed_time': elapsed_time })
             fd_m['beta_history'].append({ 'iter_num': i, 'value': fd_m['beta'], 'elapsed_time': elapsed_time })
             fd_m['conf_history'].append({ 'iter_num': i, 'value': fd_m['conf'], 'elapsed_time': elapsed_time })
+
+            lhs = set(h['cfd'].split(' => ')[0][1:-1].split(', '))
+            rhs = set(h['cfd'].split(' => ')[1].split(', '))
+
+            max_h_lhs = set(max_h.split(' => ')[0][1:-1].split(', '))
+            max_h_rhs = set(max_h.split(' => ')[1].split(', '))
+            if max_h_lhs == lhs and max_h_rhs == rhs:
+                max_h = h['cfd']
 
             if fd != max_h and fd_m['conf'] > fd_metadata[max_h]['conf_history'][-1]:
                 max_h = fd
