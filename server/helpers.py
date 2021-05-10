@@ -770,6 +770,8 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
 
         max_h_lhs = set(max_h.split(' => ')[0][1:-1].split(', '))
         max_h_rhs = set(max_h.split(' => ')[1].split(', '))
+        console.log(max_h_lhs)
+        console.log(max_h_rhs)
 
         if max_h_lhs == lhs and max_h_rhs == rhs:
             max_h = h['cfd']
