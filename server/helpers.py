@@ -775,9 +775,9 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
                 max_h = h['cfd']
 
         # mu = h['conf'] if h['cfd'] != max_h else 1
+        variance = 0.0025
         if h['cfd'] == max_h:
             mu = 1
-            variance = 0.0025
             alpha, beta = initialPrior(mu, variance)
         elif max_h == 'Not Sure':
             alpha = 1
