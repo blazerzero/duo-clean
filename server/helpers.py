@@ -931,6 +931,7 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
             # print('vios marked:', st_vios_marked)
             # print('vios total:', st_vios_total)
         max_h = max(fd_metadata.keys(), key=lambda x: fd_metadata[x]['conf'])
+        console.log(max_h)
         study_metrics['bayesian_prediction'].append({ 'iter_num': i, 'value': max_h, 'elapsed_time': elapsed_time })
 
         # Medium-term memory violation calculations
