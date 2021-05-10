@@ -361,7 +361,7 @@ def eval_h_grouped(group_type, run_type, id):
                 h['conf'] = (len(support) - len(vios)) / len(support)
                 h['support'] = support
                 h['vios'] = vios
-                h['vio_pairs'] = set(tuple(vp) for vp in h['vio_pairs'])
+                h['vio_pairs'] = set(tuple(vp) for vp in vio_pairs)
                 mu = h['conf']
                 if mu == 1:
                     mu = 0.99999
