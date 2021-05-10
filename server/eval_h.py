@@ -352,7 +352,7 @@ def eval_h_grouped(group_type, run_type, id):
                 fd = existing_fd
             except StopIteration:
                 h = dict()
-                h['cfd'] = fd['cfd']
+                h['cfd'] = fd
                 h['score'] = 1
                 support, vios = helpers.getSupportAndVios(data, clean_data, h['cfd'])
                 vio_pairs = helpers.getPairs(data, support, h['cfd'])
