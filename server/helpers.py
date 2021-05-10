@@ -770,7 +770,10 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
     # study_metrics['all_errors_total'] = list()
 
     max_h = user_hypothesis_history[0]['value'][0]
+    console.log([user_hypothesis_history[i]['value'][0] for i in range(0, len(user_hypothesis_history))])
     console.log(max_h)
+    if (max_h == 'Not Sure'):
+        console.log(0.5)
     for h in h_space:
         lhs = set(h['cfd'].split(' => ')[0][1:-1].split(', '))
         rhs = set(h['cfd'].split(' => ')[1].split(', '))
@@ -790,8 +793,6 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
             if max_h_lhs == lhs and max_h_rhs == rhs:
                 max_h = fd
                 console.log(fd_metadata[max_h]['conf'])
-        else:
-            console.log(0.5)
 
         # mu = h['conf'] if h['cfd'] != max_h else 1
         variance = 0.0025
@@ -1209,6 +1210,7 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
 
             cumulative_precision = 0.5 if len(marked) == 0 else (len(found)) / (len(marked))
             cumulative_precision_noover = 0.5 if len(marked_set) == 0 else (len(found_set) / len(marked_set))
+            # console.log(len(total))
             cumulative_recall = (len(found)) / (len(total))
             cumulative_recall_noover = (len(found_set) / len(total_set))
         else:
