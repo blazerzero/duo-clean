@@ -379,7 +379,7 @@ def eval_h_grouped(group_type, run_type, id):
                     vios=h['vios'],
                     vio_pairs=h['vio_pairs'],
                 )
-                fd_metadata[h['cfd']] = fd_m
+                fd_metadata[h['cfd']] = fd_m.asdict()
                 h_space.append(h)
 
         with open(pathstart + project_id + '/interaction_metadata.json', 'r') as f:
