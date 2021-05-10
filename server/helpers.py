@@ -58,6 +58,10 @@ class FDMeta(object):
         beta_history = list()
         for b in self.beta_history:
             beta_history.append(b.asdict())
+        
+        conf_history = list()
+        for c in self.conf_history:
+            conf_history.append(c.asdict())
 
         return {
             'lhs': self.lhs,
@@ -66,6 +70,8 @@ class FDMeta(object):
             'alpha_history': alpha_history,
             'beta': self.beta,
             'beta_history': beta_history,
+            'conf': self.conf,
+            'conf_history': conf_history,
             'support': self.support,
             'vios': self.vios,
             'vio_pairs': [list(vp) for vp in self.vio_pairs]
