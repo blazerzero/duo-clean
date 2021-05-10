@@ -773,7 +773,7 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
         console.log(lhs)
         console.log(rhs)
 
-        if max_h_lhs == lhs and max_h_rhs == rhs:
+        if len(max_h_lhs.difference(lhs)) == 0 and len(max_h_rhs.difference(rhs)) == 0:
             max_h = h['cfd']
 
         mu = h['conf'] if h['cfd'] != max_h else 1
