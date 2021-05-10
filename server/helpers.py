@@ -858,6 +858,7 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
         marked_rows = [r for r in marked_rows]
         
         max_h = study_metrics['bayesian_prediction'][-1]['value']
+        console.log(max_h)
         lhs = set(max_h.split(' => ')[0][1:-1].split(', '))
         rhs = set(max_h.split(' => ')[1].split(', '))
         try:
@@ -903,6 +904,7 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
 
             if fd != max_h and fd_m['conf'] > fd_metadata[max_h]['conf_history'][-1]['value']:
                 max_h = fd
+                console.log(max_h)
 
             if fd != target_fd:
                 continue
