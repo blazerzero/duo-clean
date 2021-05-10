@@ -12,6 +12,9 @@ import statstests
 
 console = Console()
 
+def extract_fd(item):
+    return item['cfd']
+
 def eval_user_h(project_id, run_type):
     pathstart = './docker-out/' if run_type == 'real' else './store/'
     with open(pathstart + project_id + '/project_info.json', 'r') as f:
@@ -314,6 +317,7 @@ def eval_h_grouped(group_type, run_type, id):
         # scenario = project_info['scenario']
         scenario_id = project_info['scenario_id']
         scenario = scenarios[scenario_id]
+        saved_scenario = project_info['scenario']
         user_num = str(user_num_dict[project_info['email']])
         
         data = pd.read_csv(scenario['dirty_dataset'], keep_default_na=False)
@@ -338,17 +342,25 @@ def eval_h_grouped(group_type, run_type, id):
         #     fds = list()
         
         # h_space = list()
-        # for fd in fds:
-        #     h = dict()
-        #     h['cfd'] = fd['cfd']
-        #     h['score'] = 1
-        #     support, vios = helpers.getSupportAndVios(data, clean_data, h['cfd'])
-        #     vio_pairs = helpers.getPairs(data, support, h['cfd'])
-        #     h['conf'] = (len(support) - len(vios)) / len(support)
-        #     h['support'] = support
-        #     h['vios'] = vios
-        #     h['vio_pairs'] = vio_pairs
-        #     h_space.append(h)
+        fds = [h['cfd'] for h in h_space]
+        for fd in fds:
+            lhs = set(fd.split(' => ')[0][1:-1].split(', '))
+            rhs = set(fd.split(' => ')[1].split(', '))
+            try:
+                existing_fds = map(extract_fd, saved_scenario['hypothesis_space'])
+                existing_fd = next(h for h in existing_fds if set(h.split(' => ')[0][1:-1].split(', ')) == lhs and set(h.split(' => ')[1].split(', ')) == rhs)
+                fd = existing_fd
+            except StopIteration:
+                h = dict()
+                h['cfd'] = fd['cfd']
+                h['score'] = 1
+                support, vios = helpers.getSupportAndVios(data, clean_data, h['cfd'])
+                vio_pairs = helpers.getPairs(data, support, h['cfd'])
+                h['conf'] = (len(support) - len(vios)) / len(support)
+                h['support'] = support
+                h['vios'] = vios
+                h['vio_pairs'] = vio_pairs
+                h_space.append(h)
 
         with open(pathstart + project_id + '/interaction_metadata.json', 'r') as f:
             interaction_metadata = json.load(f)
