@@ -247,7 +247,7 @@ def eval_user_h(project_id, run_type):
     
     # plt.clf()
 
-def eval_h_grouped(group_type, run_type, id):
+def eval_h_grouped(group_type, run_type, id, background=None):
     pathstart = './docker-out/' if run_type == 'real' else './store/'
 
     fig1, ax1 = plt.subplots()
@@ -260,6 +260,9 @@ def eval_h_grouped(group_type, run_type, id):
     fig8, ax8 = plt.subplots()
     fig9, ax9 = plt.subplots()
     fig10, ax10 = plt.subplots()
+    fig11, ax11 = plt.subplots()
+    fig12, ax12 = plt.subplots()
+    fig13, ax13 = plt.subplots()
 
     ax1.set_xticks(np.arange(0, 15, 3))
     ax2.set_xticks(np.arange(0, 15, 3))
@@ -271,6 +274,9 @@ def eval_h_grouped(group_type, run_type, id):
     ax8.set_xticks(np.arange(0, 15, 3))
     ax9.set_xticks(np.arange(0, 15, 3))
     ax10.set_xticks(np.arange(0, 15, 3))
+    ax11.set_xticks(np.arange(0, 15, 3))
+    ax12.set_xticks(np.arange(0, 15, 3))
+    ax13.set_xticks(np.arange(0, 15, 3))
 
     ax1.set_ylim([0, 1])
     ax2.set_ylim([0, 1])
@@ -282,6 +288,18 @@ def eval_h_grouped(group_type, run_type, id):
     ax8.set_ylim([0, 1])
     ax9.set_ylim([0, 1])
     ax10.set_ylim([0, 1])
+    ax11.set_ylim([0, 1])
+    ax12.set_ylim([0, 1])
+    ax13.set_ylim([0, 1])
+
+    bayesian_match_rate = list()
+    bayesian_match_rate_mrr = list()
+    hp_match_rate = list()
+    hp_match_rate_mrr = list()
+    bayesian_match_rate_penalty = list()
+    bayesian_match_rate_mrr_penalty = list()
+    hp_match_rate_penalty = list()
+    hp_match_rate_mrr_penalty = list()
 
     with open('./study-utils/users.json', 'r') as f:
         users = json.load(f)
@@ -293,6 +311,7 @@ def eval_h_grouped(group_type, run_type, id):
 
     all_project_ids = os.listdir(pathstart)
     project_ids = list()
+    training = list()
     for project_id in all_project_ids:
         with open(pathstart + project_id + '/project_info.json', 'r') as f:
             project_info = json.load(f)
@@ -300,23 +319,34 @@ def eval_h_grouped(group_type, run_type, id):
         scenario_id = project_info['scenario_id']
         user_num = str(user_num_dict[project_info['email']])
 
+        # Test runs; not part of real data
+        if 'test' in users[project_info['email']]['background']:
+            continue
+
+        # Training data; ignore unless we're specifically looking at training data
+        if background != 'train' and 'train' in users[project_info['email']]['background']:
+            training.append(project_id)
+
         if group_type == 'scenario':
             if scenario_id != id:
                 continue
         elif group_type == 'user':
             if user_num != id:
                 continue
+        if background is not None:
+            if background not in users[project_info['email']]['background']:
+                continue
         
         project_ids.append(project_id)
     
     for project_id in project_ids:
+        console.log(project_id, '\n')
         with open(pathstart + project_id + '/project_info.json', 'r') as f:
             project_info = json.load(f)
         with open('scenarios.json', 'r') as f:
             scenarios = json.load(f)
         with open(pathstart + project_id + '/fd_metadata.json', 'r') as f:
             fd_metadata = json.load(f)
-        # scenario = project_info['scenario']
         scenario_id = project_info['scenario_id']
         scenario = scenarios[scenario_id]
         saved_scenario = project_info['scenario']
@@ -325,25 +355,14 @@ def eval_h_grouped(group_type, run_type, id):
         data = pd.read_csv(scenario['dirty_dataset'], keep_default_na=False)
         clean_data = pd.read_csv(scenario['clean_dataset'], keep_default_na=False)
         target_fd = scenario['target_fd']
+        target_fd_lhs = set(target_fd.split(' => ')[0][1:-1].split(', '))
+        target_fd_rhs = set(target_fd.split(' => ')[1].split(', '))
         h_space = scenario['hypothesis_space']
+        target_fd = next(h for h in fd_metadata.keys() if set(h.split(' => ')[0][1:-1].split(', ')) == target_fd_lhs and set(h.split(' => ')[1].split(', ')) == target_fd_rhs)
 
         data = pd.read_csv(scenario['dirty_dataset'], keep_default_na=False)
         clean_data = pd.read_csv(scenario['clean_dataset'], keep_default_na=False)
-        min_conf = 0.001
-        max_ant = 3
 
-        # process = sp.Popen(['./data/cfddiscovery/CFDD', scenario['clean_dataset'], str(len(data.index)), str(min_conf), str(max_ant)], stdout=sp.PIPE, stderr=sp.PIPE, env={'LANG': 'C++'})   # CFDD for clean h space
-
-        # res = process.communicate()
-        # if process.returncode == 0:
-        #     output = res[0].decode('latin_1').replace(',]', ']').replace('\r', '').replace('\t', '').replace('\n', '')
-        #     fds = [c['cfd'] for c in json.loads(output, strict=False)['cfds'] if '=' not in c['cfd'].split(' => ')[0] and '=' not in c['cfd'].split(' => ')[1] and c['cfd'].split(' => ')[0] != '()']
-            
-        #     fds = helpers.buildCompositionSpace(fds, None, data, clean_data, min_conf, max_ant)
-        # else:
-        #     fds = list()
-        
-        # h_space = list()
         fds = [h['cfd'] for h in h_space]
         for fd in fds:
             lhs = set(fd.split(' => ')[0][1:-1].split(', '))
@@ -380,7 +399,8 @@ def eval_h_grouped(group_type, run_type, id):
                     vio_pairs=h['vio_pairs'],
                 )
                 fd_metadata[h['cfd']] = fd_m.asdict()
-                h_space.append(h)
+                if h['cfd'] not in [hs['cfd'] for hs in h_space]:
+                    h_space.append(h)
 
         with open(pathstart + project_id + '/interaction_metadata.json', 'r') as f:
             interaction_metadata = json.load(f)
@@ -390,8 +410,11 @@ def eval_h_grouped(group_type, run_type, id):
         user_h_conf_history = list()
         fd_recall_history = list()
         fd_precision_history = list()
+        fd_f1_history = list()
         fd_recall_seen_history = list()
         fd_precision_seen_history = list()
+        fd_f1_seen_history = list()
+        fd_f1_delta_history = list()
         user_h_seen_conf_history = list()
         seen_tuples = set()
 
@@ -401,10 +424,13 @@ def eval_h_grouped(group_type, run_type, id):
                 user_h_conf_history.append(0)
                 fd_recall_history.append(0)
                 fd_precision_history.append(0)
+                fd_f1_history.append(0)
                 if h['iter_num'] > 0:
+                    fd_f1_delta_history.append(abs(0 - fd_f1_history[-1]))
                     user_h_seen_conf_history.append(0)
                     fd_recall_seen_history.append(0)
                     fd_precision_seen_history.append(0)
+                    fd_f1_seen_history.append(0)
                 continue
 
             lhs = fd.split(' => ')[0][1:-1].split(', ')
@@ -429,8 +455,10 @@ def eval_h_grouped(group_type, run_type, id):
             user_h_conf_history.append(conf)
             fd_recall = len([v for v in vios if v in target_vios]) / len(target_vios)
             fd_precision = 0 if len(vios) == 0 else len([v for v in vios if v in target_vios]) / len(vios)
+            fd_f1 = 0 if fd_precision == 0 and fd_recall == 0 else ((2 * fd_precision * fd_recall) / (fd_precision + fd_recall))
             fd_recall_history.append(fd_recall)
             fd_precision_history.append(fd_precision)
+            fd_f1_history.append(fd_f1)
 
             if h['iter_num'] == 0:
                 continue
@@ -445,9 +473,13 @@ def eval_h_grouped(group_type, run_type, id):
 
             fd_recall_seen = len([v for v in vios if v in target_vios_seen]) / len(target_vios_seen)
             fd_precision_seen = 0 if len(vios) == 0 else len([v for v in vios if v in target_vios_seen]) / len(vios)
+            fd_f1_seen = 0 if fd_precision_seen == 0 and fd_recall_seen == 0 else ((2 * fd_precision_seen * fd_recall_seen) / (fd_precision_seen + fd_recall_seen))
 
             fd_recall_seen_history.append(fd_recall_seen)
             fd_precision_seen_history.append(fd_precision_seen)
+            fd_f1_seen_history.append(fd_f1_seen)
+
+            fd_f1_delta_history.append(abs(fd_f1_history[-1] - fd_f1_history[-2]))
         
         study_metrics, fd_metadata = helpers.deriveStats(
             interaction_metadata,
@@ -463,41 +495,61 @@ def eval_h_grouped(group_type, run_type, id):
         with open(pathstart + project_id + '/fd_metadata.json', 'w') as f:
             json.dump(fd_metadata, f)
         
+        if project_id not in training:
+            bayesian_match_rate.append(study_metrics['bayesian_match_rate'])
+            bayesian_match_rate_mrr.append(study_metrics['bayesian_match_rate_mrr'])
+            hp_match_rate.append(study_metrics['hp_match_rate'])
+            hp_match_rate_mrr.append(study_metrics['hp_match_rate_mrr'])
+            bayesian_match_rate_penalty.append(study_metrics['bayesian_match_rate_penalty'])
+            bayesian_match_rate_mrr_penalty.append(study_metrics['bayesian_match_rate_mrr_penalty'])
+            hp_match_rate_penalty.append(study_metrics['hp_match_rate_penalty'])
+            hp_match_rate_mrr_penalty.append(study_metrics['hp_match_rate_mrr_penalty'])
+        
         cumulative_precision, cumulative_recall = study_metrics['cumulative_precision'], study_metrics['cumulative_recall']
         cumulative_precision_noover, cumulative_recall_noover = study_metrics['cumulative_precision_noover'], study_metrics['cumulative_recall_noover']
 
         if len(user_h_history) > 2:
             console.print('\nSEPARATE USER\n')
-            console.log(user_h_conf_history)
+            # console.log(user_h_conf_history)
             ax1.plot([i['iter_num'] for i in user_h_history], user_h_conf_history)
-            statstests.mannkendall(user_h_conf_history)
+            # statstests.mannkendall(user_h_conf_history)
 
             ax2.plot([i['iter_num'] for i in user_h_history], fd_recall_history)
-            statstests.mannkendall(fd_recall_history)
+            # statstests.mannkendall(fd_recall_history)
 
             ax3.plot([i['iter_num'] for i in user_h_history if i['iter_num'] > 0], user_h_seen_conf_history)
-            statstests.mannkendall(user_h_seen_conf_history)
+            # statstests.mannkendall(user_h_seen_conf_history)
 
             ax4.plot([i['iter_num'] for i in cumulative_precision], [i['value'] for i in cumulative_precision])
-            statstests.mannkendall([i['value'] for i in cumulative_precision])
+            # statstests.mannkendall([i['value'] for i in cumulative_precision])
 
             ax5.plot([i['iter_num'] for i in cumulative_recall], [i['value'] for i in cumulative_recall])
-            statstests.mannkendall([i['value'] for i in cumulative_recall])
+            # statstests.mannkendall([i['value'] for i in cumulative_recall])
 
             ax6.plot([i['iter_num'] for i in cumulative_precision_noover], [i['value'] for i in cumulative_precision_noover])
-            statstests.mannkendall([i['value'] for i in cumulative_precision_noover])
+            # statstests.mannkendall([i['value'] for i in cumulative_precision_noover])
 
             ax7.plot([i['iter_num'] for i in cumulative_recall_noover], [i['value'] for i in cumulative_recall_noover])
-            statstests.mannkendall([i['value'] for i in cumulative_recall_noover])
+            # statstests.mannkendall([i['value'] for i in cumulative_recall_noover])
 
             ax8.plot([i['iter_num'] for i in user_h_history], fd_precision_history)
-            statstests.mannkendall(fd_precision_history)
+            # statstests.mannkendall(fd_precision_history)
 
             ax9.plot([i['iter_num'] for i in user_h_history if i['iter_num'] > 0], fd_recall_seen_history)
-            statstests.mannkendall(fd_recall_seen_history)
+            # statstests.mannkendall(fd_recall_seen_history)
 
             ax10.plot([i['iter_num'] for i in user_h_history if i['iter_num'] > 0], fd_precision_seen_history)
-            statstests.mannkendall(fd_precision_seen_history)
+            # statstests.mannkendall(fd_precision_seen_history)
+
+            console.log(fd_f1_history)
+            ax11.plot([i['iter_num'] for i in user_h_history], fd_f1_history)
+            statstests.mannkendall(fd_f1_history)
+
+            ax12.plot([i['iter_num'] for i in user_h_history if i['iter_num'] > 0], fd_f1_seen_history)
+            # statstests.mannkendall(fd_f1_seen_history)
+
+            console.log(fd_f1_delta_history)
+            ax13.plot([i['iter_num'] for i in user_h_history if i['iter_num'] > 0], fd_f1_delta_history)
 
     ax1.set_xlabel('Iteration #')
     ax1.set_ylabel('Confidence')
@@ -539,6 +591,18 @@ def eval_h_grouped(group_type, run_type, id):
     ax10.set_ylabel('Precision')
     ax10.set_title('Suggested FD Precision Over What the User Has Seen')
 
+    ax11.set_xlabel('Iteration #')
+    ax11.set_ylabel('F1 Score')
+    ax11.set_title('Suggested FD F1 Score')
+
+    ax12.set_xlabel('Iteration #')
+    ax12.set_ylabel('F1 Score')
+    ax12.set_title('Suggested F1 Score Over What the User Has Seen')
+    
+    ax13.set_xlabel('Iteration #')
+    ax13.set_ylabel('Difference in F1 Score')
+    ax13.set_title('Change in F1 Score of User\'s Hypotheses')
+
     fig1.tight_layout()
     fig2.tight_layout()
     fig3.tight_layout()
@@ -549,30 +613,64 @@ def eval_h_grouped(group_type, run_type, id):
     fig8.tight_layout()
     fig9.tight_layout()
     fig10.tight_layout()
+    fig11.tight_layout()
+    fig12.tight_layout()
+    fig13.tight_layout()
 
-    fig1.savefig('./plots/fd-confidence/' + (('s' + scenario_id) if group_type == 'scenario' else ('u' + user_num)) + '.jpg')
-    fig2.savefig('./plots/fd-recall/' + (('s' + scenario_id) if group_type == 'scenario' else ('u' + user_num)) + '.jpg')
-    fig3.savefig('./plots/fd-confidence-seen/' + (('s' + scenario_id) if group_type == 'scenario' else ('u' + user_num)) + '.jpg')
-    fig4.savefig('./plots/cumulative-user-precision/' + (('s' + scenario_id) if group_type == 'scenario' else ('u' + user_num)) + '.jpg')
-    fig5.savefig('./plots/cumulative-user-recall/' + (('s' + scenario_id) if group_type == 'scenario' else ('u' + user_num)) + '.jpg')
-    fig6.savefig('./plots/cumulative-user-precision-nodup/' + (('s' + scenario_id) if group_type == 'scenario' else ('u' + user_num)) + '.jpg')
-    fig7.savefig('./plots/cumulative-user-recall-nodup/' + (('s' + scenario_id) if group_type == 'scenario' else ('u' + user_num)) + '.jpg')
-    fig8.savefig('./plots/fd-precision/' + (('s' + scenario_id) if group_type == 'scenario' else ('u' + user_num)) + '.jpg')
-    fig9.savefig('./plots/fd-recall-seen/' + (('s' + scenario_id) if group_type == 'scenario' else ('u' + user_num)) + '.jpg')
-    fig10.savefig('./plots/fd-precision-seen/' + (('s' + scenario_id) if group_type == 'scenario' else ('u' + user_num)) + '.jpg')
+    match_rates = {
+        'bayesian_match_rate': np.mean(bayesian_match_rate),
+        'hp_match_rate': np.mean(hp_match_rate),
+        'bayesian_match_rate_mrr': np.mean(bayesian_match_rate_mrr),
+        'hp_match_rate_mrr': np.mean(hp_match_rate_mrr),
+        'bayesian_match_rate_penalty': np.mean(bayesian_match_rate_penalty),
+        'hp_match_rate_penalty': np.mean(hp_match_rate_penalty),
+        'bayesian_match_rate_mrr_penalty': np.mean(bayesian_match_rate_mrr_penalty),
+        'hp_match_rate_mrr_penalty': np.mean(hp_match_rate_mrr_penalty)
+    }
+
+    if background is None:
+        fig1.savefig('./plots/fd-confidence/' + (('s' + scenario_id) if group_type == 'scenario' else ('u' + user_num)) + '.jpg')
+        fig2.savefig('./plots/fd-recall/' + (('s' + scenario_id) if group_type == 'scenario' else ('u' + user_num)) + '.jpg')
+        fig3.savefig('./plots/fd-confidence-seen/' + (('s' + scenario_id) if group_type == 'scenario' else ('u' + user_num)) + '.jpg')
+        fig4.savefig('./plots/cumulative-user-precision/' + (('s' + scenario_id) if group_type == 'scenario' else ('u' + user_num)) + '.jpg')
+        fig5.savefig('./plots/cumulative-user-recall/' + (('s' + scenario_id) if group_type == 'scenario' else ('u' + user_num)) + '.jpg')
+        fig6.savefig('./plots/cumulative-user-precision-nodup/' + (('s' + scenario_id) if group_type == 'scenario' else ('u' + user_num)) + '.jpg')
+        fig7.savefig('./plots/cumulative-user-recall-nodup/' + (('s' + scenario_id) if group_type == 'scenario' else ('u' + user_num)) + '.jpg')
+        fig8.savefig('./plots/fd-precision/' + (('s' + scenario_id) if group_type == 'scenario' else ('u' + user_num)) + '.jpg')
+        fig9.savefig('./plots/fd-recall-seen/' + (('s' + scenario_id) if group_type == 'scenario' else ('u' + user_num)) + '.jpg')
+        fig10.savefig('./plots/fd-precision-seen/' + (('s' + scenario_id) if group_type == 'scenario' else ('u' + user_num)) + '.jpg')
+        fig11.savefig('./plots/fd-f1/' + (('s' + scenario_id) if group_type == 'scenario' else ('u' + user_num)) + '.jpg')
+        fig12.savefig('./plots/fd-f1-seen/' + (('s' + scenario_id) if group_type == 'scenario' else ('u' + user_num)) + '.jpg')
+        fig13.savefig('./plots/fd-f1-delta/' + (('s' + scenario_id) if group_type == 'scenario' else ('u' + user_num)) + '.jpg')
+
+        with open('./plots/match-rates/' + (('s' + scenario_id) if group_type == 'scenario' else ('u' + user_num)) + '.json', 'w') as f:
+            json.dump(match_rates, f, indent=4)
+    else:
+        fig1.savefig('./plots/fd-confidence/' + (('s' + scenario_id) if group_type == 'scenario' else ('u' + user_num)) + '-' + background + '.jpg')
+        fig2.savefig('./plots/fd-recall/' + (('s' + scenario_id) if group_type == 'scenario' else ('u' + user_num)) + '-' + background + '.jpg')
+        fig3.savefig('./plots/fd-confidence-seen/' + (('s' + scenario_id) if group_type == 'scenario' else ('u' + user_num)) + '-' + background + '.jpg')
+        fig4.savefig('./plots/cumulative-user-precision/' + (('s' + scenario_id) if group_type == 'scenario' else ('u' + user_num)) + '-' + background + '.jpg')
+        fig5.savefig('./plots/cumulative-user-recall/' + (('s' + scenario_id) if group_type == 'scenario' else ('u' + user_num)) + '-' + background + '.jpg')
+        fig6.savefig('./plots/cumulative-user-precision-nodup/' + (('s' + scenario_id) if group_type == 'scenario' else ('u' + user_num)) + '-' + background + '.jpg')
+        fig7.savefig('./plots/cumulative-user-recall-nodup/' + (('s' + scenario_id) if group_type == 'scenario' else ('u' + user_num)) + '-' + background + '.jpg')
+        fig8.savefig('./plots/fd-precision/' + (('s' + scenario_id) if group_type == 'scenario' else ('u' + user_num)) + '-' + background + '.jpg')
+        fig9.savefig('./plots/fd-recall-seen/' + (('s' + scenario_id) if group_type == 'scenario' else ('u' + user_num)) + '-' + background + '.jpg')
+        fig10.savefig('./plots/fd-precision-seen/' + (('s' + scenario_id) if group_type == 'scenario' else ('u' + user_num)) + '-' + background + '.jpg')
+        fig11.savefig('./plots/fd-f1/' + (('s' + scenario_id) if group_type == 'scenario' else ('u' + user_num)) + '-' + background + '.jpg')
+        fig12.savefig('./plots/fd-f1-seen/' + (('s' + scenario_id) if group_type == 'scenario' else ('u' + user_num)) + '-' + background + '.jpg')
+        fig13.savefig('./plots/fd-f1-delta/' + (('s' + scenario_id) if group_type == 'scenario' else ('u' + user_num)) + '-' + background + '.jpg')
+
+        with open('./plots/match-rates/' + (('s' + scenario_id) if group_type == 'scenario' else ('u' + user_num)) + '-' + background + '.json', 'w') as f:
+            json.dump(match_rates, f, indent=4)
     
     plt.clf()
-
-def eval_bayesian(run_type, project_id):
-    pass
 
 if __name__ == '__main__':
     run_type = sys.argv[1]
     diff = sys.argv[2]
     id = sys.argv[3]
+    group = sys.argv[4] if len(sys.argv) > 4 else None
     if '0' in diff:
         eval_user_h(diff, run_type, id)
-    elif diff == 'bayesian':
-        eval_bayesian(run_type, id)
     else:
-        eval_h_grouped(diff, run_type, id)
+        eval_h_grouped(diff, run_type, id, group)
