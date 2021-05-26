@@ -50,7 +50,8 @@ def pp(data):
 
 def mannkendall(data):
     result = mk.original_test(data)
-    console.print(result)
+    # console.print(result)
+    return result
 
 if __name__ == '__main__':
     data = None

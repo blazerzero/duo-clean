@@ -8,8 +8,8 @@ from rich.console import Console
 
 console = Console()
 BAYESIAN_SMOOTHING = 0.15    # Bayesian model hyperparameter
-MODEL_OUTPUT_COUNT = 3
-HP_MEMORY = 3  # Hypothesis testing model hyperparameter
+# MODEL_OUTPUT_COUNT = 3
+HP_MEMORY = 1  # Hypothesis testing model hyperparameter
 
 class CellFeedback(object):
     def __init__(self, iter_num, marked, elapsed_time):
@@ -83,6 +83,34 @@ class FDMeta(object):
 
 def extract_fd(item):
     return item['cfd']
+
+def output_reward(gt, model_output, fd_metadata):
+    gt_lhs = set(gt.split(' => ')[0][1:-1].split(', '))
+    gt_rhs = set(gt.split(' => ')[1].split(', '))
+
+    try:
+        n = next(i for i, x in enumerate(model_output) if x['lhs'] == gt_lhs and x['rhs'] == gt_rhs)
+        pure = 1 if n == 0 else 0
+        mrr = 1 / (n + 1)
+    except StopIteration:
+        pure, mrr = 0, 0
+    
+    top = model_output[0]
+    if top['lhs'] == gt_lhs and top['rhs'] == gt_rhs:
+        pure_sub_super = 1
+    elif top['lhs'].issubset(gt_lhs) or top['rhs'].issuperset(gt_rhs):
+        pure_sub_super = 1 - abs(fd_metadata[top['fd']]['f1'] - fd_metadata[gt]['f1'])
+    else:
+        pure_sub_super = 0
+    
+    try:
+        top_sub_super = next((i, x) for i, x in enumerate(model_output) if (x['lhs'] == gt_lhs and x['rhs'] == gt_rhs) or (x['lhs'].issubset(gt_lhs) or x['rhs'].issuperset(gt_rhs)))
+        mrr_sub_super = (1 / (top_sub_super[0] + 1)) * (1 - abs(fd_metadata[top_sub_super[1]['fd']]['f1'] - fd_metadata[gt]['f1']))
+    except StopIteration:
+        mrr_sub_super = 0
+    
+    return pure, mrr, pure_sub_super, mrr_sub_super
+
 
 # Record user feedback
 def recordFeedback(data, feedback, vio_pairs, project_id, current_iter, current_time):
@@ -719,7 +747,7 @@ def checkForTermination(project_id):
     else:
         return False
 
-def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty_dataset, clean_dataset, target_fd):
+def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty_dataset, clean_dataset, target_fd, max_iters=None):
     feedback_history = interaction_metadata['feedback_history']
     user_hypothesis_history = interaction_metadata['user_hypothesis_history']
     study_metrics['st_vio_precision'] = list()
@@ -763,24 +791,35 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
     study_metrics['cumulative_recall_noover'] = list()
     study_metrics['cumulative_precision'] = list()
     study_metrics['cumulative_precision_noover'] = list()
+    study_metrics['cumulative_f1'] = list()
+    study_metrics['cumulative_f1_noover'] = list()
     study_metrics['bayesian_prediction'] = [{ 'iter_num': user_hypothesis_history[0]['iter_num'], 'value': user_hypothesis_history[0]['value'][0], 'elapsed_time': user_hypothesis_history[0]['elapsed_time'] }]
     study_metrics['hp_prediction'] = [{ 'iter_num': user_hypothesis_history[0]['iter_num'], 'value': user_hypothesis_history[0]['value'][0], 'elapsed_time': user_hypothesis_history[0]['elapsed_time'] }]
-    study_metrics['bayesian_match'] = list()
-    study_metrics['hp_match'] = list()
-    study_metrics['bayesian_match_mrr'] = list()
-    study_metrics['hp_match_mrr'] = list()
-    study_metrics['bayesian_match_penalty'] = list()
-    study_metrics['hp_match_penalty'] = list()
-    study_metrics['bayesian_match_mrr_penalty'] = list()
-    study_metrics['hp_match_mrr_penalty'] = list()
-    # study_metrics['bayesian_prediction'] = list()
-
-    # study_metrics['iter_errors_marked'] = list()
-    # study_metrics['iter_errors_found'] = list()
-    # study_metrics['iter_errors_total'] = list()
-    # study_metrics['all_errors_marked'] = list()
-    # study_metrics['all_errors_found'] = list()
-    # study_metrics['all_errors_total'] = list()
+    
+    study_metrics['bayesian_match_1'] = list()
+    study_metrics['hp_match_1'] = list()
+    study_metrics['bayesian_match_mrr_1'] = list()
+    study_metrics['hp_match_mrr_1'] = list()
+    study_metrics['bayesian_match_penalty_1'] = list()
+    study_metrics['hp_match_penalty_1'] = list()
+    study_metrics['bayesian_match_mrr_penalty_1'] = list()
+    study_metrics['hp_match_mrr_penalty_1'] = list()
+    study_metrics['bayesian_match_3'] = list()
+    study_metrics['hp_match_3'] = list()
+    study_metrics['bayesian_match_mrr_3'] = list()
+    study_metrics['hp_match_mrr_3'] = list()
+    study_metrics['bayesian_match_penalty_3'] = list()
+    study_metrics['hp_match_penalty_3'] = list()
+    study_metrics['bayesian_match_mrr_penalty_3'] = list()
+    study_metrics['hp_match_mrr_penalty_3'] = list()
+    study_metrics['bayesian_match_5'] = list()
+    study_metrics['hp_match_5'] = list()
+    study_metrics['bayesian_match_mrr_5'] = list()
+    study_metrics['hp_match_mrr_5'] = list()
+    study_metrics['bayesian_match_penalty_5'] = list()
+    study_metrics['hp_match_penalty_5'] = list()
+    study_metrics['bayesian_match_mrr_penalty_5'] = list()
+    study_metrics['hp_match_mrr_penalty_5'] = list()
 
     max_h = user_hypothesis_history[0]['value'][0]
     # console.log(max_h)
@@ -833,7 +872,10 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
         fd_metadata[fd]['f1_history'] = list()
         fd_metadata[fd]['vios_in_sample'] = list()
 
-    iters = range(1, len(interaction_metadata['sample_history'])+1)
+    if max_iters is not None:
+        iters = range(1, min(max_iters, len(interaction_metadata['sample_history']))+1)
+    else:
+        iters = range(1, len(interaction_metadata['sample_history'])+1)
     # console.log([user_hypothesis_history[i]['value'][0] for i in range(0, len(user_hypothesis_history))])
     for i in iters:
         st_vios_found = set()
@@ -886,7 +928,7 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
         fd_metadata[target_fd]['vios_in_sample'].append({ 'iter_num': i, 'value': list(target_relevant_vio_pairs), 'elapsed_time': elapsed_time })
         all_target_relevant_vio_pairs = set()
 
-        oldest_iter = 0 if i <= HP_MEMORY else i - HP_MEMORY - 1
+        oldest_iter = 0 if i < HP_MEMORY + 1 else (i - HP_MEMORY) - 1
         for it in range(oldest_iter, i):
             all_target_relevant_vio_pairs |= set(fd_metadata[target_fd]['vios_in_sample'][it]['value'])
 
@@ -966,9 +1008,9 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
             fd_m['conf_history'][-1]['value'] = fd_m['conf_history'][-1]['value'] / sum_unnormalized_confs
         
         # Get output from models
-        max_h_bayesian = heapq.nlargest(MODEL_OUTPUT_COUNT, fd_metadata.keys(), key=lambda x: fd_metadata[x]['conf'])
+        max_h_bayesian = heapq.nlargest(5, fd_metadata.keys(), key=lambda x: fd_metadata[x]['conf'])
         # console.log('Bayesian:', max_h_bayesian)
-        max_h_hp = heapq.nlargest(MODEL_OUTPUT_COUNT, fd_metadata.keys(), key=lambda x: fd_metadata[x]['f1_history'][-1]['value'])
+        max_h_hp = heapq.nlargest(5, fd_metadata.keys(), key=lambda x: fd_metadata[x]['f1_history'][-1]['value'])
         # console.log('Hypothesis Testing:', max_h_hp)
         study_metrics['bayesian_prediction'].append({ 'iter_num': i, 'value': max_h_bayesian, 'elapsed_time': elapsed_time })
         study_metrics['hp_prediction'].append({ 'iter_num': i, 'value': max_h_hp, 'elapsed_time': elapsed_time })
@@ -985,65 +1027,93 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
                 console.log(e)
                 return
             
-            bayesian_match = 0
-            bayesian_match_penalty = 0
-            bayesian_match_mrr = 0
-            bayesian_match_mrr_penalty = 0
-            for n, mhb in enumerate(max_h_bayesian):
-                bayesian_lhs = set(mhb.split(' => ')[0][1:-1].split(', '))
-                bayesian_rhs = set(mhb.split(' => ')[1].split(', '))
-                if (user_lhs == bayesian_lhs and user_rhs == bayesian_rhs):
-                    bayesian_match = 1 if n == 0 else 0
-                    bayesian_match_mrr = 1 / (n + 1)
-                    bayesian_match_penalty = 1 if n == 0 else 0
-                    bayesian_match_mrr_penalty = 1 / (n + 1)
-                    break
-                elif bayesian_rhs.issuperset(user_rhs) or bayesian_lhs.issubset(user_lhs):
-                    bayesian_match = 1 if n == 0 else 0
-                    bayesian_match_mrr = 1 / (n + 1)
-                    bayesian_match_penalty = 1 - abs(fd_metadata[user_h]['f1_history'][-1]['value'] - fd_metadata[mhb]['f1_history'][-1]['value']) if n == 0 else 0
-                    bayesian_match_mrr_penalty = (1 / (n + 1)) * (1 - abs(fd_metadata[user_h]['f1_history'][-1]['value'] - fd_metadata[mhb]['f1_history'][-1]['value']))
-                    break
-            hp_match = 0
-            hp_match_penalty = 0
-            hp_match_mrr = 0
-            hp_match_mrr_penalty = 0
-            for n, mhhp in enumerate(max_h_hp):
-                hp_lhs = set(mhhp.split(' => ')[0][1:-1].split(', '))
-                hp_rhs = set(mhhp.split(' => ')[1].split(', '))
-                if (user_lhs == hp_lhs and user_rhs == hp_rhs) and n == 0:
-                    hp_match = 1 if n == 0 else 0
-                    hp_match_mrr = 1 / (n + 1)
-                    hp_match_penalty = 1 if n == 0 else 0
-                    hp_match_mrr_penalty = 1 / (n + 1)
-                    break
-                elif hp_rhs.issuperset(user_rhs) or hp_lhs.issubset(user_lhs):
-                    hp_match = 1 if n == 0 else 0
-                    hp_match_mrr = 1 / (n + 1)
-                    hp_match_penalty = 1 - abs(fd_metadata[user_h]['f1_history'][-1]['value'] - fd_metadata[mhhp]['f1_history'][-1]['value']) if n == 0 else 0
-                    hp_match_mrr_penalty = (1 / (n + 1)) * (1 - abs(fd_metadata[user_h]['f1_history'][-1]['value'] - fd_metadata[mhhp]['f1_history'][-1]['value']))
-                    break
+            bayesian_match_3 = 0
+            bayesian_match_penalty_3 = 0
+            bayesian_match_mrr_3 = 0
+            bayesian_match_mrr_penalty_3 = 0
+            bayesian_match_5 = 0
+            bayesian_match_penalty_5 = 0
+            bayesian_match_mrr_5 = 0
+            bayesian_match_mrr_penalty_5 = 0
             
-            study_metrics['bayesian_match'].append(bayesian_match)
-            study_metrics['hp_match'].append(hp_match)
-            study_metrics['bayesian_match_mrr'].append(bayesian_match_mrr)
-            study_metrics['hp_match_mrr'].append(hp_match_mrr)
-            study_metrics['bayesian_match_penalty'].append(bayesian_match_penalty)
-            study_metrics['hp_match_penalty'].append(hp_match_penalty)
-            study_metrics['bayesian_match_mrr_penalty'].append(bayesian_match_mrr_penalty)
-            study_metrics['hp_match_mrr_penalty'].append(hp_match_mrr_penalty)
+            bayesian_output = [
+                {
+                    'fd': mhb,
+                    'lhs': set(mhb.split(' => ')[0][1:-1].split(', ')),
+                    'rhs': set(mhb.split(' => ')[1].split(', '))
+                }
+                for mhb in max_h_bayesian
+            ]
+            hp_output = [
+                {
+                    'fd': mhhp,
+                    'lhs': set(mhhp.split(' => ')[0][1:-1].split(', ')),
+                    'rhs': set(mhhp.split(' => ')[1].split(', '))
+                }
+                for mhhp in max_h_hp
+            ]
 
-            # study_metrics['bayesian_match'].append(user_lhs == bayesian_lhs and user_rhs.issubset(bayesian_rhs))
-            # study_metrics['hp_match'].append(user_lhs == hp_lhs and user_rhs == user_rhs.issubset(hp_rhs))
+            bayesian_match_1, bayesian_match_mrr_1, bayesian_match_penalty_1, bayesian_match_mrr_penalty_1 = output_reward(user_h, bayesian_output[:1], fd_metadata)            
+            bayesian_match_3, bayesian_match_mrr_3, bayesian_match_penalty_3, bayesian_match_mrr_penalty_3 = output_reward(user_h, bayesian_output[:3], fd_metadata)
+            bayesian_match_5, bayesian_match_mrr_5, bayesian_match_penalty_5, bayesian_match_mrr_penalty_5 = output_reward(user_h, bayesian_output[:5], fd_metadata)
+            hp_match_1, hp_match_mrr_1, hp_match_penalty_1, hp_match_mrr_penalty_1 = output_reward(user_h, hp_output[:1], fd_metadata)
+            hp_match_3, hp_match_mrr_3, hp_match_penalty_3, hp_match_mrr_penalty_3 = output_reward(user_h, hp_output[:3], fd_metadata)
+            hp_match_5, hp_match_mrr_5, hp_match_penalty_5, hp_match_mrr_penalty_5 = output_reward(user_h, hp_output[:5], fd_metadata)
+            
+            study_metrics['bayesian_match_1'].append(bayesian_match_1)
+            study_metrics['hp_match_1'].append(hp_match_1)
+            study_metrics['bayesian_match_mrr_1'].append(bayesian_match_mrr_1)
+            study_metrics['hp_match_mrr_1'].append(hp_match_mrr_1)
+            study_metrics['bayesian_match_penalty_1'].append(bayesian_match_penalty_1)
+            study_metrics['hp_match_penalty_1'].append(hp_match_penalty_1)
+            study_metrics['bayesian_match_mrr_penalty_1'].append(bayesian_match_mrr_penalty_1)
+            study_metrics['hp_match_mrr_penalty_1'].append(hp_match_mrr_penalty_1)
+            
+            study_metrics['bayesian_match_3'].append(bayesian_match_3)
+            study_metrics['hp_match_3'].append(hp_match_3)
+            study_metrics['bayesian_match_mrr_3'].append(bayesian_match_mrr_3)
+            study_metrics['hp_match_mrr_3'].append(hp_match_mrr_3)
+            study_metrics['bayesian_match_penalty_3'].append(bayesian_match_penalty_3)
+            study_metrics['hp_match_penalty_3'].append(hp_match_penalty_3)
+            study_metrics['bayesian_match_mrr_penalty_3'].append(bayesian_match_mrr_penalty_3)
+            study_metrics['hp_match_mrr_penalty_3'].append(hp_match_mrr_penalty_3)
+
+            study_metrics['bayesian_match_5'].append(bayesian_match_5)
+            study_metrics['hp_match_5'].append(hp_match_5)
+            study_metrics['bayesian_match_mrr_5'].append(bayesian_match_mrr_5)
+            study_metrics['hp_match_mrr_5'].append(hp_match_mrr_5)
+            study_metrics['bayesian_match_penalty_5'].append(bayesian_match_penalty_5)
+            study_metrics['hp_match_penalty_5'].append(hp_match_penalty_5)
+            study_metrics['bayesian_match_mrr_penalty_5'].append(bayesian_match_mrr_penalty_5)
+            study_metrics['hp_match_mrr_penalty_5'].append(hp_match_mrr_penalty_5)
+
         else:
-            study_metrics['bayesian_match'].append(0)
-            study_metrics['hp_match'].append(0)
-            study_metrics['bayesian_match_mrr'].append(0)
-            study_metrics['hp_match_mrr'].append(0)
-            study_metrics['bayesian_match_penalty'].append(0)
-            study_metrics['hp_match_penalty'].append(0)
-            study_metrics['bayesian_match_mrr_penalty'].append(0)
-            study_metrics['hp_match_mrr_penalty'].append(0)
+            study_metrics['bayesian_match_1'].append(0)
+            study_metrics['hp_match_1'].append(0)
+            study_metrics['bayesian_match_mrr_1'].append(0)
+            study_metrics['hp_match_mrr_1'].append(0)
+            study_metrics['bayesian_match_penalty_1'].append(0)
+            study_metrics['hp_match_penalty_1'].append(0)
+            study_metrics['bayesian_match_mrr_penalty_1'].append(0)
+            study_metrics['hp_match_mrr_penalty_1'].append(0)
+            
+            study_metrics['bayesian_match_3'].append(0)
+            study_metrics['hp_match_3'].append(0)
+            study_metrics['bayesian_match_mrr_3'].append(0)
+            study_metrics['hp_match_mrr_3'].append(0)
+            study_metrics['bayesian_match_penalty_3'].append(0)
+            study_metrics['hp_match_penalty_3'].append(0)
+            study_metrics['bayesian_match_mrr_penalty_3'].append(0)
+            study_metrics['hp_match_mrr_penalty_3'].append(0)
+
+            study_metrics['bayesian_match_5'].append(0)
+            study_metrics['hp_match_5'].append(0)
+            study_metrics['bayesian_match_mrr_5'].append(0)
+            study_metrics['hp_match_mrr_5'].append(0)
+            study_metrics['bayesian_match_penalty_5'].append(0)
+            study_metrics['hp_match_penalty_5'].append(0)
+            study_metrics['bayesian_match_mrr_penalty_5'].append(0)
+            study_metrics['hp_match_mrr_penalty_5'].append(0)
 
         # Medium-term memory violation calculations
         if i > 1:
@@ -1205,43 +1275,6 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
         else:
             mt_3_vio_f1 = 0
 
-        # Short and long-term error precision, recall, and F1
-        # if iter_errors_marked > 0:
-        #     iter_err_precision = iter_errors_found / iter_errors_marked
-        # else:
-        #     iter_err_precision = 1
-        
-        # if iter_errors_total > 0:
-        #     iter_err_recall = iter_errors_found / iter_errors_total
-        # else:
-        #     iter_err_recall = 1
-
-        # if iter_err_precision > 0 or iter_err_recall > 0:
-        #     iter_err_f1 = 2 * (iter_err_precision * iter_err_recall) / (iter_err_precision + iter_err_recall)
-        # else:
-        #     iter_err_f1 = 1
-
-        # if all_errors_marked > 0:
-        #     all_err_precision = all_errors_found / all_errors_marked
-        # else:
-        #     all_err_precision = 1
-        
-        # if all_errors_total > 0:
-        #     all_err_recall = all_errors_found / all_errors_total
-        # else:
-        #     all_err_recall = 1
-
-        # if all_err_precision > 0 or all_err_recall > 0:
-        #     all_err_f1 = 2 * (all_err_precision * all_err_recall) / (all_err_precision + all_err_recall)
-        # else:
-        #     all_err_f1 = 1
-
-        # study_metrics['iter_err_precision'].append({ 'iter_num': int(i), 'value': iter_err_precision, 'elapsed_time': elapsed_time })
-        # study_metrics['iter_err_recall'].append({ 'iter_num': int(i), 'value': iter_err_recall, 'elapsed_time': elapsed_time })
-        # study_metrics['iter_err_f1'].append({ 'iter_num': int(i), 'value': iter_err_f1, 'elapsed_time': elapsed_time })
-        # study_metrics['all_err_precision'].append({ 'iter_num': int(i), 'value': all_err_precision, 'elapsed_time': elapsed_time })
-        # study_metrics['all_err_recall'].append({ 'iter_num': int(i), 'value': all_err_recall, 'elapsed_time': elapsed_time })
-        # study_metrics['all_err_f1'].append({ 'iter_num': int(i), 'value': all_err_f1, 'elapsed_time': elapsed_time })
         study_metrics['st_vio_recall'].append({ 'iter_num': int(i), 'value': st_vio_recall, 'elapsed_time': elapsed_time })
         study_metrics['mt_vio_recall'].append({ 'iter_num': int(i), 'value': mt_vio_recall, 'elapsed_time': elapsed_time })
         study_metrics['mt_2_vio_recall'].append({ 'iter_num': int(i), 'value': mt_2_vio_recall, 'elapsed_time': elapsed_time })
@@ -1275,12 +1308,6 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
         study_metrics['lt_vios_total'].append({ 'iter_num': int(i), 'value': list(lt_vios_total), 'elapsed_time': elapsed_time })
 
         if int(i) > 1:
-            # prev_found = study_metrics['st_vios_found'][-2]['value']
-            # prev_marked = study_metrics['st_vios_marked'][-2]['value']
-            # prev_total = study_metrics['st_vios_total'][-2]['value']
-            # curr_found = study_metrics['st_vios_found'][-1]['value']
-            # curr_marked = study_metrics['st_vios_marked'][-1]['value']
-            # curr_total = study_metrics['st_vios_total'][-1]['value']
             found = list()
             marked = list()
             total = list()
@@ -1307,34 +1334,41 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
             cumulative_precision_noover = study_metrics['st_vio_precision'][-1]['value']
             cumulative_recall_noover = study_metrics['st_vio_recall'][-1]['value']
         
+        cumulative_f1 = 0 if cumulative_precision == 0 and cumulative_recall == 0 else (2 * cumulative_precision * cumulative_recall) / (cumulative_precision + cumulative_recall)
+        cumulative_f1_noover = 0 if cumulative_precision_noover == 0 and cumulative_recall_noover == 0 else (2 * cumulative_precision_noover * cumulative_recall_noover) / (cumulative_precision_noover + cumulative_recall_noover)
+        
         study_metrics['cumulative_precision'].append({ 'iter_num': int(i), 'value': cumulative_precision, 'elapsed_time': elapsed_time })
         study_metrics['cumulative_recall'].append({ 'iter_num': int(i), 'value': cumulative_recall, 'elapsed_time': elapsed_time })
         study_metrics['cumulative_precision_noover'].append({ 'iter_num': int(i), 'value': cumulative_precision_noover, 'elapsed_time': elapsed_time })
         study_metrics['cumulative_recall_noover'].append({ 'iter_num': int(i), 'value': cumulative_recall_noover, 'elapsed_time': elapsed_time })
+        study_metrics['cumulative_f1'].append({ 'iter_num': int(i), 'value': cumulative_f1, 'elapsed_time': elapsed_time })
+        study_metrics['cumulative_f1_noover'].append({ 'iter_num': int(i), 'value': cumulative_f1_noover, 'elapsed_time': elapsed_time })
 
-        # study_metrics['iter_errors_marked'].append({ 'iter_num': int(i), 'value': iter_errors_marked, 'elapsed_time': elapsed_time })
-        # study_metrics['iter_errors_found'].append({ 'iter_num': int(i), 'value': iter_errors_found, 'elapsed_time': elapsed_time })
-        # study_metrics['iter_errors_total'].append({ 'iter_num': int(i), 'value': iter_errors_total, 'elapsed_time': elapsed_time })
-        # study_metrics['all_errors_marked'].append({ 'iter_num': int(i), 'value': all_errors_marked, 'elapsed_time': elapsed_time })
-        # study_metrics['all_errors_found'].append({ 'iter_num': int(i), 'value': all_errors_found, 'elapsed_time': elapsed_time })
-        # study_metrics['all_errors_total'].append({ 'iter_num': int(i), 'value': all_errors_total, 'elapsed_time': elapsed_time })
     if len(iters) > 0:
-        study_metrics['bayesian_match_rate'] = sum([i for i in study_metrics['bayesian_match']]) / len(study_metrics['bayesian_match'])
-        study_metrics['hp_match_rate'] = sum([i for i in study_metrics['hp_match']]) / len(study_metrics['hp_match'])
-        study_metrics['bayesian_match_rate_mrr'] = sum([i for i in study_metrics['bayesian_match_mrr']]) / len(study_metrics['bayesian_match_mrr'])
-        study_metrics['hp_match_rate_mrr'] = sum([i for i in study_metrics['hp_match_mrr']]) / len(study_metrics['hp_match_mrr'])
-        # console.log(study_metrics['bayesian_match_rate'])
-        # console.log(study_metrics['hp_match_rate'])
-        # console.log(study_metrics['bayesian_match_rate_mrr'])
-        # console.log(study_metrics['hp_match_rate_mrr'])
+        study_metrics['bayesian_match_rate_1'] = np.mean(study_metrics['bayesian_match_1'])
+        study_metrics['hp_match_rate_1'] = np.mean(study_metrics['hp_match_1'])
+        study_metrics['bayesian_match_rate_mrr_1'] = np.mean(study_metrics['bayesian_match_mrr_1'])
+        study_metrics['hp_match_rate_mrr_1'] = np.mean(study_metrics['hp_match_mrr_1'])
+        study_metrics['bayesian_match_rate_3'] = np.mean(study_metrics['bayesian_match_3'])
+        study_metrics['hp_match_rate_3'] = np.mean(study_metrics['hp_match_3'])
+        study_metrics['bayesian_match_rate_mrr_3'] = np.mean(study_metrics['bayesian_match_mrr_3'])
+        study_metrics['hp_match_rate_mrr_3'] = np.mean(study_metrics['hp_match_mrr_3'])
+        study_metrics['bayesian_match_rate_5'] = np.mean(study_metrics['bayesian_match_5'])
+        study_metrics['hp_match_rate_5'] = np.mean(study_metrics['hp_match_5'])
+        study_metrics['bayesian_match_rate_mrr_5'] = np.mean(study_metrics['bayesian_match_mrr_5'])
+        study_metrics['hp_match_rate_mrr_5'] = np.mean(study_metrics['hp_match_mrr_5'])
 
-        study_metrics['bayesian_match_rate_penalty'] = sum([i for i in study_metrics['bayesian_match_penalty']]) / len(study_metrics['bayesian_match_penalty'])
-        study_metrics['hp_match_rate_penalty'] = sum([i for i in study_metrics['hp_match_penalty']]) / len(study_metrics['hp_match_penalty'])
-        study_metrics['bayesian_match_rate_mrr_penalty'] = sum([i for i in study_metrics['bayesian_match_mrr_penalty']]) / len(study_metrics['bayesian_match_mrr_penalty'])
-        study_metrics['hp_match_rate_mrr_penalty'] = sum([i for i in study_metrics['hp_match_mrr_penalty']]) / len(study_metrics['hp_match_mrr_penalty'])
-        # console.log(study_metrics['bayesian_match_rate_penalty'])
-        # console.log(study_metrics['hp_match_rate_penalty'])
-        # console.log(study_metrics['bayesian_match_rate_mrr_penalty'])
-        # console.log(study_metrics['hp_match_rate_mrr_penalty'])
+        study_metrics['bayesian_match_rate_penalty_1'] = np.mean(study_metrics['bayesian_match_penalty_1'])
+        study_metrics['hp_match_rate_penalty_1'] = np.mean(study_metrics['hp_match_penalty_1'])
+        study_metrics['bayesian_match_rate_mrr_penalty_1'] = np.mean(study_metrics['bayesian_match_mrr_penalty_1'])
+        study_metrics['hp_match_rate_mrr_penalty_1'] = np.mean(study_metrics['hp_match_mrr_penalty_1'])
+        study_metrics['bayesian_match_rate_penalty_3'] = np.mean(study_metrics['bayesian_match_penalty_3'])
+        study_metrics['hp_match_rate_penalty_3'] = np.mean(study_metrics['hp_match_penalty_3'])
+        study_metrics['bayesian_match_rate_mrr_penalty_3'] = np.mean(study_metrics['bayesian_match_mrr_penalty_3'])
+        study_metrics['hp_match_rate_mrr_penalty_3'] = np.mean(study_metrics['hp_match_mrr_penalty_3'])
+        study_metrics['bayesian_match_rate_penalty_5'] = np.mean(study_metrics['bayesian_match_penalty_5'])
+        study_metrics['hp_match_rate_penalty_5'] = np.mean(study_metrics['hp_match_penalty_5'])
+        study_metrics['bayesian_match_rate_mrr_penalty_5'] = np.mean(study_metrics['bayesian_match_mrr_penalty_5'])
+        study_metrics['hp_match_rate_mrr_penalty_5'] = np.mean(study_metrics['hp_match_mrr_penalty_5'])
 
     return study_metrics, fd_metadata
