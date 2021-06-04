@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 from rich.console import Console
 import os
 import statstests
+from itertools import zip_longest
 
 console = Console()
 
@@ -403,6 +404,11 @@ def eval_h_grouped(group_type, run_type, id, background=None, max_iters=None):
     
     all_fd_f1_deltas = list()
     all_user_f1_deltas = list()
+
+    all_cumulative_f1_06 = list()
+    all_cumulative_f1_noover_06 = list()
+    all_cumulative_f1_045 = list()
+    all_cumulative_f1_noover_045 = list()
     
     for project_id in project_ids:
         console.log(project_id, '\n')
@@ -643,33 +649,40 @@ def eval_h_grouped(group_type, run_type, id, background=None, max_iters=None):
             # bayesian_match_rate_1.append(study_metrics['bayesian_match_rate_1'])
             bayesian_match_rate_mrr_1.extend(study_metrics['bayesian_match_mrr_1'])
             # hp_match_rate_1.append(study_metrics['hp_match_rate_1'])
-            hp_match_rate_mrr_1.extend(study_metrics['hp_match_mrr_1'])
+            hp_match_rate_mrr_1.extend(study_metrics['hp_match_mrr_1'][1:])
             # bayesian_match_rate_penalty_1.append(study_metrics['bayesian_match_rate_penalty_1'])
             bayesian_match_rate_mrr_penalty_1.extend(study_metrics['bayesian_match_mrr_penalty_1'])
             # hp_match_rate_penalty_1.append(study_metrics['hp_match_rate_penalty_1'])
-            hp_match_rate_mrr_penalty_1.extend(study_metrics['hp_match_mrr_penalty_1'])
+            hp_match_rate_mrr_penalty_1.extend(study_metrics['hp_match_mrr_penalty_1'][1:])
             
             # bayesian_match_rate_3.append(study_metrics['bayesian_match_rate_3'])
             bayesian_match_rate_mrr_3.extend(study_metrics['bayesian_match_mrr_3'])
             # hp_match_rate_3.append(study_metrics['hp_match_rate_3'])
-            hp_match_rate_mrr_3.extend(study_metrics['hp_match_mrr_3'])
+            hp_match_rate_mrr_3.extend(study_metrics['hp_match_mrr_3'][1:])
             # bayesian_match_rate_penalty_3.append(study_metrics['bayesian_match_rate_penalty_3'])
             bayesian_match_rate_mrr_penalty_3.extend(study_metrics['bayesian_match_mrr_penalty_3'])
             # hp_match_rate_penalty_3.append(study_metrics['hp_match_rate_penalty_3'])
-            hp_match_rate_mrr_penalty_3.extend(study_metrics['hp_match_mrr_penalty_3'])
+            hp_match_rate_mrr_penalty_3.extend(study_metrics['hp_match_mrr_penalty_3'][1:])
 
             # bayesian_match_rate_5.append(study_metrics['bayesian_match_rate_5'])
             bayesian_match_rate_mrr_5.extend(study_metrics['bayesian_match_mrr_5'])
             # hp_match_rate_5.append(study_metrics['hp_match_rate_5'])
-            hp_match_rate_mrr_5.extend(study_metrics['hp_match_mrr_5'])
+            hp_match_rate_mrr_5.extend(study_metrics['hp_match_mrr_5'][1:])
             # bayesian_match_rate_penalty_5.append(study_metrics['bayesian_match_rate_penalty_5'])
             bayesian_match_rate_mrr_penalty_5.extend(study_metrics['bayesian_match_mrr_penalty_5'])
             # hp_match_rate_penalty_5.append(study_metrics['hp_match_rate_penalty_5'])
-            hp_match_rate_mrr_penalty_5.extend(study_metrics['hp_match_mrr_penalty_5'])
+            hp_match_rate_mrr_penalty_5.extend(study_metrics['hp_match_mrr_penalty_5'][1:])
         
         cumulative_precision, cumulative_recall = study_metrics['cumulative_precision'], study_metrics['cumulative_recall']
         cumulative_precision_noover, cumulative_recall_noover = study_metrics['cumulative_precision_noover'], study_metrics['cumulative_recall_noover']
         cumulative_f1, cumulative_f1_noover = study_metrics['cumulative_f1'], study_metrics['cumulative_f1_noover']
+
+        if alt_h_ratio == 0.6:
+            all_cumulative_f1_06.append([i['value'] for i in cumulative_f1])
+            all_cumulative_f1_noover_06.append([i['value'] for i in cumulative_f1_noover])
+        else:
+            all_cumulative_f1_045.append([i['value'] for i in cumulative_f1])
+            all_cumulative_f1_noover_045.append([i['value'] for i in cumulative_f1_noover])
 
         if len(user_h_history) > 2:
 
@@ -721,10 +734,10 @@ def eval_h_grouped(group_type, run_type, id, background=None, max_iters=None):
                 # console.log(fd_f1_delta_history)
                 ax13.plot([i['iter_num'] for i in user_h_history if i['iter_num'] > 0], fd_f1_delta_history)
 
-                ax16.plot([i['iter_num'] for i in cumulative_f1], [i['value'] for i in cumulative_f1], color='blue' if alt_h_ratio == 0.6 else 'green')
+                ax16.plot([i['iter_num'] for i in cumulative_f1], [i['value'] for i in cumulative_f1], color='#0000ff55' if alt_h_ratio == 0.6 else '#00ff0055', linewidth=1)
                 # statstests.mannkendall([i['value'] for i in cumulative_precision_noover])
 
-                ax17.plot([i['iter_num'] for i in cumulative_f1_noover], [i['value'] for i in cumulative_f1_noover], color='blue' if alt_h_ratio == 0.6 else 'green')
+                ax17.plot([i['iter_num'] for i in cumulative_f1_noover], [i['value'] for i in cumulative_f1_noover], color='#0000ff55' if alt_h_ratio == 0.6 else '#00ff0055', linewidth=1)
                 # statstests.mannkendall([i['value'] for i in cumulative_recall_noover])
 
             else:
@@ -769,30 +782,30 @@ def eval_h_grouped(group_type, run_type, id, background=None, max_iters=None):
                 # console.log(fd_f1_delta_history)
                 ax13.plot([i['iter_num'] for i in user_h_history if i['iter_num'] > 0 and i['iter_num'] <= max_iters], fd_f1_delta_history)
 
-                ax16.plot([i['iter_num'] for i in cumulative_f1], [i['value'] for i in cumulative_f1], color='blue' if alt_h_ratio == 0.6 else 'green')
+                ax16.plot([i['iter_num'] for i in cumulative_f1], [i['value'] for i in cumulative_f1], color='#0000ff55' if alt_h_ratio == 0.6 else '#00ff0055', linewidth=1)
                 # statstests.mannkendall([i['value'] for i in cumulative_precision_noover])
 
-                ax17.plot([i['iter_num'] for i in cumulative_f1_noover], [i['value'] for i in cumulative_f1_noover], color='blue' if alt_h_ratio == 0.6 else 'green')
+                ax17.plot([i['iter_num'] for i in cumulative_f1_noover], [i['value'] for i in cumulative_f1_noover], color='#0000ff55' if alt_h_ratio == 0.6 else '#00ff0055', linewidth=1)
                 # statstests.mannkendall([i['value'] for i in cumulative_recall_noover])
 
-            # r = f1_mk_results[-1]
-            # if r[1] <= 0.05:
-            #     if r[0] == 'increasing':
-            #         user_f1_p_dict['significant-positive'] += 1
-            #     else:
-            #         user_f1_p_dict['significant-negative'] += 1
-            # else:
-            #     user_f1_p_dict['insignificant'] += 1
+            r = f1_mk_results[-1]
+            if r[1] <= 0.05:
+                if r[0] == 'increasing':
+                    user_f1_p_dict['significant-positive'] += 1
+                else:
+                    user_f1_p_dict['significant-negative'] += 1
+            else:
+                user_f1_p_dict['insignificant'] += 1
             # # ax14.plot([r[1]], np.zeros(1), color='g' if r[2] > 0 else 'grey' if r[2] == 0 else 'r', marker='x')
             
-            # r = f1_seen_mk_results[-1]
-            # if r[1] <= 0.05:
-            #     if r[0] == 'increasing':
-            #         user_seen_f1_p_dict['significant-positive'] += 1
-            #     else:
-            #         user_seen_f1_p_dict['significant-negative'] += 1
-            # else:
-            #     user_seen_f1_p_dict['insignificant'] += 1
+            r = f1_seen_mk_results[-1]
+            if r[1] <= 0.05:
+                if r[0] == 'increasing':
+                    user_seen_f1_p_dict['significant-positive'] += 1
+                else:
+                    user_seen_f1_p_dict['significant-negative'] += 1
+            else:
+                user_seen_f1_p_dict['insignificant'] += 1
             # ax15.plot([r[1]], np.zeros(1), color='g' if r[2] > 0 else 'grey' if r[2] == 0 else 'r', marker='x')
 
             r = user_f1_mk_results[-1]
@@ -803,6 +816,14 @@ def eval_h_grouped(group_type, run_type, id, background=None, max_iters=None):
                     user_f1_p_dict['significant-negative'] += 1
             else:
                 user_f1_p_dict['insignificant'] += 1
+    
+    if group_type == 'scenario':
+        all_cumulative_f1_06 = np.nanmean(np.array(list(zip_longest(*all_cumulative_f1_06)), dtype=float), axis=1)
+        all_cumulative_f1_noover_06 = np.nanmean(np.array(list(zip_longest(*all_cumulative_f1_noover_06)), dtype=float), axis=1)
+        all_cumulative_f1_045 = np.nanmean(np.array(list(zip_longest(*all_cumulative_f1_045)), dtype=float), axis=1)
+        all_cumulative_f1_noover_045 = np.nanmean(np.array(list(zip_longest(*all_cumulative_f1_noover_045)), dtype=float), axis=1)
+        ax16.plot(range(1, len(all_cumulative_f1_06)+1), all_cumulative_f1_06, color='blue', linewidth=3)
+        ax16.plot(range(1, len(all_cumulative_f1_045)+1), all_cumulative_f1_045, color='green', linewidth=3)
 
     ax1.set_xlabel('Iteration #')
     ax1.set_ylabel('Confidence')
@@ -919,95 +940,99 @@ def eval_h_grouped(group_type, run_type, id, background=None, max_iters=None):
         # Comparing f1 of user hypotheses with different alt h configurations
         _, user_f1_alt_h_p = sp.stats.ttest_ind(user_f1_06, user_f1_045)
 
+        with open('./plots/alt-h-stat-test/' + 's' + scenario_id + (('-i' + str(max_iters)) if max_iters is not None else '') + '.json', 'w') as f:
+            json.dump(user_f1_alt_h_p, f)
+
+    if background is None:
         # Bayes vs. HP
         # if np.array_equal(bayesian_match_rate_mrr_3, hp_match_rate_mrr_3):
         #     bayes_hp_3_wilcoxon_p = 1
         # else:
         #     _, bayes_hp_3_wilcoxon_p = sp.stats.wilcoxon(bayesian_match_rate_mrr_3, hp_match_rate_mrr_3)
-        _, bayes_hp_1_ttest_rel_p = sp.stats.ttest_rel(bayesian_match_rate_mrr_1, hp_match_rate_mrr_1)
-        _, bayes_hp_3_ttest_rel_p = sp.stats.ttest_rel(bayesian_match_rate_mrr_3, hp_match_rate_mrr_3)
+        _, bayes_hp_1_ttest_ind_p = sp.stats.ttest_ind(bayesian_match_rate_mrr_1, hp_match_rate_mrr_1)
+        _, bayes_hp_3_ttest_ind_p = sp.stats.ttest_ind(bayesian_match_rate_mrr_3, hp_match_rate_mrr_3)
         
         # if np.array_equal(bayesian_match_rate_mrr_5, hp_match_rate_mrr_5):
         #     bayes_hp_5_wilcoxon_p = 1
         # else:
         #     _, bayes_hp_5_wilcoxon_p = sp.stats.wilcoxon(bayesian_match_rate_mrr_5, hp_match_rate_mrr_5)
-        _, bayes_hp_5_ttest_rel_p = sp.stats.ttest_rel(bayesian_match_rate_mrr_5, hp_match_rate_mrr_5)
+        _, bayes_hp_5_ttest_ind_p = sp.stats.ttest_ind(bayesian_match_rate_mrr_5, hp_match_rate_mrr_5)
         
         # Bayes vs. HP (w/ Sub-Super)
         # if np.array_equal(bayesian_match_rate_mrr_penalty_3, hp_match_rate_mrr_penalty_3):
         #     bayes_hp_penalty_3_wilcoxon_p = 1
         # else:
         #     _, bayes_hp_penalty_3_wilcoxon_p = sp.stats.wilcoxon(bayesian_match_rate_mrr_penalty_3, hp_match_rate_mrr_penalty_3)
-        _, bayes_hp_penalty_1_ttest_rel_p = sp.stats.ttest_rel(bayesian_match_rate_mrr_penalty_1, hp_match_rate_mrr_penalty_1)
-        _, bayes_hp_penalty_3_ttest_rel_p = sp.stats.ttest_rel(bayesian_match_rate_mrr_penalty_3, hp_match_rate_mrr_penalty_3)
+        _, bayes_hp_penalty_1_ttest_ind_p = sp.stats.ttest_ind(bayesian_match_rate_mrr_penalty_1, hp_match_rate_mrr_penalty_1)
+        _, bayes_hp_penalty_3_ttest_ind_p = sp.stats.ttest_ind(bayesian_match_rate_mrr_penalty_3, hp_match_rate_mrr_penalty_3)
         
         # if np.array_equal(bayesian_match_rate_mrr_penalty_5, hp_match_rate_mrr_penalty_5):
         #     bayes_hp_penalty_5_wilcoxon_p = 1
         # else:
         #     _, bayes_hp_penalty_5_wilcoxon_p = sp.stats.wilcoxon(bayesian_match_rate_mrr_penalty_5, hp_match_rate_mrr_penalty_5)
-        _, bayes_hp_penalty_5_ttest_rel_p = sp.stats.ttest_rel(bayesian_match_rate_mrr_penalty_5, hp_match_rate_mrr_penalty_5)
+        _, bayes_hp_penalty_5_ttest_ind_p = sp.stats.ttest_ind(bayesian_match_rate_mrr_penalty_5, hp_match_rate_mrr_penalty_5)
 
         # Bayes-3 vs. Bayes-5
         # if np.array_equal(bayesian_match_rate_mrr_3, bayesian_match_rate_mrr_5):
         #     bayes_mrr_wilcoxon_p = 1
         # else:
         #     _, bayes_mrr_wilcoxon_p = sp.stats.wilcoxon(bayesian_match_rate_mrr_3, bayesian_match_rate_mrr_5)
-        _, bayes_mrr_1_3_ttest_rel_p = sp.stats.ttest_rel(bayesian_match_rate_mrr_1, bayesian_match_rate_mrr_3)
-        _, bayes_mrr_1_5_ttest_rel_p = sp.stats.ttest_rel(bayesian_match_rate_mrr_1, bayesian_match_rate_mrr_5)
-        _, bayes_mrr_3_5_ttest_rel_p = sp.stats.ttest_rel(bayesian_match_rate_mrr_3, bayesian_match_rate_mrr_5)
+        _, bayes_mrr_1_3_ttest_ind_p = sp.stats.ttest_ind(bayesian_match_rate_mrr_1, bayesian_match_rate_mrr_3)
+        _, bayes_mrr_1_5_ttest_ind_p = sp.stats.ttest_ind(bayesian_match_rate_mrr_1, bayesian_match_rate_mrr_5)
+        _, bayes_mrr_3_5_ttest_ind_p = sp.stats.ttest_ind(bayesian_match_rate_mrr_3, bayesian_match_rate_mrr_5)
         
         # if np.array_equal(bayesian_match_rate_mrr_penalty_3, bayesian_match_rate_mrr_penalty_5):
         #     bayes_mrr_penalty_wilcoxon_p = 1
         # else:
         #     _, bayes_mrr_penalty_wilcoxon_p = sp.stats.wilcoxon(bayesian_match_rate_mrr_penalty_3, bayesian_match_rate_mrr_penalty_5)
-        _, bayes_mrr_penalty_1_3_ttest_rel_p = sp.stats.ttest_rel(bayesian_match_rate_mrr_penalty_1, bayesian_match_rate_mrr_penalty_3)
-        _, bayes_mrr_penalty_1_5_ttest_rel_p = sp.stats.ttest_rel(bayesian_match_rate_mrr_penalty_1, bayesian_match_rate_mrr_penalty_5)
-        _, bayes_mrr_penalty_3_5_ttest_rel_p = sp.stats.ttest_rel(bayesian_match_rate_mrr_penalty_3, bayesian_match_rate_mrr_penalty_5)
+        _, bayes_mrr_penalty_1_3_ttest_ind_p = sp.stats.ttest_ind(bayesian_match_rate_mrr_penalty_1, bayesian_match_rate_mrr_penalty_3)
+        _, bayes_mrr_penalty_1_5_ttest_ind_p = sp.stats.ttest_ind(bayesian_match_rate_mrr_penalty_1, bayesian_match_rate_mrr_penalty_5)
+        _, bayes_mrr_penalty_3_5_ttest_ind_p = sp.stats.ttest_ind(bayesian_match_rate_mrr_penalty_3, bayesian_match_rate_mrr_penalty_5)
         
         # HP-3 vs. HP-5
         # if np.array_equal(hp_match_rate_mrr_3, hp_match_rate_mrr_5):
         #     hp_mrr_wilcoxon_p = 1
         # else:
         #     _, hp_mrr_wilcoxon_p = sp.stats.wilcoxon(hp_match_rate_mrr_3, hp_match_rate_mrr_5)
-        _, hp_mrr_1_3_ttest_rel_p = sp.stats.ttest_rel(hp_match_rate_mrr_1, hp_match_rate_mrr_3)
-        _, hp_mrr_1_5_ttest_rel_p = sp.stats.ttest_rel(hp_match_rate_mrr_1, hp_match_rate_mrr_5)
-        _, hp_mrr_3_5_ttest_rel_p = sp.stats.ttest_rel(hp_match_rate_mrr_3, hp_match_rate_mrr_5)
+        _, hp_mrr_1_3_ttest_ind_p = sp.stats.ttest_ind(hp_match_rate_mrr_1, hp_match_rate_mrr_3)
+        _, hp_mrr_1_5_ttest_ind_p = sp.stats.ttest_ind(hp_match_rate_mrr_1, hp_match_rate_mrr_5)
+        _, hp_mrr_3_5_ttest_ind_p = sp.stats.ttest_ind(hp_match_rate_mrr_3, hp_match_rate_mrr_5)
         
         # if np.array_equal(hp_match_rate_mrr_penalty_3, hp_match_rate_mrr_penalty_5):
         #     hp_mrr_penalty_wilcoxon_p = 1
         # else:
         #     _, hp_mrr_penalty_wilcoxon_p = sp.stats.wilcoxon(hp_match_rate_mrr_penalty_3, hp_match_rate_mrr_penalty_5)
-        _, hp_mrr_penalty_1_3_ttest_rel_p = sp.stats.ttest_rel(hp_match_rate_mrr_penalty_1, hp_match_rate_mrr_penalty_3)
-        _, hp_mrr_penalty_1_5_ttest_rel_p = sp.stats.ttest_rel(hp_match_rate_mrr_penalty_1, hp_match_rate_mrr_penalty_5)
-        _, hp_mrr_penalty_3_5_ttest_rel_p = sp.stats.ttest_rel(hp_match_rate_mrr_penalty_3, hp_match_rate_mrr_penalty_5)
+        _, hp_mrr_penalty_1_3_ttest_ind_p = sp.stats.ttest_ind(hp_match_rate_mrr_penalty_1, hp_match_rate_mrr_penalty_3)
+        _, hp_mrr_penalty_1_5_ttest_ind_p = sp.stats.ttest_ind(hp_match_rate_mrr_penalty_1, hp_match_rate_mrr_penalty_5)
+        _, hp_mrr_penalty_3_5_ttest_ind_p = sp.stats.ttest_ind(hp_match_rate_mrr_penalty_3, hp_match_rate_mrr_penalty_5)
 
         # Bayes vs. Bayes w/ Sub-Super
         # if np.array_equal(bayesian_match_rate_mrr_3, bayesian_match_rate_mrr_penalty_3):
         #     bayes_compare_3_wilcoxon_p = 1
         # else:
         #     _, bayes_compare_3_wilcoxon_p = sp.stats.wilcoxon(bayesian_match_rate_mrr_3, bayesian_match_rate_mrr_penalty_3)
-        _, bayes_compare_1_ttest_rel_p = sp.stats.ttest_rel(bayesian_match_rate_mrr_1, bayesian_match_rate_mrr_penalty_1)
-        _, bayes_compare_3_ttest_rel_p = sp.stats.ttest_rel(bayesian_match_rate_mrr_3, bayesian_match_rate_mrr_penalty_3)
+        _, bayes_compare_1_ttest_ind_p = sp.stats.ttest_ind(bayesian_match_rate_mrr_1, bayesian_match_rate_mrr_penalty_1)
+        _, bayes_compare_3_ttest_ind_p = sp.stats.ttest_ind(bayesian_match_rate_mrr_3, bayesian_match_rate_mrr_penalty_3)
         
         # if np.array_equal(bayesian_match_rate_mrr_5, bayesian_match_rate_mrr_penalty_5):
         #     bayes_compare_5_wilcoxon_p = 1
         # else:
         #     _, bayes_compare_5_wilcoxon_p = sp.stats.wilcoxon(bayesian_match_rate_mrr_5, bayesian_match_rate_mrr_penalty_5)
-        _, bayes_compare_5_ttest_rel_p = sp.stats.ttest_rel(bayesian_match_rate_mrr_5, bayesian_match_rate_mrr_penalty_5)
+        _, bayes_compare_5_ttest_ind_p = sp.stats.ttest_ind(bayesian_match_rate_mrr_5, bayesian_match_rate_mrr_penalty_5)
         
         # HP vs. HP w/ Sub-Super
         # if np.array_equal(hp_match_rate_mrr_3, hp_match_rate_mrr_penalty_3):
         #     hp_compare_3_wilcoxon_p = 1
         # else:
         #     _, hp_compare_3_wilcoxon_p = sp.stats.wilcoxon(hp_match_rate_mrr_3, hp_match_rate_mrr_penalty_3)
-        _, hp_compare_1_ttest_rel_p = sp.stats.ttest_rel(hp_match_rate_mrr_1, hp_match_rate_mrr_penalty_1)
-        _, hp_compare_3_ttest_rel_p = sp.stats.ttest_rel(hp_match_rate_mrr_3, hp_match_rate_mrr_penalty_3)
+        _, hp_compare_1_ttest_ind_p = sp.stats.ttest_ind(hp_match_rate_mrr_1, hp_match_rate_mrr_penalty_1)
+        _, hp_compare_3_ttest_ind_p = sp.stats.ttest_ind(hp_match_rate_mrr_3, hp_match_rate_mrr_penalty_3)
         
         # if np.array_equal(hp_match_rate_mrr_5, hp_match_rate_mrr_penalty_5):
         #     hp_compare_5_wilcoxon_p = 1
         # else:
         #     _, hp_compare_5_wilcoxon_p = sp.stats.wilcoxon(hp_match_rate_mrr_5, hp_match_rate_mrr_penalty_5)
-        _, hp_compare_5_ttest_rel_p = sp.stats.ttest_rel(hp_match_rate_mrr_5, hp_match_rate_mrr_penalty_5)
+        _, hp_compare_5_ttest_ind_p = sp.stats.ttest_ind(hp_match_rate_mrr_5, hp_match_rate_mrr_penalty_5)
 
         # Gather Wilcoxon results
         # wilcoxon_results = {
@@ -1026,44 +1051,44 @@ def eval_h_grouped(group_type, run_type, id, background=None, max_iters=None):
         # }
 
         # Gather t Test results
-        ttest_rel_results = {
-            'bayes_hp_1': bayes_hp_1_ttest_rel_p,
-            'bayes_hp_3': bayes_hp_3_ttest_rel_p,
-            'bayes_hp_5': bayes_hp_5_ttest_rel_p,
-            'bayes_hp_penalty_1': bayes_hp_penalty_1_ttest_rel_p,
-            'bayes_hp_penalty_3': bayes_hp_penalty_3_ttest_rel_p,
-            'bayes_hp_penalty_5': bayes_hp_penalty_5_ttest_rel_p,
-            'bayes_mrr_1_3': bayes_mrr_1_3_ttest_rel_p,
-            'bayes_mrr_1_5': bayes_mrr_1_5_ttest_rel_p,
-            'bayes_mrr_3_5': bayes_mrr_3_5_ttest_rel_p,
-            'bayes_mrr_penalty_1_3': bayes_mrr_penalty_1_3_ttest_rel_p,
-            'bayes_mrr_penalty_1_5': bayes_mrr_penalty_1_5_ttest_rel_p,
-            'bayes_mrr_penalty_3_5': bayes_mrr_penalty_3_5_ttest_rel_p,
-            'hp_mrr_1_3': hp_mrr_1_3_ttest_rel_p,
-            'hp_mrr_1_5': hp_mrr_1_5_ttest_rel_p,
-            'hp_mrr_3_5': hp_mrr_3_5_ttest_rel_p,
-            'hp_mrr_penalty_1_3': hp_mrr_penalty_1_3_ttest_rel_p,
-            'hp_mrr_penalty_1_5': hp_mrr_penalty_1_5_ttest_rel_p,
-            'hp_mrr_penalty_3_5': hp_mrr_penalty_3_5_ttest_rel_p,
-            'bayes_compare_1': bayes_compare_1_ttest_rel_p,
-            'bayes_compare_3': bayes_compare_3_ttest_rel_p,
-            'bayes_compare_5': bayes_compare_5_ttest_rel_p,
-            'hp_compare_1': hp_compare_1_ttest_rel_p,
-            'hp_compare_3': hp_compare_3_ttest_rel_p,
-            'hp_compare_5': hp_compare_5_ttest_rel_p
+        ttest_ind_results = {
+            'bayes_hp_1': bayes_hp_1_ttest_ind_p,
+            'bayes_hp_3': bayes_hp_3_ttest_ind_p,
+            'bayes_hp_5': bayes_hp_5_ttest_ind_p,
+            'bayes_hp_penalty_1': bayes_hp_penalty_1_ttest_ind_p,
+            'bayes_hp_penalty_3': bayes_hp_penalty_3_ttest_ind_p,
+            'bayes_hp_penalty_5': bayes_hp_penalty_5_ttest_ind_p,
+            'bayes_mrr_1_3': bayes_mrr_1_3_ttest_ind_p,
+            'bayes_mrr_1_5': bayes_mrr_1_5_ttest_ind_p,
+            'bayes_mrr_3_5': bayes_mrr_3_5_ttest_ind_p,
+            'bayes_mrr_penalty_1_3': bayes_mrr_penalty_1_3_ttest_ind_p,
+            'bayes_mrr_penalty_1_5': bayes_mrr_penalty_1_5_ttest_ind_p,
+            'bayes_mrr_penalty_3_5': bayes_mrr_penalty_3_5_ttest_ind_p,
+            'hp_mrr_1_3': hp_mrr_1_3_ttest_ind_p,
+            'hp_mrr_1_5': hp_mrr_1_5_ttest_ind_p,
+            'hp_mrr_3_5': hp_mrr_3_5_ttest_ind_p,
+            'hp_mrr_penalty_1_3': hp_mrr_penalty_1_3_ttest_ind_p,
+            'hp_mrr_penalty_1_5': hp_mrr_penalty_1_5_ttest_ind_p,
+            'hp_mrr_penalty_3_5': hp_mrr_penalty_3_5_ttest_ind_p,
+            'bayes_compare_1': bayes_compare_1_ttest_ind_p,
+            'bayes_compare_3': bayes_compare_3_ttest_ind_p,
+            'bayes_compare_5': bayes_compare_5_ttest_ind_p,
+            'hp_compare_1': hp_compare_1_ttest_ind_p,
+            'hp_compare_3': hp_compare_3_ttest_ind_p,
+            'hp_compare_5': hp_compare_5_ttest_ind_p
         }
 
-        with open('./plots/fd-f1-pairwise-deltas/' + 's' + scenario_id + (('-i' + str(max_iters)) if max_iters is not None else '') + '.json', 'w') as f:
+        with open('./plots/fd-f1-pairwise-deltas/' + (('s' + scenario_id) if group_type == 'scenario' else ('u' + user_num)) + (('-i' + str(max_iters)) if max_iters is not None else '') + '.json', 'w') as f:
             json.dump(np.mean(all_fd_f1_deltas), f, indent=4)
         
-        with open('./plots/user-f1-pairwise-deltas/' + 's' + scenario_id + (('-i' + str(max_iters)) if max_iters is not None else '') + '.json', 'w') as f:
+        with open('./plots/user-f1-pairwise-deltas/' + (('s' + scenario_id) if group_type == 'scenario' else ('u' + user_num)) + (('-i' + str(max_iters)) if max_iters is not None else '') + '.json', 'w') as f:
             json.dump(np.mean(all_user_f1_deltas), f, indent=4)
         
         # with open('./plots/wilcoxon-results/' + 's' + scenario_id + (('-i' + str(max_iters)) if max_iters is not None else '') + '.json', 'w') as f:
         #     json.dump(wilcoxon_results, f, indent=4)
         
-        with open('./plots/ttest-results/' + 's' + scenario_id + (('-i' + str(max_iters)) if max_iters is not None else '') + '.json', 'w') as f:
-            json.dump(ttest_rel_results, f, indent=4)
+        with open('./plots/ttest-results/' + (('s' + scenario_id) if group_type == 'scenario' else ('u' + user_num)) + (('-i' + str(max_iters)) if max_iters is not None else '') + '.json', 'w') as f:
+            json.dump(ttest_ind_results, f, indent=4)
 
     if background is None:
         fig1.savefig('./plots/fd-confidence/' + (('s' + scenario_id) if group_type == 'scenario' else ('u' + user_num)) + (('-i' + str(max_iters)) if max_iters is not None else '') + '.jpg')
@@ -1093,8 +1118,8 @@ def eval_h_grouped(group_type, run_type, id, background=None, max_iters=None):
         with open('./plots/f1-seen-mk-results/' + (('s' + scenario_id) if group_type == 'scenario' else ('u' + user_num)) + (('-i' + str(max_iters)) if max_iters is not None else '') + '.json', 'w') as f:
             json.dump(f1_seen_mk_results, f, indent=4)
         
-        with open('./plots/alt-h-stat-test/' + (('s' + scenario_id) if group_type == 'scenario' else ('u' + user_num)) + (('-i' + str(max_iters)) if max_iters is not None else '') + '.json', 'w') as f:
-            json.dump(user_f1_alt_h_p, f)
+        # with open('./plots/alt-h-stat-test/' + (('s' + scenario_id) if group_type == 'scenario' else ('u' + user_num)) + (('-i' + str(max_iters)) if max_iters is not None else '') + '.json', 'w') as f:
+        #     json.dump(user_f1_alt_h_p, f)
         
         with open('./plots/f1-mk-plots/' + (('s' + scenario_id) if group_type == 'scenario' else ('u' + user_num)) + (('-i' + str(max_iters)) if max_iters is not None else '') + '.json', 'w') as f:
             json.dump(user_f1_p_dict, f)
@@ -1130,8 +1155,8 @@ def eval_h_grouped(group_type, run_type, id, background=None, max_iters=None):
         with open('./plots/f1-seen-mk-results/' + (('s' + scenario_id) if group_type == 'scenario' else ('u' + user_num)) + '-' + background + (('-i' + str(max_iters)) if max_iters is not None else '') + '.json', 'w') as f:
             json.dump(f1_seen_mk_results, f, indent=4)
         
-        with open('./plots/alt_h_stat_test/' + (('s' + scenario_id) if group_type == 'scenario' else ('u' + user_num)) + '-' + background + (('-i' + str(max_iters)) if max_iters is not None else '') + '.json', 'w') as f:
-            json.dump(user_f1_alt_h_p, f)
+        # with open('./plots/alt_h_stat_test/' + (('s' + scenario_id) if group_type == 'scenario' else ('u' + user_num)) + '-' + background + (('-i' + str(max_iters)) if max_iters is not None else '') + '.json', 'w') as f:
+        #     json.dump(user_f1_alt_h_p, f)
         
         with open('./plots/f1-mk-plots/' + (('s' + scenario_id) if group_type == 'scenario' else ('u' + user_num)) + '-' + background + (('-i' + str(max_iters)) if max_iters is not None else '') + '.json', 'w') as f:
             json.dump(user_f1_p_dict, f)

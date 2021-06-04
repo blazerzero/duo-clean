@@ -613,6 +613,8 @@ def buildCompositionSpace(fds, h_space, dirty_data, clean_data, min_conf, max_an
 def initialPrior(mu, variance):
     if mu == 1:
         mu = 0.9999
+    elif mu == 0:
+        mu = 0.0001
     beta = (1 - mu) * ((mu * (1 - mu) / variance) - 1)
     alpha = (mu * beta) / (1 - mu)
     return abs(alpha), abs(beta)
@@ -825,6 +827,10 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
     # console.log(max_h)
     # if (max_h == 'Not Sure'):
         # console.log(0.5)
+    num_not_sub_super = len([h for h in h_space if max_h != 'Not Sure' and (\
+        not set(h['cfd'].split(' => ')[0][1:-1].split(', ')).issubset(set(max_h.split(' => ')[0][1:-1].split(', '))) and \
+        not set(h['cfd'].split(' => ')[1].split(', ')).issuperset(set(max_h.split(' => ')[1].split(', '))))])
+    console.log(num_not_sub_super)
     for h in h_space:
         lhs = set(h['cfd'].split(' => ')[0][1:-1].split(', '))
         rhs = set(h['cfd'].split(' => ')[1].split(', '))
@@ -832,7 +838,7 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
             existing_fds = list(fd_metadata.keys())
             existing_fd = next(ef for ef in existing_fds if set(ef.split(' => ')[0][1:-1].split(', ')) == lhs and set(ef.split(' => ')[1].split(', ')) == rhs)
             fd = existing_fd
-        except StopIteration:
+        except StopIteration as e:
             fd = h['cfd']
 
         if max_h != 'Not Sure':
@@ -843,6 +849,14 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
             max_h_rhs = set(max_h.split(' => ')[1].split(', '))
             if max_h_lhs == lhs and max_h_rhs == rhs:
                 max_h = fd
+            else:
+                try:
+                    existing_fds = list(fd_metadata.keys())
+                    existing_fd = next(ef for ef in existing_fds if set(ef.split(' => ')[0][1:-1].split(', ')) == max_h_lhs and set(ef.split(' => ')[1].split(', ')) == max_h_rhs)
+                    max_h = existing_fd
+                except StopIteration as e:
+                    console.log(e)
+                    return
                 # console.log(fd_metadata[max_h]['conf'])
 
         # mu = h['conf'] if h['cfd'] != max_h else 1
@@ -854,8 +868,11 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
         elif fd == max_h:
             mu = 1 - BAYESIAN_SMOOTHING
             alpha, beta = initialPrior(mu, variance)
+        elif lhs.issubset(max_h_lhs) or rhs.issuperset(max_h_rhs):
+            mu = (1 - BAYESIAN_SMOOTHING) * (1 - abs(fd_metadata[fd]['f1'] - fd_metadata[max_h]['f1']))
+            alpha, beta = initialPrior(mu, variance)
         else:
-            mu = BAYESIAN_SMOOTHING / (len(h_space) - 1)
+            mu = 0 if num_not_sub_super == 0 else BAYESIAN_SMOOTHING / num_not_sub_super
             alpha, beta = initialPrior(mu, variance)
 
         # console.log(fd_metadata.keys())
@@ -866,11 +883,16 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
 
         fd_metadata[fd]['alpha_history'] = [{ 'iter_num': 0, 'value': alpha, 'elapsed_time': 0 }]
         fd_metadata[fd]['beta_history'] = [{ 'iter_num': 0, 'value': beta, 'elapsed_time': 0 }]
-        fd_metadata[fd]['conf_history'] = [{ 'iter_num': 0, 'value': mu, 'elapsed_time': 0 }]
+        # fd_metadata[fd]['conf_history'] = [{ 'iter_num': 0, 'value': mu, 'elapsed_time': 0 }]
         fd_metadata[fd]['precision_history'] = list()
         fd_metadata[fd]['recall_history'] = list()
         fd_metadata[fd]['f1_history'] = list()
         fd_metadata[fd]['vios_in_sample'] = list()
+    
+    all_mu_sum = sum([f['conf'] for f in fd_metadata.values()])
+    for f in fd_metadata.values():
+        f['conf'] /= all_mu_sum
+        fd_metadata[fd]['conf_history'] = [{ 'iter_num': 0, 'value': f['conf'], 'elapsed_time': 0 }]
 
     if max_iters is not None:
         iters = range(1, min(max_iters, len(interaction_metadata['sample_history']))+1)
