@@ -734,10 +734,10 @@ def eval_h_grouped(group_type, run_type, id, background=None, max_iters=None):
                 # console.log(fd_f1_delta_history)
                 ax13.plot([i['iter_num'] for i in user_h_history if i['iter_num'] > 0], fd_f1_delta_history)
 
-                ax16.plot([i['iter_num'] for i in cumulative_f1], [i['value'] for i in cumulative_f1], color='#0000ff55' if alt_h_ratio == 0.6 else '#00ff0055', linewidth=1)
+                ax16.plot([i['iter_num'] for i in cumulative_f1], [i['value'] for i in cumulative_f1], color='#0000ff' if alt_h_ratio == 0.6 else '#00ff00', linewidth=1)
                 # statstests.mannkendall([i['value'] for i in cumulative_precision_noover])
 
-                ax17.plot([i['iter_num'] for i in cumulative_f1_noover], [i['value'] for i in cumulative_f1_noover], color='#0000ff55' if alt_h_ratio == 0.6 else '#00ff0055', linewidth=1)
+                ax17.plot([i['iter_num'] for i in cumulative_f1_noover], [i['value'] for i in cumulative_f1_noover], color='#0000ff' if alt_h_ratio == 0.6 else '#00ff00', linewidth=1)
                 # statstests.mannkendall([i['value'] for i in cumulative_recall_noover])
 
             else:
@@ -782,10 +782,10 @@ def eval_h_grouped(group_type, run_type, id, background=None, max_iters=None):
                 # console.log(fd_f1_delta_history)
                 ax13.plot([i['iter_num'] for i in user_h_history if i['iter_num'] > 0 and i['iter_num'] <= max_iters], fd_f1_delta_history)
 
-                ax16.plot([i['iter_num'] for i in cumulative_f1], [i['value'] for i in cumulative_f1], color='#0000ff55' if alt_h_ratio == 0.6 else '#00ff0055', linewidth=1)
+                ax16.plot([i['iter_num'] for i in cumulative_f1], [i['value'] for i in cumulative_f1], color='#0000ff' if alt_h_ratio == 0.6 else '#00ff00', linewidth=1)
                 # statstests.mannkendall([i['value'] for i in cumulative_precision_noover])
 
-                ax17.plot([i['iter_num'] for i in cumulative_f1_noover], [i['value'] for i in cumulative_f1_noover], color='#0000ff55' if alt_h_ratio == 0.6 else '#00ff0055', linewidth=1)
+                ax17.plot([i['iter_num'] for i in cumulative_f1_noover], [i['value'] for i in cumulative_f1_noover], color='#0000ff' if alt_h_ratio == 0.6 else '#00ff00', linewidth=1)
                 # statstests.mannkendall([i['value'] for i in cumulative_recall_noover])
 
             r = f1_mk_results[-1]
@@ -817,13 +817,13 @@ def eval_h_grouped(group_type, run_type, id, background=None, max_iters=None):
             else:
                 user_f1_p_dict['insignificant'] += 1
     
-    if group_type == 'scenario':
-        all_cumulative_f1_06 = np.nanmean(np.array(list(zip_longest(*all_cumulative_f1_06)), dtype=float), axis=1)
-        all_cumulative_f1_noover_06 = np.nanmean(np.array(list(zip_longest(*all_cumulative_f1_noover_06)), dtype=float), axis=1)
-        all_cumulative_f1_045 = np.nanmean(np.array(list(zip_longest(*all_cumulative_f1_045)), dtype=float), axis=1)
-        all_cumulative_f1_noover_045 = np.nanmean(np.array(list(zip_longest(*all_cumulative_f1_noover_045)), dtype=float), axis=1)
-        ax16.plot(range(1, len(all_cumulative_f1_06)+1), all_cumulative_f1_06, color='blue', linewidth=3)
-        ax16.plot(range(1, len(all_cumulative_f1_045)+1), all_cumulative_f1_045, color='green', linewidth=3)
+    # if group_type == 'scenario':
+    #     all_cumulative_f1_06 = np.nanmean(np.array(list(zip_longest(*all_cumulative_f1_06)), dtype=float), axis=1)
+    #     all_cumulative_f1_noover_06 = np.nanmean(np.array(list(zip_longest(*all_cumulative_f1_noover_06)), dtype=float), axis=1)
+    #     all_cumulative_f1_045 = np.nanmean(np.array(list(zip_longest(*all_cumulative_f1_045)), dtype=float), axis=1)
+    #     all_cumulative_f1_noover_045 = np.nanmean(np.array(list(zip_longest(*all_cumulative_f1_noover_045)), dtype=float), axis=1)
+    #     ax16.plot(range(1, len(all_cumulative_f1_06)+1), all_cumulative_f1_06, color='blue', linewidth=3)
+    #     ax16.plot(range(1, len(all_cumulative_f1_045)+1), all_cumulative_f1_045, color='green', linewidth=3)
 
     ax1.set_xlabel('Iteration #')
     ax1.set_ylabel('Confidence')
