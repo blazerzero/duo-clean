@@ -259,6 +259,7 @@ def eval_user_h(project_id, run_type):
 def eval_h_grouped(group_type, run_type, id, background=None, max_iters=None):
     pathstart = './docker-out/' if run_type == 'real' else './store/'
 
+    # Initialize plots
     fig1, ax1 = plt.subplots()
     fig2, ax2 = plt.subplots()
     fig3, ax3 = plt.subplots()
@@ -380,6 +381,8 @@ def eval_h_grouped(group_type, run_type, id, background=None, max_iters=None):
             project_info = json.load(f)
         scenario = project_info['scenario']
         scenario_id = project_info['scenario_id']
+        if project_info['email'] not in user_num_dict.keys():
+            continue
         user_num = str(user_num_dict[project_info['email']])
 
         # Test runs; not part of real data
@@ -412,6 +415,8 @@ def eval_h_grouped(group_type, run_type, id, background=None, max_iters=None):
     
     for project_id in project_ids:
         console.log(project_id, '\n')
+
+        # Get run data
         with open(pathstart + project_id + '/project_info.json', 'r') as f:
             project_info = json.load(f)
         with open('scenarios.json', 'r') as f:
@@ -501,6 +506,7 @@ def eval_h_grouped(group_type, run_type, id, background=None, max_iters=None):
             fd_m['recall'] = len([v for v in fd_m['vios'] if v in target_vios]) / len(target_vios)
             fd_m['f1'] = 0 if fd_m['precision'] == 0 and fd_m['recall'] == 0 else (2 * fd_m['precision'] * fd_m['recall']) / (fd_m['precision'] + fd_m['recall'])
 
+        # Put run data through stat calculator function
         study_metrics, fd_metadata = helpers.deriveStats(
             interaction_metadata,
             fd_metadata,
@@ -512,6 +518,7 @@ def eval_h_grouped(group_type, run_type, id, background=None, max_iters=None):
             max_iters
         )
 
+        # Save user f1 score
         for i in study_metrics['st_vio_f1']:
             if alt_h_ratio == 0.6:
                 user_f1_06.append(i['value'])
@@ -522,15 +529,13 @@ def eval_h_grouped(group_type, run_type, id, background=None, max_iters=None):
             if max_iters is not None and n == max_iters + 1:
                 break
             fd = h['value'][0]
+
+            # Calculate FD precision, recall, and f1 statistics
             if fd == 'Not Sure':
                 user_h_conf_history.append(0)
                 fd_recall_history.append(0)
                 fd_precision_history.append(0)
                 fd_f1_history.append(0)
-                # if project_info['scenario']['alt_h_sample_ratio'] == 0.6:
-                #     user_fd_f1_06.append(0)
-                # elif project_info['scenario']['alt_h_sample_ratio'] == 0.45:
-                #     user_fd_f1_045.append(0)
                 if h['iter_num'] > 0:
                     fd_f1_delta_history.append(abs(0 - fd_f1_history[-1]))
                     user_h_seen_conf_history.append(0)
@@ -589,6 +594,7 @@ def eval_h_grouped(group_type, run_type, id, background=None, max_iters=None):
         with open(pathstart + project_id + '/fd_metadata.json', 'w') as f:
             json.dump(fd_metadata, f)
 
+        # Calculate differences in the user's hypothesis f1 score between any two iterations
         for i, h1 in enumerate(user_h_history):
             if max_iters is not None and i == max_iters + 1:
                 break
@@ -645,6 +651,7 @@ def eval_h_grouped(group_type, run_type, id, background=None, max_iters=None):
         all_user_f1_deltas.extend(user_f1_deltas)
         all_fd_f1_deltas.extend(fd_f1_deltas)
 
+        # Store model reward metrics
         if project_id not in training:
             # bayesian_match_rate_1.append(study_metrics['bayesian_match_rate_1'])
             bayesian_match_rate_mrr_1.extend(study_metrics['bayesian_match_mrr_1'])
@@ -673,6 +680,7 @@ def eval_h_grouped(group_type, run_type, id, background=None, max_iters=None):
             # hp_match_rate_penalty_5.append(study_metrics['hp_match_rate_penalty_5'])
             hp_match_rate_mrr_penalty_5.extend(study_metrics['hp_match_mrr_penalty_5'][1:])
         
+        # Extract cumulative user precision, recall, and f1 values
         cumulative_precision, cumulative_recall = study_metrics['cumulative_precision'], study_metrics['cumulative_recall']
         cumulative_precision_noover, cumulative_recall_noover = study_metrics['cumulative_precision_noover'], study_metrics['cumulative_recall_noover']
         cumulative_f1, cumulative_f1_noover = study_metrics['cumulative_f1'], study_metrics['cumulative_f1_noover']
@@ -684,6 +692,7 @@ def eval_h_grouped(group_type, run_type, id, background=None, max_iters=None):
             all_cumulative_f1_045.append([i['value'] for i in cumulative_f1])
             all_cumulative_f1_noover_045.append([i['value'] for i in cumulative_f1_noover])
 
+        # Plot data
         if len(user_h_history) > 2:
 
             res = statstests.mannkendall([i['value'] for i in cumulative_f1])
@@ -825,6 +834,7 @@ def eval_h_grouped(group_type, run_type, id, background=None, max_iters=None):
     #     ax16.plot(range(1, len(all_cumulative_f1_06)+1), all_cumulative_f1_06, color='blue', linewidth=3)
     #     ax16.plot(range(1, len(all_cumulative_f1_045)+1), all_cumulative_f1_045, color='green', linewidth=3)
 
+    # Set up plot labels
     ax1.set_xlabel('Iteration #')
     ax1.set_ylabel('Confidence')
     ax1.set_title('Suggested FD Confidence Over the Interaction')
@@ -909,6 +919,7 @@ def eval_h_grouped(group_type, run_type, id, background=None, max_iters=None):
     fig16.tight_layout()
     fig17.tight_layout()
 
+    # Calculate mean model rewards
     match_rates = {
         # 'bayesian_match_rate_1': np.mean(bayesian_match_rate_1),
         # 'hp_match_rate_1': np.mean(hp_match_rate_1),
@@ -943,6 +954,7 @@ def eval_h_grouped(group_type, run_type, id, background=None, max_iters=None):
         with open('./plots/alt-h-stat-test/' + 's' + scenario_id + (('-i' + str(max_iters)) if max_iters is not None else '') + '.json', 'w') as f:
             json.dump(user_f1_alt_h_p, f)
 
+    # Run significance tests on model rewards
     if background is None:
         # Bayes vs. HP
         # if np.array_equal(bayesian_match_rate_mrr_3, hp_match_rate_mrr_3):
@@ -1090,6 +1102,7 @@ def eval_h_grouped(group_type, run_type, id, background=None, max_iters=None):
         with open('./plots/ttest-results/' + (('s' + scenario_id) if group_type == 'scenario' else ('u' + user_num)) + (('-i' + str(max_iters)) if max_iters is not None else '') + '.json', 'w') as f:
             json.dump(ttest_ind_results, f, indent=4)
 
+    # Save plots
     if background is None:
         fig1.savefig('./plots/fd-confidence/' + (('s' + scenario_id) if group_type == 'scenario' else ('u' + user_num)) + (('-i' + str(max_iters)) if max_iters is not None else '') + '.jpg')
         fig2.savefig('./plots/fd-recall/' + (('s' + scenario_id) if group_type == 'scenario' else ('u' + user_num)) + (('-i' + str(max_iters)) if max_iters is not None else '') + '.jpg')

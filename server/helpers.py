@@ -8,15 +8,16 @@ from rich.console import Console
 
 console = Console()
 BAYESIAN_SMOOTHING = 0.15    # Bayesian model hyperparameter
-# MODEL_OUTPUT_COUNT = 3
 HP_MEMORY = 1  # Hypothesis testing model hyperparameter
 
+# CellFeedback: An instance of feedback for a particular cell
 class CellFeedback(object):
     def __init__(self, iter_num, marked, elapsed_time):
         self.iter_num = iter_num    # iteration number
         self.marked = marked            # whether or not the user marked the cell as noisy in this iteration
-        self.elapsed_time = elapsed_time
+        self.elapsed_time = elapsed_time    # how much time has elapsed since the beginning of the interaction
 
+    # Convert class object to a dictionary
     def asdict(self):
         return {
             'iter_num': self.iter_num,
@@ -24,12 +25,14 @@ class CellFeedback(object):
             'elapsed_time': self.elapsed_time
         }
 
+# StudyMetric: a standardized class to represent various metrics being collected in the study
 class StudyMetric(object):
     def __init__(self, iter_num, value, elapsed_time):
-        self.iter_num = iter_num
-        self.value = value
-        self.elapsed_time = elapsed_time
+        self.iter_num = iter_num    # iteration number
+        self.value = value  # the metric value
+        self.elapsed_time = elapsed_time    # time elapsed since the beginning of the interaction
 
+    # Convert class object to a dictionary
     def asdict(self):
         return {
             'iter_num': self.iter_num,
@@ -37,23 +40,31 @@ class StudyMetric(object):
             'elapsed_time': self.elapsed_time
         }
 
+# FDMeta: An object storing all important attributes and metrics for an FD
 class FDMeta(object):
     def __init__(self, fd, a, b, support, vios, vio_pairs):
+        # LHS and RHS of the FD (not in set form)
         self.lhs = fd.split(' => ')[0][1:-1].split(', ')
         self.rhs = fd.split(' => ')[1].split(', ')
+
+        # Beta distribution parameters
         self.alpha = a
         self.alpha_history = [StudyMetric(iter_num=0, value=self.alpha, elapsed_time=0)]
         self.beta = b
         self.beta_history = [StudyMetric(iter_num=0, value=self.beta, elapsed_time=0)]
         self.conf = (a / (a+b))
         self.conf_history = [StudyMetric(iter_num=0, value=self.conf, elapsed_time=0)]
-        self.support = support
-        self.vios = vios
-        self.vio_pairs = vio_pairs
+        
+        self.support = support  # How many tuples the FD applies to
+        self.vios = vios    # Individual tuples that violate the FD
+        self.vio_pairs = vio_pairs  # Pairs of tuples that together violate the FD
+
+        # Violations found and total violations (for precision and recall)
         self.all_vios_found_history = []
         self.iter_vios_found_history = []
         self.iter_vios_total_history = []
     
+    # Convert class object to dictionary
     def asdict(self):
         alpha_history = list()
         for a in self.alpha_history:
@@ -81,9 +92,7 @@ class FDMeta(object):
             'vio_pairs': [list(vp) for vp in self.vio_pairs]
         }
 
-def extract_fd(item):
-    return item['cfd']
-
+# output_reward: Takes the ground truth FD (user hypothesis), model output, and FD metadata store and calculates model rewards
 def output_reward(gt, model_output, fd_metadata):
     gt_lhs = set(gt.split(' => ')[0][1:-1].split(', '))
     gt_rhs = set(gt.split(' => ')[1].split(', '))
@@ -319,17 +328,6 @@ def buildSample(data, X, sample_size, project_id, current_iter, current_time):
 # Return the tuples and violations for the sample
 def returnTuples(data, X, sample_size, alt_h_vio_pairs, target_h_sample_ratio, alt_h_sample_ratio, current_iter):
     s_out = list()
-
-    # Extract all tuples in target and alternative FD vio pairs
-    X_tups = list(itertools.chain(*X))
-    alt_X_tups = list(itertools.chain(*alt_h_vio_pairs))
-
-    # Build sets of viable vio pairs (pairs that satisfy target and violate alt and vice versa)
-    # viable_X = [(x, y) for (x, y) in X if x not in alt_X_tups and y not in alt_X_tups]
-    # viable_alt_X = [(x, y) for (x, y) in alt_h_vio_pairs if x not in X_tups and y not in X_tups]
-    
-    # Build set of vio pairs that violate neither the target nor alternative hypotheses
-    # viable_rem = [x for x in data.index if x not in X_tups and x not in alt_X_tups]
     
     # Add vios to the sample that violate the alt but not the target
     if len(alt_h_vio_pairs) > math.ceil(alt_h_sample_ratio * sample_size):
@@ -388,9 +386,6 @@ def returnTuples(data, X, sample_size, alt_h_vio_pairs, target_h_sample_ratio, a
 # OTHER HELPER FUNCTIONS  #
 # # # # # # # # # # # # # #
 # # # # # # # # # # # # # #
-
-
-
 
 # Get FD support and violations
 def getSupportAndVios(dirty_data, clean_data, fd):
@@ -628,51 +623,64 @@ def getPairs(data, support, fd):
         for idx2 in support:
             if idx1 == idx2:
                 continue
+            
+            # Initialize a representation of the pair
             pair = (idx1, idx2) if idx2 > idx1 else (idx2, idx1)
             match = True
+
+            # Check if these tuples have matching LHS values
             for lh in lhs:
                 if data.at[idx1, lh] != data.at[idx2, lh]:
                     match = False
                     break
+            
+            # If it is a matching pair, check if any RHS values conflict with each other
             if match is True:
                 for rh in rhs:
                     if data.at[idx1, rh] != data.at[idx2, rh]:
-                        vio_pairs.add(pair)
+                        vio_pairs.add(pair) # This is a violation pair; add it to the set
                         break
+
     return list(vio_pairs)   
 
+# Derive total violations for the FD, violations found, and violations marked
+# NOTE: t_sample is the full sample accounting for short, medium, or long-term memory, while curr_sample is only the current sample
 def vioStats(curr_sample, t_sample, feedback, vio_pairs, attrs, dirty_dataset, clean_dataset):
     vios_marked = set()
     vios_total = set()
     vios_found = set()
+
     for x, y in vio_pairs:
-        if x not in t_sample or y not in t_sample:
+        if x not in t_sample or y not in t_sample:  # If either of x or y are not in the full sample we're evaluating, skip this pair
             continue
-        if x not in curr_sample and y not in curr_sample:
+        if x not in curr_sample and y not in curr_sample:   # If both x and y are not in the current sample, skip this pair
             continue
         vios_total.add((x, y))
 
+        # Check if the user marked the violation
         x_marked = False
         for attr in attrs:
-            if feedback[str(x)][attr] is True:
+            if feedback[str(x)][attr] is True:  # This user marekd at least one attribute in x
                 x_marked = True
                 break
         y_marked = False
         for attr in attrs:
-            if feedback[str(y)][attr] is True:
+            if feedback[str(y)][attr] is True:  # The user marked at least one attribute in y
                 y_marked = True
                 break
-        if x_marked == y_marked and x_marked is False:
+        if x_marked == y_marked and x_marked is False:  # The user marked nothing; they didn't find this violation; skip
             continue
+
         vios_marked.add((x,y))
         vios_found.add((x,y))
     
+    # Look through all non-violating tuples to see if the user marked anything incorrectly
     for x in curr_sample:
-        vios_w_x = {i for i in vios_marked if x in i}
+        vios_w_x = {i for i in vios_marked if x in i}   # Make sure no violation pairs have x
         if len(vios_w_x) == 0:
             marked = False
             for attr in attrs:
-                if feedback[str(x)][attr] is True:
+                if feedback[str(x)][attr] is True:  # The user marked this tuple
                     marked = True
                     break
             if marked is True:
@@ -680,6 +688,7 @@ def vioStats(curr_sample, t_sample, feedback, vio_pairs, attrs, dirty_dataset, c
 
     return vios_marked, vios_found, vios_total
 
+# Convert pickle files in ./store/ to JSON (for post-analysis in eval_h.py and other scripts)
 def pkl2Json(project_id):
     files = os.listdir('./store/' + project_id + '/')
     for f in files:
@@ -703,6 +712,7 @@ def pkl2Json(project_id):
                 with open('./store/' + project_id + '/' + f.split('.')[0] + '.json', 'w') as fp:
                     json.dump(obj, fp, ensure_ascii=False, indent=4)
 
+# Check if a terminating condition is met for this run
 def checkForTermination(project_id):
     pkl2Json(project_id)
     with open('./store/' + project_id + '/study_metrics.json', 'r') as f:
@@ -719,7 +729,7 @@ def checkForTermination(project_id):
 
     h_space = project_info['scenario']['hypothesis_space']
     clean_h_space = project_info['scenario']['clean_hypothesis_space']
-    study_metrics, fd_metadata = deriveStats(
+    study_metrics, fd_metadata = deriveStats(   # Gather stats
         interaction_metadata,
         fd_metadata,
         h_space,
@@ -737,6 +747,7 @@ def checkForTermination(project_id):
     if (len(study_metrics['st_vios_marked'][-1]['value']) == 0):
         return False
     
+    # If precision and recall has been fairly stable over the last few iterations, terminate
     st_vio_precision = [i['value'] for i in study_metrics['st_vio_precision']]
     st_vio_recall = [i['value'] for i in study_metrics['st_vio_recall']]
     if (st_vio_precision[-1] >= 0.8 and abs(st_vio_precision[-1] - st_vio_precision[-2]) <= 0.1 and abs(st_vio_precision[-2] - st_vio_precision[-3]) <= 0.1):
@@ -749,6 +760,7 @@ def checkForTermination(project_id):
     else:
         return False
 
+# Derive post-analysis stats and metrics
 def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty_dataset, clean_dataset, target_fd, max_iters=None):
     feedback_history = interaction_metadata['feedback_history']
     user_hypothesis_history = interaction_metadata['user_hypothesis_history']
@@ -767,12 +779,6 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
     study_metrics['mt_vio_f1'] = list()
     study_metrics['mt_2_vio_f1'] = list()
     study_metrics['mt_3_vio_f1'] = list()
-    # study_metrics['iter_err_precision'] = list()
-    # study_metrics['iter_err_recall'] = list()
-    # study_metrics['iter_err_f1'] = list()
-    # study_metrics['all_err_precision'] = list()
-    # study_metrics['all_err_recall'] = list()
-    # study_metrics['all_err_f1'] = list()
 
     study_metrics['st_vios_marked'] = list()
     study_metrics['mt_vios_marked'] = list()
@@ -824,9 +830,6 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
     study_metrics['hp_match_mrr_penalty_5'] = list()
 
     max_h = user_hypothesis_history[0]['value'][0]
-    # console.log(max_h)
-    # if (max_h == 'Not Sure'):
-        # console.log(0.5)
     num_not_sub_super = len([h for h in h_space if max_h != 'Not Sure' and (\
         not set(h['cfd'].split(' => ')[0][1:-1].split(', ')).issubset(set(max_h.split(' => ')[0][1:-1].split(', '))) and \
         not set(h['cfd'].split(' => ')[1].split(', ')).issuperset(set(max_h.split(' => ')[1].split(', '))))])
@@ -874,8 +877,6 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
         else:
             mu = 0 if num_not_sub_super == 0 else BAYESIAN_SMOOTHING / num_not_sub_super
             alpha, beta = initialPrior(mu, variance)
-
-        # console.log(fd_metadata.keys())
         
         fd_metadata[fd]['alpha'] = alpha
         fd_metadata[fd]['beta'] = beta
@@ -883,7 +884,6 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
 
         fd_metadata[fd]['alpha_history'] = [{ 'iter_num': 0, 'value': alpha, 'elapsed_time': 0 }]
         fd_metadata[fd]['beta_history'] = [{ 'iter_num': 0, 'value': beta, 'elapsed_time': 0 }]
-        # fd_metadata[fd]['conf_history'] = [{ 'iter_num': 0, 'value': mu, 'elapsed_time': 0 }]
         fd_metadata[fd]['precision_history'] = list()
         fd_metadata[fd]['recall_history'] = list()
         fd_metadata[fd]['f1_history'] = list()
@@ -898,7 +898,6 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
         iters = range(1, min(max_iters, len(interaction_metadata['sample_history']))+1)
     else:
         iters = range(1, len(interaction_metadata['sample_history'])+1)
-    # console.log([user_hypothesis_history[i]['value'][0] for i in range(0, len(user_hypothesis_history))])
     for i in iters:
         st_vios_found = set()
         st_vios_total = set()
@@ -1031,12 +1030,11 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
         
         # Get output from models
         max_h_bayesian = heapq.nlargest(5, fd_metadata.keys(), key=lambda x: fd_metadata[x]['conf'])
-        # console.log('Bayesian:', max_h_bayesian)
         max_h_hp = heapq.nlargest(5, fd_metadata.keys(), key=lambda x: fd_metadata[x]['f1_history'][-1]['value'])
-        # console.log('Hypothesis Testing:', max_h_hp)
         study_metrics['bayesian_prediction'].append({ 'iter_num': i, 'value': max_h_bayesian, 'elapsed_time': elapsed_time })
         study_metrics['hp_prediction'].append({ 'iter_num': i, 'value': max_h_hp, 'elapsed_time': elapsed_time })
 
+        # Calculate rewards for each model configuration
         if user_hypothesis_history[i]['value'][0] != 'Not Sure':
             user_h = user_hypothesis_history[i]['value'][0]
             user_lhs = set(user_h.split(' => ')[0][1:-1].split(', '))
@@ -1221,8 +1219,6 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
         else:
             st_vio_recall = 0.5
         
-        # print('recall:', st_vio_recall)
-
         if len(lt_vios_total) > 0:
             lt_vio_recall = len(lt_vios_found) / len(lt_vios_total)
         else:
@@ -1247,8 +1243,6 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
             st_vio_precision = len(st_vios_found) / len(st_vios_marked)
         else:
             st_vio_precision = 0.5
-
-        # print('precision:', st_vio_precision)
 
         if len(lt_vios_marked) > 0:
             lt_vio_precision = len(lt_vios_found) / len(lt_vios_marked)
@@ -1275,8 +1269,6 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
         else:
             st_vio_f1 = 0
         
-        # print('f1:', st_vio_f1, '\n')
-
         if lt_vio_precision > 0 or lt_vio_recall > 0:
             lt_vio_f1 = 2 * (lt_vio_precision * lt_vio_recall) / (lt_vio_precision + lt_vio_recall)
         else:
@@ -1297,6 +1289,7 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
         else:
             mt_3_vio_f1 = 0
 
+        # Store metric results
         study_metrics['st_vio_recall'].append({ 'iter_num': int(i), 'value': st_vio_recall, 'elapsed_time': elapsed_time })
         study_metrics['mt_vio_recall'].append({ 'iter_num': int(i), 'value': mt_vio_recall, 'elapsed_time': elapsed_time })
         study_metrics['mt_2_vio_recall'].append({ 'iter_num': int(i), 'value': mt_2_vio_recall, 'elapsed_time': elapsed_time })
@@ -1329,6 +1322,7 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
         study_metrics['mt_3_vios_total'].append({ 'iter_num': int(i), 'value': list(mt_3_vios_total), 'elapsed_time': elapsed_time })
         study_metrics['lt_vios_total'].append({ 'iter_num': int(i), 'value': list(lt_vios_total), 'elapsed_time': elapsed_time })
 
+        # Calculate cumulative user precision, recall, and f1 score
         if int(i) > 1:
             found = list()
             marked = list()
@@ -1347,7 +1341,6 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
 
             cumulative_precision = 0.5 if len(marked) == 0 else (len(found)) / (len(marked))
             cumulative_precision_noover = 0.5 if len(marked_set) == 0 else (len(found_set) / len(marked_set))
-            # console.log(len(total))
             cumulative_recall = (len(found)) / (len(total))
             cumulative_recall_noover = (len(found_set) / len(total_set))
         else:
@@ -1359,6 +1352,7 @@ def deriveStats(interaction_metadata, fd_metadata, h_space, study_metrics, dirty
         cumulative_f1 = 0 if cumulative_precision == 0 and cumulative_recall == 0 else (2 * cumulative_precision * cumulative_recall) / (cumulative_precision + cumulative_recall)
         cumulative_f1_noover = 0 if cumulative_precision_noover == 0 and cumulative_recall_noover == 0 else (2 * cumulative_precision_noover * cumulative_recall_noover) / (cumulative_precision_noover + cumulative_recall_noover)
         
+        # Save cumulative precision, recall, and f1-score values
         study_metrics['cumulative_precision'].append({ 'iter_num': int(i), 'value': cumulative_precision, 'elapsed_time': elapsed_time })
         study_metrics['cumulative_recall'].append({ 'iter_num': int(i), 'value': cumulative_recall, 'elapsed_time': elapsed_time })
         study_metrics['cumulative_precision_noover'].append({ 'iter_num': int(i), 'value': cumulative_precision_noover, 'elapsed_time': elapsed_time })

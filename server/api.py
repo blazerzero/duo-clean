@@ -37,6 +37,7 @@ class User(object):
         self.pre_survey = dict()
         self.post_questionnaire = dict()
         self.comments = ''
+        self.background = list()
         console.log(self.scenarios)
     
     def asdict(self):
@@ -47,7 +48,8 @@ class User(object):
             'runs': self.runs if hasattr(self, 'runs') else None,
             'pre_survey': self.pre_survey,
             'post_questionnaire': self.post_questionnaire,
-            'comments': self.comments if hasattr(self, 'comments') else None
+            'comments': self.comments if hasattr(self, 'comments') else None,
+            'background': self.background
         }
 
 # Test endpoint to check if the server is live
